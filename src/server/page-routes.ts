@@ -1,0 +1,102 @@
+import { Hono } from 'hono';
+import { z } from 'zod';
+import { PageError, pageInput, pagePatch } from './pages.js';
+import type { Platform } from './platform.js';
+export function pageRoutes(platform: Platform) {
+  const app = new Hono();
+  app.get('/conversations/:id/page-context', (c) => {
+    const thread = platform.workspace.requireThread(c.req.param('id'));
+    const dot = platform.workspace.dot(thread.dotId)!;
+    const page = platform.workspace.pages.forThread(thread.id);
+    return c.json(
+      page && platform.workspace.canAccessSpace(dot.id, page.spaceId)
+        ? { id: page.id, spaceId: page.spaceId, title: page.title }
+        : null,
+    );
+  });
+  app.get('/spaces/:spaceId/pages', (c) =>
+    c.json(platform.workspace.pages.list(c.req.param('spaceId'))),
+  );
+  app.get('/spaces/:spaceId/pages/:id', (c) =>
+    c.json(
+      platform.workspace.pages.get(c.req.param('spaceId'), c.req.param('id')),
+    ),
+  );
+  app.post('/spaces/:spaceId/pages', async (c) => {
+    const data = pageInput.safeParse(await c.req.json());
+    if (!data.success)
+      return c.json(
+        {
+          error:
+            'Enter a title (160 characters max) and Markdown content (100,000 max).',
+        },
+        400,
+      );
+    return c.json(
+      platform.workspace.pages.create(c.req.param('spaceId'), data.data),
+      201,
+    );
+  });
+  app.patch('/spaces/:spaceId/pages/:id', async (c) => {
+    const data = pagePatch.safeParse(await c.req.json());
+    if (!data.success)
+      return c.json(
+        { error: 'A valid page patch and expectedRevision are required.' },
+        400,
+      );
+    return c.json(
+      platform.workspace.pages.update(
+        c.req.param('spaceId'),
+        c.req.param('id'),
+        data.data,
+      ),
+    );
+  });
+  app.post('/spaces/:spaceId/pages/:id/conversation', async (c) => {
+    const data = z
+      .object({ dotId: z.string().min(1) })
+      .strict()
+      .safeParse(await c.req.json());
+    if (!data.success) return c.json({ error: 'Choose a specialist.' }, 400);
+    return c.json(
+      await platform.pages.conversation(
+        c.req.param('spaceId'),
+        c.req.param('id'),
+        data.data.dotId,
+      ),
+    );
+  });
+  app.post('/conversations/:id/page', async (c) => {
+    const data = z
+      .object({
+        title: z.string().trim().min(1).max(160),
+        parentId: z.string().nullable().default(null),
+      })
+      .strict()
+      .safeParse(await c.req.json());
+    if (!data.success)
+      return c.json({ error: 'Enter a valid page title and parent.' }, 400);
+    return c.json(
+      await platform.pages.saveConversation(
+        c.req.param('id'),
+        data.data.title,
+        data.data.parentId,
+      ),
+      201,
+    );
+  });
+  app.onError((error, c) =>
+    error instanceof SyntaxError
+      ? c.json({ error: 'Invalid JSON request.' }, 400)
+      : error instanceof PageError
+        ? c.json({ error: error.message }, error.status)
+        : c.json(
+            {
+              error:
+                'Page operation could not complete. Check Intelligence setup or retry; your draft has not been discarded.',
+            },
+            503,
+          ),
+  );
+  return app;
+}

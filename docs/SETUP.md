@@ -1,0 +1,143 @@
+# Running the template
+
+OpenDots runs a React app and a Node server. The server stores pages, Space and Dot configuration, and thread bindings in SQLite and connects to your configured conversation, model, and messaging services.
+
+## Local development
+
+Use Node.js 24 and npm.
+
+```sh
+npm ci
+cp .env.example .env
+npm run dev
+```
+
+Open http://127.0.0.1:5173. The API runs on port 4310. Without service credentials, the app shows its setup state; it does not generate simulated replies.
+
+For a built local app:
+
+```sh
+npm run build
+npm start
+```
+
+Open http://127.0.0.1:4310. Keep the server running for background work.
+
+## Conversation services
+
+Edit `.env` on the server and restart after changes:
+
+| Variable                                      | Purpose                                                   |
+| --------------------------------------------- | --------------------------------------------------------- |
+| `INTELLIGENCE_API_KEY`                        | Project credential for conversation persistence           |
+| `INTELLIGENCE_API_URL`, `INTELLIGENCE_WS_URL` | Endpoint overrides for your Intelligence deployment       |
+| `OPENAI_API_KEY`, `OPENAI_MODEL`              | Model credential and model identifier                     |
+| `OPENAI_BASE_URL`                             | Compatible model API endpoint                             |
+| `OWNER_ID`                                    | Stable identity used for this deployment's conversations  |
+| `DATABASE_PATH`                               | SQLite file containing pages, workspace and work metadata |
+| `OWNER_TOKEN`                                 | Application access token; required for external bindings  |
+| `APP_ORIGIN`                                  | Exact browser origin when using a proxy or custom domain  |
+
+The model environment variable names follow the configured provider adapter. Provider credentials belong in `.env`, not client-side variables or source code. Conversation history lives in the configured Intelligence project; copying the SQLite file alone does not back up that history.
+
+## Pages and page conversations
+
+Select a Space to open its page library. Search for a document, switch between grid and list views, or create a new page. The visual editor supports formatting, headings, lists, checklists, tables, and slash commands. Use `/` to insert a block and Cmd/Ctrl+S to save immediately. Pages autosave after editing pauses; the save status tells you whether changes reached the server.
+
+Page actions include creating subpages, moving a page within its Space, and editing Markdown source. Existing documents with unsupported visual-editor syntax stay in source mode to preserve their content. Manual editing works without conversation credentials.
+
+Open a page's chat and choose a specialist with access to that Space. Grant access from the Dot’s settings in the sidebar. The server creates or reuses a CopilotKit Thread for that page and specialist. The Dot receives the current saved page as context and can read, create, and edit pages in its authorized Spaces. The page conversation uses that page’s Space by default; other chats use the Dot’s default page destination. Save your manual edits before asking it to revise the document. Revision checks reject stale writes; a conflict keeps your local draft available for recovery. Failed saves stop automatic retries until you retry or resolve the conflict, so a disconnected session does not silently replace newer content.
+
+Use the conversation's save-to-page action to create a document from its saved text history. This requires a working conversation service. Pages retain a link to the source conversation, and page links in chat open the document workspace.
+
+Back up both storage layers: SQLite contains page content and thread bindings; the Intelligence project contains conversation history. The template does not include multi-user page sharing, realtime collaboration, file uploads, or arbitrary interactive embeds.
+
+## Browser tool
+
+The browser service reads a supplied public URL and returns page text and a capture. Configure `BROWSER_URL` and `BROWSER_SECRET`, then run:
+
+```sh
+npx playwright install chromium
+npm run browser
+```
+
+Use the same secret on the app and browser processes. Browser navigation is read-only with JavaScript disabled. Private addresses, redirects, and authenticated pages are unsupported; provide a canonical public URL. This is a bounded research tool, not a general desktop or shell.
+
+## Persistent Dot computers
+
+For a separate browser, persistent files, and optional shell for each specialist, follow [Computer setup](COMPUTERS.md). This uses pinned OpenBot computer/supervisor services and per-Dot permissions. When computer services are configured, Dots use their computer tools in place of the read-only public-page tool; enable each Dot's required capabilities before use.
+
+## Slack
+
+OpenDots uses `@copilotkit/channels` with a managed Slack connection, following the runtime and channel pattern in [OpenTag](https://github.com/CopilotKit/OpenTag). The application declares the channel and its specialist agent; Intelligence manages the Slack adapter and delivery. You do not need a separate Slack webhook server or Socket Mode connection in OpenDots.
+
+### Create the managed channel
+
+Select the same Intelligence project used by this application, then create a uniquely named channel:
+
+```sh
+npx --yes copilotkit@latest project select
+npx --yes copilotkit@latest channels add --name opendots --display-name "OpenDots" --adapter slack --json
+```
+
+Follow the CLI's returned `nextAction` to create the Slack app from its generated manifest, supply credentials through the managed setup flow, and run its `resumeCommand`. A `blocked` response means a Slack-console step is still needed; a `failed` response must be resolved before continuing. Keep Socket Mode off. Install or reinstall the generated app in your workspace with its requested scopes. Use a distinct channel name for separate deployments so they do not compete for deliveries.
+
+See [OpenTag's setup guide](https://github.com/CopilotKit/OpenTag/blob/main/setup.md) for the Slack-console walkthrough. Slack bot tokens and signing secrets belong in the managed adapter configuration, not the browser or this application's `.env`.
+
+### Connect a specialist
+
+Configure the application server's `.env` alongside its Intelligence and model credentials:
+
+```dotenv
+SLACK_CHANNEL_NAME=opendots
+SLACK_TEAM_ID=T_REPLACE_WITH_WORKSPACE_ID
+SLACK_USER_IDS=U_REPLACE_WITH_YOUR_USER_ID
+SLACK_DOT_ID=REPLACE_WITH_DOT_ID
+```
+
+`SLACK_CHANNEL_NAME` must exactly match the managed channel name, not a Slack conversation name such as `#general`. OpenTag calls this setting `INTELLIGENCE_CHANNEL_NAME`; OpenDots uses `SLACK_CHANNEL_NAME`. `SLACK_TEAM_ID` and the comma-separated `SLACK_USER_IDS` restrict who may invoke the specialist. `SLACK_DOT_ID` selects an existing Dot; find IDs in the authenticated `/api/workspace` response. If omitted, it defaults to the initial Dot.
+
+Restart OpenDots after changing environment settings and inspect Slack status in Settings & setup. Channel activation must complete before trying a message. Mention the installed bot in a channel it can access; subsequent messages in that followed thread go to the same specialist. Unrelated threads, bot events, edits, deletions, and users outside the allowlist do not start agent runs. Editing a message to add a mention is not supported; send a new message instead.
+
+This template maps permitted Slack users to the single OpenDots owner. Replies are visible to the Slack conversation's audience, so choose the specialist's Space access and permitted tools accordingly. This is not a multi-user identity model.
+
+### Verify your deployment
+
+From an allowed user, mention the bot and verify a response in the same Slack thread. Reply in that thread and confirm continuity. Check that an unrelated thread and an unapproved user cannot invoke it. Pause the assistant in OpenDots and verify that a permitted request receives a paused notice. Check Settings & setup for channel connection failures.
+
+Local tests exercise channel behavior with fixtures. A live Slack mention/reply remains unverified until you provision the managed connection and model credentials. [Channels SDK documentation](https://github.com/CopilotKit/channels-sdk) describes extending the adapter and channel behavior.
+
+## Calls
+
+The included speech adapter uses the Realtime API at `api.openai.com`. Set `VOICE_API_KEY` to a key with access to that API and `VOICE_MODEL` to a supported Realtime model; `VOICE_NAME` selects the voice. `OPENAI_BASE_URL` changes the compute model endpoint only, not speech. Calls use browser microphone access and WebRTC. Hosted deployments need HTTPS. The server mediates provider setup and delegates compute to the selected Dot's conversation.
+
+A configured key is not evidence of a successful call. Verify microphone access, audio playback, compute delegation, interruption, hangup, and the saved receipt with your deployment before relying on voice workflows.
+
+## Containers
+
+Set `OWNER_TOKEN` and `BROWSER_SECRET` to different random secrets of at least 24 characters in `.env`, then run:
+
+```sh
+docker compose up --build -d
+```
+
+Open http://localhost:4310. The app port binds to loopback; the browser service has no published port. Application metadata lives in the `opendots-data` volume.
+
+```sh
+# Stop services while retaining saved data.
+docker compose down
+```
+
+For remote hosting, configure an HTTPS reverse proxy and the matching `APP_ORIGIN`. See [Security](../SECURITY.md) for the template's deployment boundary.
+
+## Development checks
+
+```sh
+npm run check-format
+npm run lint
+npm run typecheck
+npm test
+npm run build
+```
+
+Automated tests use service fixtures. Live model, Intelligence, Slack, and voice verification requires your own configured services.

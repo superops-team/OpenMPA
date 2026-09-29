@@ -1,0 +1,63 @@
+services:
+  app:
+    build:
+      context: .
+      target: app
+    ports:
+      - '127.0.0.1:4310:4310'
+    environment:
+      OWNER_TOKEN: ${OWNER_TOKEN:?Set a 24+ character OWNER_TOKEN in .env}
+      APP_ORIGIN: ${APP_ORIGIN:-http://localhost:4310}
+      OWNER_ID: ${OWNER_ID:-opendots-owner}
+      INTELLIGENCE_API_KEY: ${INTELLIGENCE_API_KEY:-}
+      INTELLIGENCE_API_URL: ${INTELLIGENCE_API_URL:-}
+      INTELLIGENCE_WS_URL: ${INTELLIGENCE_WS_URL:-}
+      VOICE_API_KEY: ${VOICE_API_KEY:-}
+      VOICE_MODEL: ${VOICE_MODEL:-}
+      VOICE_NAME: ${VOICE_NAME:-marin}
+      SLACK_CHANNEL_NAME: ${SLACK_CHANNEL_NAME:-}
+      SLACK_TEAM_ID: ${SLACK_TEAM_ID:-}
+      SLACK_USER_IDS: ${SLACK_USER_IDS:-}
+      SLACK_DOT_ID: ${SLACK_DOT_ID:-}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      OPENAI_BASE_URL: ${OPENAI_BASE_URL:-https://api.openai.com/v1}
+      OPENAI_MODEL: ${OPENAI_MODEL:-}
+      BROWSER_URL: http://browser:4311
+      BROWSER_SECRET: ${BROWSER_SECRET:?Set a 24+ character BROWSER_SECRET in .env}
+    volumes:
+      - opendots-data:/data
+    networks:
+      - browser-link
+      - app-egress
+    init: true
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+  browser:
+    build:
+      context: .
+      target: browser
+    environment:
+      BROWSER_SECRET: ${BROWSER_SECRET:?Set a 24+ character BROWSER_SECRET in .env}
+    networks:
+      - browser-link
+      - browser-egress
+    init: true
+    restart: unless-stopped
+    shm_size: 256mb
+    read_only: true
+    tmpfs:
+      - /tmp:size=256m
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+networks:
+  browser-link:
+    internal: true
+  app-egress:
+  browser-egress:
+volumes:
+  opendots-data:

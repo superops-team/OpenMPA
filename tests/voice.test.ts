@@ -1,0 +1,184 @@
+import { afterEach, expect, it, vi } from 'vitest';
+import { Store } from '../src/server/store.js';
+import { WorkspaceStore } from '../src/server/workspace.js';
+import { VoiceService } from '../src/server/voice.js';
+import type { PlatformConfig } from '../src/server/platform-config.js';
+const resources: (() => void)[] = [];
+afterEach(() => {
+  resources.splice(0).forEach((close) => close());
+  vi.useRealTimers();
+});
+function fixture() {
+  const store = new Store(':memory:');
+  const workspace = new WorkspaceStore(':memory:', 'owner');
+  workspace.bindThread('thread', workspace.dots()[0].id, 'A conversation');
+  resources.push(() => {
+    store.close();
+    workspace.close();
+  });
+  const config: PlatformConfig = {
+    baseUrl: 'https://example.com',
+    voiceKey: 'test-secret',
+    voiceModel: 'voice-model',
+    voiceName: 'marin',
+    runtimeUrl: '',
+    slackUsers: [],
+  };
+  const turn = vi.fn(
+    async (_thread: string, _prompt: string, _signal: AbortSignal) =>
+      'Current answer',
+  );
+  const history = vi.fn(async () => 'user: Earlier topic');
+  const transport = vi.fn<typeof fetch>(async (url) =>
+    String(url).endsWith('/hangup')
+      ? new Response(null, { status: 200 })
+      : new Response('v=0\r\nm=audio 9 UDP/TLS/RTP/SAVPF 111', {
+          headers: { location: '/v1/realtime/calls/rtc_test' },
+        }),
+  );
+  const voice = new VoiceService(
+    {
+      workspace,
+      store,
+      config,
+      turn,
+      history,
+      requireReady() {},
+      setup: () => ({
+        voice: true,
+        intelligence: true,
+        model: true,
+        browser: false,
+        slack: 'not_configured',
+        missing: [],
+      }),
+    },
+    transport,
+  );
+  return { voice, transport, workspace, store, turn, history };
+}
+const offer = 'v=0\r\nm=audio 9 UDP/TLS/RTP/SAVPF 111';
+it('binds voice history and compute to the existing thread, deduplicates tools and hangs up remotely', async () => {
+  const f = fixture();
+  const call = await f.voice.begin(
+    'thread',
+    offer,
+    new AbortController().signal,
+  );
+  expect(f.history).toHaveBeenCalledWith('thread');
+  const body = f.transport.mock.calls[0][1]?.body;
+  expect(body).toBeInstanceOf(FormData);
+  expect(String((body as FormData).get('session'))).toContain('Earlier topic');
+  f.voice.activate(call.id);
+  await Promise.all([
+    f.voice.compute(call.id, 'tool-1', 'Research'),
+    f.voice.compute(call.id, 'tool-1', 'Research'),
+  ]);
+  expect(f.turn).toHaveBeenCalledTimes(1);
+  expect(f.turn.mock.calls[0]?.[0]).toBe('thread');
+  await f.voice.end(call.id, 'Confirmed discussion');
+  expect(
+    f.transport.mock.calls.some(([url]) =>
+      String(url).endsWith('/rtc_test/hangup'),
+    ),
+  ).toBe(true);
+  expect(f.workspace.call(call.id).status).toBe('ended');
+  await expect(f.voice.compute(call.id, 'late', 'Research')).rejects.toThrow(
+    'ended',
+  );
+});
+it('rejects unowned threads before provider contact and expires unactivated peers', async () => {
+  vi.useFakeTimers();
+  const f = fixture();
+  await expect(
+    f.voice.begin('foreign', offer, new AbortController().signal),
+  ).rejects.toThrow();
+  expect(f.transport).not.toHaveBeenCalled();
+  const call = await f.voice.begin(
+    'thread',
+    offer,
+    new AbortController().signal,
+  );
+  await vi.advanceTimersByTimeAsync(30_001);
+  expect(f.workspace.call(call.id).status).toBe('failed');
+  expect(
+    f.transport.mock.calls.some(([url]) => String(url).endsWith('/hangup')),
+  ).toBe(true);
+});
+it('aborts a pending history lookup without starting a provider session', async () => {
+  const f = fixture();
+  f.history.mockImplementation(() => new Promise(() => {}));
+  const controller = new AbortController();
+  const pending = f.voice.begin('thread', offer, controller.signal);
+  controller.abort();
+  await expect(pending).rejects.toThrow('cancelled');
+  expect(f.transport).not.toHaveBeenCalled();
+});
+it('fails visibly for provider errors and does not claim an active call', async () => {
+  const f = fixture();
+  f.transport.mockResolvedValue(
+    new Response('provider error', { status: 429 }),
+  );
+  await expect(
+    f.voice.begin('thread', offer, new AbortController().signal),
+  ).rejects.toThrow('429');
+  expect(f.workspace.calls()[0].status).toBe('failed');
+});
+it('hangs up a provisioned peer whose SDP is invalid', async () => {
+  const f = fixture();
+  f.transport.mockResolvedValueOnce(
+    new Response('invalid SDP', {
+      headers: { location: '/v1/realtime/calls/rtc_test' },
+    }),
+  );
+  await expect(
+    f.voice.begin('thread', offer, new AbortController().signal),
+  ).rejects.toThrow('invalid SDP');
+  expect(
+    f.transport.mock.calls.some(([url]) =>
+      String(url).endsWith('/rtc_test/hangup'),
+    ),
+  ).toBe(true);
+});
+it('saves a late transcript after expiry without changing the ended status or duration', async () => {
+  vi.useFakeTimers();
+  const f = fixture();
+  const call = await f.voice.begin(
+    'thread',
+    offer,
+    new AbortController().signal,
+  );
+  await vi.advanceTimersByTimeAsync(30_001);
+  const expired = f.workspace.call(call.id);
+  await f.voice.end(call.id, 'Buffered speech at disconnect');
+  await f.voice.end(call.id, 'Buffered speech at disconnect');
+  expect(f.workspace.call(call.id)).toMatchObject({
+    status: 'failed',
+    endedAt: expired.endedAt,
+    transcript: 'Buffered speech at disconnect',
+  });
+  expect(f.turn).toHaveBeenCalledTimes(1);
+});
+it('defers paused transcript synchronization and resumes it once without a duplicate turn', async () => {
+  const f = fixture();
+  const call = await f.voice.begin(
+    'thread',
+    offer,
+    new AbortController().signal,
+  );
+  f.store.updateSettings({ paused: true });
+  f.voice.abortAll();
+  await f.voice.end(call.id, 'Speech saved while paused');
+  expect(f.turn).not.toHaveBeenCalled();
+  expect(f.workspace.call(call.id).transcript).toBe(
+    'Speech saved while paused',
+  );
+  expect(f.workspace.call(call.id).error).toContain(
+    'pending Intelligence sync',
+  );
+  f.store.updateSettings({ paused: false });
+  await f.voice.resumePending();
+  await f.voice.resumePending();
+  expect(f.turn).toHaveBeenCalledTimes(1);
+  expect(f.workspace.call(call.id).status).toBe('failed');
+});
