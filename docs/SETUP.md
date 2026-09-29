@@ -130,6 +130,51 @@ docker compose down
 
 For remote hosting, configure an HTTPS reverse proxy and the matching `APP_ORIGIN`. See [Security](../SECURITY.md) for the template's deployment boundary.
 
+## Automatic Learning
+
+OpenDots connects [CopilotKit Automatic Learning](https://docs.copilotkit.ai/learning)
+to individual Dots. It uses the existing server-side `INTELLIGENCE_API_KEY` and
+optional `INTELLIGENCE_API_URL`; no additional model key or frontend key is needed.
+
+1. Open **Learning** in the same Intelligence project and create a container for
+   one focused workflow, such as `research-workflow`. IDs use 1–64 lowercase
+   letters, numbers, and single hyphens.
+2. In OpenDots, edit the Dot and enter that ID under **Automatic Learning**.
+   Saving the ID configures routing; it does not create or verify the remote container.
+3. Start new conversations and complete related workflows. Each conversation keeps
+   the container assigned when it was created. Existing conversations, including
+   ones created before this integration, are not enrolled retroactively. Changing
+   or clearing the Dot's ID affects only new conversations. This applies to page
+   chat, scheduled and voice compute in those conversations, and new Slack threads.
+4. In Intelligence, inspect the evidence, run Learning manually or use its schedule,
+   and review and publish proposed skills. The default automatic threshold is 15
+   eligible threads; use the readiness count shown in your deployment.
+5. Enable **Skill delivery** on the Intelligence container, then enable **Use
+   published skills** in the Dot's settings. Start a new turn in an enrolled
+   conversation. The native BuiltInAgent integration loads the latest published
+   catalog and exposes `copilotkit_load_skill` and `copilotkit_read_skill_file`.
+   The model decides which relevant skills to load. Check the run's tool calls to
+   verify actual use; saving settings alone does not establish connectivity.
+
+Skill delivery always uses the conversation's original container, even after the
+Dot is pointed at another container. The Dot's delivery checkbox applies to all its
+conversations. Unchecking it stops delivery on subsequent turns; changing Learning
+settings also stops active work. Conversations without a container do not request
+skills. Existing research, memory, page, and computer permissions still apply.
+
+Ingestion and delivery are separate. Clearing the container does not unenroll older
+conversations; pause Learning in Intelligence to stop its analysis. Turning off
+delivery does not stop evidence collection. A delivery denial or an unavailable
+initial skill snapshot fails the turn rather than silently continuing without the
+configured skills. Restore delivery or uncheck **Use published skills** to continue
+without them. Skills require review and publication in Intelligence; OpenDots does
+not automatically approve them.
+
+The integration uses an explicit container list, so ambient
+`CPK_INTELLIGENCE_LEARNING_CONTAINER_ID` and `CPK_INTELLIGENCE_SKILLS_REVISION`
+variables do not override a conversation's configuration. Self-hosted Intelligence
+must support the [skill delivery endpoints](https://docs.copilotkit.ai/intelligence/learned-skills).
+
 ## Development checks
 
 ```sh

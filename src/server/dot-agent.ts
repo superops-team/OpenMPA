@@ -62,7 +62,10 @@ export class DotAgent extends AbstractAgent {
             dot.id,
             'Slack conversation',
           );
-        this.workspace.requireThread(input.threadId, dot.id);
+        const conversation = this.workspace.requireThread(
+          input.threadId,
+          dot.id,
+        );
         if (
           !this.config.intelligenceKey ||
           !this.config.apiKey ||
@@ -79,6 +82,8 @@ export class DotAgent extends AbstractAgent {
             settings.researchAllowed !== initialSettings.researchAllowed ||
             settings.memoryAllowed !== initialSettings.memoryAllowed ||
             current.memoryAllowed !== dot.memoryAllowed ||
+            current.learningContainerId !== dot.learningContainerId ||
+            current.skillDeliveryEnabled !== dot.skillDeliveryEnabled ||
             current.researchAllowed !== dot.researchAllowed ||
             current.spaceId !== dot.spaceId ||
             JSON.stringify(current.spaceIds) !== JSON.stringify(dot.spaceIds)
@@ -173,7 +178,18 @@ export class DotAgent extends AbstractAgent {
         }).chat(this.config.model);
         this.inner = new BuiltInAgent({
           model,
-          maxSteps: 5,
+          learnedSkills:
+            dot.skillDeliveryEnabled && conversation.learningContainerId
+              ? {
+                  containers: [{ id: conversation.learningContainerId }],
+                  apiKey: this.config.intelligenceKey,
+                  apiUrl: this.config.intelligenceApiUrl,
+                }
+              : undefined,
+          maxSteps:
+            dot.skillDeliveryEnabled && conversation.learningContainerId
+              ? 10
+              : 5,
           maxOutputTokens: 2200,
           maxRetries: 1,
           tools: [

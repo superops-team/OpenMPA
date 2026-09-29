@@ -15,6 +15,7 @@ import { DotAgent } from './dot-agent.js';
 import { runThreadTurn } from './headless.js';
 import { setupStatus, type PlatformConfig } from './platform-config.js';
 import { validateRuntimeScope } from './runtime-scope.js';
+import { learningSelector } from './learning.js';
 export class Platform {
   private channelStartupFailed = false;
   readonly pages: PageService;
@@ -40,6 +41,10 @@ export class Platform {
       apiKey: config.intelligenceKey,
       apiUrl: config.intelligenceApiUrl,
       wsUrl: config.intelligenceWsUrl,
+      getLearningContainerId: learningSelector(
+        workspace,
+        config.slackDotId ?? workspace.dots()[0]?.id,
+      ),
     });
     const channels = [];
     if (config.slackChannel && config.slackTeam && config.slackUsers.length) {

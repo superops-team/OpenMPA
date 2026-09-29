@@ -5,6 +5,14 @@ import { DotAgent } from '../src/server/dot-agent.js';
 import { Store } from '../src/server/store.js';
 import { WorkspaceStore } from '../src/server/workspace.js';
 const inner = vi.hoisted(() => ({
+  configure:
+    vi.fn<
+      (
+        options: ConstructorParameters<
+          typeof import('@copilotkit/runtime/v2').BuiltInAgent
+        >[0],
+      ) => void
+    >(),
   run: vi.fn<() => Observable<BaseEvent>>(),
   abortRun: vi.fn(),
 }));
@@ -14,6 +22,11 @@ vi.mock('@copilotkit/runtime/v2', async (importOriginal) => {
   return {
     ...original,
     BuiltInAgent: class {
+      constructor(
+        options: ConstructorParameters<typeof original.BuiltInAgent>[0],
+      ) {
+        inner.configure(options);
+      }
       run = inner.run;
       abortRun = inner.abortRun;
     },
@@ -23,6 +36,56 @@ const databases: Array<{ close(): void }> = [];
 afterEach(() => {
   databases.splice(0).forEach((db) => db.close());
   vi.restoreAllMocks();
+  inner.configure.mockClear();
+});
+
+it('uses the conversation container for delivery and preserves tools and override restrictions', async () => {
+  const f = fixture(false);
+  const dot = f.workspace.dots()[0];
+  f.workspace.updateDot(dot.id, {
+    ...dot,
+    learningContainerId: 'research',
+    skillDeliveryEnabled: true,
+  });
+  f.workspace.bindThread('learning', dot.id, 'Learning');
+  f.workspace.updateDot(dot.id, {
+    ...dot,
+    learningContainerId: 'writing',
+    skillDeliveryEnabled: true,
+  });
+  inner.run.mockReturnValue(of());
+  await lastValueFrom(
+    f.agent.run({ ...f.input, threadId: 'learning' }).pipe(toArray()),
+  );
+  expect(inner.configure).toHaveBeenLastCalledWith(
+    expect.objectContaining({
+      learnedSkills: {
+        containers: [{ id: 'research' }],
+        apiKey: 'fixture',
+        apiUrl: undefined,
+      },
+      maxSteps: 10,
+      overridableProperties: [],
+      tools: expect.arrayContaining([
+        expect.objectContaining({ name: 'read_space_page' }),
+      ]),
+    }),
+  );
+  await lastValueFrom(f.agent.run(f.input).pipe(toArray()));
+  expect(inner.configure).toHaveBeenLastCalledWith(
+    expect.objectContaining({ learnedSkills: undefined, maxSteps: 5 }),
+  );
+  f.workspace.updateDot(dot.id, {
+    ...dot,
+    learningContainerId: 'writing',
+    skillDeliveryEnabled: false,
+  });
+  await lastValueFrom(
+    f.agent.run({ ...f.input, threadId: 'learning' }).pipe(toArray()),
+  );
+  expect(inner.configure).toHaveBeenLastCalledWith(
+    expect.objectContaining({ learnedSkills: undefined, maxSteps: 5 }),
+  );
 });
 function fixture(channel = true) {
   const store = new Store(':memory:');

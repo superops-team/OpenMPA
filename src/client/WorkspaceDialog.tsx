@@ -47,6 +47,12 @@ export function WorkspaceDialog({
     dialog.type === 'dot' ? (dialog.dot?.spaceId ?? dialog.spaceId) : '',
   );
   const [interval, setInterval] = useState('86400');
+  const [learningContainer, setLearningContainer] = useState(
+    dialog.type === 'dot' ? (dialog.dot?.learningContainerId ?? '') : '',
+  );
+  const [skillDelivery, setSkillDelivery] = useState(
+    dialog.type === 'dot' ? (dialog.dot?.skillDeliveryEnabled ?? false) : false,
+  );
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const container = useRef<HTMLElement>(null);
@@ -134,6 +140,8 @@ export function WorkspaceDialog({
                 instructions: text,
                 researchAllowed: research,
                 memoryAllowed: memory,
+                learningContainerId: learningContainer.trim() || null,
+                skillDeliveryEnabled: skillDelivery,
               };
             }
             if (dialog.type === 'settings') {
@@ -278,6 +286,56 @@ export function WorkspaceDialog({
                 </span>
               </label>
             </>
+          )}
+          {dialog.type === 'dot' && (
+            <fieldset className="space-access-fields">
+              <legend>Automatic Learning</legend>
+              <label className="field-label" htmlFor="learning-container">
+                Learning container ID
+              </label>
+              <input
+                id="learning-container"
+                value={learningContainer}
+                maxLength={64}
+                pattern="[a-z0-9]+(-[a-z0-9]+)*"
+                placeholder="research-workflow"
+                aria-describedby="learning-help"
+                onChange={(event) => {
+                  setLearningContainer(event.target.value);
+                  if (!event.target.value.trim()) setSkillDelivery(false);
+                }}
+              />
+              <p className="muted" id="learning-help">
+                Create this container in your Intelligence project first. New
+                conversations will contribute evidence to it. Leave blank to
+                keep new conversations out of Learning. Existing conversations
+                retain their original assignment.
+              </p>
+              <label className="permission-row">
+                <input
+                  type="checkbox"
+                  checked={skillDelivery}
+                  disabled={!learningContainer.trim()}
+                  onChange={(event) => setSkillDelivery(event.target.checked)}
+                />
+                <span>
+                  <strong>Use published skills</strong>
+                  <small>
+                    Load reviewed skills from each conversation’s assigned
+                    container. Enable delivery in Intelligence too. Turning this
+                    off stops skill loading; it does not stop evidence
+                    collection.
+                  </small>
+                </span>
+              </label>
+              <a
+                href="https://docs.copilotkit.ai/learning"
+                target="_blank"
+                rel="noreferrer"
+              >
+                Set up Learning and review skills ↗
+              </a>
+            </fieldset>
           )}
           {dialog.type === 'schedule' && (
             <>
