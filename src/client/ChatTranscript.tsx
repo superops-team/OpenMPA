@@ -1,8 +1,8 @@
 import { openPageLink } from './page-navigation';
-import { Fragment } from 'react';
+import { Fragment, type ReactNode } from 'react';
 import { PhoneOff } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
-import type { Message } from '@ag-ui/core';
+import type { AssistantMessage, Message } from '@ag-ui/core';
 import type { CallReceipt } from '../shared/types';
 function Receipt({ call }: { call: CallReceipt }) {
   return (
@@ -22,9 +22,11 @@ function Receipt({ call }: { call: CallReceipt }) {
 export function ChatTranscript({
   messages,
   calls,
+  renderTools,
 }: {
   messages: Message[];
   calls: CallReceipt[];
+  renderTools?: (message: AssistantMessage) => ReactNode;
 }) {
   const ids = new Set(messages.map((message) => message.id));
   return (
@@ -38,32 +40,35 @@ export function ChatTranscript({
         ))}
       {messages.map((message) => (
         <Fragment key={message.id}>
-          <div className={`chat-bubble ${message.role}`}>
-            <ReactMarkdown
-              components={{
-                img: ({ alt }) => <span>{alt}</span>,
-                a: ({ href, children }) => (
-                  <a
-                    onClick={(event) => {
-                      if (href?.startsWith('/#/spaces/')) {
-                        event.preventDefault();
-                        openPageLink(href);
+          {typeof message.content === 'string' && message.content.trim() && (
+            <div className={`chat-bubble ${message.role}`}>
+              <ReactMarkdown
+                components={{
+                  img: ({ alt }) => <span>{alt}</span>,
+                  a: ({ href, children }) => (
+                    <a
+                      onClick={(event) => {
+                        if (href?.startsWith('/#/spaces/')) {
+                          event.preventDefault();
+                          openPageLink(href);
+                        }
+                      }}
+                      href={href}
+                      target={
+                        href?.startsWith('/#/spaces/') ? undefined : '_blank'
                       }
-                    }}
-                    href={href}
-                    target={
-                      href?.startsWith('/#/spaces/') ? undefined : '_blank'
-                    }
-                    rel="noreferrer"
-                  >
-                    {children}
-                  </a>
-                ),
-              }}
-            >
-              {String(message.content)}
-            </ReactMarkdown>
-          </div>
+                      rel="noreferrer"
+                    >
+                      {children}
+                    </a>
+                  ),
+                }}
+              >
+                {String(message.content)}
+              </ReactMarkdown>
+            </div>
+          )}
+          {message.role === 'assistant' && renderTools?.(message)}
           {calls
             .filter((call) => call.anchorMessageId === message.id)
             .map((call) => (

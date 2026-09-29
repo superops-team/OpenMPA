@@ -2,7 +2,12 @@ import { contextualMessage, type PageContext } from './page-context';
 import { api } from './api';
 import type { Page } from '../server/pages';
 import { useEffect, useRef, useState } from 'react';
-import { useAgent, useCopilotKit } from '@copilotkit/react-core/v2';
+import {
+  CopilotChatToolCallsView,
+  useRenderTool,
+  useAgent,
+  useCopilotKit,
+} from '@copilotkit/react-core/v2';
 import {
   FilePlus,
   ArrowUp,
@@ -13,6 +18,10 @@ import {
   Square,
   X,
 } from 'lucide-react';
+import {
+  ComputerToolCard,
+  type ComputerToolRenderProps,
+} from './ComputerToolCard';
 import { ChatTranscript } from './ChatTranscript';
 import type { CallReceipt, Conversation, Dot } from '../shared/types';
 import { Mascot } from './Mascot';
@@ -27,6 +36,7 @@ export function Chat({
   paused,
   onSaved,
   onSchedule,
+  onComputer,
 }: {
   thread: Conversation;
   dot: Dot;
@@ -37,6 +47,7 @@ export function Chat({
   paused: boolean;
   onSaved: () => void;
   onSchedule: () => void;
+  onComputer?: () => void;
 }) {
   const { agent, isReady } = useAgent({
     agentId: `chat-${thread.id}`,
@@ -152,11 +163,46 @@ export function Chat({
   useEffect(() => {
     if (paused && voice.status !== 'idle') void voice.end();
   }, [paused]);
+  const computerCalls = agent.messages.flatMap((message) =>
+    message.role === 'assistant' ? (message.toolCalls ?? []) : [],
+  );
+  const latestBrowserCall = computerCalls.findLast((call) =>
+    [
+      'navigate',
+      'snapshot',
+      'read',
+      'screenshot',
+      'click',
+      'type',
+      'key',
+      'scroll',
+    ].some((action) => call.function.name === `computer_${action}`),
+  );
+  useRenderTool(
+    {
+      name: '*',
+      render: (props: ComputerToolRenderProps) =>
+        props.name.startsWith('computer_') ? (
+          <ComputerToolCard
+            {...props}
+            dotId={dot.id}
+            dotName={dot.name}
+            running={running}
+            showScreen={props.toolCallId === latestBrowserCall?.id}
+            onExpand={onComputer}
+          />
+        ) : null,
+    },
+    [dot.id, dot.name, running, latestBrowserCall?.id, onComputer],
+  );
   const visible = agent.messages.filter(
     (message) =>
       ['user', 'assistant'].includes(message.role) &&
-      typeof message.content === 'string' &&
-      message.content.trim(),
+      ((typeof message.content === 'string' && message.content.trim()) ||
+        (message.role === 'assistant' &&
+          message.toolCalls?.some((call) =>
+            call.function.name.startsWith('computer_'),
+          ))),
   );
   return (
     <div className="live-chat">
@@ -254,7 +300,16 @@ export function Chat({
             </p>
           </div>
         )}
-        <ChatTranscript messages={visible} calls={calls} />
+        <ChatTranscript
+          messages={visible}
+          calls={calls}
+          renderTools={(message) => (
+            <CopilotChatToolCallsView
+              message={message}
+              messages={agent.messages}
+            />
+          )}
+        />
         {running && (
           <div className="thinking">
             <span />
@@ -382,8 +437,7 @@ export function Chat({
         <div className="chat-compose-note">
           {voiceReady
             ? 'Text and voice, one conversation.'
-            : 'Text is ready. Voice needs separate server configuration.'}{' '}
-          · Public pages only
+            : 'Text is ready. Voice needs separate server configuration.'}
         </div>
       </form>
     </div>

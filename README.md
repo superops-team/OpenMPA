@@ -44,6 +44,10 @@ Each Dot can have its own computer, using [OpenBot](https://github.com/CopilotKi
 
 See [Computer setup](docs/COMPUTERS.md) to build the pinned services and connect your deployment. Computer tools require those services; an unconfigured template does not execute commands on your host.
 
+![A Dot browsing and saving notes through natural-language chat](docs/demos/computer-chat.gif)
+
+_Ask Scout to open a website, summarize it, save notes, and verify the file. Every computer action in this demo is requested through chat; CopilotKit tool renderers show the live browser, saved file, and terminal output inline. [Watch the MP4](docs/demos/computer-chat.mp4)._
+
 ### Text and calls
 
 A continuous conversation keeps the Dot's avatar and status above the messages, with text and call controls close at hand. Work updates, source links, and call receipts appear in the timeline; a side panel shows results or the agent's computer.
@@ -111,7 +115,7 @@ See [Setup](docs/SETUP.md) for configuration, Slack, calls, the browser service,
 | Memory                     | User-managed preferences that permitted Dots can use                                              |
 | Deployment                 | Local Node setup and separate application/browser containers                                      |
 
-Local checks cover setup, persistence, permissions, SDK failure handling, and browser isolation. Automated tests use service fixtures. **Live Intelligence, model responses, and page-context chat were verified on September 29, 2026.** Slack, voice, and Dot-computer verification still require their own deployment configuration. See [recording notes](docs/demos/README.md) for the demonstrated flows and limits.
+Local checks cover setup, persistence, permissions, SDK failure handling, and browser isolation. Automated tests use service fixtures. **Live Intelligence, model responses, and page-context chat were verified on September 29, 2026.** Live OpenBot computer browsing, file creation, shell verification, and file persistence across stop/start were also verified locally. Slack and voice still require their own connected-service verification. See [recording notes](docs/demos/README.md) for the demonstrated flows and limits.
 
 This is a single-owner starting point. Shared editing, invitations, file uploads, and interactive page embeds are not included. Schedules are recurring instructions, not a complete goal or event-trigger system. Specialist Dots have separate roles and conversations; multi-Dot group conversations and automatic delegation are further work.
 

@@ -580,6 +580,7 @@ export function App() {
                   )}
                   paused={state.settings.paused}
                   onSaved={refresh}
+                  onComputer={() => setPane(true)}
                   onSchedule={() =>
                     setDialog({ type: 'schedule', threadId: thread.id })
                   }

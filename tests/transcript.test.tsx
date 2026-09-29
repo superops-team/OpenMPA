@@ -29,3 +29,42 @@ it('keeps call receipts between the anchored message and later conversation turn
     html.indexOf('Later message'),
   );
 });
+
+it('renders tool-only assistant messages inline between chat turns without printing tool JSON', () => {
+  const html = renderToStaticMarkup(
+    <ChatTranscript
+      messages={[
+        { id: 'request', role: 'user', content: 'Open the website' },
+        {
+          id: 'tool-call',
+          role: 'assistant',
+          toolCalls: [
+            {
+              id: 'navigate',
+              type: 'function',
+              function: {
+                name: 'computer_navigate',
+                arguments: '{"url":"https://example.com"}',
+              },
+            },
+          ],
+        },
+        { id: 'reply', role: 'assistant', content: 'Here is the summary' },
+      ]}
+      calls={[]}
+      renderTools={(message) =>
+        message.toolCalls?.length ? (
+          <section>Inline computer view</section>
+        ) : null
+      }
+    />,
+  );
+  expect(html.indexOf('Open the website')).toBeLessThan(
+    html.indexOf('Inline computer view'),
+  );
+  expect(html.indexOf('Inline computer view')).toBeLessThan(
+    html.indexOf('Here is the summary'),
+  );
+  expect(html).not.toContain('undefined');
+  expect(html).not.toContain('computer_navigate');
+});
