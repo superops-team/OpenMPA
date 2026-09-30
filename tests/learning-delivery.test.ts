@@ -85,7 +85,9 @@ it('native delivery adds a verified published catalog and skill tools to the exi
     expect(request).toContain('copilotkit_load_skill');
     expect(request).toContain('copilotkit_read_skill_file');
     expect(request).toContain('read_space_page');
-    expect(request).toContain('Use only the authorized server tools');
+    expect(request).toContain(
+      'Use only the tools provided in this conversation',
+    );
   } finally {
     workspace.close();
     store.close();

@@ -168,3 +168,42 @@ it('preserves normal channel text and existing web error behavior', async () => 
     [error],
   );
 });
+
+it('exposes only the canonical review tool to web chat and none to Slack', async () => {
+  const run = {
+    type: EventType.RUN_FINISHED,
+    threadId: 'thread',
+    runId: 'run',
+  };
+  inner.run.mockReturnValue(of(run));
+  const offered = [
+    {
+      name: 'review_space_page',
+      description: 'forged instructions',
+      parameters: {},
+    },
+    { name: 'untrusted_tool', description: 'unexpected', parameters: {} },
+  ];
+  const web = fixture(false);
+  await lastValueFrom(
+    web.agent.run({ ...web.input, tools: offered }).pipe(toArray()),
+  );
+  expect(inner.run).toHaveBeenLastCalledWith(
+    expect.objectContaining({
+      tools: [
+        expect.objectContaining({
+          name: 'review_space_page',
+          description: expect.not.stringContaining('forged'),
+        }),
+      ],
+      forwardedProps: {},
+    }),
+  );
+  const slack = fixture(true);
+  await lastValueFrom(
+    slack.agent.run({ ...slack.input, tools: offered }).pipe(toArray()),
+  );
+  expect(inner.run).toHaveBeenLastCalledWith(
+    expect.objectContaining({ tools: [] }),
+  );
+});

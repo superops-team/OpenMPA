@@ -1,9 +1,49 @@
+import { pageReviewSchema } from '../shared/page-review.js';
 import { Hono } from 'hono';
 import { z } from 'zod';
 import { PageError, pageInput, pagePatch } from './pages.js';
 import type { Platform } from './platform.js';
 export function pageRoutes(platform: Platform) {
   const app = new Hono();
+  app.get('/conversations/:id/reviewed-page/:toolCallId', (c) => {
+    const thread = platform.workspace.requireThread(c.req.param('id'));
+    const receipt = platform.workspace.pages.reviewReceipt(
+      thread.id,
+      c.req.param('toolCallId'),
+    );
+    if (!receipt) return c.json(null);
+    if (!platform.workspace.canAccessSpace(thread.dotId, receipt.spaceId))
+      return c.json(
+        { error: 'This Dot no longer has access to the selected Space.' },
+        403,
+      );
+    return c.json(
+      platform.workspace.pages.get(receipt.spaceId, receipt.pageId),
+    );
+  });
+  app.post('/conversations/:id/reviewed-page', async (c) => {
+    const data = pageReviewSchema
+      .extend({ toolCallId: z.string().min(1).max(200) })
+      .safeParse(await c.req.json());
+    if (!data.success)
+      return c.json({ error: 'Enter a valid page draft.' }, 400);
+    const thread = platform.workspace.requireThread(c.req.param('id'));
+    if (!platform.workspace.canAccessSpace(thread.dotId, data.data.spaceId))
+      return c.json(
+        { error: 'This Dot no longer has access to the selected Space.' },
+        403,
+      );
+    const { spaceId, toolCallId, ...draft } = data.data;
+    return c.json(
+      platform.workspace.pages.createReviewed(
+        spaceId,
+        draft,
+        thread.id,
+        toolCallId,
+      ),
+      201,
+    );
+  });
   app.get('/conversations/:id/page-context', (c) => {
     const thread = platform.workspace.requireThread(c.req.param('id'));
     const dot = platform.workspace.dot(thread.dotId)!;

@@ -158,3 +158,66 @@ it('keeps page routes behind owner authentication and browser origin checks', as
     ).status,
   ).toBe(403);
 });
+
+it('saves reviewed drafts once and rechecks the Dot’s Space access', async () => {
+  const { ws, app } = fixture();
+  const dot = ws.dots()[0];
+  ws.bindThread('review-thread', dot.id, 'Review');
+  const draft = {
+    title: 'Launch brief',
+    content: 'A reviewed draft.',
+    spaceId: dot.spaceId,
+    toolCallId: 'review-1',
+  };
+  const path = '/api/conversations/review-thread/reviewed-page';
+  const first = await app.request(path, request(draft));
+  expect(first.status).toBe(201);
+  const saved = await first.json();
+  const retry = await app.request(path, request(draft));
+  expect((await retry.json()).id).toBe(saved.id);
+  expect(ws.pages.list(dot.spaceId)).toHaveLength(1);
+  const other = ws.createSpace('Other', '');
+  ws.updateDot(dot.id, { ...dot, spaceId: other.id, spaceIds: [other.id] });
+  expect((await app.request(path, request(draft))).status).toBe(403);
+  expect(ws.pages.list(dot.spaceId)).toHaveLength(1);
+});
+
+it('restores review receipts through the owner API with current thread and Space authorization', async () => {
+  const { ws, app } = fixture('owner-secret');
+  const dot = ws.dots()[0];
+  ws.bindThread('review-restore', dot.id, 'Review');
+  const base = '/api/conversations/review-restore/reviewed-page';
+  const headers = { Authorization: 'Bearer owner-secret' };
+  expect((await app.request(`${base}/call`)).status).toBe(401);
+  expect(
+    await (await app.request(`${base}/call`, { headers })).json(),
+  ).toBeNull();
+  const saved = ws.pages.createReviewed(
+    dot.spaceId,
+    { title: 'Saved', content: 'Evidence' },
+    'review-restore',
+    'call',
+  );
+  expect(
+    await (await app.request(`${base}/call`, { headers })).json(),
+  ).toMatchObject({ id: saved.id, spaceId: dot.spaceId });
+  ws.bindThread('other-thread', dot.id, 'Other');
+  expect(
+    await (
+      await app.request('/api/conversations/other-thread/reviewed-page/call', {
+        headers,
+      })
+    ).json(),
+  ).toBeNull();
+  expect(
+    (
+      await app.request(
+        '/api/conversations/missing-thread/reviewed-page/call',
+        { headers },
+      )
+    ).status,
+  ).not.toBe(200);
+  const other = ws.createSpace('Other', '');
+  ws.updateDot(dot.id, { ...dot, spaceId: other.id, spaceIds: [other.id] });
+  expect((await app.request(`${base}/call`, { headers })).status).toBe(403);
+});

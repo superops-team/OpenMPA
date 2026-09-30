@@ -3703,3 +3703,87 @@ h3 {
   white-space: pre-wrap;
   overflow-wrap: anywhere;
 }
+
+.page-review-card {
+  flex: 0 0 auto;
+  width: 100%;
+  border: 1px solid #dfe3df;
+  border-radius: 16px;
+  overflow: hidden;
+  background: #fff;
+  margin: 12px 0;
+}
+.page-review-card header {
+  display: flex;
+  gap: 9px;
+  align-items: center;
+  padding: 14px 18px;
+  border-bottom: 1px solid #edf0ed;
+  font-size: 12px;
+  color: #46574b;
+}
+.page-review-card header span {
+  margin-left: auto;
+  color: #748278;
+  font-size: 11px;
+}
+.page-review-body {
+  padding: 18px 22px;
+  max-height: 310px;
+  overflow: auto;
+  font-size: 13px;
+  line-height: 1.65;
+}
+.page-review-body h3 {
+  font-size: 20px;
+  margin: 0 0 12px;
+  letter-spacing: -0.5px;
+}
+.page-review-body h2 {
+  font-size: 15px;
+  margin: 16px 0 8px;
+}
+.page-review-body p {
+  margin: 8px 0;
+}
+.page-review-card footer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+  padding: 14px 18px;
+  background: #f7f9f7;
+  border-top: 1px solid #edf0ed;
+}
+.page-review-card footer button {
+  display: inline-flex;
+  gap: 6px;
+  align-items: center;
+  padding: 9px 13px;
+  border: 1px solid #dde3df;
+  border-radius: 9px;
+  background: #fff;
+  font-size: 12px;
+  cursor: pointer;
+}
+.page-review-card footer .review-primary {
+  background: #496d61;
+  color: #fff;
+  border-color: #496d61;
+}
+.page-review-card footer small {
+  color: #738078;
+  font-size: 11px;
+}
+.page-review-card button:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+.page-review-card button:focus-visible {
+  outline: 2px solid #697abb;
+  outline-offset: 3px;
+}
+.page-review-card > p {
+  padding: 0 18px;
+  color: #a33e35;
+}

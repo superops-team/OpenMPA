@@ -40,6 +40,9 @@ export class Pages {
     private db: DatabaseSync,
     private spaceExists: (id: string) => boolean,
   ) {
+    db.exec(
+      'CREATE TABLE IF NOT EXISTS page_reviews(threadId TEXT NOT NULL, toolCallId TEXT NOT NULL, pageId TEXT NOT NULL, spaceId TEXT NOT NULL, PRIMARY KEY(threadId,toolCallId))',
+    );
     db.exec(`CREATE TABLE IF NOT EXISTS pages(id TEXT PRIMARY KEY, spaceId TEXT NOT NULL, parentId TEXT, title TEXT NOT NULL, content TEXT NOT NULL, revision INTEGER NOT NULL, createdAt INTEGER NOT NULL, updatedAt INTEGER NOT NULL, sourceThreadId TEXT);
  CREATE TABLE IF NOT EXISTS page_threads(pageId TEXT NOT NULL,dotId TEXT NOT NULL,threadId TEXT NOT NULL UNIQUE,ready INTEGER NOT NULL DEFAULT 0, leaseUntil INTEGER NOT NULL DEFAULT 0, PRIMARY KEY(pageId,dotId));`);
     if (
@@ -110,6 +113,53 @@ export class Pages {
         sourceThreadId,
       );
     return this.get(spaceId, id);
+  }
+  reviewReceipt(
+    threadId: string,
+    toolCallId: string,
+  ): { pageId: string; spaceId: string } | null {
+    const row = this.db
+      .prepare(
+        'SELECT pageId,spaceId FROM page_reviews WHERE threadId=? AND toolCallId=?',
+      )
+      .get(threadId, toolCallId);
+    return row
+      ? { pageId: String(row.pageId), spaceId: String(row.spaceId) }
+      : null;
+  }
+  createReviewed(
+    spaceId: string,
+    input: z.input<typeof pageInput>,
+    threadId: string,
+    toolCallId: string,
+  ): Page {
+    this.db.exec('BEGIN IMMEDIATE');
+    try {
+      const previous = this.db
+        .prepare(
+          'SELECT pageId,spaceId FROM page_reviews WHERE threadId=? AND toolCallId=?',
+        )
+        .get(threadId, toolCallId);
+      if (previous) {
+        if (previous.spaceId !== spaceId)
+          throw new PageError(
+            'This review was already saved to another Space.',
+            409,
+          );
+        const page = this.get(spaceId, String(previous.pageId));
+        this.db.exec('COMMIT');
+        return page;
+      }
+      const page = this.create(spaceId, input, threadId);
+      this.db
+        .prepare('INSERT INTO page_reviews VALUES (?,?,?,?)')
+        .run(threadId, toolCallId, page.id, spaceId);
+      this.db.exec('COMMIT');
+      return page;
+    } catch (error) {
+      this.db.exec('ROLLBACK');
+      throw error;
+    }
   }
   update(spaceId: string, id: string, input: z.input<typeof pagePatch>): Page {
     const parsed = pagePatch.safeParse(input);

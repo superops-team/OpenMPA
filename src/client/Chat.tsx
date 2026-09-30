@@ -1,3 +1,5 @@
+import { PageReviewCard } from './PageReviewCard';
+import { pageReviewSchema, pageReviewTool } from '../shared/page-review';
 import { contextualMessage, type PageContext } from './page-context';
 import { api } from './api';
 import type { Page } from '../server/pages';
@@ -5,6 +7,7 @@ import { useEffect, useRef, useState } from 'react';
 import {
   CopilotChatToolCallsView,
   useRenderTool,
+  useHumanInTheLoop,
   useAgent,
   useCopilotKit,
 } from '@copilotkit/react-core/v2';
@@ -163,6 +166,17 @@ export function Chat({
   useEffect(() => {
     if (paused && voice.status !== 'idle') void voice.end();
   }, [paused]);
+  useHumanInTheLoop(
+    {
+      name: pageReviewTool.name,
+      description: pageReviewTool.description,
+      parameters: pageReviewSchema,
+      render: (props) => (
+        <PageReviewCard {...props} threadId={thread.id} onSaved={onSaved} />
+      ),
+    },
+    [thread.id, onSaved],
+  );
   const computerCalls = agent.messages.flatMap((message) =>
     message.role === 'assistant' ? (message.toolCalls ?? []) : [],
   );
@@ -200,8 +214,10 @@ export function Chat({
       ['user', 'assistant'].includes(message.role) &&
       ((typeof message.content === 'string' && message.content.trim()) ||
         (message.role === 'assistant' &&
-          message.toolCalls?.some((call) =>
-            call.function.name.startsWith('computer_'),
+          message.toolCalls?.some(
+            (call) =>
+              call.function.name.startsWith('computer_') ||
+              call.function.name === pageReviewTool.name,
           ))),
   );
   return (

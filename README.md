@@ -14,9 +14,9 @@ Spaces, specialist agents, and conversations that move between text, calls, and 
 
 ---
 
-![Live specialist conversation](docs/demos/specialist-chat.gif)
+![Ask Scout to browse, review its draft, and save a Space page](docs/demos/chat-to-space.gif)
 
-_A live conversation with Scout, with the updated Dot avatars and separate Dots, Spaces, and recent chats. [Watch the MP4](docs/demos/specialist-chat.mp4)._
+_Ask → browse → approve → save. A live computer view and a human review card appear right in chat, then the approved draft becomes an editable Space page. [Watch the 23-second video](docs/demos/chat-to-space.mp4). Enlarged for readability; idle time is trimmed and playback is accelerated._
 
 ## Overview
 
@@ -47,6 +47,10 @@ See [Computer setup](docs/COMPUTERS.md) to build the pinned services and connect
 ![A Dot browsing and saving notes through natural-language chat](docs/demos/computer-chat.gif)
 
 _Ask Scout to open a website, summarize it, save notes, and verify the file. Every computer action in this demo is requested through chat; CopilotKit tool renderers show the live browser, saved file, and terminal output inline. [Watch the MP4](docs/demos/computer-chat.mp4)._
+
+### Review before saving
+
+Ask a Dot to show a draft before saving it. A CopilotKit human-in-the-loop card pauses the conversation for **Approve & save** or **Decline**. Approval creates the page in an authorized Space and returns a link; retries recover the same saved page. The agent continues after your decision.
 
 ### Text and calls
 
