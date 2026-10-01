@@ -2,7 +2,7 @@
 
 # OpenDots
 
-### Your always-on AI coworkers that move between text, calls, and Slack.
+### Always-on AI coworkers that move between text, calls, and Slack.
 
 **An open-source template for persistent AI agents, each with its own computer. Available on Web and Mobile.**
 
