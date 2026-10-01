@@ -24,7 +24,7 @@ Fully self-hostable. Clone this template and customize it however you want.
 
 <table><tr><td>
 
-https://github.com/user-attachments/assets/15d512d0-9018-4319-a973-bc74d9fd5fd6
+https://github.com/user-attachments/assets/4c74fe7d-ecdd-42dd-95da-5d34f9b9576e
 
 </td></tr></table>
 
