@@ -8,9 +8,7 @@
 
 Built with [CopilotKit](https://github.com/CopilotKit/CopilotKit) and [AG-UI](https://docs.ag-ui.com/introduction).
 
-[Book a meeting with our engineers](https://www.copilotkit.ai/talk-to-an-engineer?ref=opendots_readme)
-
-[Get started](#get-started) · [Overview](#overview) · [Architecture](#architecture) · [Status](#development-status) · [Contributing](CONTRIBUTING.md)
+[Talk to our engineers](https://www.copilotkit.ai/talk-to-an-engineer?ref=opendots_readme) · [Get started](#get-started) · [Overview](#overview) · [Architecture](#architecture) · [Status](#development-status) · [Contributing](CONTRIBUTING.md)
 
 </div>
 
