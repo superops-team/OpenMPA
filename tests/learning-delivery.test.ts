@@ -5,15 +5,21 @@ import {
   CopilotKitIntelligence,
   LearnedSkillsError,
 } from '@copilotkit/runtime/v2';
-import type { RunAgentInput } from '@ag-ui/core';
+import { EventType, type RunAgentInput } from '@ag-ui/core';
 import { lastValueFrom, toArray } from 'rxjs';
+import { chat } from '@tanstack/ai';
 import { DotAgent } from '../src/server/dot-agent.js';
+import { completion } from './fixtures/model-stream.js';
 import { Store } from '../src/server/store.js';
 import { WorkspaceStore } from '../src/server/workspace.js';
 
-afterEach(() => vi.restoreAllMocks());
+vi.mock('@tanstack/ai', { spy: true });
+afterEach(() => {
+  vi.restoreAllMocks();
+  vi.clearAllMocks();
+});
 
-it('native delivery adds a verified published catalog and skill tools to the existing model request', async () => {
+it('TanStack AI streams with the verified skill catalog and authorized server tools', async () => {
   const store = new Store(':memory:');
   const workspace = new WorkspaceStore(':memory:', 'owner');
   try {
@@ -42,12 +48,29 @@ it('native delivery adds a verified published catalog and skill tools to the exi
     ]);
     const network = vi
       .spyOn(globalThis, 'fetch')
-      .mockResolvedValue(
-        new Response(
-          `data: ${JSON.stringify({ id: 'fixture', object: 'chat.completion.chunk', created: 1, model: 'fixture', choices: [{ index: 0, delta: { role: 'assistant', content: 'Ready to review evidence.' }, finish_reason: null }] })}\n\n` +
-            `data: ${JSON.stringify({ id: 'fixture', object: 'chat.completion.chunk', created: 1, model: 'fixture', choices: [{ index: 0, delta: {}, finish_reason: 'stop' }] })}\n\ndata: [DONE]\n\n`,
-          { headers: { 'Content-Type': 'text/event-stream' } },
+      .mockResolvedValueOnce(
+        completion(
+          {
+            role: 'assistant',
+            tool_calls: [
+              {
+                index: 0,
+                id: 'load-skill',
+                type: 'function',
+                function: {
+                  name: 'copilotkit_load_skill',
+                  arguments: JSON.stringify({
+                    skill_name: 'research/evidence-review',
+                  }),
+                },
+              },
+            ],
+          },
+          'tool_calls',
         ),
+      )
+      .mockResolvedValueOnce(
+        completion({ role: 'assistant', content: 'Ready to review evidence.' }),
       );
     const agent = new DotAgent(
       store,
@@ -79,7 +102,17 @@ it('native delivery adds a verified published catalog and skill tools to the exi
         .pipe(toArray()),
     );
     expect(JSON.stringify(events)).toContain('Ready to review evidence.');
-    expect(network).toHaveBeenCalledTimes(1);
+    expect(chat).toHaveBeenCalledTimes(1);
+    expect(network).toHaveBeenCalledTimes(2);
+    expect(events).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          type: EventType.TOOL_CALL_RESULT,
+          toolCallId: 'load-skill',
+          content: expect.stringContaining('evidence-review'),
+        }),
+      ]),
+    );
     const request = String(network.mock.calls[0][1]?.body);
     expect(request).toContain('evidence-review');
     expect(request).toContain('copilotkit_load_skill');

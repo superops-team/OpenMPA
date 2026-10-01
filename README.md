@@ -122,7 +122,7 @@ Bring your agents into Slack with [Channels SDK](https://github.com/CopilotKit/c
 
 [AG-UI](https://docs.ag-ui.com/introduction) carries streamed messages, tool calls, and agent state between the backend and CopilotKit components. Computer activity appears inline as the agent works; human-in-the-loop cards pause a tool call for your decision before it continues.
 
-The template uses CopilotKit's React SDK and runtime, Intelligence for durable Threads, and Channels SDK for Slack. Pages, application metadata, and background-work state are stored separately from conversation history.
+The template uses TanStack AI for model streaming and server-tool execution, CopilotKit's React SDK and runtime, Intelligence for durable Threads, and Channels SDK for Slack. Pages, application metadata, and background-work state are stored separately from conversation history.
 
 ```mermaid
 flowchart TB
@@ -131,6 +131,8 @@ flowchart TB
   Managed <--> Channels[Channels SDK]
   Channels --> Agents[Specialist compute agents]
   Runtime --> Agents
+  Agents --> AI[TanStack AI]
+  AI --> Provider[OpenAI-compatible model provider]
   Runtime <--> Intelligence["Intelligence / Threads"]
   Channels <--> Intelligence
   Web <--> Speech[Realtime speech]

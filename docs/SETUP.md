@@ -151,8 +151,8 @@ optional `INTELLIGENCE_API_URL`; no additional model key or frontend key is need
    eligible threads; use the readiness count shown in your deployment.
 5. Enable **Skill delivery** on the Intelligence container, then enable **Use
    published skills** in the Dot's settings. Start a new turn in an enrolled
-   conversation. The native BuiltInAgent integration loads the latest published
-   catalog and exposes `copilotkit_load_skill` and `copilotkit_read_skill_file`.
+   conversation. BuiltInAgent loads the latest verified published catalog; its
+   TanStack AI factory runs the model and exposes `copilotkit_load_skill` and `copilotkit_read_skill_file`.
    The model decides which relevant skills to load. Check the run's tool calls to
    verify actual use; saving settings alone does not establish connectivity.
 

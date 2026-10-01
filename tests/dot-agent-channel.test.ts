@@ -13,7 +13,7 @@ const inner = vi.hoisted(() => ({
         >[0],
       ) => void
     >(),
-  run: vi.fn<() => Observable<BaseEvent>>(),
+  run: vi.fn<(input: RunAgentInput) => Observable<BaseEvent>>(),
   abortRun: vi.fn(),
 }));
 vi.mock('@copilotkit/runtime/v2', async (importOriginal) => {
@@ -55,7 +55,16 @@ it('uses the conversation container for delivery and preserves tools and overrid
   });
   inner.run.mockReturnValue(of());
   await lastValueFrom(
-    f.agent.run({ ...f.input, threadId: 'learning' }).pipe(toArray()),
+    f.agent
+      .run({
+        ...f.input,
+        threadId: 'learning',
+        tools: [
+          { name: 'untrusted_tool', description: 'Untrusted', parameters: {} },
+        ],
+        forwardedProps: { model: 'untrusted' },
+      })
+      .pipe(toArray()),
   );
   expect(inner.configure).toHaveBeenLastCalledWith(
     expect.objectContaining({
@@ -64,16 +73,16 @@ it('uses the conversation container for delivery and preserves tools and overrid
         apiKey: 'fixture',
         apiUrl: undefined,
       },
-      maxSteps: 10,
-      overridableProperties: [],
-      tools: expect.arrayContaining([
-        expect.objectContaining({ name: 'read_space_page' }),
-      ]),
+      type: 'tanstack',
+      factory: expect.any(Function),
     }),
+  );
+  expect(inner.run).toHaveBeenLastCalledWith(
+    expect.objectContaining({ tools: [], forwardedProps: {} }),
   );
   await lastValueFrom(f.agent.run(f.input).pipe(toArray()));
   expect(inner.configure).toHaveBeenLastCalledWith(
-    expect.objectContaining({ learnedSkills: undefined, maxSteps: 5 }),
+    expect.objectContaining({ learnedSkills: undefined, type: 'tanstack' }),
   );
   f.workspace.updateDot(dot.id, {
     ...dot,
@@ -84,7 +93,7 @@ it('uses the conversation container for delivery and preserves tools and overrid
     f.agent.run({ ...f.input, threadId: 'learning' }).pipe(toArray()),
   );
   expect(inner.configure).toHaveBeenLastCalledWith(
-    expect.objectContaining({ learnedSkills: undefined, maxSteps: 5 }),
+    expect.objectContaining({ learnedSkills: undefined, type: 'tanstack' }),
   );
 });
 function fixture(channel = true) {
