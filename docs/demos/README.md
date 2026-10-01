@@ -47,7 +47,15 @@ The final recording was captured after correcting host-to-supervisor networking 
 - A saved workspace file retained identical contents across a stop/start (checked separately from the recording).
 - Browser work resumed after restart using a fresh snapshot.
 
-Slack and realtime calls are not demonstrated. Their service configuration and live checks remain separate.
+Slack is not demonstrated. Spoken compute delegation and full interruption behavior still need dedicated live checks.
+
+## Voice call UI test
+
+[Voice call](voice-call.mp4) (15 seconds) is a silent screen capture of a real browser WebRTC call using `gpt-realtime-2.1`. It shows connection, elapsed time, separate user and Dot captions, microphone and speaker mute, minimize/expand, hang-up, and the saved receipt. The microphone was muted during the controls sequence; the visible spoken input and replies came from the live session. Capture uses two screenshots per second; waiting time is trimmed and playback is accelerated to 1.25×. The clip is not a latency benchmark and does not contain recorded audio.
+
+Live checks on September 30, 2026 confirmed two-way microphone/audio in an earlier mic check, live captions, working controls, clean provider hang-up, and a saved transcript with no call error. The final receipt and assistant summary survived a reload in the same Intelligence thread. A separate real server turn verified the Node-compatible Intelligence agent used for receipt sync and compute; spoken `ask_compute` delegation was not demonstrated in this clip.
+
+Calls stop microphone transmission and pause output immediately when ending, then release the WebRTC peer after the server hang-up request. Captions and callbacks from an ended session cannot update a later call. Keys stay server-side and are not included in recordings.
 
 ## Re-recording
 

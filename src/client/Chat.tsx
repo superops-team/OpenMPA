@@ -25,10 +25,11 @@ import {
   ComputerToolCard,
   type ComputerToolRenderProps,
 } from './ComputerToolCard';
-import { ChatTranscript } from './ChatTranscript';
+import { ChatTranscript, isInternalVoiceReceipt } from './ChatTranscript';
 import type { CallReceipt, Conversation, Dot } from '../shared/types';
 import { Mascot } from './Mascot';
 import { useVoice } from './useVoice';
+import { CallView } from './CallView';
 export function Chat({
   thread,
   dot,
@@ -211,6 +212,7 @@ export function Chat({
   );
   const visible = agent.messages.filter(
     (message) =>
+      !isInternalVoiceReceipt(message) &&
       ['user', 'assistant'].includes(message.role) &&
       ((typeof message.content === 'string' && message.content.trim()) ||
         (message.role === 'assistant' &&
@@ -362,22 +364,11 @@ export function Chat({
           )}
         </div>
       )}
-      {voice.status !== 'idle' && (
-        <div className="voice-strip">
-          <span className="voice-pulse" />
-          {voice.status === 'active'
-            ? 'On a call · compute uses this conversation'
-            : voice.status === 'connecting'
-              ? 'Connecting your microphone…'
-              : 'Saving call receipt…'}
-          <button
-            onClick={() => void voice.end()}
-            disabled={voice.status === 'ending'}
-          >
-            End call
-          </button>
-        </div>
-      )}
+      <CallView
+        key={voice.status === 'idle' ? 'idle' : 'call'}
+        dot={dot}
+        voice={voice}
+      />
       <form
         className="chat-composer"
         onSubmit={(e) => {

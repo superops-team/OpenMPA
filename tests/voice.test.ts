@@ -83,6 +83,12 @@ it('binds voice history and compute to the existing thread, deduplicates tools a
     ),
   ).toBe(true);
   expect(f.workspace.call(call.id).status).toBe('ended');
+  expect(f.turn).toHaveBeenLastCalledWith(
+    'thread',
+    expect.stringContaining('Record a short call receipt'),
+    expect.any(AbortSignal),
+    { opendotsSource: 'voice_receipt' },
+  );
   await expect(f.voice.compute(call.id, 'late', 'Research')).rejects.toThrow(
     'ended',
   );
@@ -181,4 +187,64 @@ it('defers paused transcript synchronization and resumes it once without a dupli
   await f.voice.resumePending();
   expect(f.turn).toHaveBeenCalledTimes(1);
   expect(f.workspace.call(call.id).status).toBe('failed');
+});
+
+it('reports rejected provider hangup status without exposing its response body', async () => {
+  const f = fixture();
+  const call = await f.voice.begin(
+    'thread',
+    offer,
+    new AbortController().signal,
+  );
+  f.transport.mockResolvedValueOnce(
+    new Response('sensitive provider details', { status: 409 }),
+  );
+  const ended = await f.voice.end(call.id, 'Confirmed discussion');
+  expect(ended.status).toBe('ended');
+  expect(ended.error).toContain('HTTP 409');
+  expect(ended.error).not.toContain('sensitive provider details');
+});
+it('reports transport hangup failures without exposing transport errors', async () => {
+  const f = fixture();
+  const call = await f.voice.begin(
+    'thread',
+    offer,
+    new AbortController().signal,
+  );
+  f.transport.mockRejectedValueOnce(new Error('sensitive transport details'));
+  const ended = await f.voice.end(call.id, 'Confirmed discussion');
+  expect(ended.error).toBe(
+    'The local call stopped, but provider hangup failed (Error).',
+  );
+});
+
+it('distinguishes provider hangup timeout from transport failure', async () => {
+  const f = fixture();
+  const call = await f.voice.begin(
+    'thread',
+    offer,
+    new AbortController().signal,
+  );
+  f.transport.mockRejectedValueOnce(
+    new DOMException('sensitive timeout details', 'TimeoutError'),
+  );
+  const ended = await f.voice.end(call.id, 'Confirmed discussion');
+  expect(ended.error).toBe(
+    'The local call stopped, but provider hangup timed out.',
+  );
+});
+it('sanitizes custom provider transport error names', async () => {
+  const f = fixture();
+  const call = await f.voice.begin(
+    'thread',
+    offer,
+    new AbortController().signal,
+  );
+  const error = new Error('sensitive transport details');
+  error.name = 'sensitive provider identifier';
+  f.transport.mockRejectedValueOnce(error);
+  const ended = await f.voice.end(call.id, 'Confirmed discussion');
+  expect(ended.error).toBe(
+    'The local call stopped, but provider hangup failed (transport error).',
+  );
 });

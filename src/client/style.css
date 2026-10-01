@@ -3787,3 +3787,209 @@ h3 {
   padding: 0 18px;
   color: #a33e35;
 }
+
+/* A focused voice surface, with chat one click away. */
+.call-view {
+  position: fixed;
+  z-index: 60;
+  inset: 20px 20px 20px max(290px, calc((100vw - 1040px) / 2));
+  border-radius: 24px;
+  background: radial-gradient(
+    ellipse at 50% 20%,
+    #367a70 0%,
+    #1c544c 48%,
+    #133d37 100%
+  );
+  color: #fff;
+  display: flex;
+  align-items: center;
+  flex-direction: column;
+  padding: 24px 32px;
+  box-shadow: 0 24px 80px #153e3b30;
+  overflow: auto;
+}
+.call-heading {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 12px;
+  color: #d0e7e0;
+}
+.call-heading > span {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.call-live-dot {
+  width: 6px;
+  height: 6px;
+  background: #abf1d5;
+  border-radius: 50%;
+}
+.call-view .call-minimize {
+  background: #ffffff12;
+  color: white;
+  border-color: #ffffff20;
+  padding: 10px;
+  border-radius: 50%;
+}
+.call-persona {
+  display: flex;
+  align-items: center;
+  flex-direction: column;
+  margin-top: clamp(20px, 8vh, 90px);
+}
+.call-persona .mascot {
+  width: 154px;
+  height: 154px;
+  filter: drop-shadow(0 15px 22px #0b29252a);
+}
+.call-persona h2 {
+  font-size: 24px;
+  font-weight: 550;
+  margin: 18px 0 14px;
+}
+.call-timer {
+  font-variant-numeric: tabular-nums;
+  font-size: 20px;
+  color: #c9e8dd;
+}
+.call-persona p {
+  font-size: 13px;
+  color: #c9e8dd;
+  margin: 12px 0;
+}
+.call-persona.speaking .mascot {
+  animation: call-breathe 1.5s ease-in-out infinite;
+}
+@keyframes call-breathe {
+  50% {
+    transform: scale(1.06) translateY(-4px);
+  }
+}
+.call-caption {
+  flex: 1;
+  width: min(480px, 100%);
+  padding: 28px 0;
+  font-size: 18px;
+  line-height: 1.6;
+  text-align: center;
+  color: #e7f5ef;
+  overflow-y: auto;
+  min-height: 80px;
+}
+.call-controls {
+  display: flex;
+  gap: 28px;
+  justify-content: center;
+  padding-top: 20px;
+}
+.call-controls button {
+  display: flex;
+  flex-direction: column;
+  color: #fff;
+  background: transparent;
+  padding: 0;
+  border: 0;
+  gap: 10px;
+}
+.call-controls button:hover:not(:disabled) {
+  background: transparent;
+}
+.call-controls button > span {
+  width: 58px;
+  height: 58px;
+  display: grid;
+  place-items: center;
+  background: #ffffff18;
+  border: 1px solid #ffffff18;
+  border-radius: 50%;
+}
+.call-controls button:hover:not(:disabled) > span {
+  background: #ffffff28;
+}
+.call-controls button[aria-pressed='true'] > span {
+  background: #e0f4eb;
+  color: #194d42;
+}
+.call-controls .call-end > span {
+  background: #da5636;
+  border-color: #da5636;
+}
+.call-controls .call-end:hover:not(:disabled) > span {
+  background: #c84628;
+}
+.call-controls small {
+  font-size: 12px;
+}
+.call-footer {
+  font-size: 11px;
+  color: #b3d2c8;
+  margin: 26px 0 4px;
+}
+.call-warning {
+  font-size: 12px;
+  max-width: 440px;
+  text-align: center;
+  color: #ffddcb;
+}
+.call-view.minimized {
+  inset: auto 24px 110px auto;
+  width: 300px;
+  padding: 16px;
+  border-radius: 18px;
+}
+.call-view.minimized .call-persona {
+  margin-top: 10px;
+}
+.call-view.minimized .call-persona .mascot {
+  width: 52px;
+  height: 52px;
+}
+.call-view.minimized .call-persona h2 {
+  margin: 4px 0;
+  font-size: 15px;
+}
+.call-view.minimized .call-timer {
+  font-size: 14px;
+}
+.call-view.minimized .call-persona p {
+  margin: 6px 0;
+}
+.call-view.minimized .call-controls {
+  padding-top: 8px;
+  gap: 20px;
+}
+.call-view.minimized .call-controls button > span {
+  width: 40px;
+  height: 40px;
+}
+@media (max-width: 760px) {
+  .call-view {
+    inset: 8px;
+    padding: 18px 24px;
+  }
+  .call-view.minimized {
+    inset: auto 12px 100px auto;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .call-persona.speaking .mascot {
+    animation: none;
+  }
+}
+.call-caption p {
+  margin: 0 0 20px;
+}
+.call-caption small {
+  display: block;
+  color: #b3d2c8;
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  margin-bottom: 6px;
+}
+.call-caption .call-user-caption {
+  font-size: 14px;
+  color: #c9e8dd;
+}

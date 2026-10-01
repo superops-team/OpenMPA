@@ -1,6 +1,10 @@
 import { expect, it } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { ChatTranscript } from '../src/client/ChatTranscript';
+import {
+  ChatTranscript,
+  isInternalVoiceReceipt,
+} from '../src/client/ChatTranscript';
+import type { Message } from '@ag-ui/core';
 it('keeps call receipts between the anchored message and later conversation turns', () => {
   const html = renderToStaticMarkup(
     <ChatTranscript
@@ -67,4 +71,46 @@ it('renders tool-only assistant messages inline between chat turns without print
   );
   expect(html).not.toContain('undefined');
   expect(html).not.toContain('computer_navigate');
+});
+
+it('hides only marked receipt prompts while retaining summaries and prior unmarked messages', () => {
+  const messages: Message[] = [
+    { id: 'legacy', role: 'user', content: 'Earlier unmarked receipt prompt' },
+    {
+      id: 'internal',
+      role: 'user',
+      content: 'Internal sync instructions',
+      metadata: { opendotsSource: 'voice_receipt' },
+    },
+    {
+      id: 'opendots:voice_receipt:durable',
+      role: 'user',
+      content: 'Persisted internal instructions without metadata',
+    },
+    {
+      id: 'summary',
+      role: 'assistant',
+      content: 'Confirmed call summary',
+      metadata: { opendotsSource: 'voice_receipt' },
+    },
+    {
+      id: 'user',
+      role: 'user',
+      content: 'My next question',
+      metadata: { opendotsSource: 'voice_compute' },
+    },
+  ];
+  const html = renderToStaticMarkup(
+    <ChatTranscript
+      messages={messages.filter((message) => !isInternalVoiceReceipt(message))}
+      calls={[]}
+    />,
+  );
+  expect(html).not.toContain('Internal sync instructions');
+  expect(html).not.toContain(
+    'Persisted internal instructions without metadata',
+  );
+  expect(html).toContain('Earlier unmarked receipt prompt');
+  expect(html).toContain('Confirmed call summary');
+  expect(html).toContain('My next question');
 });

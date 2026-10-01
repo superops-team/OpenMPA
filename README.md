@@ -2,11 +2,13 @@
 
 # OpenDots
 
-### A little dot. A lot off your plate.
+### Your always-on AI coworkers that move between text, calls, and Slack.
 
-**An open-source template for persistent AI coworkers.**
+**An open-source template for always-on AI coworkers, each with its own computer.**
 
-Spaces, specialist agents, and conversations that move between text, calls, and Slack.
+Built with [CopilotKit](https://github.com/CopilotKit/CopilotKit) and [AG-UI](https://docs.ag-ui.com/introduction).
+
+[Book a meeting with our engineers](https://www.copilotkit.ai/talk-to-an-engineer?ref=opendots_readme)
 
 [Get started](#get-started) · [Overview](#overview) · [Architecture](#architecture) · [Status](#development-status) · [Contributing](CONTRIBUTING.md)
 
@@ -14,7 +16,7 @@ Spaces, specialist agents, and conversations that move between text, calls, and 
 
 ---
 
-![Ask Scout to browse, review its draft, and save a Space page](docs/demos/chat-to-space.gif)
+[![▶ Watch: chat → computer → human review → Space page (23 seconds)](docs/demos/chat-to-space-poster.jpg)](docs/demos/chat-to-space.mp4)
 
 _Ask → browse → approve → save. A live computer view and a human review card appear right in chat, then the approved draft becomes an editable Space page. [Watch the 23-second video](docs/demos/chat-to-space.mp4). Enlarged for readability; idle time is trimmed and playback is accelerated._
 
@@ -30,7 +32,7 @@ A Space is a home for working documents. Dots appear separately in navigation an
 
 Pages stay in the local workspace database. Their conversations use CopilotKit Threads, with a separate conversation for each page and specialist. Page links connect the document workspace to Dot chat. Manual editing works before you configure conversation services. Autosave reports its progress, failed saves retain your draft, and revision checks prevent stale edits from overwriting newer content. Markdown source mode remains available.
 
-![Navigate Spaces and ask a specialist about a page](docs/demos/spaces-page-chat.gif)
+[![▶ Watch: Spaces and page chat](docs/demos/spaces-page-chat-poster.jpg)](docs/demos/spaces-page-chat.mp4)
 
 _Open a Space, navigate to its launch brief, ask Scout about the saved page, and continue in Dot chat. This recording uses live page chat and example launch content. [Watch the MP4](docs/demos/spaces-page-chat.mp4)._
 
@@ -44,7 +46,7 @@ Each Dot can have its own computer, using [OpenBot](https://github.com/CopilotKi
 
 See [Computer setup](docs/COMPUTERS.md) to build the pinned services and connect your deployment. Computer tools require those services; an unconfigured template does not execute commands on your host.
 
-![A Dot browsing and saving notes through natural-language chat](docs/demos/computer-chat.gif)
+[![▶ Watch: computer use through natural-language chat](docs/demos/computer-chat-poster.jpg)](docs/demos/computer-chat.mp4)
 
 _Ask Scout to open a website, summarize it, save notes, and verify the file. Every computer action in this demo is requested through chat; CopilotKit tool renderers show the live browser, saved file, and terminal output inline. [Watch the MP4](docs/demos/computer-chat.mp4)._
 
@@ -56,7 +58,11 @@ Ask a Dot to show a draft before saving it. A CopilotKit human-in-the-loop card 
 
 A continuous conversation keeps the Dot's avatar and status above the messages, with text and call controls close at hand. Work updates, source links, and call receipts appear in the timeline; a side panel shows results or the agent's computer.
 
-Calls pair realtime speech with a separate compute agent, so the conversation can continue while longer work runs. Both use the same conversation context and tool permissions. Voice needs separate provider configuration.
+Calls pair realtime speech with a separate compute agent, so the conversation can continue while longer work runs. Both use the same conversation context and tool permissions. The call screen includes a live timer, separate user and Dot captions, microphone mute, speaker mute, and a minimized view for continuing in chat. Voice needs separate provider configuration.
+
+[![▶ Watch: a live Dot call, captions, and call controls (15 seconds)](docs/demos/voice-call-poster.jpg)](docs/demos/voice-call.mp4)
+
+_Connect, talk, mute, minimize, and return to chat. [Watch the 15-second UI test](docs/demos/voice-call.mp4). This is a silent screen capture of a real call, with waiting time trimmed and playback accelerated._
 
 ### Slack
 
@@ -64,11 +70,15 @@ Mention a Dot through a managed Slack connection using Channels SDK, then contin
 
 ## Architecture
 
+### AG-UI connects the agent to the interface
+
+[AG-UI](https://docs.ag-ui.com/introduction) carries streamed messages, tool calls, and agent state between the backend and CopilotKit components. Computer activity appears inline as the agent works; human-in-the-loop cards pause a tool call for your decision before it continues.
+
 The template uses CopilotKit's React SDK and runtime, Intelligence for durable Threads, and Channels SDK for Slack. Pages, application metadata, and background-work state are stored separately from conversation history.
 
 ```mermaid
 flowchart TB
-  Web["Web app: pages, Spaces, Dots, chat"] --> Runtime[CopilotKit runtime]
+  Web["Web app: pages, Spaces, Dots, chat"] -->|AG-UI| Runtime[CopilotKit runtime]
   Slack[Slack] <--> Managed[Managed channel connection]
   Managed <--> Channels[Channels SDK]
   Channels --> Agents[Specialist compute agents]
@@ -119,7 +129,7 @@ See [Setup](docs/SETUP.md) for configuration, Slack, calls, the browser service,
 | Memory                     | User-managed preferences that permitted Dots can use                                              |
 | Deployment                 | Local Node setup and separate application/browser containers                                      |
 
-Local checks cover setup, persistence, permissions, SDK failure handling, and browser isolation. Automated tests use service fixtures. **Live Intelligence, model responses, and page-context chat were verified on September 29, 2026.** Live OpenBot computer browsing, file creation, shell verification, and file persistence across stop/start were also verified locally. Slack and voice still require their own connected-service verification. See [recording notes](docs/demos/README.md) for the demonstrated flows and limits.
+Local checks cover setup, persistence, permissions, SDK failure handling, and browser isolation. Automated tests use service fixtures. **Live Intelligence, model responses, and page-context chat were verified on September 29, 2026.** Live OpenBot computer browsing, file creation, shell verification, and file persistence across stop/start were also verified locally. Live Realtime speech, call controls, and receipt persistence were verified locally on September 30, 2026. Slack and spoken compute delegation still need connected-service verification. See [recording notes](docs/demos/README.md) for the demonstrated flows and limits.
 
 This is a single-owner starting point. Shared editing, invitations, file uploads, and interactive page embeds are not included. Schedules are recurring instructions, not a complete goal or event-trigger system. Specialist Dots have separate roles and conversations; multi-Dot group conversations and automatic delegation are further work.
 
@@ -137,6 +147,7 @@ See [Contributing](CONTRIBUTING.md) for development guidance and [Security](SECU
 
 ## References
 
+- [AG-UI documentation](https://docs.ag-ui.com/introduction)
 - [CopilotKit documentation](https://docs.copilotkit.ai/intelligence/overview)
 - [Channels SDK](https://github.com/CopilotKit/channels-sdk)
 - [OpenMuse](https://github.com/CopilotKit/OpenMuse)

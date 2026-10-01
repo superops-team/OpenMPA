@@ -179,6 +179,7 @@ export class Platform {
     threadId: string,
     prompt: string,
     signal: AbortSignal,
+    metadata?: Record<string, unknown>,
   ): Promise<string> {
     this.requireReady();
     const thread = this.workspace.requireThread(threadId);
@@ -191,6 +192,7 @@ export class Platform {
       threadId,
       prompt,
       signal,
+      metadata,
     );
   }
 }

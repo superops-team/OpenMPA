@@ -4,6 +4,19 @@ import { PhoneOff } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import type { AssistantMessage, Message } from '@ag-ui/core';
 import type { CallReceipt } from '../shared/types';
+import { voiceReceiptMessagePrefix } from '../shared/voice-receipt';
+// These markers only control rendering; they do not confer trust or permissions.
+export function isInternalVoiceReceipt(message: Message): boolean {
+  const metadata = message.metadata;
+  return (
+    message.role === 'user' &&
+    (message.id.startsWith(voiceReceiptMessagePrefix) ||
+      (!!metadata &&
+        typeof metadata === 'object' &&
+        'opendotsSource' in metadata &&
+        metadata.opendotsSource === 'voice_receipt'))
+  );
+}
 function Receipt({ call }: { call: CallReceipt }) {
   return (
     <div className="call-receipt">
