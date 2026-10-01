@@ -6,7 +6,7 @@
 
 **An open-source template for persistent AI agents, each with its own computer. Available on Web and Mobile.**
 
-Built with [CopilotKit](https://github.com/CopilotKit/CopilotKit) and [AG-UI](https://docs.ag-ui.com/introduction). · [Get started](#get-started) · [Overview](#overview) · [Architecture](#architecture) · [Status](#development-status) · [Contributing](CONTRIBUTING.md)
+Built with [CopilotKit](https://github.com/CopilotKit/CopilotKit) and [AG-UI](https://docs.ag-ui.com/introduction). · [Get started](#get-started) · [Overview](#overview) · [Architecture](#architecture) · [Features](#features) · [Contributing](CONTRIBUTING.md)
 
 [![CI](https://github.com/CopilotKit/OpenDots/actions/workflows/ci.yml/badge.svg)](https://github.com/CopilotKit/OpenDots/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](./LICENSE)
@@ -36,7 +36,7 @@ _Ask → browse → approve → save. A live computer view and a human review ca
 
 OpenDots is a starting point for building your own agent workspace. Clone it, define your Dots, connect your services, and adapt the interface and tools to your needs.
 
-**A template, not a hosted product.** You run the application and configure its infrastructure. The template is in early development; the status table below distinguishes local verification from connected-service testing.
+**A template, not a hosted product.** You run the application and configure its infrastructure. The template is in early development; the Features section below describes what's included and distinguishes local verification from connected-service testing.
 
 ### Spaces
 
@@ -164,22 +164,25 @@ Open **http://127.0.0.1:5173**. You can create Spaces, write pages, and configur
 
 See [Setup](docs/SETUP.md) for configuration, Slack, calls, the browser service, and Docker.
 
-## Development status
+## Features
 
-| Area                       | Included                                                                                          |
-| -------------------------- | ------------------------------------------------------------------------------------------------- |
-| Spaces and Specialist Dots | Saved names, role instructions, and per-Dot research and memory permissions                       |
-| Pages                      | Searchable library, visual editor, slash commands, autosave, and revision checks                  |
-| Conversations              | React SDK chat and Threads integration, page-specific conversations, and source links             |
-| Slack                      | Managed Channels SDK declaration with workspace and user allowlists                               |
-| Calls                      | WebRTC speech, delegated compute, bounded sessions, hangup, and timeline receipts                 |
-| Background work            | Scheduled server-side turns in their original conversation, with pause and retry controls         |
-| Browser                    | Separate read-only public-page service with page capture and navigation limits                    |
-| Dot computers              | Per-Dot browser profiles, files, shell, takeover, permissions, and action records through OpenBot |
-| Memory                     | User-managed preferences that permitted Dots can use                                              |
-| Deployment                 | Local Node setup and separate application/browser containers                                      |
+| Area                       | Included                                                                                                                                |
+| -------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
+| Spaces and Specialist Dots | Saved names, role instructions, and per-Dot research and memory permissions                                                             |
+| Pages                      | Searchable library, visual editor, slash commands, autosave, and revision checks                                                        |
+| Conversations              | React SDK chat and Threads integration, page-specific conversations, and source links                                                   |
+| Slack                      | Managed Channels SDK declaration with workspace and user allowlists                                                                     |
+| Calls                      | WebRTC speech, delegated compute, bounded sessions, hangup, and timeline receipts                                                       |
+| Background work            | Scheduled server-side turns in their original conversation, with pause and retry controls                                               |
+| Browser                    | Separate read-only public-page service with page capture and navigation limits                                                          |
+| Dot computers              | Per-Dot browser profiles, files, shell, takeover, permissions, and action records through OpenBot                                       |
+| Memory                     | User-managed preferences that permitted Dots can use                                                                                    |
+| Automatic Learning         | Per-Dot Learning containers, conversation evidence routing, and published-skill delivery; see [setup](docs/SETUP.md#automatic-learning) |
+| Deployment                 | Local Node setup and separate application/browser containers                                                                            |
 
 Local checks cover setup, persistence, permissions, SDK failure handling, and browser isolation. Automated tests use service fixtures. **Live Intelligence, model responses, and page-context chat were verified on September 29, 2026.** Live OpenBot computer browsing, file creation, shell verification, and file persistence across stop/start were also verified locally. Live Realtime speech, call controls, and receipt persistence were verified locally on September 30, 2026. Slack and spoken compute delegation still need connected-service verification. See [recording notes](docs/demos/README.md) for the demonstrated flows and limits.
+
+Automatic Learning routing and skill delivery are configured locally. Cloud schedules, eligible-thread counts, and published-skill delivery still need connected-service verification. Skills require review and publication in Intelligence; existing conversations without a container are not enrolled retroactively.
 
 This is a single-owner starting point. Shared editing, invitations, file uploads, and interactive page embeds are not included. Schedules are recurring instructions, not a complete goal or event-trigger system. Specialist Dots have separate roles and conversations; multi-Dot group conversations and automatic delegation are further work.
 
