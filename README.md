@@ -12,6 +12,8 @@ Built with [CopilotKit](https://github.com/CopilotKit/CopilotKit) and [AG-UI](ht
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](./LICENSE)
 ![Alpha](https://img.shields.io/badge/status-alpha-orange.svg)
 
+<a href="https://trendshift.io/repositories/275323" target="_blank"><img src="https://trendshift.io/api/badge/trendshift/repositories/275323/daily?language=TypeScript" alt="CopilotKit/OpenDots | Trendshift #2 TypeScript Repository Of The Day" width="250" height="55"/></a>
+
 Fully self-hostable. Clone this template and customize it however you want.
 
 [**Building on OpenDots? Meet with the CopilotKit team →**](https://www.copilotkit.ai/talk-to-an-engineer?ref=opendots_readme)
