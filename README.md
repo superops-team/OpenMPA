@@ -160,7 +160,18 @@ cp .env.example .env
 npm run dev
 ```
 
-Open **http://127.0.0.1:5173**. You can create Spaces, write pages, and configure Dots before connecting services. Add your conversation and model settings to `.env` to start chatting.
+Open **http://127.0.0.1:5173**. You can create Spaces, write pages, and configure Dots before connecting services. To start chatting, connect an Intelligence project and a model.
+
+Sign in to CopilotKit and select or create the Intelligence project. Run these commands in the `OpenDots` folder:
+
+```sh
+npx copilotkit@latest login
+npx copilotkit@latest project select
+```
+
+`project select` writes a project key to `.env` as `CPK_INTELLIGENCE_API_KEY`. Then add `OPENAI_API_KEY` and `OPENAI_MODEL` to `.env` and restart `npm run dev`.
+
+Do not run `copilotkit onboard` in this folder. OpenDots already contains its CopilotKit integration, and onboarding adds a second, generic one.
 
 See [Setup](docs/SETUP.md) for configuration, Slack, calls, the browser service, and Docker.
 
