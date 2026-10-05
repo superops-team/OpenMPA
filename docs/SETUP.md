@@ -25,6 +25,17 @@ Open http://127.0.0.1:4310. Keep the server running for background work.
 
 ## Conversation services
 
+OpenDots stores conversations in a CopilotKit Intelligence project. To get the project key, run these commands in the OpenDots folder after `cp .env.example .env`:
+
+```sh
+npx copilotkit@latest login
+npx copilotkit@latest project select
+```
+
+`login` opens the browser to sign in or create an account. `project select` lets you select or create a project, and writes a project-scoped key to `.env` as `CPK_INTELLIGENCE_API_KEY`. It removes an `INTELLIGENCE_API_KEY` line, so that the file holds one credential. Use the same project for Slack and Automatic Learning below.
+
+Do not run `copilotkit onboard` in this folder. Onboarding is for apps that do not have CopilotKit yet. OpenDots already has its integration.
+
 Edit `.env` on the server and restart after changes:
 
 | Variable                                      | Purpose                                                   |
