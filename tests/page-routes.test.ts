@@ -269,6 +269,54 @@ it('restores review receipts through the owner API with current thread and Space
   ws.updateDot(dot.id, { ...dot, spaceId: other.id, spaceIds: [other.id] });
   expect((await app.request(`${base}/call`, { headers })).status).toBe(403);
 });
+
+it('answers malformed JSON and invalid Space access with 400 on workspace routes', async () => {
+  const { ws, app } = fixture();
+  const dot = ws.dots()[0];
+  for (const path of ['/api/spaces', '/api/dots', '/api/conversations']) {
+    const response = await app.request(path, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: '{',
+    });
+    expect(response.status).toBe(400);
+  }
+  const body = {
+    name: dot.name,
+    instructions: dot.instructions,
+    researchAllowed: true,
+    memoryAllowed: true,
+  };
+  expect(
+    (
+      await app.request(
+        '/api/dots',
+        request({ ...body, spaceId: 'missing-space' }),
+      )
+    ).status,
+  ).toBe(400);
+  expect(
+    (
+      await app.request(
+        `/api/dots/${dot.id}`,
+        request({ ...body, spaceIds: ['missing-space'] }, 'PUT'),
+      )
+    ).status,
+  ).toBe(400);
+});
+
+it('keeps upstream JSON parsing failures on workspace routes as 503', async () => {
+  const { ws, app } = fixture();
+  vi.spyOn(ws, 'createSpace').mockImplementation(() => {
+    throw new SyntaxError('Unexpected token in upstream response');
+  });
+  const response = await app.request(
+    '/api/spaces',
+    request({ name: 'Valid', description: '' }),
+  );
+  expect(response.status).toBe(503);
+});
+
 it.each([
   ['GET', '/reviewed-page/tool'],
   ['POST', '/reviewed-page'],
