@@ -52,7 +52,7 @@ type State = z.infer<typeof stateSchema>;
 export const setupMetadata = {
   accessibility_title: 'OpenDots',
   opendots_distribution: 'web',
-  opendots_version: '0.1.0',
+  opendots_version: '0.1.1',
   runtime_env: 'node',
   server_platform:
     process.platform === 'darwin'
@@ -234,7 +234,7 @@ export class SetupTelemetry {
           event_id: entry.id,
           properties: entry.event,
           global_properties: this.metadata,
-          package: { name: 'opendots', version: '0.1.0' },
+          package: { name: 'opendots', version: '0.1.1' },
           ts: entry.occurredAt,
         });
       } catch {

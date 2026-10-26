@@ -1,5 +1,27 @@
 # Changelog
 
+## 0.1.1 — 2026-10-26
+
+### Features
+
+- Add Chinese and English desktop localization, following the macOS language by default.
+- Persist non-sensitive desktop preferences and window state in a pure-Go SQLite store. Store optional cloud credentials in a passphrase-encrypted local vault instead of a machine-bound Keychain entry.
+- Add account-scoped AgentKit Region, Project and Runtime discovery. Restore a saved Runtime only when it belongs to the current account directory; otherwise keep a visible Runtime selector without projecting another account's Runtime.
+- Redesign the conversation surface with a quiet 760px reading column, compact tool activity, an automatically growing composer and explicit jump-to-latest behavior.
+
+### Fixes
+
+- Allow AgentKit Runtime-key identity to create and continue independent Sessions without requiring an unnecessary business-identity override.
+- Keep Runtime selection, authentication and deployment tabs synchronized across connection epochs, and add native selected-state keyboard navigation for Settings tabs.
+- Deduplicate optimistic user messages, streaming assistant chunks and terminal history projection.
+- Preserve editable credential drafts after errors and remove the broken Keychain save/restore path.
+- Move the conversation scrollbar to the outer viewport gutter so it no longer overlaps right-aligned user messages.
+
+### Known limitations
+
+- A Session created without an execution-config revision inherits Runtime defaults. The current assistant-settings dialog reports this state as non-editable; per-Session AGENTS.md and Skill editing remains planned for a later release.
+- The macOS application remains ad-hoc signed and is not Apple-notarized. Full knowledge and dedicated channel write acceptance still depends on the selected Runtime configuration.
+
 ## 0.1.0 — 2026-10-26
 
 First OpenMPA desktop preview for macOS on Apple Silicon, built with MyGo and the existing AgentKit OpenAPI.

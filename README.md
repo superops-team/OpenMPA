@@ -2,9 +2,9 @@
 
 A native macOS desktop workspace for AgentKit MPA Runtime, built with MyGo. Native navigation and management screens surround a system WebView for conversation and rich document editing.
 
-**v0.1.0 preview · macOS Apple Silicon**
+**v0.1.1 preview · macOS Apple Silicon**
 
-- [Download v0.1.0](https://github.com/superops-team/OpenMPA/releases/tag/v0.1.0)
+- [Download v0.1.1](https://github.com/superops-team/OpenMPA/releases/tag/v0.1.1)
 - [Desktop setup and architecture](desktop/README.md)
 - [Release notes and acceptance limits](CHANGELOG.md)
 - [Build and release process](docs/RELEASE.md)
