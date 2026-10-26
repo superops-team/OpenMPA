@@ -1,0 +1,242 @@
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from 'react';
+
+import type {
+  ConnectionVM,
+  DesktopServices,
+  ImagesVM,
+  PlatformVM,
+  RuntimeVM,
+} from './models';
+import { reviewImages } from './image-review';
+
+export function useDesktopSettingsState({
+  services,
+  connection,
+  onConnection,
+}: {
+  services: DesktopServices;
+  connection?: ConnectionVM;
+  onConnection: (connection: ConnectionVM | undefined) => void;
+}) {
+  const [platform, setPlatform] = useState<PlatformVM>();
+  const [profiles, setProfiles] = useState<
+    Array<{
+      profileId: string;
+      label: string;
+      accountId: string;
+      runtimeId?: string;
+    }>
+  >([]);
+  const [credentials, setCredentials] = useState({
+    accessKey: '',
+    secretKey: '',
+    securityToken: '',
+    region: 'cn-beijing',
+    remember: false,
+  });
+  const [region, setRegion] = useState('cn-beijing');
+  const [project, setProject] = useState('default');
+  const [runtimes, setRuntimes] = useState<RuntimeVM[]>([]);
+  const [directoryScope, setDirectoryScope] = useState('');
+  const [directoryLoading, setDirectoryLoading] = useState(false);
+  const directoryRequest = useRef(0);
+  const [query, setQuery] = useState('');
+  const [identity, setIdentity] = useState({
+    userId: '',
+    applicationToken: '',
+    testDeployment: false,
+  });
+  const [channelAuth, setChannelAuth] = useState({
+    mode: 'runtimeKey',
+    secret: '',
+  });
+  const [images, setImages] = useState<ImagesVM>();
+  const [review, setReview] = useState<ReturnType<typeof reviewImages>>();
+  const [update, setUpdate] = useState<{
+    operationId: string;
+    status: string;
+  }>();
+  const [updates, setUpdates] = useState<
+    Array<{ operationId: string; status: string }>
+  >([]);
+  const [error, setError] = useState('');
+  const [notice, setNotice] = useState('');
+  const [busy, setBusy] = useState(false);
+  const generation = useRef(0);
+  useEffect(() => {
+    const current = ++generation.current;
+    void services.platform
+      .status()
+      .then((value) => {
+        if (generation.current === current) setPlatform(value);
+      })
+      .catch((error: unknown) => {
+        if (generation.current === current)
+          setError(
+            error instanceof Error
+              ? error.message
+              : 'Could not read account status.',
+          );
+      });
+    void services.platform
+      .profiles()
+      .then((list) => {
+        if (generation.current === current) setProfiles(list);
+      })
+      .catch((error: unknown) => {
+        if (generation.current === current)
+          setError(
+            error instanceof Error
+              ? error.message
+              : 'Saved accounts could not be read.',
+          );
+      });
+    return () => {
+      generation.current++;
+    };
+  }, [services]);
+  useLayoutEffect(() => {
+    generation.current++;
+    setBusy(false);
+    setReview(undefined);
+    setImages(undefined);
+    setUpdate(undefined);
+    setUpdates([]);
+    if (connection && services.deployment) {
+      let active = true;
+      void services.deployment
+        .updates(connection.runtimeId)
+        .then((list) => {
+          if (active) setUpdates(list);
+        })
+        .catch((error: unknown) => {
+          if (active)
+            setError(
+              error instanceof Error
+                ? error.message
+                : 'Could not read saved update receipts.',
+            );
+        });
+      return () => {
+        active = false;
+      };
+    }
+  }, [connection?.epoch]);
+  const act = async (run: () => Promise<void>) => {
+    const current = generation.current;
+    setBusy(true);
+    setError('');
+    setNotice('');
+    try {
+      await run();
+    } catch (error) {
+      if (generation.current === current)
+        setError(
+          error instanceof Error ? error.message : 'Settings action failed.',
+        );
+    } finally {
+      if (generation.current === current) {
+        if (connection && services.deployment) {
+          try {
+            const saved = await services.deployment.updates(
+              connection.runtimeId,
+            );
+            if (generation.current === current) setUpdates(saved);
+          } catch {
+            if (generation.current === current)
+              setNotice(
+                'Saved update receipts could not be refreshed. Use Refresh saved receipts to recover the original operation when the host is available.',
+              );
+          }
+        }
+        if (generation.current === current) setBusy(false);
+      }
+    }
+  };
+  const scope = JSON.stringify([platform?.accountId, region, project]);
+  const load = useCallback(async () => {
+    if (!platform?.signedIn) return;
+    const current = ++directoryRequest.current;
+    setDirectoryLoading(true);
+    try {
+      const list = await services.platform.list(region, project);
+      if (directoryRequest.current === current) {
+        setRuntimes(list);
+        setDirectoryScope(scope);
+      }
+    } catch (error) {
+      if (directoryRequest.current === current) {
+        setRuntimes([]);
+        setError(
+          error instanceof Error
+            ? error.message
+            : 'Could not load MPA Runtimes.',
+        );
+      }
+    } finally {
+      if (directoryRequest.current === current) setDirectoryLoading(false);
+    }
+  }, [services, platform?.signedIn, scope, region, project]);
+  useEffect(() => {
+    setRuntimes([]);
+    setDirectoryScope('');
+    if (platform?.signedIn) void load();
+    else setDirectoryLoading(false);
+    return () => {
+      directoryRequest.current++;
+    };
+  }, [load, platform?.signedIn]);
+  const visibleRuntimes =
+    directoryScope === scope
+      ? runtimes.filter((runtime) =>
+          `${runtime.id} ${runtime.name}`
+            .toLowerCase()
+            .includes(query.toLowerCase()),
+        )
+      : [];
+  return {
+    error,
+    notice,
+    platform,
+    busy,
+    act,
+    services,
+    setPlatform,
+    setRuntimes,
+    onConnection,
+    generation,
+    credentials,
+    setCredentials,
+    setRegion,
+    setNotice,
+    profiles,
+    region,
+    project,
+    setProject,
+    directoryLoading,
+    load,
+    query,
+    setQuery,
+    visibleRuntimes,
+    connection,
+    identity,
+    setIdentity,
+    channelAuth,
+    setChannelAuth,
+    setUpdates,
+    setImages,
+    images,
+    setReview,
+    setError,
+    review,
+    setUpdate,
+    updates,
+    update,
+  };
+}

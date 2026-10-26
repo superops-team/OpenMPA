@@ -20,10 +20,12 @@ export default function RichEditor({
   value,
   onChange,
   onNotice,
+  readOnly = false,
 }: {
   value: string;
   onChange: (value: string) => void;
   onNotice: (message: string) => void;
+  readOnly?: boolean;
 }) {
   const change = useRef(onChange);
   change.current = onChange;
@@ -31,6 +33,7 @@ export default function RichEditor({
   notice.current = onNotice;
   const emitted = useRef(value);
   const editor = useEditor({
+    editable: !readOnly,
     extensions: [
       ...documentExtensions(),
       Markdown,
@@ -98,6 +101,9 @@ export default function RichEditor({
         : null,
   });
   useEffect(() => {
+    editor?.setEditable(!readOnly);
+  }, [editor, readOnly]);
+  useEffect(() => {
     if (editor && value !== emitted.current) {
       emitted.current = value;
       editor.commands.setContent(value, {
@@ -113,6 +119,7 @@ export default function RichEditor({
         className="format-toolbar"
         role="toolbar"
         aria-label="Text formatting"
+        style={readOnly ? { display: 'none' } : undefined}
       >
         <button
           title="Bold (⌘/Ctrl B)"

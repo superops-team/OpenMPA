@@ -1,1 +1,5 @@
 * text=auto eol=lf
+# Generated bindings and image assets have reproducible source generators.
+src/client/desktop/generated/mygo.ts linguist-generated=true
+desktop/branding/*.png linguist-generated=true
+desktop/internal/host/assets/dots/*.png linguist-generated=true

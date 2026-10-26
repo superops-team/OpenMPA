@@ -1,0 +1,111 @@
+{
+  "bytes_per_token": 4,
+  "ignore_patterns": [
+    {
+      "pattern": "package-lock.json",
+      "reason": "dependency lock file"
+    },
+    {
+      "pattern": "**/package-lock.json",
+      "reason": "dependency lock file"
+    },
+    {
+      "pattern": "npm-shrinkwrap.json",
+      "reason": "dependency lock file"
+    },
+    {
+      "pattern": "**/npm-shrinkwrap.json",
+      "reason": "dependency lock file"
+    },
+    {
+      "pattern": "pnpm-lock.yaml",
+      "reason": "dependency lock file"
+    },
+    {
+      "pattern": "**/pnpm-lock.yaml",
+      "reason": "dependency lock file"
+    },
+    {
+      "pattern": "yarn.lock",
+      "reason": "dependency lock file"
+    },
+    {
+      "pattern": "**/yarn.lock",
+      "reason": "dependency lock file"
+    },
+    {
+      "pattern": "bun.lock",
+      "reason": "dependency lock file"
+    },
+    {
+      "pattern": "**/bun.lock",
+      "reason": "dependency lock file"
+    },
+    {
+      "pattern": "bun.lockb",
+      "reason": "dependency lock file"
+    },
+    {
+      "pattern": "**/bun.lockb",
+      "reason": "dependency lock file"
+    },
+    {
+      "pattern": "uv.lock",
+      "reason": "dependency lock file"
+    },
+    {
+      "pattern": "**/uv.lock",
+      "reason": "dependency lock file"
+    },
+    {
+      "pattern": "poetry.lock",
+      "reason": "dependency lock file"
+    },
+    {
+      "pattern": "**/poetry.lock",
+      "reason": "dependency lock file"
+    },
+    {
+      "pattern": "Pipfile.lock",
+      "reason": "dependency lock file"
+    },
+    {
+      "pattern": "**/Pipfile.lock",
+      "reason": "dependency lock file"
+    },
+    {
+      "pattern": "Cargo.lock",
+      "reason": "dependency lock file"
+    },
+    {
+      "pattern": "**/Cargo.lock",
+      "reason": "dependency lock file"
+    },
+    {
+      "pattern": "composer.lock",
+      "reason": "dependency lock file"
+    },
+    {
+      "pattern": "**/composer.lock",
+      "reason": "dependency lock file"
+    },
+    {
+      "pattern": "Gemfile.lock",
+      "reason": "dependency lock file"
+    },
+    {
+      "pattern": "**/Gemfile.lock",
+      "reason": "dependency lock file"
+    },
+    {
+      "pattern": "go.sum",
+      "reason": "dependency lock file"
+    },
+    {
+      "pattern": "**/go.sum",
+      "reason": "dependency lock file"
+    }
+  ],
+  "max_bytes": 20000,
+  "schema": "pre-commit-token-limit-config/v1"
+}

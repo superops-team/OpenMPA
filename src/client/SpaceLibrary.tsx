@@ -7,7 +7,7 @@ import {
   List,
   ArrowUpRight,
 } from 'lucide-react';
-import type { Page } from '../server/pages';
+import type { Page } from '../shared/page-types';
 import type { Space } from '../shared/types';
 export function pageExcerpt(content: string) {
   return content

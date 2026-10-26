@@ -1,7 +1,7 @@
 {
   "name": "opendots",
   "version": "0.1.0",
-  "description": "A self-hosted personal-agent template with CopilotKit Intelligence, Threads, and Channels.",
+  "description": "OpenMPA desktop client for AgentKit MPA Runtime, built with MyGo.",
   "directories": {
     "doc": "docs",
     "test": "tests"
@@ -18,7 +18,13 @@
     "knip:production": "knip --production",
     "lint": "eslint src tests vite.config.ts",
     "format": "prettier --write src tests *.json *.ts *.js index.html public .github Dockerfile \"compose*.yml\" deployment README.md docs .env.example --ignore-unknown",
-    "check-format": "prettier --check src tests *.json *.ts *.js index.html public .github Dockerfile \"compose*.yml\" deployment README.md docs .env.example --ignore-unknown"
+    "check-format": "prettier --check src tests *.json *.ts *.js index.html public .github Dockerfile \"compose*.yml\" deployment README.md docs .env.example --ignore-unknown",
+    "dev:desktop:frontend": "vite --config vite.desktop.config.ts",
+    "build:desktop:frontend": "vite build --config vite.desktop.config.ts",
+    "desktop:generate": "cd desktop && GOTOOLCHAIN=go1.27.3 CGO_ENABLED=0 go run github.com/egoist/mygo/cmd/mygo generate .",
+    "desktop:dev": "cd desktop && GOTOOLCHAIN=go1.27.3 CGO_ENABLED=0 go run github.com/egoist/mygo/cmd/mygo dev .",
+    "desktop:build": "cd desktop && GOTOOLCHAIN=go1.27.3 CGO_ENABLED=0 go run github.com/egoist/mygo/cmd/mygo build -platform darwin/arm64 .",
+    "desktop:test": "cd desktop && GOTOOLCHAIN=go1.27.3 go test ./..."
   },
   "keywords": [],
   "author": "Atai Barkai",
@@ -54,7 +60,8 @@
     "react-markdown": "^10.1.0",
     "remark-gfm": "^4.0.1",
     "rxjs": "^7.8.1",
-    "zod": "^4.6.5"
+    "zod": "^4.6.5",
+    "mygo-runtime": "0.6.4"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
@@ -83,7 +90,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/CopilotKit/OpenDots.git"
+    "url": "git+https://github.com/superops-team/OpenMPA.git"
   },
   "overrides": {
     "undici": "^6.29.0"

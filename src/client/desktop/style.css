@@ -1,0 +1,158 @@
+/* The native controls overlay this first row; the page reserves their inset. */
+.desktop-app.app {
+  height: 100dvh;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.desktop-app.app .workspace {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  width: 100%;
+  margin-left: 0;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+}
+.desktop-app .chat-workspace {
+  height: auto;
+  flex: 1;
+  min-height: 0;
+}
+.desktop-app .workspace > .main-content {
+  flex: 1;
+  min-height: 0;
+}
+.desktop-app .workspace {
+  min-width: 0;
+}
+.desktop-app .main-content {
+  overflow-y: auto;
+}
+.desktop-form {
+  display: grid;
+  gap: 14px;
+}
+.desktop-form label {
+  display: grid;
+  gap: 6px;
+  font-size: 13px;
+}
+.desktop-form input,
+.desktop-form select,
+.desktop-form textarea,
+.desktop-app .document-chat-dock select {
+  font: inherit;
+  color: inherit;
+  padding: 10px 12px;
+  border: 1px solid var(--line, #ddd);
+  border-radius: 8px;
+  background: var(--surface, #fff);
+  min-width: 0;
+}
+.desktop-form textarea {
+  min-height: 110px;
+  resize: vertical;
+}
+.desktop-form .desktop-check {
+  display: flex;
+  align-items: center;
+}
+.desktop-inline {
+  display: flex;
+  gap: 12px;
+  align-items: end;
+  flex-wrap: wrap;
+}
+.desktop-runtime {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  justify-content: space-between;
+  padding: 12px 0;
+}
+.desktop-runtime p {
+  font-size: 12px;
+  word-break: break-all;
+}
+.desktop-chat-actions {
+  display: flex;
+  justify-content: end;
+  gap: 12px;
+  padding: 6px 18px;
+}
+.desktop-app .persistent-chat {
+  min-height: 0;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+.desktop-app .chat-column {
+  display: flex;
+  flex-direction: column;
+}
+.desktop-app .document-chat-panel {
+  min-height: 0;
+}
+.desktop-app .document-chat-panel .persistent-chat {
+  height: calc(100% - 44px);
+}
+.desktop-app .chat-transcript {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+}
+.desktop-app .chat-composer textarea {
+  resize: vertical;
+  min-height: 48px;
+}
+.desktop-app .document-chat-dock {
+  padding: 16px;
+}
+.desktop-app .document-chat-dock label {
+  display: grid;
+  gap: 8px;
+}
+.desktop-app .result-pane {
+  padding: 18px;
+  overflow-y: auto;
+}
+.desktop-app .task-detail-card {
+  margin-top: 20px;
+}
+.desktop-app .task-row {
+  text-align: left;
+  color: inherit;
+  background: transparent;
+  width: 100%;
+  cursor: pointer;
+}
+.desktop-app .task-row > div {
+  flex: 1;
+}
+.desktop-app .document-save-notice {
+  overflow-wrap: anywhere;
+}
+.desktop-binding-qr {
+  max-width: 280px;
+  width: 100%;
+  height: auto;
+  background: white;
+}
+.desktop-content {
+  max-height: 480px;
+  overflow: auto;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+@media (max-width: 760px) {
+  .desktop-inline {
+    display: grid;
+  }
+  .desktop-runtime {
+    align-items: start;
+  }
+}
