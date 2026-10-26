@@ -1,4 +1,4 @@
-// OpenMPA's desktop entry point is pure assembly until MyGo calls WhenReady.
+// OpenMPA's desktop entry point assembles local services before MyGo calls WhenReady.
 package main
 
 import (
@@ -6,18 +6,21 @@ import (
 	"github.com/superops-team/OpenMPA/desktop/internal/artifact"
 	"github.com/superops-team/OpenMPA/desktop/internal/channels"
 	"github.com/superops-team/OpenMPA/desktop/internal/cloud"
+	"github.com/superops-team/OpenMPA/desktop/internal/configstore"
 	"github.com/superops-team/OpenMPA/desktop/internal/connection"
-	"github.com/superops-team/OpenMPA/desktop/internal/credentials"
 	"github.com/superops-team/OpenMPA/desktop/internal/deployment"
 	"github.com/superops-team/OpenMPA/desktop/internal/host"
 	"github.com/superops-team/OpenMPA/desktop/internal/ipc"
 	"github.com/superops-team/OpenMPA/desktop/internal/knowledge"
+	"github.com/superops-team/OpenMPA/desktop/internal/localization"
 	"github.com/superops-team/OpenMPA/desktop/internal/nativeui"
 	"github.com/superops-team/OpenMPA/desktop/internal/runtimeconfig"
 	"github.com/superops-team/OpenMPA/desktop/internal/schedule"
 	"github.com/superops-team/OpenMPA/desktop/internal/session"
+	"github.com/superops-team/OpenMPA/desktop/internal/vault"
 	"github.com/superops-team/OpenMPA/desktop/internal/workspace"
 	"log"
+	"os"
 	"path/filepath"
 )
 
@@ -26,29 +29,34 @@ func main() {
 	if !mygo.App.RequestSingleInstanceLock() {
 		return
 	}
-	cloudClient := cloud.NewWithProfileStore(func() (string, error) {
-		dir, e := mygo.App.Path(mygo.PathUserData)
-		if e != nil {
-			return "", e
+	generateData := ""
+	if os.Getenv("MYGO_GENERATE") != "" {
+		var err error
+		generateData, err = os.MkdirTemp("", "openmpa-generate-")
+		if err != nil {
+			log.Fatal("OpenMPA binding generation could not start")
 		}
-		return filepath.Join(dir, "credential-profiles.json"), nil
-	})
+		defer os.RemoveAll(generateData)
+		mygo.App.SetPath(mygo.PathUserData, generateData)
+	}
+	userData, err := mygo.App.Path(mygo.PathUserData)
+	if err != nil {
+		log.Fatal("OpenMPA local data directory could not start")
+	}
+	settingsDB, err := configstore.Open(filepath.Join(userData, "openmpa.db"))
+	if err != nil {
+		log.Fatal("OpenMPA local settings could not start")
+	}
+	mygo.App.SetWindowStateStore(settingsDB)
+	cloudClient := cloud.New()
 	conn := connection.New()
-	platform := ipc.NewPlatformWithPersistence(cloudClient, conn, credentials.New(), func() (string, error) {
-		dir, e := mygo.App.Path(mygo.PathUserData)
-		if e != nil {
-			return "", e
-		}
-		return filepath.Join(dir, "saved-logins.json"), nil
-	})
+	platform := ipc.NewPlatformWithVault(cloudClient, conn, vault.New(settingsDB))
 	shell := host.New()
 	dataPath := func(name string) (string, error) {
-		dir, e := mygo.App.Path(mygo.PathUserData)
-		if e != nil {
-			return "", e
-		}
-		return filepath.Join(dir, name), nil
+		return filepath.Join(userData, name), nil
 	}
+	languageService := localization.New(settingsDB)
+	mygo.App.OnLocaleChanged(localization.SetCurrentLocale)
 	documents := workspace.New(func() (string, error) { return dataPath("workspace.json") })
 	pending := session.NewPendingStore(func() (string, error) { return dataPath("pending") })
 	mygo.BindAs("Platform", platform)
@@ -70,17 +78,19 @@ func main() {
 	mygo.BindAs("Schedule", scheduleService)
 	mygo.BindAs("Deployment", deploymentService)
 	mygo.BindAs("RuntimeConfig", configService)
+	mygo.BindAs("Localization", languageService)
 	mygo.App.WhenReady(func() {
-		w, page, err := host.NewDesktopWindow(shell, mygo.WindowOptions{Title: "OpenMPA", URL: "/desktop.html", Width: 1280, Height: 850, TitleBarStyle: mygo.TitleBarHiddenInset, TrafficLightPosition: &mygo.Point{X: 14, Y: 15}})
+		_ = localization.Load(languageService)
+		w, page, err := host.NewDesktopWindow(shell, mygo.WindowOptions{Title: "OpenMPA", URL: "/desktop.html", Width: 1280, Height: 850, StateKey: "main", TitleBarStyle: mygo.TitleBarHiddenInset, TrafficLightPosition: &mygo.Point{X: 14, Y: 15}})
 		if err != nil {
 			log.Fatal("OpenMPA desktop view could not start")
 		}
 		host.Attach(shell, w)
-		nativeui.Attach(shell, w, nativeui.Services{Workspace: documents, Artifact: artifactService, Session: sessions, TaskIntentPath: func() (string, error) { return dataPath("native-task-intents.json") }, Platform: platform, Connection: connectionService, Channels: channelService, Knowledge: knowledgeService, Schedule: scheduleService, Deployment: deploymentService, RuntimeConfig: configService})
+		nativeui.Attach(shell, w, nativeui.Services{Workspace: documents, Artifact: artifactService, Session: sessions, TaskIntentPath: func() (string, error) { return dataPath("native-task-intents.json") }, Platform: platform, Connection: connectionService, Channels: channelService, Knowledge: knowledgeService, Schedule: scheduleService, Deployment: deploymentService, RuntimeConfig: configService, Localization: languageService, Config: settingsDB})
 		host.RestrictPageNavigation(page)
 		host.RestrictPagePermissions(page)
 	})
-	mygo.App.OnQuit(func() { conn.Disconnect(); workspace.Shutdown(documents) })
+	mygo.App.OnQuit(func() { conn.Disconnect(); workspace.Shutdown(documents); settingsDB.Close() })
 	if e := mygo.App.Run(); e != nil {
 		log.Fatal("OpenMPA desktop could not start")
 	}

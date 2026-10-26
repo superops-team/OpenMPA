@@ -4,11 +4,45 @@ import (
 	"context"
 	"encoding/json"
 	"github.com/superops-team/OpenMPA/desktop/internal/dto"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"strings"
 	"testing"
 )
+
+type roundTripFunc func(*http.Request) (*http.Response, error)
+
+func (f roundTripFunc) RoundTrip(request *http.Request) (*http.Response, error) { return f(request) }
+
+func TestAgentKitRegionCatalogRoutesHostAndSignature(t *testing.T) {
+	regions := Regions()
+	if len(regions) != 2 || regions[0].Region != "cn-beijing" || regions[1].Region != "cn-shanghai" {
+		t.Fatalf("unexpected AgentKit regions: %+v", regions)
+	}
+	for _, item := range regions {
+		endpoint, ok := AgentKitEndpoint(item.Region)
+		if !ok || endpoint != "https://"+item.EndpointHost || !ValidRegion(item.Region) {
+			t.Fatalf("bad endpoint for %+v", item)
+		}
+	}
+	if _, ok := AgentKitEndpoint("cn-guangzhou"); ok {
+		t.Fatal("unsupported AgentKit region accepted")
+	}
+
+	c := New()
+	c.credential = Credentials{AccessKey: "ak", SecretKey: "sk"}
+	c.state = dto.PlatformState{SignedIn: true}
+	c.transport = roundTripFunc(func(request *http.Request) (*http.Response, error) {
+		if request.URL.Host != "agentkit.cn-shanghai.volcengineapi.com" || !strings.Contains(request.Header.Get("Authorization"), "/cn-shanghai/agentkit/request") {
+			t.Errorf("Shanghai routing/signature mismatch: %s", request.URL.Host)
+		}
+		return &http.Response{StatusCode: 200, Header: http.Header{}, Body: io.NopCloser(strings.NewReader(`{"Result":{"AgentKitRuntimes":[]}}`))}, nil
+	})
+	if _, err := c.List(context.Background(), dto.RuntimeListRequest{Region: "cn-shanghai", ProjectName: "default"}); err != nil {
+		t.Fatal(err)
+	}
+}
 
 func testCloud(t *testing.T, handler http.HandlerFunc) *Client {
 	t.Helper()

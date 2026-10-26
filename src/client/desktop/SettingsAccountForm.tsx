@@ -12,6 +12,7 @@ export function SettingsAccountForm(
     setRegion,
     setNotice,
     busy,
+    regions,
   } = props;
   return (
     <form
@@ -28,7 +29,6 @@ export function SettingsAccountForm(
             secretKey: '',
             securityToken: '',
             region: credentials.region,
-            remember: credentials.remember,
           });
           setRegion(credentials.region);
           setNotice('Signed in. Credential inputs cleared.');
@@ -81,32 +81,21 @@ export function SettingsAccountForm(
       </label>
       <label>
         Region
-        <input
+        <select
           required
           value={credentials.region}
           onChange={(event) =>
             setCredentials({ ...credentials, region: event.target.value })
           }
-        />
+        >
+          {regions.map((item) => (
+            <option key={item.id} value={item.id}>
+              {item.name} ({item.id})
+            </option>
+          ))}
+        </select>
       </label>
-      <label className="desktop-check">
-        <input
-          type="checkbox"
-          checked={credentials.remember}
-          onChange={(event) =>
-            setCredentials({
-              ...credentials,
-              remember: event.target.checked,
-            })
-          }
-        />
-        Remember this account in the system credential store
-      </label>
-      <p>
-        {credentials.remember
-          ? 'The host saves credentials in the system credential store.'
-          : 'Credentials remain in this app process until sign out or exit.'}
-      </p>
+      <p>Credentials remain in this OpenMPA process and are cleared on exit.</p>
       <button className="primary" disabled={busy}>
         Sign in
       </button>

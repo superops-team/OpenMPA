@@ -91,3 +91,38 @@ it('projects navigation into the native shell and handles native selection and c
   );
   await act(async () => renderer.unmount());
 });
+
+it('routes a disconnected native new-conversation action to settings without calling native creation again', async () => {
+  vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true);
+  let navigation!: (action: string, id?: string) => void;
+  const requestConversation = vi.fn(async () => {});
+  const setShellState = vi.fn(async (state: NativeShellState) => {
+    void state;
+  });
+  const services = {
+    host: {
+      requestConversation,
+      onNavigation: (listener: typeof navigation) => {
+        navigation = listener;
+        return () => {};
+      },
+      setShellState,
+      onClose: () => () => {},
+      closeState: async () => ({ pending: false, requestId: 0 }),
+    },
+    workspace: { spaces: async () => [] },
+    connection: { status: async () => undefined },
+  } as unknown as DesktopServices;
+  let renderer!: ReactTestRenderer;
+  await act(async () => {
+    renderer = create(<DesktopApp services={services} />);
+  });
+  await act(async () => {
+    navigation('newConversation');
+  });
+  expect(requestConversation).not.toHaveBeenCalled();
+  expect(setShellState).toHaveBeenLastCalledWith(
+    expect.objectContaining({ view: 'settings' }),
+  );
+  await act(async () => renderer.unmount());
+});

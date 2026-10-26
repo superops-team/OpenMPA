@@ -44,6 +44,18 @@ func SafeMessage(code string) string {
 		return "The request contains invalid input."
 	case "notConnected":
 		return "Choose and connect a Runtime first."
+	case "localConfigUnavailable":
+		return "OpenMPA could not save its local settings."
+	case "vaultUnavailable":
+		return "Saved credentials are unavailable on this build."
+	case "vaultMissing":
+		return "No saved credentials were found."
+	case "vaultWrongPassphrase":
+		return "The passphrase did not unlock the saved credentials."
+	case "vaultNotSignedIn":
+		return "Sign in before saving credentials."
+	case "vaultAccountMismatch":
+		return "The saved credentials belong to a different account."
 	default:
 		return "The requested operation could not be completed."
 	}
@@ -53,7 +65,6 @@ type ScopeRequest struct {
 	ConnectionEpoch uint64 `json:"connectionEpoch"`
 }
 type SignInRequest struct {
-	Remember      bool   `json:"remember,omitempty"`
 	AccessKey     string `json:"accessKey"`
 	SecretKey     string `json:"secretKey"`
 	SecurityToken string `json:"securityToken,omitempty"`
@@ -67,13 +78,29 @@ type Principal struct {
 	Scope            string `json:"scope"`
 }
 type PlatformState struct {
-	ProfileID     string     `json:"profileId,omitempty"`
-	Remembered    bool       `json:"remembered"`
 	SignedIn      bool       `json:"signedIn"`
 	HasCredential bool       `json:"hasCredential"`
 	ExpiresAt     string     `json:"expiresAt,omitempty"`
+	Region        string     `json:"region,omitempty"`
 	Epoch         uint64     `json:"epoch"`
 	Principal     *Principal `json:"principal,omitempty"`
+}
+type RegionSummary struct {
+	Region       string `json:"region"`
+	DisplayName  string `json:"displayName"`
+	EndpointHost string `json:"endpointHost"`
+}
+type RegionList struct {
+	Regions []RegionSummary `json:"regions"`
+}
+type VaultStatus struct {
+	Exists    bool   `json:"exists"`
+	AccountID string `json:"accountId,omitempty"`
+	Region    string `json:"region,omitempty"`
+	UpdatedAt string `json:"updatedAt,omitempty"`
+}
+type VaultPassphraseRequest struct {
+	Passphrase string `json:"passphrase"`
 }
 type RuntimeRequest struct {
 	Region      string `json:"region"`
@@ -327,28 +354,6 @@ type BotListResult struct {
 	OK    bool       `json:"ok"`
 	Value *BotList   `json:"value,omitempty"`
 	Error *SafeError `json:"error,omitempty"`
-}
-
-type RestoreRequest struct {
-	ProfileID string `json:"profileId"`
-}
-type SavedProfile struct {
-	ProfileID   string `json:"profileId"`
-	Label       string `json:"label"`
-	AccountID   string `json:"accountId"`
-	Scope       string `json:"scope"`
-	Region      string `json:"region"`
-	Remembered  bool   `json:"remembered"`
-	RuntimeID   string `json:"runtimeId,omitempty"`
-	ProjectName string `json:"projectName,omitempty"`
-}
-type SavedProfiles struct {
-	Profiles []SavedProfile `json:"profiles"`
-}
-type SavedProfilesResult struct {
-	OK    bool           `json:"ok"`
-	Value *SavedProfiles `json:"value,omitempty"`
-	Error *SafeError     `json:"error,omitempty"`
 }
 
 type ActiveRun struct {

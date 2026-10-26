@@ -32,7 +32,8 @@ func New() *Client {
 		if service == "sts" {
 			return "https://sts.volcengineapi.com"
 		}
-		return "https://agentkit." + region + ".volcengineapi.com"
+		endpoint, _ := AgentKitEndpoint(region)
+		return endpoint
 	}}
 }
 func (c *Client) State() dto.PlatformState {
@@ -46,13 +47,46 @@ func (c *Client) State() dto.PlatformState {
 	return s
 }
 func (c *Client) Epoch() uint64 { return c.State().Epoch }
+
+// Credential returns a copy of the in-memory credential for the encrypted
+// vault. It is never an IPC value. The boolean is false unless signed in with
+// a complete AK/SK pair.
+func (c *Client) Credential() (Credentials, dto.PlatformState, bool) {
+	c.mu.RLock()
+	cred, state := c.credential, c.state
+	c.mu.RUnlock()
+	if state.Principal != nil {
+		p := *state.Principal
+		state.Principal = &p
+	}
+	if !state.SignedIn || cred.AccessKey == "" || cred.SecretKey == "" {
+		return Credentials{}, state, false
+	}
+	return cred, state, true
+}
+
 func (c *Client) SignOut() {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	c.credential = Credentials{}
 	c.state = dto.PlatformState{Epoch: c.state.Epoch + 1}
 }
-func ValidRegion(r string) bool { return r == "cn-beijing" || r == "cn-shanghai" }
+
+var supportedRegions = []dto.RegionSummary{
+	{Region: "cn-beijing", DisplayName: "华北2（北京）", EndpointHost: "agentkit.cn-beijing.volcengineapi.com"},
+	{Region: "cn-shanghai", DisplayName: "华东2（上海）", EndpointHost: "agentkit.cn-shanghai.volcengineapi.com"},
+}
+
+func Regions() []dto.RegionSummary { return append([]dto.RegionSummary(nil), supportedRegions...) }
+func AgentKitEndpoint(region string) (string, bool) {
+	for _, item := range supportedRegions {
+		if item.Region == region {
+			return "https://" + item.EndpointHost, true
+		}
+	}
+	return "", false
+}
+func ValidRegion(region string) bool { _, ok := AgentKitEndpoint(region); return ok }
 func (c *Client) SignIn(ctx context.Context, r dto.SignInRequest) (dto.PlatformState, *dto.SafeError) {
 	if !ValidRegion(r.Region) || r.AccessKey == "" || r.SecretKey == "" || len(r.AccessKey) > 2048 || len(r.SecretKey) > 2048 || len(r.SecurityToken) > 16384 {
 		return dto.PlatformState{}, dto.Failure("invalidInput", "platform", "never", 0)
@@ -91,7 +125,7 @@ func (c *Client) SignIn(ctx context.Context, r dto.SignInRequest) (dto.PlatformS
 		return dto.PlatformState{}, dto.Failure("staleConnection", "platform", "reload", 0)
 	}
 	c.credential = cred
-	c.state = dto.PlatformState{SignedIn: true, HasCredential: true, ExpiresAt: r.ExpiresAt, Epoch: expected + 1, Principal: &dto.Principal{AccountID: string(identity.AccountID), IdentityType: identity.IdentityType, CloudPrincipalID: principalID, Scope: string(identity.AccountID) + "/" + identity.IdentityType + "/" + principalID}}
+	c.state = dto.PlatformState{SignedIn: true, HasCredential: true, ExpiresAt: r.ExpiresAt, Region: r.Region, Epoch: expected + 1, Principal: &dto.Principal{AccountID: string(identity.AccountID), IdentityType: identity.IdentityType, CloudPrincipalID: principalID, Scope: string(identity.AccountID) + "/" + identity.IdentityType + "/" + principalID}}
 	return c.state, nil
 }
 func (c *Client) snapshot() (Credentials, uint64, *dto.SafeError) {

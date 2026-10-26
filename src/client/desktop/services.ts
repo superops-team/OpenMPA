@@ -32,8 +32,10 @@ const connectionVM = (state: ConnectionState): ConnectionVM => ({
   runtimeId: state.runtimeId,
   status: state.connected
     ? state.hasBusinessIdentity
-      ? 'Business identity set'
-      : 'Identity required'
+      ? 'Explicit business identity'
+      : state.hasCredential
+        ? 'Runtime key identity'
+        : 'Authentication required'
     : 'Disconnected',
 });
 const pageVM = (page: NativePage): Page => ({ ...page, sourceThreadId: null });
@@ -147,22 +149,22 @@ export function createDesktopServices(): DesktopServices {
       },
     },
     platform: {
-      profiles: async () => unwrap(await Platform.savedProfiles()).profiles,
-      restore: async (profileId) => {
-        const state = unwrap(await Platform.restore({ profileId }));
-        return {
-          signedIn: state.signedIn,
-          accountId: state.principal?.accountId || '',
-          region: 'cn-beijing',
-        };
-      },
       status: async () => {
         const state = unwrap(await Platform.status());
         return {
           signedIn: state.signedIn,
           accountId: state.principal?.accountId || '',
-          region: 'cn-beijing',
+          region: state.region || 'cn-beijing',
         };
+      },
+      regions: async () =>
+        unwrap(await Platform.regions()).regions.map((region) => ({
+          id: region.region,
+          name: region.displayName,
+          endpointHost: region.endpointHost,
+        })),
+      resetRuntime: async () => {
+        unwrap(await Platform.resetRuntime());
       },
       signIn: async (input) => {
         const state = unwrap(await Platform.signIn(input));

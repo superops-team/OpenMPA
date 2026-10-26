@@ -4,8 +4,18 @@ import { DesktopChat } from './Chat';
 import { DesktopPages } from './Pages';
 import type { DesktopServices } from './models';
 import { useDesktopAppState } from './DesktopAppState';
+import { LocaleProvider, useMessages } from './locale';
 
 export function DesktopApp({ services }: { services: DesktopServices }) {
+  return (
+    <LocaleProvider>
+      <DesktopAppContent services={services} />
+    </LocaleProvider>
+  );
+}
+
+function DesktopAppContent({ services }: { services: DesktopServices }) {
+  const m = useMessages();
   const state = useDesktopAppState({ services });
   const {
     error,
@@ -38,7 +48,7 @@ export function DesktopApp({ services }: { services: DesktopServices }) {
             <span>{error}</span>
             <button
               className="icon-button"
-              aria-label="Dismiss error"
+              aria-label={m.dismissError()}
               onClick={() => setError('')}
             >
               <X size={16} />
@@ -155,7 +165,7 @@ export function DesktopApp({ services }: { services: DesktopServices }) {
                       }}
                     >
                       <Settings2 size={13} />
-                      Bot settings
+                      {m.openBotSettings()}
                     </button>
                     <button
                       className="text-button"
@@ -190,7 +200,7 @@ export function DesktopApp({ services }: { services: DesktopServices }) {
                       }}
                     >
                       <Pencil size={13} />
-                      Rename
+                      {m.rename()}
                     </button>
                     <button
                       className="text-button"
@@ -228,7 +238,7 @@ export function DesktopApp({ services }: { services: DesktopServices }) {
                       }}
                     >
                       <Trash2 size={13} />
-                      Delete
+                      {m.delete()}
                     </button>
                   </div>
 
@@ -244,12 +254,8 @@ export function DesktopApp({ services }: { services: DesktopServices }) {
                 <div className="new-conversation">
                   <div className="empty-chat-persona">
                     <Mascot name="OpenMPA" />
-                    <h2>Your workspace, with follow-through.</h2>
-                    <p>
-                      Connect your cloud account, choose an MPA Runtime and open
-                      a continuing conversation. Local pages are available
-                      independently.
-                    </p>
+                    <h2>{m.workspaceFollowThrough()}</h2>
+                    <p>{m.connectRuntimeOpenConversation()}</p>
                     <button
                       className="primary"
                       onClick={() =>

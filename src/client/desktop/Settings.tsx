@@ -22,9 +22,9 @@ export function DesktopSettings({
     act,
     setPlatform,
     setRuntimes,
-    profiles,
     generation,
     region,
+    regions,
     project,
     setRegion,
     setProject,
@@ -95,46 +95,6 @@ export function DesktopSettings({
         ) : (
           <SettingsAccountForm {...state} />
         )}
-        {profiles.length > 0 && (
-          <div>
-            <h3>Saved accounts</h3>
-            {profiles.map((profile) => (
-              <div className="desktop-runtime" key={profile.profileId}>
-                <div>
-                  <strong>{profile.label || profile.accountId}</strong>
-                  <p>
-                    Account {profile.accountId}
-                    {profile.runtimeId ? ` · Runtime ${profile.runtimeId}` : ''}
-                  </p>
-                </div>
-                <button
-                  className="text-button"
-                  disabled={busy}
-                  onClick={() =>
-                    void act(async () => {
-                      const current = generation.current;
-                      try {
-                        const value = await services.platform.restore(
-                          profile.profileId,
-                        );
-                        if (generation.current === current) setPlatform(value);
-                      } finally {
-                        const value = await services.platform.status();
-                        const next = await services.connection.status();
-                        if (generation.current === current) {
-                          setPlatform(value);
-                          onConnection(next);
-                        }
-                      }
-                    })
-                  }
-                >
-                  Restore account
-                </button>
-              </div>
-            ))}
-          </div>
-        )}
       </section>
       <section className="task-detail-card desktop-form">
         <h2>AgentKit MPA Runtimes</h2>
@@ -146,11 +106,24 @@ export function DesktopSettings({
         <div className="desktop-inline">
           <label>
             Region
-            <input
+            <select
               disabled={busy}
               value={region}
-              onChange={(event) => setRegion(event.target.value)}
-            />
+              onChange={(event) => {
+                const selected = event.target.value;
+                void act(async () => {
+                  await services.platform.resetRuntime?.();
+                  setRegion(selected);
+                  onConnection(undefined);
+                });
+              }}
+            >
+              {regions.map((item) => (
+                <option key={item.id} value={item.id}>
+                  {item.name} ({item.id})
+                </option>
+              ))}
+            </select>
           </label>
           <label>
             Project

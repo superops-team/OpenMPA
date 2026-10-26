@@ -45,6 +45,11 @@ export interface PlatformVM {
   accountId: string;
   region: string;
 }
+export interface RegionVM {
+  id: string;
+  name: string;
+  endpointHost: string;
+}
 export interface AttachmentVM {
   sessionId: string;
   operationRef: string;
@@ -147,23 +152,15 @@ export interface DesktopServices {
   };
   platform: {
     status(): Promise<PlatformVM>;
+    regions?(): Promise<RegionVM[]>;
+    resetRuntime?(): Promise<void>;
     signIn(input: {
       accessKey: string;
       secretKey: string;
       securityToken: string;
       region: string;
-      remember?: boolean;
     }): Promise<PlatformVM>;
     signOut(): Promise<void>;
-    profiles(): Promise<
-      Array<{
-        profileId: string;
-        label: string;
-        accountId: string;
-        runtimeId?: string;
-      }>
-    >;
-    restore(profileId: string): Promise<PlatformVM>;
     list(region: string, projectName: string): Promise<RuntimeVM[]>;
     bind(
       region: string,

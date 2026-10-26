@@ -694,6 +694,16 @@ export interface KnowledgeSessionRequest {
   sessionId: string;
 }
 
+export interface LanguageRequest {
+  mode: string;
+}
+
+export interface LanguageResult {
+  ok: boolean;
+  value?: LocalizationState;
+  error?: SafeError;
+}
+
 export interface LinkConversationRequest {
   pageId: string;
   botRef: BotRef;
@@ -744,6 +754,11 @@ export interface ListResult {
 }
 
 export interface ListSpacesRequest {}
+
+export interface LocalizationState {
+  mode: string;
+  locale: string;
+}
 
 export interface MovePageRequest {
   id: string;
@@ -934,11 +949,10 @@ export interface PermissionsResult {
 }
 
 export interface PlatformState {
-  profileId?: string;
-  remembered: boolean;
   signedIn: boolean;
   hasCredential: boolean;
   expiresAt?: string;
+  region?: string;
   epoch: number;
   principal?: Principal;
 }
@@ -1065,6 +1079,22 @@ export interface RecoverableDraft {
   capturedAt: number;
 }
 
+export interface RegionList {
+  regions: RegionSummary[];
+}
+
+export interface RegionListResult {
+  ok: boolean;
+  value?: RegionList;
+  error?: SafeError;
+}
+
+export interface RegionSummary {
+  region: string;
+  displayName: string;
+  endpointHost: string;
+}
+
 export interface RemovalReceipt {
   channel: string;
   appId: string;
@@ -1089,10 +1119,6 @@ export interface ResolvePendingRequest {
   operationId: string;
   mode: string;
   confirm: boolean;
-}
-
-export interface RestoreRequest {
-  profileId: string;
 }
 
 export interface ReviewReceipt {
@@ -1301,27 +1327,6 @@ export interface SaveReviewedResultRequest {
   content: string;
 }
 
-export interface SavedProfile {
-  profileId: string;
-  label: string;
-  accountId: string;
-  scope: string;
-  region: string;
-  remembered: boolean;
-  runtimeId?: string;
-  projectName?: string;
-}
-
-export interface SavedProfiles {
-  profiles: SavedProfile[];
-}
-
-export interface SavedProfilesResult {
-  ok: boolean;
-  value?: SavedProfiles;
-  error?: SafeError;
-}
-
 export interface ScheduleCreateRequest {
   connectionEpoch: number;
   clientToken: string;
@@ -1452,7 +1457,6 @@ export interface ShellState {
 }
 
 export interface SignInRequest {
-  remember?: boolean;
   accessKey: string;
   secretKey: string;
   securityToken?: string;
@@ -1663,6 +1667,23 @@ export interface Values {
   maxConcurrency: number;
 }
 
+export interface VaultPassphraseRequest {
+  passphrase: string;
+}
+
+export interface VaultStatus {
+  exists: boolean;
+  accountId?: string;
+  region?: string;
+  updatedAt?: string;
+}
+
+export interface VaultStatusResult {
+  ok: boolean;
+  value?: VaultStatus;
+  error?: SafeError;
+}
+
 export interface VersionList {
   versions: RuntimeVersion[];
   complete: boolean;
@@ -1693,18 +1714,32 @@ export const Platform = {
   bindRuntime(r: RuntimeRequest): Promise<ConnectionStateResult> {
     return call("Platform.BindRuntime", r);
   },
+  forgetVault(): Promise<EmptyResult> {
+    return call("Platform.ForgetVault");
+  },
   listRuntimes(r: RuntimeListRequest): Promise<RuntimeListResult> {
     return call("Platform.ListRuntimes", r);
   },
-  restore(r: RestoreRequest): Promise<PlatformStateResult> {
-    return call("Platform.Restore", r);
+  regions(): Promise<RegionListResult> {
+    return call("Platform.Regions");
+  },
+  /**
+   * ResetRuntime drops the current Runtime projection without signing the cloud
+   * account out. Region or project changes must not retain a binding from the
+   * previous Runtime directory.
+   */
+  resetRuntime(): Promise<EmptyResult> {
+    return call("Platform.ResetRuntime");
   },
   runtime(r: RuntimeRequest): Promise<RuntimeSummaryResult> {
     return call("Platform.Runtime", r);
   },
-  /** SavedProfiles exposes safe references only; credentials remain in the system store. */
-  savedProfiles(): Promise<SavedProfilesResult> {
-    return call("Platform.SavedProfiles");
+  /**
+   * SaveVault encrypts the current in-memory credential. It requires a signed-in
+   * session because only the cloud client can prove the account and Region.
+   */
+  saveVault(r: VaultPassphraseRequest): Promise<VaultStatusResult> {
+    return call("Platform.SaveVault", r);
   },
   signIn(r: SignInRequest): Promise<PlatformStateResult> {
     return call("Platform.SignIn", r);
@@ -1714,6 +1749,17 @@ export const Platform = {
   },
   status(): Promise<PlatformStateResult> {
     return call("Platform.Status");
+  },
+  /**
+   * UnlockVault decrypts the saved credential and signs in. A wrong passphrase
+   * and a damaged record deliberately share one safe error.
+   */
+  unlockVault(r: VaultPassphraseRequest): Promise<PlatformStateResult> {
+    return call("Platform.UnlockVault", r);
+  },
+  /** VaultStatus is a local read; it never returns the passphrase or any secret. */
+  vaultStatus(): Promise<VaultStatusResult> {
+    return call("Platform.VaultStatus");
   },
   versions(r: RuntimeRequest): Promise<VersionListResult> {
     return call("Platform.Versions", r);
@@ -2046,6 +2092,15 @@ export const RuntimeConfig = {
   },
   update(r: RuntimeconfigUpdateRequest): Promise<RuntimeconfigOperationResult> {
     return call("RuntimeConfig.Update", r);
+  },
+} as const;
+
+export const Localization = {
+  set(request: LanguageRequest): Promise<LanguageResult> {
+    return call("Localization.Set", request);
+  },
+  status(): Promise<LanguageResult> {
+    return call("Localization.Status");
   },
 } as const;
 

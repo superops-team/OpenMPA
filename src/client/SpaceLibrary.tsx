@@ -9,6 +9,7 @@ import {
 } from 'lucide-react';
 import type { Page } from '../shared/page-types';
 import type { Space } from '../shared/types';
+import { useMessages } from './desktop/locale';
 export function pageExcerpt(content: string) {
   return content
     .replace(/^---\r?\n[\s\S]*?\r?\n---(?:\r?\n|$)/, '')
@@ -33,6 +34,7 @@ export function SpaceLibrary({
   onPage: (id: string) => void;
   onNew: () => void;
 }) {
+  const m = useMessages();
   const [query, setQuery] = useState('');
   const [layout, setLayout] = useState<'grid' | 'list'>('grid');
   const [sort, setSort] = useState('recent');
@@ -58,49 +60,49 @@ export function SpaceLibrary({
     >
       <header className="library-heading">
         <div>
-          <span className="library-eyebrow">SPACE</span>
+          <span className="library-eyebrow">{m.space()}</span>
           <h1>{space.name}</h1>
           {space.description && <p>{space.description}</p>}
         </div>
         <button className="document-primary" onClick={onNew}>
-          <Plus size={17} /> New page
+          <Plus size={17} /> {m.newPage()}
         </button>
       </header>
       <div className="library-tools">
         <label className="library-search">
           <Search size={17} />
           <input
-            aria-label="Search pages"
-            placeholder="Search pages"
+            aria-label={m.searchPages()}
+            placeholder={m.searchPages()}
             value={query}
             onChange={(e) => setQuery(e.target.value)}
           />
         </label>
         <label className="library-sort">
-          <span className="sr-only">Sort pages</span>
+          <span className="sr-only">{m.sortPages()}</span>
           <select
-            aria-label="Sort pages"
+            aria-label={m.sortPages()}
             value={sort}
             onChange={(e) => setSort(e.target.value)}
           >
-            <option value="recent">Recently edited</option>
-            <option value="name">Name A–Z</option>
+            <option value="recent">{m.recentlyEdited()}</option>
+            <option value="name">{m.nameAZ()}</option>
           </select>
         </label>
         <div
           className="library-view-toggle"
           role="group"
-          aria-label="Library view"
+          aria-label={m.libraryView()}
         >
           <button
-            aria-label="Grid view"
+            aria-label={m.gridView()}
             aria-pressed={layout === 'grid'}
             onClick={() => setLayout('grid')}
           >
             <LayoutGrid size={17} />
           </button>
           <button
-            aria-label="List view"
+            aria-label={m.listView()}
             aria-pressed={layout === 'list'}
             onClick={() => setLayout('list')}
           >
@@ -109,10 +111,8 @@ export function SpaceLibrary({
         </div>
       </div>
       <div className="library-section-label">
-        <h2>{query ? 'Search results' : 'All pages'}</h2>
-        <span>
-          {filtered.length} {filtered.length === 1 ? 'page' : 'pages'}
-        </span>
+        <h2>{query ? m.searchResults() : m.allPages()}</h2>
+        <span>{m.pageCount(filtered.length)}</span>
       </div>
       {filtered.length ? (
         <div className={`library-pages ${layout}`}>
@@ -127,13 +127,10 @@ export function SpaceLibrary({
               </span>
               <div className="library-card-body">
                 <h3>{page.title}</h3>
-                <p>
-                  {pageExcerpt(page.content) ||
-                    'An empty page, ready to write.'}
-                </p>
+                <p>{pageExcerpt(page.content) || m.emptyPage()}</p>
                 <div className="library-page-meta">
                   <span title={new Date(page.updatedAt).toLocaleString()}>
-                    Edited{' '}
+                    {m.edited()}{' '}
                     {new Date(page.updatedAt).toLocaleDateString(undefined, {
                       month: 'short',
                       day: 'numeric',
@@ -156,15 +153,11 @@ export function SpaceLibrary({
       ) : (
         <div className="library-empty">
           <FileText size={30} strokeWidth={1.3} />
-          <h2>{query ? 'No matching pages' : 'No pages yet'}</h2>
-          <p>
-            {query
-              ? 'Try a different title or phrase.'
-              : 'Create your first page to start organizing this Space.'}
-          </p>
+          <h2>{query ? m.noMatchingPages() : m.noPagesYet()}</h2>
+          <p>{query ? m.tryDifferentSearch() : m.createFirstPage()}</p>
           {!query && (
             <button className="document-primary" onClick={onNew}>
-              <Plus size={16} /> New page
+              <Plus size={16} /> {m.newPage()}
             </button>
           )}
         </div>

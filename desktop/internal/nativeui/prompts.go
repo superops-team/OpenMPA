@@ -6,6 +6,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/superops-team/OpenMPA/desktop/internal/dto"
 	"github.com/superops-team/OpenMPA/desktop/internal/host"
+	"github.com/superops-team/OpenMPA/desktop/internal/localization"
 	"github.com/superops-team/OpenMPA/desktop/internal/workspace"
 	"strings"
 )
@@ -34,6 +35,19 @@ func (p *Controller) HandleAction(action, id string) bool {
 	}
 	if action != "newConversation" && action != "createSpace" {
 		return false
+	}
+	if action == "newConversation" {
+		state := p.services.Connection.Status().Value
+		if state == nil || !state.Connected {
+			p.prompt = promptState{}
+			p.err = nil
+			p.settings.tab = "Runtime"
+			if p.window != nil {
+				p.window.Invalidate()
+			}
+			// Let the WebView navigation owner switch the shell to Settings.
+			return false
+		}
 	}
 	if p.busy {
 		p.message = "Finish the current operation before creating another item."
@@ -71,16 +85,16 @@ func (p *Controller) RenderOverlay(c *ui.Context, state host.ShellState) {
 				title = "New assistant"
 				label = "Assistant name"
 			}
-			ui.Text(c, title).FontSize(18).Bold()
+			ui.Text(c, localization.UI(title)).FontSize(18).Bold()
 			p.field(c, label, &p.prompt.name, false)
 			if p.prompt.assistant != nil {
 				p.note(c, "Recover the original assistant: "+p.prompt.assistant.SessionID)
 			}
 			if p.err != nil {
-				ui.Text(c, p.err.Message+statusSuffix(p.err)).FontSize(12).TextColor(ui.RGB(175, 60, 50))
+				ui.Text(c, localization.Error(p.err.Code, p.err.Message)+statusSuffix(p.err)).FontSize(12).TextColor(ui.RGB(175, 60, 50))
 			}
 			ui.Row(c).Gap(10).Children(func() {
-				ui.Button(c, "Cancel").Disabled(p.busy).OnClick(func() { p.prompt.open = false })
+				ui.Button(c, localization.Text("cancel", nil)).Label(localization.Text("cancel", nil)).Disabled(p.busy).OnClick(func() { p.prompt.open = false })
 				button := "Create"
 				if p.prompt.kind == "renameSession" {
 					button = "Save title"
@@ -92,8 +106,8 @@ func (p *Controller) RenderOverlay(c *ui.Context, state host.ShellState) {
 	p.renderSessionDialog(c)
 	if p.err != nil && !p.prompt.open && !p.sessionDialog.open && !state.Pane && state.View != "settings" && state.View != "channels" && state.View != "tasks" && state.View != "knowledge" {
 		ui.Column(c.Key("native-operation-feedback")).Absolute().Bottom(20).Right(20).Width(400).Padding(14).Gap(10).Background(ui.RGB(255, 255, 255)).Border(1, ui.RGB(225, 225, 225)).Radius(8).Label("Native operation status").Children(func() {
-			ui.Text(c, p.err.Message+statusSuffix(p.err)).FontSize(12)
-			ui.Button(c, "Dismiss").OnClick(func() { p.err = nil })
+			ui.Text(c, localization.Error(p.err.Code, p.err.Message)+statusSuffix(p.err)).FontSize(12)
+			ui.Button(c, localization.Text("dismiss", nil)).OnClick(func() { p.err = nil })
 		})
 	}
 	switch ui.AlertDialog(c, &p.confirm, p.confirmTitle, p.confirmMessage, "Cancel", "Continue") {
@@ -143,8 +157,8 @@ func (p *Controller) createPromptItem() {
 		return
 	}
 	state := p.services.Connection.Status().Value
-	if !state.Connected || !state.HasBusinessIdentity {
-		p.err = dto.Failure("notConnected", "desktop", "never", 0)
+	if err := assistantCreationPrecondition(*state); err != nil {
+		p.err = err
 		return
 	}
 	intent := p.prompt.assistant
@@ -189,6 +203,19 @@ func (p *Controller) createPromptItem() {
 			host.NotifyCreated(p.host, "sessionCreated", record.SessionID)
 		}, nil
 	})
+}
+
+// assistantCreationPrecondition mirrors AgentKit key-auth: a bound Runtime
+// key is a complete Session identity. An explicit business identity is an
+// optional subject override and must not be mistaken for connectivity.
+func assistantCreationPrecondition(state dto.ConnectionState) *dto.SafeError {
+	if !state.Connected {
+		return dto.Failure("notConnected", "desktop", "never", 0)
+	}
+	if !state.HasCredential {
+		return dto.Failure("authRequired", "desktop", "never", 0)
+	}
+	return nil
 }
 
 func workspaceError(e *workspace.ServiceError) *dto.SafeError {

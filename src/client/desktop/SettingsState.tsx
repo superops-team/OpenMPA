@@ -11,6 +11,7 @@ import type {
   DesktopServices,
   ImagesVM,
   PlatformVM,
+  RegionVM,
   RuntimeVM,
 } from './models';
 import { reviewImages } from './image-review';
@@ -25,22 +26,25 @@ export function useDesktopSettingsState({
   onConnection: (connection: ConnectionVM | undefined) => void;
 }) {
   const [platform, setPlatform] = useState<PlatformVM>();
-  const [profiles, setProfiles] = useState<
-    Array<{
-      profileId: string;
-      label: string;
-      accountId: string;
-      runtimeId?: string;
-    }>
-  >([]);
   const [credentials, setCredentials] = useState({
     accessKey: '',
     secretKey: '',
     securityToken: '',
     region: 'cn-beijing',
-    remember: false,
   });
   const [region, setRegion] = useState('cn-beijing');
+  const [regions, setRegions] = useState<RegionVM[]>([
+    {
+      id: 'cn-beijing',
+      name: '华北2（北京）',
+      endpointHost: 'agentkit.cn-beijing.volcengineapi.com',
+    },
+    {
+      id: 'cn-shanghai',
+      name: '华东2（上海）',
+      endpointHost: 'agentkit.cn-shanghai.volcengineapi.com',
+    },
+  ]);
   const [project, setProject] = useState('default');
   const [runtimes, setRuntimes] = useState<RuntimeVM[]>([]);
   const [directoryScope, setDirectoryScope] = useState('');
@@ -74,7 +78,10 @@ export function useDesktopSettingsState({
     void services.platform
       .status()
       .then((value) => {
-        if (generation.current === current) setPlatform(value);
+        if (generation.current === current) {
+          setPlatform(value);
+          if (value.region) setRegion(value.region);
+        }
       })
       .catch((error: unknown) => {
         if (generation.current === current)
@@ -84,19 +91,16 @@ export function useDesktopSettingsState({
               : 'Could not read account status.',
           );
       });
-    void services.platform
-      .profiles()
-      .then((list) => {
-        if (generation.current === current) setProfiles(list);
-      })
-      .catch((error: unknown) => {
-        if (generation.current === current)
-          setError(
-            error instanceof Error
-              ? error.message
-              : 'Saved accounts could not be read.',
-          );
-      });
+    if (services.platform.regions) {
+      void services.platform
+        .regions()
+        .then((value) => {
+          if (generation.current === current && value.length) setRegions(value);
+        })
+        .catch(() => {
+          // The packaged native catalog remains the safe fallback.
+        });
+    }
     return () => {
       generation.current++;
     };
@@ -215,8 +219,8 @@ export function useDesktopSettingsState({
     setCredentials,
     setRegion,
     setNotice,
-    profiles,
     region,
+    regions,
     project,
     setProject,
     directoryLoading,

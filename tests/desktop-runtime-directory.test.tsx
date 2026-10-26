@@ -45,8 +45,8 @@ it('loads the signed-in account directory and rejects old region results before 
   expect(list).toHaveBeenCalledWith('cn-beijing', 'default');
   await act(async () => {
     renderer.root
-      .findAllByType('input')
-      .find((input) => input.props.value === 'cn-beijing')!
+      .findAllByType('select')
+      .find((select) => select.props.value === 'cn-beijing')!
       .props.onChange({ target: { value: 'cn-shanghai' } });
   });
   expect(list).toHaveBeenLastCalledWith('cn-shanghai', 'default');

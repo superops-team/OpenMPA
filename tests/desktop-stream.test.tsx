@@ -203,7 +203,7 @@ it('keeps running when the Runtime returns aborted false and reads authoritative
   await act(async () =>
     renderer.root
       .findAllByType('button')
-      .find((button) => button.children.includes(' Stop current session'))!
+      .find((button) => button.props['aria-label'] === 'Stop current session')!
       .props.onClick(),
   );
   expect(read).toHaveBeenCalledTimes(2);

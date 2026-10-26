@@ -8,7 +8,7 @@ import (
 )
 
 func TestNativeCreationDialogIsReversibleAndDoesNotCreateOnOpen(t *testing.T) {
-	p := testController()
+	p := testController(t)
 	p.prompt = promptState{open: true, kind: "createSpace"}
 	tt := ui.NewTester(func(c *ui.Context) { p.RenderOverlay(c, p.shell) }, 760, 700)
 	if _, ok := tt.Find("Space name"); !ok {
@@ -44,8 +44,46 @@ func TestAssistantCreationIntentKeepsOriginalIDAfterRestart(t *testing.T) {
 	}
 }
 
+func TestAssistantCreationAllowsRuntimeKeyIdentity(t *testing.T) {
+	tests := []struct {
+		name  string
+		state dto.ConnectionState
+		code  string
+	}{
+		{name: "agentkit runtime key", state: dto.ConnectionState{Connected: true, HasCredential: true}},
+		{name: "explicit business identity", state: dto.ConnectionState{Connected: true, HasCredential: true, HasBusinessIdentity: true}},
+		{name: "disconnected", state: dto.ConnectionState{}, code: "notConnected"},
+		{name: "credential missing", state: dto.ConnectionState{Connected: true}, code: "authRequired"},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			err := assistantCreationPrecondition(test.state)
+			if test.code == "" && err != nil {
+				t.Fatalf("valid Runtime identity rejected: %+v", err)
+			}
+			if test.code != "" && (err == nil || err.Code != test.code) {
+				t.Fatalf("got %+v, want %s", err, test.code)
+			}
+		})
+	}
+}
+
+func TestDisconnectedNewAssistantRoutesToRuntimeSettingsWithoutDialog(t *testing.T) {
+	p := testController(t)
+	p.settings.tab = "Account"
+	if handled := p.HandleAction("newConversation", ""); handled {
+		t.Fatal("native handler swallowed the navigation to Runtime settings")
+	}
+	if p.prompt.open {
+		t.Fatal("disconnected new assistant opened an unusable creation dialog")
+	}
+	if p.settings.tab != "Runtime" {
+		t.Fatalf("new assistant routed to %q, want Runtime settings", p.settings.tab)
+	}
+}
+
 func TestNativeSessionDialogRejectsOldDirectory(t *testing.T) {
-	p := testController()
+	p := testController(t)
 	p.shell.SelectedSession = "session"
 	p.shell.ConnectionEpoch = p.epoch() + 1
 	p.shell.Sessions = []host.NavigationItem{{ID: "session", Title: "Title"}}
@@ -55,7 +93,7 @@ func TestNativeSessionDialogRejectsOldDirectory(t *testing.T) {
 }
 
 func TestNativeRenameDialogShowsCurrentTitle(t *testing.T) {
-	p := testController()
+	p := testController(t)
 	p.shell = host.ShellState{ConnectionEpoch: p.epoch(), SelectedSession: "session", Sessions: []host.NavigationItem{{ID: "session", Title: "Current title"}}}
 	if !p.sessionAction("renameSession") {
 		t.Fatal("rename not handled")
@@ -70,7 +108,7 @@ func TestNativeRenameDialogShowsCurrentTitle(t *testing.T) {
 }
 
 func TestNativeActionFailureRemainsVisibleOverChat(t *testing.T) {
-	p := testController()
+	p := testController(t)
 	p.err = dto.Failure("staleConnection", "desktop", "reload", 0)
 	tt := ui.NewTester(func(c *ui.Context) { p.RenderOverlay(c, host.ShellState{View: "chat"}) }, 760, 700)
 	if _, ok := tt.Find("Native operation status"); !ok {

@@ -90,6 +90,29 @@
   flex-direction: column;
   height: 100%;
 }
+.desktop-app .persistent-chat.live-chat {
+  width: 100%;
+  max-width: none;
+  padding: 0 0 20px;
+}
+.desktop-app .chat-persona,
+.desktop-app .chat-composer,
+.desktop-app .chat-status {
+  width: calc(100% - 48px);
+  max-width: 760px;
+  margin-inline: auto;
+  box-sizing: border-box;
+}
+.desktop-app .chat-transcript-wrap {
+  width: 100%;
+}
+.desktop-app .chat-transcript {
+  scrollbar-gutter: stable;
+  padding-inline: max(24px, calc((100% - 760px) / 2));
+}
+.desktop-app .chat-jump {
+  right: max(24px, calc((100% - 760px) / 2));
+}
 .desktop-app .chat-column {
   display: flex;
   flex-direction: column;
@@ -105,9 +128,17 @@
   min-height: 0;
   overflow-y: auto;
 }
-.desktop-app .chat-composer textarea {
-  resize: vertical;
-  min-height: 48px;
+.desktop-app .composer-field textarea {
+  resize: none;
+  min-height: 44px;
+  caret-color: #5f8f87;
+}
+/* The product-wide ink focus ring reads as a heavy black frame around a
+   multi-line composer. The container's teal focus ring is the indicator. */
+.desktop-app .composer-field textarea:focus,
+.desktop-app .composer-field textarea:focus-visible {
+  outline: none;
+  outline-offset: 0;
 }
 .desktop-app .document-chat-dock {
   padding: 16px;
@@ -154,5 +185,16 @@
   }
   .desktop-runtime {
     align-items: start;
+  }
+  .desktop-app .chat-persona,
+  .desktop-app .chat-composer,
+  .desktop-app .chat-status {
+    width: calc(100% - 32px);
+  }
+  .desktop-app .chat-transcript {
+    padding-inline: 16px;
+  }
+  .desktop-app .chat-jump {
+    right: 16px;
   }
 }

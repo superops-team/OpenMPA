@@ -173,16 +173,16 @@ export function useDesktopAppState({
       setError('');
   }, []);
   const createSession = async () => {
+    if (!connection) {
+      navigate('settings');
+      return;
+    }
     if (services.host?.requestConversation) {
       try {
         await services.host.requestConversation();
       } catch (error) {
         reportFailure(error, 'bots');
       }
-      return;
-    }
-    if (!connection) {
-      navigate('settings');
       return;
     }
     const current = connection.epoch;

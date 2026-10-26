@@ -37,7 +37,7 @@ func TestChannelSelectionUsesProviderAndAccount(t *testing.T) {
 }
 
 func TestNativeChannelCatalogueRowRemainsReachable(t *testing.T) {
-	p := testController()
+	p := testController(t)
 	_, e := p.services.Connection.Client.Bind(connection.Binding{Endpoint: "https://example.com", Scope: "test", RuntimeID: "r", RuntimeKey: "key"}, false)
 	if e != nil {
 		t.Fatal(e)

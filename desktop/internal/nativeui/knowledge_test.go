@@ -9,7 +9,7 @@ import (
 )
 
 func TestNativeKnowledgeFormKeepsSessionAndVersion(t *testing.T) {
-	p := testController()
+	p := testController(t)
 	_, e := p.services.Connection.Client.Bind(connection.Binding{Endpoint: "https://example.com", RuntimeID: "r", Scope: "scope", RuntimeKey: "key"}, false)
 	if e != nil {
 		t.Fatal(e)

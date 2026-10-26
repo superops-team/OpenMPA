@@ -61,9 +61,13 @@ export function useDesktopChatState({
   const stream = useRef<
     ReturnType<DesktopServices['sessions']['subscribe']> | undefined
   >(undefined);
-  const scroll = useRef<HTMLDivElement>(null);
+  const transcript = useRef<HTMLDivElement>(null);
+  const stickToBottom = useRef(true);
+  const [showJump, setShowJump] = useState(false);
   useEffect(() => {
     mounted.current = true;
+    stickToBottom.current = true;
+    setShowJump(false);
     setHistoryLoaded(false);
     const current = ++generation.current;
     void Promise.all([
@@ -116,8 +120,37 @@ export function useDesktopChatState({
     };
   }, [services, connection.epoch, session.id]);
   useEffect(() => {
-    scroll.current?.scrollIntoView({ block: 'end' });
+    const element = transcript.current;
+    if (!element) return;
+    if (stickToBottom.current) {
+      element.scrollTop = element.scrollHeight;
+      setShowJump(false);
+    } else {
+      setShowJump(true);
+    }
   }, [projection.messages]);
+  const onTranscriptScroll = () => {
+    const element = transcript.current;
+    if (!element) return;
+    const nearBottom =
+      element.scrollHeight - element.scrollTop - element.clientHeight <= 80;
+    stickToBottom.current = nearBottom;
+    if (nearBottom) setShowJump(false);
+  };
+  const jumpToBottom = () => {
+    const element = transcript.current;
+    if (!element) return;
+    stickToBottom.current = true;
+    setShowJump(false);
+    const reduceMotion =
+      typeof window !== 'undefined' &&
+      typeof window.matchMedia === 'function' &&
+      window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    element.scrollTo({
+      top: element.scrollHeight,
+      behavior: reduceMotion ? 'auto' : 'smooth',
+    });
+  };
   const send = async () => {
     if (
       submitting ||
@@ -535,7 +568,10 @@ export function useDesktopChatState({
     projection,
     onSaveReply,
     setError,
-    scroll,
+    transcript,
+    showJump,
+    onTranscriptScroll,
+    jumpToBottom,
     error,
     pending,
     generation,

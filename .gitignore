@@ -28,7 +28,6 @@ desktop/go.work
 desktop/go.work.sum
 desktop/verify-gui
 desktop/openmpa
-desktop/verify-secrets
 
 # Local agent tooling and account-bound live acceptance
 .trae/
@@ -55,3 +54,6 @@ prd-spec/features/agentkit-desktop/modules/2026-10-25-m11-human-operations.md
 # Python verification bytecode
 __pycache__/
 *.pyc
+
+# Local brainstorming mockups (visual companion)
+.superpowers/

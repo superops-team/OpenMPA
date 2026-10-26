@@ -4,6 +4,7 @@ import (
 	"github.com/egoist/mygo"
 	"github.com/egoist/mygo/ui"
 	"github.com/superops-team/OpenMPA/desktop/internal/dto"
+	"github.com/superops-team/OpenMPA/desktop/internal/localization"
 	"strings"
 	"sync"
 	"time"
@@ -97,7 +98,8 @@ func buttonFeedback(b ui.Element) {
 }
 
 func iconButton(c *ui.Context, action, label string, selected bool, fn func()) ui.Element {
-	b := ui.Button(c.Key(action), "").Label(label).Tooltip(label).Size(32, 32).Padding(0).Radius(5).BorderWidth(0).Background(ui.Transparent).Selected(selected)
+	shown := localization.UI(label)
+	b := ui.Button(c.Key(action), "").Label(shown).Tooltip(shown).Size(32, 32).Padding(0).Radius(5).BorderWidth(0).Background(ui.Transparent).Selected(selected)
 	if selected || b.Hovered() {
 		b.Background(ui.RGB(228, 228, 228))
 	}
@@ -111,7 +113,8 @@ func iconButton(c *ui.Context, action, label string, selected bool, fn func()) u
 func (r *nativeRail) controls(c *ui.Context) {
 	state := r.snapshot()
 	ui.Column(c).Fill().Padding(12, 6).Gap(10).AlignItems(ui.Center).Background(ui.RGB(245, 245, 245)).BorderWidth(0, 1, 0, 0).BorderColor(ui.RGB(228, 228, 228)).Children(func() {
-		home := ui.Button(c.Key("home"), "").Label("OpenMPA home").Tooltip("OpenMPA home").Size(36, 36).Padding(0).Radius(6).BorderWidth(0).Background(ui.Transparent)
+		homeLabel := localization.Text("openMpaHome", nil)
+		home := ui.Button(c.Key("home"), "").Label(homeLabel).Tooltip(homeLabel).Size(36, 36).Padding(0).Radius(6).BorderWidth(0).Background(ui.Transparent)
 		if home.Hovered() {
 			home.Background(ui.RGB(228, 228, 228))
 		}
@@ -137,21 +140,21 @@ func (r *nativeRail) controls(c *ui.Context) {
 func (r *nativeRail) titlebar(c *ui.Context) {
 	state := r.snapshot()
 	insets := c.TitleBar()
-	ui.Row(c).Key("titlebar").Label("OpenMPA title bar").Height(44).Shrink(0).Gap(10).AlignItems(ui.Center).
+	ui.Row(c).Key("titlebar").Label(localization.Text("titleBar", nil)).Height(44).Shrink(0).Gap(10).AlignItems(ui.Center).
 		Padding(0, insets.Right+14, 0, insets.Left+10).DragWindow().Background(ui.RGB(245, 245, 245)).
 		BorderWidth(0, 0, 1, 0).BorderColor(ui.RGB(228, 228, 228)).Children(func() {
 		ui.Text(c, "OpenMPA").FontSize(13).Bold().TextColor(ui.RGB(48, 48, 48)).SingleLine().Shrink(0)
 		iconButton(c, "toggleSidebar", "Toggle navigation", false, func() { r.action("toggleSidebar", "") })
 		// Divider defaults to Stretch, so a short titlebar rule must opt into centering.
-		ui.Divider(c).Key("titlebar-divider").Label("Title bar separator").Width(1).Height(16).AlignSelf(ui.Center).Background(ui.RGB(222, 222, 222)).Margin(0, 6)
-		ui.Row(c).Key("location").Label("Current location").Grow(1).MinWidth(0).Gap(12).Children(func() {
+		ui.Divider(c).Key("titlebar-divider").Label(localization.Text("titleBarSeparator", nil)).Width(1).Height(16).AlignSelf(ui.Center).Background(ui.RGB(222, 222, 222)).Margin(0, 6)
+		ui.Row(c).Key("location").Label(localization.Text("currentLocation", nil)).Grow(1).MinWidth(0).Gap(12).Children(func() {
 			location := state.Location
 			if location == "" {
-				location = "Your workspace"
+				location = localization.Text("yourWorkspace", nil)
 			}
 			title := state.PageTitle
 			if title == "" {
-				title = "chat"
+				title = localization.Text("chat", nil)
 			}
 			ui.Text(c, location).Tooltip(location).SingleLine().FontSize(13).TextColor(ui.RGB(105, 105, 105)).MinWidth(0).Shrink(1)
 			ui.Text(c, "/").FontSize(13).TextColor(ui.RGB(150, 150, 150)).Shrink(0)
@@ -163,7 +166,8 @@ func (r *nativeRail) titlebar(c *ui.Context) {
 func (r *nativeRail) sidebar(c *ui.Context) {
 	state := r.snapshot()
 	row := func(action, id, title, subtitle string, selected bool) {
-		b := ui.Button(c.Key(action+":"+id), "").Label(title).Tooltip(title).FillWidth().MinHeight(36).Padding(7, 9).Radius(6).BorderWidth(0).Background(ui.Transparent).Selected(selected)
+		shown := localization.UI(title)
+		b := ui.Button(c.Key(action+":"+id), "").Label(shown).Tooltip(shown).FillWidth().MinHeight(36).Padding(7, 9).Radius(6).BorderWidth(0).Background(ui.Transparent).Selected(selected)
 		if selected {
 			b.Background(ui.RGB(235, 237, 246))
 		} else if b.Hovered() {
@@ -177,9 +181,9 @@ func (r *nativeRail) sidebar(c *ui.Context) {
 				ui.Icon(c, icon).FontSize(17).TextColor(ui.RGB(112, 112, 112))
 			}
 			ui.Column(c).Grow(1).MinWidth(0).Gap(2).Children(func() {
-				ui.Text(c, title).FontSize(13).TextColor(ui.RGB(80, 80, 80)).SingleLine()
+				ui.Text(c, shown).FontSize(13).TextColor(ui.RGB(80, 80, 80)).SingleLine()
 				if subtitle != "" {
-					ui.Text(c, subtitle).FontSize(11).TextColor(ui.RGB(120, 120, 120)).SingleLine()
+					ui.Text(c, localization.UI(subtitle)).FontSize(11).TextColor(ui.RGB(120, 120, 120)).SingleLine()
 				}
 			})
 		})
@@ -189,15 +193,15 @@ func (r *nativeRail) sidebar(c *ui.Context) {
 	}
 	heading := func(label, action, actionLabel string) {
 		ui.Row(c).Margin(10, 4, 4).Children(func() {
-			ui.Text(c, label).FontSize(11).Bold().TextColor(ui.RGB(115, 115, 115)).Grow(1)
+			ui.Text(c, localization.UI(label)).FontSize(11).Bold().TextColor(ui.RGB(115, 115, 115)).Grow(1)
 			if action != "" {
 				iconButton(c, "newConversation", actionLabel, false, func() { r.action(action, "") }).Size(24, 24)
 			}
 		})
 	}
-	ui.Column(c).Key("sidebar").Label("Workspace navigation").Fill().Padding(12, 10).Gap(4).Background(ui.RGB(249, 249, 249)).BorderWidth(0, 1, 0, 0).BorderColor(ui.RGB(228, 228, 228)).Children(func() {
+	ui.Column(c).Key("sidebar").Label(localization.Text("workspaceNavigation", nil)).Fill().Padding(12, 10).Gap(4).Background(ui.RGB(249, 249, 249)).BorderWidth(0, 1, 0, 0).BorderColor(ui.RGB(228, 228, 228)).Children(func() {
 		row("newConversation", "", "New conversation", "", false)
-		ui.TextInput(c.Key("navigation-search"), &r.query).Label("Find conversations").Placeholder("Search assistants and Spaces").FillWidth()
+		ui.TextInput(c.Key("navigation-search"), &r.query).Label(localization.Text("findConversations", nil)).Placeholder(localization.Text("searchAssistantsSpaces", nil)).FillWidth()
 		matches := func(item NavigationItem) bool {
 			return strings.Contains(strings.ToLower(item.ID+" "+item.Title), strings.ToLower(strings.TrimSpace(r.query)))
 		}
@@ -235,7 +239,7 @@ func (r *nativeRail) sidebar(c *ui.Context) {
 			if item.heading != "" {
 				heading(item.heading, item.action, item.actionLabel)
 			} else if item.action == "" {
-				ui.Text(c, item.title).Padding(8).FontSize(12).TextColor(ui.RGB(120, 120, 120))
+				ui.Text(c, localization.UI(item.title)).Padding(8).FontSize(12).TextColor(ui.RGB(120, 120, 120))
 			} else {
 				row(item.action, item.id, item.title, item.subtitle, item.selected)
 			}

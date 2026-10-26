@@ -5,9 +5,9 @@ import (
 	"errors"
 	"github.com/superops-team/OpenMPA/desktop/internal/cloud"
 	"github.com/superops-team/OpenMPA/desktop/internal/connection"
-	"github.com/superops-team/OpenMPA/desktop/internal/credentials"
 	"github.com/superops-team/OpenMPA/desktop/internal/deployment"
 	"github.com/superops-team/OpenMPA/desktop/internal/dto"
+	"github.com/superops-team/OpenMPA/desktop/internal/vault"
 	"strings"
 	"sync"
 	"time"
@@ -16,25 +16,135 @@ import (
 type Platform struct {
 	Cloud           *cloud.Client
 	Connection      *connection.Client
+	Vault           *vault.Service
 	mu              sync.RWMutex
 	target          dto.RuntimeRequest
 	toolID          string
 	boundScope      string
 	boundCloudEpoch uint64
 	operationMu     sync.Mutex
-	persistence     *loginPersistence
 }
 
 func NewPlatform(c *cloud.Client, conn *connection.Client) *Platform {
 	return &Platform{Cloud: c, Connection: conn}
 }
+
+func NewPlatformWithVault(c *cloud.Client, conn *connection.Client, v *vault.Service) *Platform {
+	p := NewPlatform(c, conn)
+	p.Vault = v
+	return p
+}
 func (p *Platform) Status() dto.PlatformStateResult {
 	out := p.Cloud.State()
-	if p.persistence != nil {
-		out = p.persistence.decorate(out)
-	}
 	return dto.PlatformStateResult{OK: true, Value: &out}
 }
+func (p *Platform) Regions() dto.RegionListResult {
+	out := dto.RegionList{Regions: cloud.Regions()}
+	return dto.RegionListResult{OK: true, Value: &out}
+}
+
+// VaultStatus is a local read; it never returns the passphrase or any secret.
+func (p *Platform) VaultStatus() dto.VaultStatusResult {
+	out := dto.VaultStatus{}
+	if p.Vault == nil {
+		return dto.VaultStatusResult{OK: true, Value: &out}
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+	defer cancel()
+	status, err := p.Vault.Status(ctx)
+	if err != nil {
+		return dto.VaultStatusResult{Error: dto.Failure("vaultUnavailable", "desktop", "readOnly", 0)}
+	}
+	out.Exists = status.Exists
+	out.AccountID = status.AccountID
+	out.Region = status.Region
+	if status.UpdatedAt > 0 {
+		out.UpdatedAt = time.UnixMilli(status.UpdatedAt).UTC().Format(time.RFC3339)
+	}
+	return dto.VaultStatusResult{OK: true, Value: &out}
+}
+
+// SaveVault encrypts the current in-memory credential. It requires a signed-in
+// session because only the cloud client can prove the account and Region.
+func (p *Platform) SaveVault(ctx context.Context, r dto.VaultPassphraseRequest) dto.VaultStatusResult {
+	if p.Vault == nil {
+		return dto.VaultStatusResult{Error: dto.Failure("vaultUnavailable", "desktop", "never", 0)}
+	}
+	credential, state, ok := p.Cloud.Credential()
+	if !ok || state.Principal == nil || state.Region == "" {
+		return dto.VaultStatusResult{Error: dto.Failure("vaultNotSignedIn", "desktop", "never", 0)}
+	}
+	passphrase := []byte(r.Passphrase)
+	r.Passphrase = ""
+	defer clear(passphrase)
+	payload := vault.Payload{AccessKey: credential.AccessKey, SecretKey: credential.SecretKey, SecurityToken: credential.Token, ExpiresAt: credential.ExpiresAt}
+	err := p.Vault.Save(ctx, passphrase, payload, state.Principal.AccountID, state.Region)
+	payload = vault.Payload{}
+	if err != nil {
+		if errors.Is(err, vault.ErrInvalid) {
+			return dto.VaultStatusResult{Error: dto.Failure("invalidInput", "desktop", "never", 0)}
+		}
+		return dto.VaultStatusResult{Error: dto.Failure("vaultUnavailable", "desktop", "readOnly", 0)}
+	}
+	return p.VaultStatus()
+}
+
+// UnlockVault decrypts the saved credential and signs in. A wrong passphrase
+// and a damaged record deliberately share one safe error.
+func (p *Platform) UnlockVault(ctx context.Context, r dto.VaultPassphraseRequest) dto.PlatformStateResult {
+	if p.Vault == nil {
+		return dto.PlatformStateResult{Error: dto.Failure("vaultUnavailable", "desktop", "never", 0)}
+	}
+	p.operationMu.Lock()
+	defer p.operationMu.Unlock()
+	passphrase := []byte(r.Passphrase)
+	r.Passphrase = ""
+	defer clear(passphrase)
+	payload, record, err := p.Vault.Unlock(ctx, passphrase)
+	if err != nil {
+		switch {
+		case errors.Is(err, vault.ErrMissing):
+			return dto.PlatformStateResult{Error: dto.Failure("vaultMissing", "desktop", "never", 0)}
+		case errors.Is(err, vault.ErrWrongPassphrase):
+			return dto.PlatformStateResult{Error: dto.Failure("vaultWrongPassphrase", "desktop", "never", 0)}
+		default:
+			return dto.PlatformStateResult{Error: dto.Failure("vaultUnavailable", "desktop", "readOnly", 0)}
+		}
+	}
+	state, signInError := p.Cloud.SignIn(ctx, dto.SignInRequest{
+		Region:        record.Region,
+		AccessKey:     payload.AccessKey,
+		SecretKey:     payload.SecretKey,
+		SecurityToken: payload.SecurityToken,
+		ExpiresAt:     payload.ExpiresAt,
+	})
+	payload = vault.Payload{}
+	if signInError != nil {
+		return dto.PlatformStateResult{Error: signInError}
+	}
+	if state.Principal == nil || state.Principal.AccountID != record.AccountID {
+		p.Cloud.SignOut()
+		p.Connection.Disconnect()
+		clearTarget(p)
+		return dto.PlatformStateResult{Error: dto.Failure("vaultAccountMismatch", "desktop", "never", 0)}
+	}
+	p.Connection.Disconnect()
+	clearTarget(p)
+	return dto.PlatformStateResult{OK: true, Value: &state}
+}
+
+func (p *Platform) ForgetVault() dto.EmptyResult {
+	if p.Vault == nil {
+		return dto.EmptyResult{Error: dto.Failure("vaultUnavailable", "desktop", "never", 0)}
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+	defer cancel()
+	if err := p.Vault.Forget(ctx); err != nil {
+		return dto.EmptyResult{Error: dto.Failure("vaultUnavailable", "desktop", "readOnly", 0)}
+	}
+	return dto.EmptyResult{OK: true, Value: &dto.Empty{}}
+}
+
 func (p *Platform) SignIn(ctx context.Context, r dto.SignInRequest) dto.PlatformStateResult {
 	p.operationMu.Lock()
 	defer p.operationMu.Unlock()
@@ -42,15 +152,6 @@ func (p *Platform) SignIn(ctx context.Context, r dto.SignInRequest) dto.Platform
 	if e == nil {
 		p.Connection.Disconnect()
 		clearTarget(p)
-		if p.persistence != nil {
-			e = p.persistence.signIn(ctx, out, r)
-			if e != nil {
-				p.Cloud.SignOut()
-				p.Connection.Disconnect()
-			} else {
-				out = p.persistence.decorate(out)
-			}
-		}
 	}
 	return dto.PlatformStateResult{OK: e == nil, Value: only(&out, e), Error: e}
 }
@@ -106,11 +207,6 @@ func (p *Platform) bindRuntime(ctx context.Context, r dto.RuntimeRequest) dto.Co
 		}
 		return bindingError
 	})
-	if e == nil {
-		if p.persistence != nil {
-			e = p.persistence.bind(r)
-		}
-	}
 	out := p.Connection.State()
 	return dto.ConnectionStateResult{OK: e == nil, Value: only(&out, e), Error: e}
 }
@@ -121,18 +217,20 @@ func (p *Platform) Versions(ctx context.Context, r dto.RuntimeRequest) dto.Versi
 func (p *Platform) SignOut() dto.EmptyResult {
 	p.operationMu.Lock()
 	defer p.operationMu.Unlock()
-	var e *dto.SafeError
-	if p.persistence != nil {
-		ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
-		defer cancel()
-		e = p.persistence.signOut(ctx)
-	}
 	p.Cloud.SignOut()
 	p.Connection.Disconnect()
 	clearTarget(p)
-	if e != nil {
-		return dto.EmptyResult{Error: e}
-	}
+	return dto.EmptyResult{OK: true, Value: &dto.Empty{}}
+}
+
+// ResetRuntime drops the current Runtime projection without signing the cloud
+// account out. Region or project changes must not retain a binding from the
+// previous Runtime directory.
+func (p *Platform) ResetRuntime() dto.EmptyResult {
+	p.operationMu.Lock()
+	defer p.operationMu.Unlock()
+	p.Connection.Disconnect()
+	clearTarget(p)
 	return dto.EmptyResult{OK: true, Value: &dto.Empty{}}
 }
 
@@ -168,9 +266,6 @@ func DeploymentTarget(p *Platform) deployment.Target {
 		return empty
 	}
 	profile := cloudState.Principal.CloudPrincipalID
-	if profile == "" && p.persistence != nil {
-		profile = p.persistence.decorate(cloudState).ProfileID
-	}
 	if profile == "" {
 		return empty
 	}
@@ -197,16 +292,7 @@ func (c *Connection) SetBusinessIdentity(ctx context.Context, r dto.IdentityRequ
 		c.Platform.operationMu.Lock()
 		defer c.Platform.operationMu.Unlock()
 	}
-	operationCtx, cancel := context.WithTimeout(ctx, 30*time.Second)
-	defer cancel()
 	e := c.Client.SetBusinessAuth(r)
-	if e == nil && c.Platform != nil && c.Platform.persistence != nil {
-		scope, saveError := c.Platform.persistence.saveAuth(operationCtx, Target(c.Platform), &r, nil)
-		e = saveError
-		if e == nil && r.AuthMode == "legacyJwt" && scope != "" {
-			c.Client.SetBusinessScope(c.Client.State().ConnectionEpoch, scope)
-		}
-	}
 	if e != nil {
 		c.Client.Disconnect()
 	}
@@ -247,90 +333,10 @@ func (c *Connection) ConfigureChannelAuth(ctx context.Context, r dto.ChannelAuth
 		c.Platform.operationMu.Lock()
 		defer c.Platform.operationMu.Unlock()
 	}
-	operationCtx, cancel := context.WithTimeout(ctx, 30*time.Second)
-	defer cancel()
 	e := c.Client.ConfigureChannelAuth(r)
-	if e == nil && c.Platform != nil && c.Platform.persistence != nil {
-		_, e = c.Platform.persistence.saveAuth(operationCtx, Target(c.Platform), nil, &r)
-	}
 	if e != nil {
 		c.Client.Disconnect()
 	}
 	out := c.Client.State()
 	return dto.ConnectionStateResult{OK: e == nil, Value: only(&out, e), Error: e}
-}
-
-// SavedProfiles exposes safe references only; credentials remain in the system store.
-func (p *Platform) SavedProfiles() dto.SavedProfilesResult {
-	if p.persistence == nil {
-		return dto.SavedProfilesResult{OK: true, Value: &dto.SavedProfiles{Profiles: []dto.SavedProfile{}}}
-	}
-	out, e := p.persistence.list()
-	return dto.SavedProfilesResult{OK: e == nil, Value: only(&out, e), Error: e}
-}
-func NewPlatformWithPersistence(c *cloud.Client, conn *connection.Client, store *credentials.Store, path func() (string, error)) *Platform {
-	p := NewPlatform(c, conn)
-	p.persistence = newLoginPersistence(store, path)
-	return p
-}
-func (p *Platform) Restore(ctx context.Context, r dto.RestoreRequest) dto.PlatformStateResult {
-	p.operationMu.Lock()
-	defer p.operationMu.Unlock()
-	if p.persistence == nil {
-		return dto.PlatformStateResult{Error: dto.Failure("savedProfileMissing", "transport", "never", 0)}
-	}
-	record, e := p.persistence.lookup(r.ProfileID)
-	if e != nil {
-		return dto.PlatformStateResult{Error: e}
-	}
-	bundle, err := p.persistence.store.Load(ctx, record.Profile)
-	if err != nil {
-		return dto.PlatformStateResult{Error: secretFailure(err)}
-	}
-	request := dto.SignInRequest{AccessKey: slotValue(bundle, credentials.CloudAK), SecretKey: slotValue(bundle, credentials.CloudSK), SecurityToken: slotValue(bundle, credentials.SecurityToken), ExpiresAt: record.ExpiresAt, Region: record.Summary.Region}
-	state, e := p.Cloud.SignIn(ctx, request)
-	if e != nil {
-		return dto.PlatformStateResult{Error: e}
-	}
-	clearTarget(p)
-	if state.Principal == nil || state.Principal.Scope != record.Profile.Scope {
-		p.Cloud.SignOut()
-		p.Connection.Disconnect()
-		return dto.PlatformStateResult{Error: dto.Failure("scopeMismatch", "platform", "never", 0)}
-	}
-	p.Connection.Disconnect()
-	p.persistence.activate(r.ProfileID)
-	for _, binding := range record.Bindings {
-		if binding.Runtime.RuntimeID != record.SelectedRuntime || binding.Runtime.Region != record.Summary.Region || binding.Runtime.ProjectName != record.Summary.ProjectName {
-			continue
-		}
-		result := p.bindRuntime(ctx, binding.Runtime)
-		if !result.OK {
-			return dto.PlatformStateResult{Error: result.Error}
-		}
-		b, loadError := p.persistence.store.Load(ctx, binding.Profile)
-		if loadError != nil && !errors.Is(loadError, credentials.ErrNotFound) {
-			return dto.PlatformStateResult{Error: secretFailure(loadError)}
-		}
-		epoch := p.Connection.State().ConnectionEpoch
-		if binding.BusinessMode != "" {
-			e = p.Connection.SetBusinessAuth(dto.IdentityRequest{ConnectionEpoch: epoch, AuthMode: binding.BusinessMode, LegacyJWT: slotValue(b, credentials.ApplicationJWT), TestSubject: binding.TestSubject, VerifiedTestDeployment: binding.VerifiedTest})
-			if e != nil {
-				return dto.PlatformStateResult{Error: e}
-			}
-			if binding.BusinessMode == "legacyJwt" {
-				p.Connection.SetBusinessScope(p.Connection.State().ConnectionEpoch, binding.BusinessScope)
-			}
-		}
-		epoch = p.Connection.State().ConnectionEpoch
-		if binding.ChannelMode != "" {
-			e = p.Connection.ConfigureChannelAuth(dto.ChannelAuthRequest{ConnectionEpoch: epoch, AuthMode: binding.ChannelMode, ChannelKey: slotValue(b, credentials.ChannelManagement), LegacyJWT: slotValue(b, credentials.ChannelManagementJWT)})
-			if e != nil {
-				return dto.PlatformStateResult{Error: e}
-			}
-		}
-		break
-	}
-	state = p.persistence.decorate(p.Cloud.State())
-	return dto.PlatformStateResult{OK: true, Value: &state}
 }

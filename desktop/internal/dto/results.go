@@ -5,6 +5,16 @@ type PlatformStateResult struct {
 	Value *PlatformState `json:"value,omitempty"`
 	Error *SafeError     `json:"error,omitempty"`
 }
+type RegionListResult struct {
+	OK    bool        `json:"ok"`
+	Value *RegionList `json:"value,omitempty"`
+	Error *SafeError  `json:"error,omitempty"`
+}
+type VaultStatusResult struct {
+	OK    bool         `json:"ok"`
+	Value *VaultStatus `json:"value,omitempty"`
+	Error *SafeError   `json:"error,omitempty"`
+}
 type RuntimeSummaryResult struct {
 	OK    bool            `json:"ok"`
 	Value *RuntimeSummary `json:"value,omitempty"`
