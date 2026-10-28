@@ -9,11 +9,13 @@ import (
 	"github.com/superops-team/OpenMPA/desktop/internal/configstore"
 	"github.com/superops-team/OpenMPA/desktop/internal/connection"
 	"github.com/superops-team/OpenMPA/desktop/internal/deployment"
+	"github.com/superops-team/OpenMPA/desktop/internal/dto"
 	"github.com/superops-team/OpenMPA/desktop/internal/host"
 	"github.com/superops-team/OpenMPA/desktop/internal/ipc"
 	"github.com/superops-team/OpenMPA/desktop/internal/knowledge"
 	"github.com/superops-team/OpenMPA/desktop/internal/localization"
 	"github.com/superops-team/OpenMPA/desktop/internal/runtimeconfig"
+	"github.com/superops-team/OpenMPA/desktop/internal/runtimeterminal"
 	"github.com/superops-team/OpenMPA/desktop/internal/schedule"
 	"github.com/superops-team/OpenMPA/desktop/internal/session"
 	"github.com/superops-team/OpenMPA/desktop/internal/trace"
@@ -82,6 +84,8 @@ func main() {
 	mygo.BindAs("RuntimeConfig", configService)
 	traceService := trace.New(conn)
 	mygo.BindAs("Trace", traceService)
+	terminalService := runtimeterminal.New(cloudClient, conn, func() dto.RuntimeRequest { return ipc.Target(platform) })
+	mygo.BindAs("Terminal", runtimeterminal.NewIPC(terminalService))
 	mygo.BindAs("Localization", languageService)
 	mygo.App.WhenReady(func() {
 		_ = localization.Load(languageService)
@@ -93,7 +97,12 @@ func main() {
 		host.RestrictPageNavigation(page)
 		host.RestrictPagePermissions(page)
 	})
-	mygo.App.OnQuit(func() { conn.Disconnect(); workspace.Shutdown(documents); settingsDB.Close() })
+	mygo.App.OnQuit(func() {
+		terminalService.CloseAll()
+		conn.Disconnect()
+		workspace.Shutdown(documents)
+		settingsDB.Close()
+	})
 	if e := mygo.App.Run(); e != nil {
 		log.Fatal("OpenMPA desktop could not start")
 	}

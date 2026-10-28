@@ -185,7 +185,6 @@ func (r *nativeRail) titlebar(c *ui.Context) {
 			ui.Text(c, "/").FontSize(c.Theme().FontSize).TextColor(c.Theme().TextMuted).Shrink(0)
 			ui.Text(c, title).Tooltip(title).SingleLine().FontSize(c.Theme().FontSize).TextColor(c.Theme().Text).MinWidth(0).Shrink(1)
 		})
-		iconButton(c, "trace", "Open turn trace", state.TraceOpen, func() { r.action("trace", "") })
 	})
 }
 func (r *nativeRail) sidebar(c *ui.Context) {
@@ -291,7 +290,7 @@ func (r *nativeRail) sidebar(c *ui.Context) {
 		}).Grow(1).MinHeight(0).Gap(3)
 
 		ui.Divider(c).Margin(8, 0)
-		for _, item := range []struct{ action, label string }{{"tasks", "Scheduled & activity"}, {"resources", "Skills, MCP & instructions"}, {"collaboration", "A2A collaboration"}, {"knowledge", "Knowledge"}, {"channels", "Channels & templates"}, {"settings", "Settings & setup"}} {
+		for _, item := range []struct{ action, label string }{{"tasks", "Scheduled & activity"}, {"resources", "Skills, MCP & instructions"}, {"collaboration", "A2A collaboration"}, {"knowledge", "Knowledge"}, {"channels", "Channels & templates"}} {
 			row(item.action, "", item.label, "", state.View == item.action)
 		}
 	})

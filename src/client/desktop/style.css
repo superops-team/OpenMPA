@@ -158,8 +158,17 @@
 .desktop-chat-actions {
   display: flex;
   justify-content: end;
-  gap: 12px;
+  align-items: center;
+  gap: 8px;
   padding: 6px 18px;
+}
+.desktop-chat-actions .text-button[aria-pressed='true'] {
+  background: var(--color-surface);
+  color: var(--color-foreground);
+}
+.desktop-chat-actions .text-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.42;
 }
 .desktop-app .persistent-chat {
   min-height: 0;

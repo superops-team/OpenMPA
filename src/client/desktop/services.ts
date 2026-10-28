@@ -7,6 +7,7 @@ import {
   Platform,
   Connection,
   Session,
+  Terminal,
   Trace,
   Localization,
   Workspace,
@@ -211,6 +212,11 @@ export function createDesktopServices(): DesktopServices {
     trace: {
       read: async (connectionEpoch, sessionId, invocationId) =>
         unwrap(await Trace.read({ connectionEpoch, sessionId, invocationId })),
+    },
+    terminal: {
+      open: async (connectionEpoch, sessionId, title) => {
+        unwrap(await Terminal.open({ connectionEpoch, sessionId, title }));
+      },
     },
     sessions: {
       models: async (connectionEpoch) => {
