@@ -1,6 +1,10 @@
 package host
 
 import (
+	"image/png"
+	"os"
+	"path/filepath"
+
 	"github.com/egoist/mygo/ui"
 	"math"
 	"strings"
@@ -49,7 +53,7 @@ func TestNativeShellLayoutAndState(t *testing.T) {
 	}
 	toggle, _ := tt.Find("Toggle navigation")
 	location, _ := tt.Find("Current location")
-	action, _ := tt.Find("Show capabilities and artifacts")
+	action, _ := tt.Find("Open turn trace")
 	if toggle.Y+toggle.H/2 != location.Y+location.H/2 || action.Y+action.H/2 != toggle.Y+toggle.H/2 || location.X < toggle.X+toggle.W || location.X+location.W > action.X {
 		t.Fatalf("top controls overlap or misalign: %v %v %v", toggle, location, action)
 	}
@@ -58,7 +62,7 @@ func TestNativeShellLayoutAndState(t *testing.T) {
 	if _, found := tt.Find("Workspace navigation"); found {
 		t.Fatal("sidebar did not collapse")
 	}
-	if _, found := tt.Find("Open Spaces"); !found {
+	if _, found := tt.Find("Open scheduled activity"); !found {
 		t.Fatal("native rail disappeared")
 	}
 	if validShellState(ShellState{View: "chat", Sessions: []NavigationItem{{ID: "s"}, {ID: "s"}}}) {
@@ -75,7 +79,7 @@ func TestNativeRailActions(t *testing.T) {
 	tt.Frame()
 	for _, item := range []struct{ label, action string }{
 		{"OpenMPA home", "home"}, {"Toggle sidebar", "toggleSidebar"}, {"New conversation", "newConversation"},
-		{"Open Spaces", "pages"}, {"Open scheduled activity", "tasks"}, {"Open settings", "settings"},
+		{"Open scheduled activity", "tasks"}, {"Open settings", "settings"},
 	} {
 		if err := tt.Click(item.label); err != nil {
 			t.Fatalf("missing native button %s", item.label)
@@ -84,7 +88,7 @@ func TestNativeRailActions(t *testing.T) {
 			t.Fatalf("action mismatch for %s: %v", item.label, actions)
 		}
 	}
-	if len(actions) != 6 {
+	if len(actions) != 5 {
 		t.Fatalf("duplicate actions %v", actions)
 	}
 	if New().SetShellState(ShellState{View: "arbitrary"}).OK {
@@ -94,25 +98,40 @@ func TestNativeRailActions(t *testing.T) {
 
 func TestNativeSidebarSelection(t *testing.T) {
 	var action, id string
-	rail := &nativeRail{state: ShellState{View: "chat", Sessions: []NavigationItem{{ID: "session-id", Title: "My assistant"}}, Spaces: []NavigationItem{{ID: "space-id", Title: "Personal"}}}, request: func(a, i string) { action, id = a, i }}
+	rail := &nativeRail{state: ShellState{View: "chat", SelectedAssistant: "runtime-a", Assistants: []NavigationItem{{ID: "runtime-a", Title: "Assistant A"}}, Sessions: []NavigationItem{{ID: "session-id", Title: "My conversation"}}}, request: func(a, i string) { action, id = a, i }}
 	tt := ui.NewTester(rail.sidebar, 240, 700)
-	if err := tt.Click("My assistant"); err != nil {
+	if _, found := tt.Find("Runtime"); !found {
+		t.Fatal("Runtime selector missing")
+	}
+	if err := tt.Click("My conversation"); err != nil {
 		t.Fatal(err)
 	}
 	if action != "selectSession" || id != "session-id" {
 		t.Fatalf("session action %s %s", action, id)
 	}
-	if err := tt.Click("Personal"); err != nil {
+	if err := tt.Click("New conversation"); err != nil {
 		t.Fatal(err)
 	}
-	if action != "selectSpace" || id != "space-id" {
-		t.Fatalf("space action %s %s", action, id)
+	if action != "newConversation" {
+		t.Fatal("new conversation action missing")
 	}
-	if err := tt.Click("Create Space"); err != nil {
+	if _, found := tt.Find("SPACES"); found {
+		t.Fatal("Spaces navigation must be removed")
+	}
+}
+
+func TestNativeSidebarSettingsSections(t *testing.T) {
+	var action, id string
+	rail := &nativeRail{state: ShellState{View: "settings", SettingsSection: "Runtime"}, request: func(a, i string) { action, id = a, i }}
+	tt := ui.NewTester(rail.sidebar, 240, 700)
+	if _, found := tt.Find("Home"); found {
+		t.Fatal("redundant Home row should not be rendered")
+	}
+	if err := tt.Click("Theme"); err != nil {
 		t.Fatal(err)
 	}
-	if action != "createSpace" {
-		t.Fatal("create space action missing")
+	if action != "selectSettingsSection" || id != "Theme" {
+		t.Fatalf("settings action %s %s", action, id)
 	}
 }
 
@@ -133,5 +152,42 @@ func TestNativeSidebarSearchKeepsExactSessionIdentity(t *testing.T) {
 	}
 	if selected != "session-b" {
 		t.Fatalf("selected %s", selected)
+	}
+}
+
+func TestSidebarPreviewImages(t *testing.T) {
+	cases := []struct {
+		name  string
+		state ShellState
+	}{
+		{name: "sidebar-chat", state: ShellState{View: "chat", SelectedAssistant: "runtime-a", Assistants: []NavigationItem{{ID: "runtime-a", Title: "Assistant A"}}, Sessions: []NavigationItem{{ID: "s", Title: "Conversation one"}}}},
+		{name: "sidebar-settings", state: ShellState{View: "settings", SettingsSection: "Runtime"}},
+	}
+	dir := t.TempDir()
+	for _, item := range cases {
+		rail := &nativeRail{state: item.state}
+		tt := ui.NewTester(rail.sidebar, 240, 700)
+		tt.Frame()
+		img := tt.Image()
+		if img.Bounds().Dx() != 240 || img.Bounds().Dy() != 700 {
+			t.Fatalf("%s dimensions %v", item.name, img.Bounds())
+		}
+		path := filepath.Join(dir, item.name+".png")
+		file, err := os.Create(path)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if err := png.Encode(file, img); err != nil {
+			file.Close()
+			t.Fatal(err)
+		}
+		if err := file.Close(); err != nil {
+			t.Fatal(err)
+		}
+		info, err := os.Stat(path)
+		if err != nil || info.Size() < 1000 {
+			t.Fatalf("%s preview missing or empty: %v %v", item.name, info, err)
+		}
+		t.Logf("%s %d bytes", path, info.Size())
 	}
 }

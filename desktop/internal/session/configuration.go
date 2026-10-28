@@ -57,6 +57,38 @@ func (s *Service) UpdateExecutionConfig(ctx context.Context, r dto.ExecutionConf
 	return decodeExecutionConfig(resp)
 }
 
+// EnsureExecutionConfig repairs a legacy normal Session only after the user
+// explicitly chooses a model. It does not submit a Turn or change an active
+// Turn's immutable execution snapshot.
+func (s *Service) EnsureExecutionConfig(ctx context.Context, r dto.SessionRequest) dto.ExecutionConfigResult {
+	current := s.ExecutionConfig(ctx, r)
+	if current.OK || current.Error == nil || current.Error.HTTPStatus != http.StatusNotFound {
+		return current
+	}
+	var overview struct {
+		Agent struct {
+			ID string `json:"id"`
+		} `json:"agent"`
+	}
+	if e := s.conn.JSON(ctx, r.ConnectionEpoch, http.MethodGet, "/api/v1/runtime-console/overview", nil, &overview); e != nil {
+		return dto.ExecutionConfigResult{Error: e}
+	}
+	if !validResourceID(overview.Agent.ID) {
+		return dto.ExecutionConfigResult{Error: dto.Failure("executionConfigUnavailable", "mpa", "never", 0)}
+	}
+	var created struct {
+		SessionID string `json:"sessionId"`
+	}
+	input := dto.CreateRequest{ConnectionEpoch: r.ConnectionEpoch, SessionID: r.SessionID, MPAInstanceID: overview.Agent.ID}
+	if e := s.conn.JSON(ctx, r.ConnectionEpoch, http.MethodPost, "/api/v1/sessions", input, &created); e != nil {
+		return dto.ExecutionConfigResult{Error: e}
+	}
+	if created.SessionID != r.SessionID {
+		return dto.ExecutionConfigResult{Error: dto.Failure("invalidResponse", "runtimeIngress", "verifyOnly", 0)}
+	}
+	return s.ExecutionConfig(ctx, r)
+}
+
 func decodeExecutionConfig(resp *http.Response) dto.ExecutionConfigResult {
 	defer resp.Body.Close()
 	var wire struct {

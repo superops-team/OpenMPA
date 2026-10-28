@@ -368,6 +368,11 @@
   line-height: 1.72;
   overflow-wrap: anywhere;
 }
+.conversation-turn {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
 .chat-bubble p {
   margin: 0 0 10px;
   line-height: inherit;
@@ -568,7 +573,8 @@
   place-items: center;
   transition:
     background-color 140ms cubic-bezier(0.23, 1, 0.32, 1),
-    color 140ms cubic-bezier(0.23, 1, 0.32, 1);
+    color 140ms cubic-bezier(0.23, 1, 0.32, 1),
+    transform 140ms cubic-bezier(0.23, 1, 0.32, 1);
 }
 .composer-action.send {
   background: #5f8f87;
@@ -576,6 +582,7 @@
 }
 .composer-action.send:hover:not(:disabled) {
   background: #527f78;
+  transform: translateY(-1px);
 }
 .composer-action.send:disabled {
   background: #cfd6e6;
@@ -588,6 +595,41 @@
 }
 .composer-action.stop:hover:not(:disabled) {
   background: #dce7e3;
+}
+.composer-action.is-submitting,
+.composer-action.is-running {
+  position: relative;
+}
+.composer-action.is-submitting::after,
+.composer-action.is-running::after {
+  content: '';
+  position: absolute;
+  inset: -3px;
+  border-radius: inherit;
+  border: 1px solid currentColor;
+  opacity: 0.28;
+  animation: composer-action-pulse 1100ms ease-out infinite;
+}
+.composer-action.is-running svg {
+  animation: composer-action-breathe 900ms ease-in-out infinite alternate;
+}
+@keyframes composer-action-pulse {
+  from {
+    transform: scale(0.88);
+    opacity: 0.32;
+  }
+  to {
+    transform: scale(1.22);
+    opacity: 0;
+  }
+}
+@keyframes composer-action-breathe {
+  from {
+    transform: scale(0.9);
+  }
+  to {
+    transform: scale(1);
+  }
 }
 .chat-status {
   flex: none;
@@ -638,6 +680,11 @@
   .composer-field,
   .composer-action {
     transition: none;
+  }
+  .composer-action.is-submitting::after,
+  .composer-action.is-running::after,
+  .composer-action.is-running svg {
+    animation: none;
   }
 }
 @media (max-width: 760px) {

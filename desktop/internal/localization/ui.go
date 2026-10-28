@@ -11,7 +11,7 @@ var uiKeys = map[string]string{
 	"The directory loads automatically. Select a Runtime to switch immediately.": "runtimeSwitchDescription",
 	"No MPA Runtimes are visible in this account, Region and Project.":           "noVisibleRuntimes",
 	"Display language": "displayLanguage", "Follow system": "followSystem", "中文": "chinese", "English": "english",
-	"OpenMPA uses one language across native UI, system menus and content pages.": "languageDescription", "Display language updated.": "languageChanged",
+	"OpenMPA uses one language across the desktop UI, system menus and content pages.": "languageDescription", "Display language updated.": "languageChanged",
 	"Volcengine account": "volcengineAccount", "Sign out": "signOut", "Access key": "accessKey", "Secret key": "secretKey",
 	"Security token (optional)": "securityTokenOptional", "Login region": "loginRegion", "Sign in": "signIn",
 	"Credentials remain in this OpenMPA process and are cleared on exit.": "credentialsSessionOnly", "Choose an MPA Runtime": "chooseRuntime", "Region": "region", "Project": "project",
@@ -39,9 +39,15 @@ var uiKeys = map[string]string{
 	"Toggle navigation": "toggleNavigation", "New conversation": "newConversation", "Open Spaces": "openSpaces", "Open scheduled activity": "openScheduledActivity",
 	"Open settings": "openSettings", "Show capabilities and artifacts": "showCapabilities", "OpenMPA title bar": "titleBar", "Title bar separator": "titleBarSeparator",
 	"Current location": "currentLocation", "Your workspace": "yourWorkspace", "chat": "chat", "Workspace navigation": "workspaceNavigation",
-	"Find conversations": "findConversations", "Search assistants and Spaces": "searchAssistantsSpaces", "ASSISTANTS": "assistants", "SPACES": "spaces",
+	"Find conversations": "findConversations", "Search conversations": "searchConversations", "ASSISTANTS": "assistants", "SPACES": "spaces",
+	"CONVERSATIONS": "conversations", "Configured skills only. Browsing the AgentKit skill space needs a catalog API this client does not have.": "assistantSkillScope", "No conversations yet.": "noConversations", "Assistant": "assistant", "Select an assistant": "selectAssistant", "Home": "home",
+	"SETTINGS": "settingsSectionsTitle", "Theme": "theme", "Session knowledge": "sessionKnowledge",
+	"Select a conversation first.": "selectConversationFirst", "Scheduled tasks for this assistant.": "scheduledForAssistant",
+	"Select a conversation to scope scheduled tasks to its assistant.": "selectConversationForSchedules",
+	"Display theme": "displayTheme", "The theme applies to the desktop shell and the conversation content.": "themeDescription",
+	"Light": "light", "Dark": "dark", "Display theme updated.": "themeChanged",
 	"RECENT CHATS": "recentChats", "Session": "session", "Choose your Runtime in Settings.": "chooseRuntimeSettings", "Scheduled & activity": "scheduledActivity",
-	"Channels & templates": "channelsTemplates", "Settings & setup": "settingsSetup", "Native operation status": "nativeOperationStatus", "Dismiss": "dismiss",
+	"Channels & templates": "channelsTemplates", "Settings & setup": "settingsSetup", "Host operation status": "nativeOperationStatus", "Dismiss": "dismiss",
 	"Runtime key identity": "runtimeKeyStatus", "Explicit business identity": "explicitIdentityStatus", "Authentication required": "authenticationRequired",
 }
 
@@ -58,6 +64,9 @@ func UI(value string) string {
 	}
 	if strings.HasPrefix(plain, "Recover the original assistant: ") {
 		return Text("recoverAssistant", map[string]any{"session": strings.TrimPrefix(plain, "Recover the original assistant: ")})
+	}
+	if strings.HasPrefix(plain, "Knowledge for conversation ") {
+		return Text("knowledgeForConversation", map[string]any{"session": strings.TrimPrefix(plain, "Knowledge for conversation ")})
 	}
 	return value
 }

@@ -80,6 +80,16 @@ type PendingListResult struct {
 	Value *PendingList `json:"value,omitempty"`
 	Error *SafeError   `json:"error,omitempty"`
 }
+type AssistantConfigResult struct {
+	OK    bool             `json:"ok"`
+	Value *AssistantConfig `json:"value,omitempty"`
+	Error *SafeError       `json:"error,omitempty"`
+}
+type SkillCatalogResult struct {
+	OK    bool          `json:"ok"`
+	Value *SkillCatalog `json:"value,omitempty"`
+	Error *SafeError    `json:"error,omitempty"`
+}
 type EmptyResult struct {
 	OK    bool       `json:"ok"`
 	Value *Empty     `json:"value,omitzero"`

@@ -1,0 +1,24 @@
+.turn-process {
+  color: var(--color-foreground);
+}
+.turn-process-disclosure {
+  background: var(--color-card);
+}
+.turn-process-inspect {
+  flex: none;
+}
+.turn-process-spin {
+  animation: turn-process-spin var(--motion-spinner-duration) linear infinite;
+}
+
+@keyframes turn-process-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .turn-process-spin {
+    animation: none;
+  }
+}

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 
 import {
   emptyProjection,
@@ -11,6 +11,13 @@ import type {
   PendingRunVM,
   SessionVM,
 } from './models';
+import {
+  closeStream,
+  consumeSessionEvents,
+  terminalObservation,
+  waitForSubscriptionBoundary,
+} from './chat-subscription';
+import { useChatBootstrap, useChatTranscript } from './chat-lifecycle';
 export function useDesktopChatState({
   services,
   connection,
@@ -41,18 +48,10 @@ export function useDesktopChatState({
   const [configVersion, setConfigVersion] = useState(session.configVersion);
   const [error, setError] = useState('');
   const [pending, setPending] = useState<PendingRunVM[]>([]);
+  const [completedInvocationIds, setCompletedInvocationIds] = useState<
+    string[]
+  >([]);
   const generation = useRef(0);
-  const mounted = useRef(false);
-  const currentScope = useRef({
-    epoch: connection.epoch,
-    sessionId: session.id,
-    scope: connection.scope,
-  });
-  currentScope.current = {
-    epoch: connection.epoch,
-    sessionId: session.id,
-    scope: connection.scope,
-  };
   const activeInvocation = useRef<string | undefined>(undefined);
   const cursor = useRef<string | undefined>(undefined);
   const subscriptionGeneration = useRef(0);
@@ -61,96 +60,26 @@ export function useDesktopChatState({
   const stream = useRef<
     ReturnType<DesktopServices['sessions']['subscribe']> | undefined
   >(undefined);
-  const transcript = useRef<HTMLDivElement>(null);
-  const stickToBottom = useRef(true);
-  const [showJump, setShowJump] = useState(false);
-  useEffect(() => {
-    mounted.current = true;
-    stickToBottom.current = true;
-    setShowJump(false);
-    setHistoryLoaded(false);
-    const current = ++generation.current;
-    void Promise.all([
-      services.sessions.read(connection.epoch, session.id),
-      services.sessions.pending(connection.epoch, session.id),
-    ])
-      .then(([history, saved]) => {
-        if (generation.current === current) {
-          setProjection({
-            ...emptyProjection({
-              connectionEpoch: connection.epoch,
-              subscriptionEpoch: current,
-              sessionId: session.id,
-            }),
-            messages: history.messages,
-          });
-          setConfigVersion(history.session.configVersion);
-          setPending(saved);
-          const invocation =
-            history.activeRun?.invocationId ||
-            saved.find((operation) => operation.invocationId)?.invocationId;
-          activeInvocation.current = invocation;
-          setResumeInvocation(invocation);
-          if (saved.length) {
-            setDraft(saved[0].content);
-            setExecution('unknown');
-          } else if (
-            ['running', 'queued', 'accepted'].includes(
-              (history.session.status || '').toLowerCase(),
-            )
-          )
-            setExecution('running');
-          else setExecution('idle');
-          setHistoryScope(`${connection.epoch}:${session.id}`);
-          setHistoryLoaded(true);
-        }
-      })
-      .catch((error: unknown) => {
-        if (generation.current === current)
-          setError(
-            error instanceof Error
-              ? error.message
-              : 'Could not load conversation.',
-          );
-      });
-    return () => {
-      mounted.current = false;
-      generation.current++;
-      stream.current?.close();
-    };
-  }, [services, connection.epoch, session.id]);
-  useEffect(() => {
-    const element = transcript.current;
-    if (!element) return;
-    if (stickToBottom.current) {
-      element.scrollTop = element.scrollHeight;
-      setShowJump(false);
-    } else {
-      setShowJump(true);
-    }
-  }, [projection.messages]);
-  const onTranscriptScroll = () => {
-    const element = transcript.current;
-    if (!element) return;
-    const nearBottom =
-      element.scrollHeight - element.scrollTop - element.clientHeight <= 80;
-    stickToBottom.current = nearBottom;
-    if (nearBottom) setShowJump(false);
-  };
-  const jumpToBottom = () => {
-    const element = transcript.current;
-    if (!element) return;
-    stickToBottom.current = true;
-    setShowJump(false);
-    const reduceMotion =
-      typeof window !== 'undefined' &&
-      typeof window.matchMedia === 'function' &&
-      window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    element.scrollTo({
-      top: element.scrollHeight,
-      behavior: reduceMotion ? 'auto' : 'smooth',
-    });
-  };
+  useChatBootstrap({
+    services,
+    connection,
+    session,
+    generation,
+    activeInvocation,
+    stream,
+    setProjection,
+    setHistoryLoaded,
+    setCompletedInvocationIds,
+    setConfigVersion,
+    setPending,
+    setDraft,
+    setExecution,
+    setHistoryScope,
+    setError,
+    setResumeInvocation,
+  });
+  const { transcript, showJump, onTranscriptScroll, jumpToBottom } =
+    useChatTranscript(projection.messages);
   const send = async () => {
     if (
       submitting ||
@@ -167,8 +96,27 @@ export function useDesktopChatState({
     const current = generation.current;
     resumeGeneration.current++;
     const prompt = draft.trim();
+    const optimisticId = crypto.randomUUID();
+    const optimisticInvocation = `optimistic:${optimisticId}`;
     setSubmitting(true);
     setError('');
+    setDraft('');
+    setExecution('submitting');
+    setProjection((previous) => ({
+      ...previous,
+      messages: [
+        ...previous.messages,
+        {
+          id: optimisticId,
+          role: 'user',
+          content: prompt,
+          invocationId: optimisticInvocation,
+          partial: false,
+          kind: 'message',
+        },
+      ],
+    }));
+    let receiptAccepted = false;
     try {
       const context = material ? await material() : '';
       if (generation.current !== current) return;
@@ -177,10 +125,11 @@ export function useDesktopChatState({
         session.id,
         context ? `${prompt}\n\n${context}` : prompt,
         configVersion,
+        session.mpaInstanceId || connection.runtimeId,
       );
       if (generation.current !== current) return;
       const subscriptionEpoch = ++subscriptionGeneration.current;
-      setDraft('');
+      receiptAccepted = true;
       setExecution(receipt.status);
       activeInvocation.current = receipt.invocationId;
       setResumeInvocation(receipt.invocationId);
@@ -193,19 +142,13 @@ export function useDesktopChatState({
           subscriptionEpoch,
           sessionId: session.id,
         },
-        messages: [
-          ...previous.messages,
-          {
-            id: crypto.randomUUID(),
-            role: 'user',
-            content: prompt,
-            invocationId: receipt.invocationId,
-            partial: false,
-            kind: 'message',
-          },
-        ],
+        messages: previous.messages.map((message) =>
+          message.id === optimisticId
+            ? { ...message, invocationId: receipt.invocationId }
+            : message,
+        ),
       }));
-      stream.current?.close();
+      closeStream(stream.current);
       const subscription = services.sessions.subscribe(
         connection.epoch,
         session.id,
@@ -214,41 +157,42 @@ export function useDesktopChatState({
       );
       stream.current = subscription;
       setExecution('running');
-      let verifiedTerminal = false;
+      const terminal = terminalObservation();
       // Subscribe is intentionally not awaited before consuming its Channel.
-      const consume = (async () => {
-        for await (const event of subscription.events) {
-          if (
-            generation.current !== current ||
-            subscriptionGeneration.current !== subscriptionEpoch
-          )
-            break;
-          if (
+      const consume = consumeSessionEvents({
+        subscription,
+        observation: terminal,
+        active: () =>
+          generation.current === current &&
+          subscriptionGeneration.current === subscriptionEpoch,
+        matches: (event) =>
+          !(
             event.connectionEpoch !== connection.epoch ||
             event.subscriptionEpoch !== subscriptionEpoch ||
             event.sessionId !== session.id ||
             event.invocationId !== activeInvocation.current
-          )
-            continue;
+          ),
+        onEvent: (event) => {
           if (event.eventId && event.kind !== 'heartbeat')
             cursor.current = event.eventId;
           setProjection((previous) => projectEvent(previous, event));
-          if (
-            event.terminal &&
-            event.invocationId === activeInvocation.current
-          ) {
-            verifiedTerminal = event.kind !== 'error';
-            setExecution(event.kind === 'error' ? 'unknown' : 'completed');
-          }
-          if (event.kind === 'error') {
+        },
+        onTerminal: (failed, text) => {
+          setExecution(failed ? 'unknown' : 'completed');
+          if (failed)
             setError(
-              event.text ??
-                'Stream ended with an error. Read history before retrying.',
+              text ||
+                'The Runtime ended this turn with an error. You can start another turn.',
             );
-          }
-        }
-      })();
-      await Promise.all([consume, subscription.finished]);
+        },
+        onError: (text) =>
+          setError(
+            text || 'Stream ended with an error. Read history before retrying.',
+          ),
+      });
+      const boundary = await waitForSubscriptionBoundary(consume, subscription);
+      if (subscriptionGeneration.current === subscriptionEpoch)
+        subscriptionGeneration.current++;
       if (generation.current === current) {
         const history = await services.sessions.read(
           connection.epoch,
@@ -282,14 +226,27 @@ export function useDesktopChatState({
             ...previous,
             messages: history.messages,
           }));
+          setCompletedInvocationIds(history.completedInvocations || []);
           const completed =
-            verifiedTerminal ||
+            terminal.verified ||
             pendingVerified ||
             history.completedInvocations?.includes(receipt.invocationId);
-          setExecution(completed ? 'completed' : 'unknown');
-          if (!completed)
+          const settled = completed || terminal.failed;
+          setExecution(
+            settled ? (terminal.failed ? 'failed' : 'completed') : 'unknown',
+          );
+          if (settled) {
+            activeInvocation.current = undefined;
+            setResumeInvocation(undefined);
+            cursor.current = undefined;
+            if (!terminal.failed) setError('');
+          }
+          if (!settled && boundary.error) throw boundary.error;
+          if (!settled)
             setError(
-              'The subscription closed without a matching terminal event. Review authoritative history before another submission.',
+              terminal.observed
+                ? 'The Runtime sent a terminal event, but authoritative history has not settled yet. Retry history verification before another submission.'
+                : 'The subscription closed without a matching terminal event. Review authoritative history before another submission.',
             );
         }
       }
@@ -314,6 +271,7 @@ export function useDesktopChatState({
                   ...emptyProjection(previous.scope),
                   messages: history.messages,
                 }));
+                setCompletedInvocationIds(history.completedInvocations || []);
                 setError(
                   'The saved stream cursor expired. History has been rebuilt. Resume this same invocation without a cursor.',
                 );
@@ -331,7 +289,19 @@ export function useDesktopChatState({
         void services.sessions
           .pending(connection.epoch, session.id)
           .then((saved) => {
-            if (generation.current === current) setPending(saved);
+            if (generation.current === current) {
+              setPending(saved);
+              if (!receiptAccepted && saved.length === 0) {
+                setProjection((previous) => ({
+                  ...previous,
+                  messages: previous.messages.filter(
+                    (message) => message.id !== optimisticId,
+                  ),
+                }));
+                setDraft((currentDraft) => currentDraft || prompt);
+                setExecution('idle');
+              }
+            }
           })
           .catch(() => {
             /* Unknown remains blocked if pending inspection fails. */
@@ -365,6 +335,7 @@ export function useDesktopChatState({
         ...emptyProjection(previous.scope),
         messages: history.messages,
       }));
+      setCompletedInvocationIds(history.completedInvocations || []);
       let invocation =
         acceptedInvocation ||
         operation?.invocationId ||
@@ -415,6 +386,7 @@ export function useDesktopChatState({
           return;
         setPending(remaining);
         setExecution('completed');
+        setCompletedInvocationIds(history.completedInvocations || []);
         return;
       }
       if (
@@ -424,7 +396,7 @@ export function useDesktopChatState({
         return;
       activeInvocation.current = invocation;
       setResumeInvocation(invocation);
-      stream.current?.close();
+      closeStream(stream.current);
       const subscriptionEpoch = ++subscriptionGeneration.current;
       const subscription = services.sessions.subscribe(
         connection.epoch,
@@ -440,32 +412,38 @@ export function useDesktopChatState({
         scope: { ...previous.scope, subscriptionEpoch },
         invocationId: invocation,
       }));
-      let verifiedTerminal = false;
-      const consume = (async () => {
-        for await (const event of subscription.events) {
-          if (
-            generation.current !== current ||
-            resumeGeneration.current !== attempt ||
-            subscriptionGeneration.current !== subscriptionEpoch
-          )
-            break;
-          if (
+      const terminal = terminalObservation();
+      const consume = consumeSessionEvents({
+        subscription,
+        observation: terminal,
+        active: () =>
+          generation.current === current &&
+          resumeGeneration.current === attempt &&
+          subscriptionGeneration.current === subscriptionEpoch,
+        matches: (event) =>
+          !(
             event.connectionEpoch !== connection.epoch ||
             event.subscriptionEpoch !== subscriptionEpoch ||
             event.sessionId !== session.id ||
             event.invocationId !== invocation
-          )
-            continue;
+          ),
+        onEvent: (event) => {
           if (event.eventId && event.kind !== 'heartbeat')
             cursor.current = event.eventId;
           setProjection((previous) => projectEvent(previous, event));
-          if (event.terminal) {
-            verifiedTerminal = event.kind !== 'error';
-            setExecution(event.kind === 'error' ? 'unknown' : 'completed');
-          }
-        }
-      })();
-      await Promise.all([consume, subscription.finished]);
+        },
+        onTerminal: (failed, text) => {
+          setExecution(failed ? 'unknown' : 'completed');
+          if (failed)
+            setError(
+              text ||
+                'The Runtime ended this turn with an error. You can start another turn.',
+            );
+        },
+      });
+      const boundary = await waitForSubscriptionBoundary(consume, subscription);
+      if (subscriptionGeneration.current === subscriptionEpoch)
+        subscriptionGeneration.current++;
       const latest = await services.sessions.read(connection.epoch, session.id);
       let saved = await services.sessions.pending(connection.epoch, session.id);
       const pendingVerified = saved.some(
@@ -494,14 +472,28 @@ export function useDesktopChatState({
           ...previous,
           messages: latest.messages,
         }));
+        setCompletedInvocationIds(latest.completedInvocations || []);
         setPending(saved);
+        const completed =
+          terminal.verified ||
+          pendingVerified ||
+          !!latest.completedInvocations?.includes(invocation);
+        const settled = completed || terminal.failed;
         setExecution(
-          verifiedTerminal ||
-            pendingVerified ||
-            latest.completedInvocations?.includes(invocation)
-            ? 'completed'
-            : 'unknown',
+          settled ? (terminal.failed ? 'failed' : 'completed') : 'unknown',
         );
+        if (settled) {
+          activeInvocation.current = undefined;
+          setResumeInvocation(undefined);
+          cursor.current = undefined;
+          if (!terminal.failed) setError('');
+        } else if (boundary.error) {
+          throw boundary.error;
+        } else if (terminal.observed) {
+          setError(
+            'The Runtime sent a terminal event, but authoritative history has not settled yet.',
+          );
+        }
       }
     } catch (error) {
       if (
@@ -529,6 +521,7 @@ export function useDesktopChatState({
                 ...emptyProjection(previous.scope),
                 messages: latest.messages,
               }));
+              setCompletedInvocationIds(latest.completedInvocations || []);
               setError(
                 'The saved stream cursor expired. History has been rebuilt. Resume the same invocation again without a cursor.',
               );
@@ -560,6 +553,12 @@ export function useDesktopChatState({
         setSubmitting(false);
     }
   };
+  const cancelSubscription = () => {
+    resumeGeneration.current++;
+    subscriptionGeneration.current++;
+    cursor.current = undefined;
+    closeStream(stream.current);
+  };
   return {
     session,
     execution,
@@ -582,10 +581,15 @@ export function useDesktopChatState({
     resume,
     setExecution,
     resumeInvocation,
+    setResumeInvocation,
     send,
     draft,
     setDraft,
     historyLoaded,
     activeInvocation,
+    completedInvocationIds,
+    setCompletedInvocationIds,
+    setConfigVersion,
+    cancelSubscription,
   };
 }

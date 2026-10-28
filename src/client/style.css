@@ -1,4 +1,6 @@
+@import './styles/design-tokens.css';
 @import './styles/foundation.css';
+@import './ui/ui.css';
 @import './styles/workspace.css';
 @import './styles/conversation.css';
 @import './styles/documents.css';

@@ -1,11 +1,4 @@
-import { Channel } from 'mygo-runtime';
-import {
-  Artifact,
-  Channels,
-  Connection,
-  Deployment,
-  Schedule,
-} from './generated/mygo';
+import { Channels, Connection, Deployment, Schedule } from './generated/mygo';
 import { unwrap } from './result';
 import { parseProfile } from './profile';
 import type { DesktopServices, ScheduleVM } from './models';
@@ -15,8 +8,6 @@ type NativeTask = NonNullable<
 type NativeImages = NonNullable<
   Awaited<ReturnType<typeof Deployment.readImages>>['value']
 >;
-type Progress =
-  Parameters<typeof Artifact.download>[1] extends Channel<infer T> ? T : never;
 const taskVM = (task: NativeTask): ScheduleVM => ({
   id: task.id,
   name: task.name,
@@ -39,7 +30,7 @@ const config = (task: Pick<ScheduleVM, 'schedule' | 'timezone'>) => ({
 });
 export function desktopFeatures(): Pick<
   DesktopServices,
-  'schedules' | 'channels' | 'deployment' | 'artifacts'
+  'schedules' | 'channels' | 'deployment'
 > {
   const images = new Map<string, NativeImages>();
   const pendingCreates = new Map<
@@ -439,35 +430,6 @@ export function desktopFeatures(): Pick<
             }),
           ),
         ),
-    },
-    artifacts: {
-      download: async (
-        connectionEpoch,
-        sessionId,
-        remotePath,
-        onProgress,
-        signal,
-      ) => {
-        if (signal.aborted) throw new Error('Download cancelled.');
-        const channel = new Channel<Progress>();
-        const close = () => channel.close();
-        signal.addEventListener('abort', close, { once: true });
-        const finished = Artifact.download(
-          { connectionEpoch, sessionId, remotePath },
-          channel,
-        ).then((result) => unwrap(result));
-        try {
-          const [, receipt] = await Promise.all([
-            (async () => {
-              for await (const event of channel) onProgress(event.bytesWritten);
-            })(),
-            finished,
-          ]);
-          return `Saved ${receipt.bytesWritten} bytes · ${receipt.integrity}`;
-        } finally {
-          signal.removeEventListener('abort', close);
-        }
-      },
     },
   };
 }

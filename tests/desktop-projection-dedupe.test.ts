@@ -172,4 +172,115 @@ describe('conversation projection dedupe', () => {
       projection.messages.filter((message) => message.role === 'assistant'),
     ).toHaveLength(1);
   });
+
+  it('updates one tool row by tool id and keeps its safe subject', () => {
+    let projection = emptyProjection(scope);
+    projection = projectEvent(
+      projection,
+      event({
+        kind: 'toolCall',
+        toolId: 'tool-1',
+        toolName: 'read',
+        toolStatus: 'running',
+        toolSubject: 'src/client/desktop/Chat.tsx',
+        blockId: 'call',
+        eventId: 'e1',
+      }),
+    );
+    projection = projectEvent(
+      projection,
+      event({
+        kind: 'toolResult',
+        toolId: 'tool-1',
+        toolName: 'read',
+        toolStatus: 'success',
+        blockId: 'result',
+        eventId: 'e2',
+      }),
+    );
+
+    const tools = projection.messages.filter(
+      (message) => message.toolId === 'tool-1',
+    );
+    expect(tools).toHaveLength(1);
+    expect(tools[0]).toMatchObject({
+      kind: 'toolResult',
+      toolName: 'read',
+      toolStatus: 'success',
+      toolSubject: 'src/client/desktop/Chat.tsx',
+    });
+  });
+
+  it('does not regress a completed tool when its call arrives late', () => {
+    let projection = emptyProjection(scope);
+    projection = projectEvent(
+      projection,
+      event({
+        kind: 'toolResult',
+        toolId: 'tool-1',
+        toolName: 'read',
+        toolStatus: 'success',
+        eventId: 'result-first',
+      }),
+    );
+    projection = projectEvent(
+      projection,
+      event({
+        kind: 'toolCall',
+        toolId: 'tool-1',
+        toolName: 'read',
+        toolStatus: 'running',
+        toolSubject: 'src/client/desktop/Chat.tsx',
+        eventId: 'call-late',
+      }),
+    );
+    expect(
+      projection.messages.find((message) => message.toolId === 'tool-1'),
+    ).toMatchObject({
+      kind: 'toolResult',
+      toolStatus: 'success',
+      toolSubject: 'src/client/desktop/Chat.tsx',
+    });
+  });
+
+  it('retains a hidden reasoning marker without its text', () => {
+    const projection = projectEvent(
+      emptyProjection(scope),
+      event({
+        kind: 'reasoning',
+        text: 'must not render',
+        reasoningVisibility: 'hidden',
+        eventId: 'reasoning-1',
+      }),
+    );
+    expect(projection.messages[0]).toMatchObject({
+      kind: 'reasoning',
+      content: '',
+      reasoningVisibility: 'hidden',
+    });
+  });
+
+  it('stops an unfinished tool when a terminal event arrives', () => {
+    let projection = projectEvent(
+      emptyProjection(scope),
+      event({
+        kind: 'toolCall',
+        toolId: 'tool-1',
+        toolName: 'shell',
+        toolStatus: 'running',
+        eventId: 'tool-1',
+      }),
+    );
+    projection = projectEvent(
+      projection,
+      event({ kind: 'done', terminal: true, eventId: undefined }),
+    );
+    expect(
+      projection.messages.find((message) => message.toolId === 'tool-1'),
+    ).toMatchObject({ toolStatus: 'stopped' });
+    expect(projection.messages.at(-1)).toMatchObject({
+      kind: 'status',
+      terminalStatus: 'completed',
+    });
+  });
 });

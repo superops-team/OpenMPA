@@ -5,6 +5,8 @@ import {
   Platform,
   Connection,
   Session,
+  Trace,
+  Localization,
   Workspace,
   events,
 } from './generated/mygo';
@@ -12,24 +14,33 @@ import { desktopFeatures } from './features';
 import type {
   ClientEvent,
   ConnectionState,
+  ExecutionConfig,
   SessionSummary,
 } from './generated/mygo';
 type NativePage = NonNullable<
   Awaited<ReturnType<typeof Workspace.getPage>>['value']
 >;
 import { unwrap } from './result';
-import {
-  emptyProjection,
-  projectEvent,
-  type DisplayEvent,
-  type DisplayMessage,
-} from './projection';
 import type { ConnectionVM, DesktopServices, Page, SessionVM } from './models';
+import { displayEvent, historyMessages } from './service-events';
+export { displayEvent } from './service-events';
 
+const platformVM = (state: {
+  signedIn: boolean;
+  principal?: { accountId?: string } | null;
+  region?: string;
+}) => ({
+  signedIn: state.signedIn,
+  accountId: state.principal?.accountId || '',
+  region: state.region || 'cn-beijing',
+});
 const connectionVM = (state: ConnectionState): ConnectionVM => ({
   epoch: state.connectionEpoch,
   scope: state.scope,
   runtimeId: state.runtimeId,
+  runtimeName: state.runtimeName,
+  workerToolId: state.workerToolId,
+  runtimeImage: state.runtimeImage,
   status: state.connected
     ? state.hasBusinessIdentity
       ? 'Explicit business identity'
@@ -42,45 +53,11 @@ const pageVM = (page: NativePage): Page => ({ ...page, sourceThreadId: null });
 const sessionVM = (session: SessionSummary) => ({
   id: session.sessionId || session.id,
   title: session.title || session.sessionId || session.id,
+  mpaInstanceId: session.mpaInstanceId,
+  traceEnabled: session.traceEnabled,
   updatedAt: session.lastUpdateTime,
   status: session.status,
 });
-export function displayEvent(event: ClientEvent): DisplayEvent {
-  return {
-    connectionEpoch: event.connectionEpoch,
-    subscriptionEpoch: event.subscriptionEpoch,
-    sessionId: event.sessionId,
-    invocationId: event.invocationId,
-    eventId: event.eventId,
-    blockId: event.blockId,
-    kind: event.error
-      ? 'error'
-      : event.terminal && !event.text
-        ? 'done'
-        : event.kind,
-    text:
-      event.error?.message ||
-      event.text ||
-      (event.toolName
-        ? `${event.kind}: ${event.toolName}${event.toolId ? ` (${event.toolId})` : ''}`
-        : ''),
-    role: event.author === 'user' ? 'user' : 'assistant',
-    partial: event.partial,
-    terminal: event.terminal,
-  };
-}
-function historyMessages(events: ClientEvent[]): DisplayMessage[] {
-  if (!events.length) return [];
-  const first = events[0];
-  let projection = emptyProjection({
-    connectionEpoch: first.connectionEpoch,
-    subscriptionEpoch: first.subscriptionEpoch,
-    sessionId: first.sessionId,
-  });
-  for (const event of events)
-    projection = projectEvent(projection, displayEvent(event));
-  return projection.messages;
-}
 async function digest(title: string, content: string) {
   const bytes = await crypto.subtle.digest(
     'SHA-256',
@@ -101,11 +78,9 @@ export function createDesktopServices(): DesktopServices {
   return {
     ...desktopFeatures(),
     host: {
-      requestSessionAction: async (action) => {
-        unwrap(await Host.requestSessionAction(action));
-      },
-      requestConversation: async () => {
-        unwrap(await Host.requestConversation());
+      theme: async () => {
+        const value = unwrap(await Host.theme());
+        return { theme: value.theme };
       },
       onNavigation: (listener) =>
         events.navigationRequested.on((request) =>
@@ -121,41 +96,9 @@ export function createDesktopServices(): DesktopServices {
         unwrap(await Host.resolveClose({ requestId, allow }));
       },
     },
-    capabilities: {
-      read: async (connectionEpoch, sessionId) => {
-        const values = unwrap(
-          await Connection.test({ connectionEpoch }),
-        ).capabilities.map((capability) => ({
-          name: capability.name,
-          value: capability.state,
-        }));
-        if (sessionId) {
-          const config = unwrap(
-            await Session.executionConfig({ connectionEpoch, sessionId }),
-          );
-          values.push(
-            {
-              name: 'Execution configuration version',
-              value: config.executionConfigVersion,
-            },
-            { name: 'Model', value: config.model || 'Not exposed' },
-            {
-              name: 'Bot profile',
-              value: config.profileBound ? 'Bound' : 'Not bound',
-            },
-          );
-        }
-        return values;
-      },
-    },
     platform: {
       status: async () => {
-        const state = unwrap(await Platform.status());
-        return {
-          signedIn: state.signedIn,
-          accountId: state.principal?.accountId || '',
-          region: state.region || 'cn-beijing',
-        };
+        return platformVM(unwrap(await Platform.status()));
       },
       regions: async () =>
         unwrap(await Platform.regions()).regions.map((region) => ({
@@ -165,6 +108,14 @@ export function createDesktopServices(): DesktopServices {
         })),
       resetRuntime: async () => {
         unwrap(await Platform.resetRuntime());
+      },
+      vaultStatus: async () => unwrap(await Platform.vaultStatus()),
+      saveVault: async (passphrase) =>
+        unwrap(await Platform.saveVault({ passphrase })),
+      unlockVault: async (passphrase) =>
+        platformVM(unwrap(await Platform.unlockVault({ passphrase }))),
+      forgetVault: async () => {
+        unwrap(await Platform.forgetVault());
       },
       signIn: async (input) => {
         const state = unwrap(await Platform.signIn(input));
@@ -177,9 +128,9 @@ export function createDesktopServices(): DesktopServices {
       signOut: async () => {
         unwrap(await Platform.signOut());
       },
-      list: async (region, projectName) => {
+      list: async (region, projectName, forceRefresh = false) => {
         const result = unwrap(
-          await Platform.listRuntimes({ region, projectName }),
+          await Platform.listRuntimes({ region, projectName, forceRefresh }),
         );
         if (!result.complete)
           throw new Error(
@@ -251,6 +202,14 @@ export function createDesktopServices(): DesktopServices {
         );
       },
     },
+    localization: {
+      status: async () => unwrap(await Localization.status()),
+      set: async (mode) => unwrap(await Localization.set({ mode })),
+    },
+    trace: {
+      read: async (connectionEpoch, sessionId, invocationId) =>
+        unwrap(await Trace.read({ connectionEpoch, sessionId, invocationId })),
+    },
     sessions: {
       recover: async (connectionEpoch, operationId, mode) => {
         const result = unwrap(
@@ -272,15 +231,15 @@ export function createDesktopServices(): DesktopServices {
         unwrap(await Session.pending({ connectionEpoch })).operations.filter(
           (operation) => operation.sessionId === sessionId,
         ),
-      list: async (connectionEpoch) => {
+      list: async (connectionEpoch, forceRefresh = false) => {
         const list: SessionVM[] = unwrap(
-          await Session.list({ connectionEpoch }),
+          await Session.list({ connectionEpoch, forceRefresh }),
         ).sessions.map(sessionVM);
         return list;
       },
-      create: async (connectionEpoch, title) => {
+      create: async (connectionEpoch, title, mpaInstanceId) => {
         const session = sessionVM(
-          unwrap(await Session.create({ connectionEpoch })),
+          unwrap(await Session.create({ connectionEpoch, mpaInstanceId })),
         );
         if (title)
           unwrap(
@@ -324,6 +283,7 @@ export function createDesktopServices(): DesktopServices {
         sessionId,
         content,
         executionConfigVersion,
+        assistantId,
       ) => {
         const pending = unwrap(
           await Session.pending({ connectionEpoch }),
@@ -341,6 +301,7 @@ export function createDesktopServices(): DesktopServices {
             idempotencyKey: operationId,
             content,
             executionConfigVersion,
+            assistantId,
           }),
         );
         return { invocationId: result.invocationId, status: 'accepted' };
@@ -377,6 +338,53 @@ export function createDesktopServices(): DesktopServices {
         return unwrap(await Session.abort({ connectionEpoch, sessionId }))
           .aborted;
       },
+      executionConfig: async (connectionEpoch, sessionId) =>
+        unwrap(await Session.executionConfig({ connectionEpoch, sessionId })),
+      ensureExecutionConfig: async (connectionEpoch, sessionId) =>
+        unwrap(
+          await Session.ensureExecutionConfig({ connectionEpoch, sessionId }),
+        ),
+      updateExecutionConfig: async (
+        connectionEpoch,
+        sessionId,
+        input,
+      ): Promise<ExecutionConfig> =>
+        unwrap(
+          await Session.updateExecutionConfig({
+            connectionEpoch,
+            sessionId,
+            etag: input.etag,
+            modelMode: input.modelMode,
+            model: input.model,
+            mcpMode: input.mcpMode,
+            mcpServers: input.mcpServers,
+          }),
+        ),
+      assistantConfig: async (connectionEpoch, sessionId, assistantId) =>
+        unwrap(
+          await Session.assistantConfig({
+            connectionEpoch,
+            sessionId,
+            assistantId,
+          }),
+        ),
+      saveAssistantConfig: async (
+        connectionEpoch,
+        sessionId,
+        assistantId,
+        input,
+      ) =>
+        unwrap(
+          await Session.saveAssistantConfig({
+            connectionEpoch,
+            sessionId,
+            assistantId,
+            agentsMd: input.agentsMd,
+            skills: input.skills,
+          }),
+        ),
+      skillCatalog: async (connectionEpoch, query = '') =>
+        unwrap(await Session.skillCatalog({ connectionEpoch, query })).skills,
     },
     workspace: {
       exportDraft: async (draft) => {

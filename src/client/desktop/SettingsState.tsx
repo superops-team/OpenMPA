@@ -13,6 +13,7 @@ import type {
   PlatformVM,
   RegionVM,
   RuntimeVM,
+  VaultStatusVM,
 } from './models';
 import { reviewImages } from './image-review';
 
@@ -32,6 +33,13 @@ export function useDesktopSettingsState({
     securityToken: '',
     region: 'cn-beijing',
   });
+  const [vaultStatus, setVaultStatus] = useState<VaultStatusVM>({
+    exists: false,
+  });
+  const [vaultPassphrase, setVaultPassphrase] = useState('');
+  const [vaultConfirm, setVaultConfirm] = useState('');
+  const [vaultUnlockPassphrase, setVaultUnlockPassphrase] = useState('');
+  const [showVaultPassphrase, setShowVaultPassphrase] = useState(false);
   const [region, setRegion] = useState('cn-beijing');
   const [regions, setRegions] = useState<RegionVM[]>([
     {
@@ -101,9 +109,24 @@ export function useDesktopSettingsState({
           // The packaged native catalog remains the safe fallback.
         });
     }
+    if (services.platform.vaultStatus) {
+      void services.platform
+        .vaultStatus()
+        .then((value) => {
+          if (generation.current === current) setVaultStatus(value);
+        })
+        .catch(() => {});
+    }
     return () => {
       generation.current++;
     };
+  }, [services]);
+  const loadVaultStatus = useCallback(async () => {
+    if (!services.platform.vaultStatus) {
+      setVaultStatus({ exists: false });
+      return;
+    }
+    setVaultStatus(await services.platform.vaultStatus());
   }, [services]);
   useLayoutEffect(() => {
     generation.current++;
@@ -164,29 +187,36 @@ export function useDesktopSettingsState({
     }
   };
   const scope = JSON.stringify([platform?.accountId, region, project]);
-  const load = useCallback(async () => {
-    if (!platform?.signedIn) return;
-    const current = ++directoryRequest.current;
-    setDirectoryLoading(true);
-    try {
-      const list = await services.platform.list(region, project);
-      if (directoryRequest.current === current) {
-        setRuntimes(list);
-        setDirectoryScope(scope);
-      }
-    } catch (error) {
-      if (directoryRequest.current === current) {
-        setRuntimes([]);
-        setError(
-          error instanceof Error
-            ? error.message
-            : 'Could not load MPA Runtimes.',
+  const load = useCallback(
+    async (forceRefresh = false) => {
+      if (!platform?.signedIn) return;
+      const current = ++directoryRequest.current;
+      setDirectoryLoading(true);
+      try {
+        const list = await services.platform.list(
+          region,
+          project,
+          forceRefresh,
         );
+        if (directoryRequest.current === current) {
+          setRuntimes(list);
+          setDirectoryScope(scope);
+        }
+      } catch (error) {
+        if (directoryRequest.current === current) {
+          setRuntimes([]);
+          setError(
+            error instanceof Error
+              ? error.message
+              : 'Could not load MPA Runtimes.',
+          );
+        }
+      } finally {
+        if (directoryRequest.current === current) setDirectoryLoading(false);
       }
-    } finally {
-      if (directoryRequest.current === current) setDirectoryLoading(false);
-    }
-  }, [services, platform?.signedIn, scope, region, project]);
+    },
+    [services, platform?.signedIn, scope, region, project],
+  );
   useEffect(() => {
     setRuntimes([]);
     setDirectoryScope('');
@@ -217,6 +247,17 @@ export function useDesktopSettingsState({
     generation,
     credentials,
     setCredentials,
+    vaultStatus,
+    setVaultStatus,
+    vaultPassphrase,
+    setVaultPassphrase,
+    vaultConfirm,
+    setVaultConfirm,
+    vaultUnlockPassphrase,
+    setVaultUnlockPassphrase,
+    showVaultPassphrase,
+    setShowVaultPassphrase,
+    loadVaultStatus,
     setRegion,
     setNotice,
     region,

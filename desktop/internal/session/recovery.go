@@ -55,13 +55,16 @@ func (s *Service) Recover(ctx context.Context, r dto.RecoverRequest) dto.RunRece
 	if err != nil {
 		return dto.RunReceiptResult{Error: dto.Failure("invalidInput", "transport", "never", 0)}
 	}
-	data, _ := json.Marshal(struct {
-		Content string `json:"content"`
-		Version int    `json:"executionConfigVersion"`
-	}{p.Content, version})
+	input := runInput{Content: p.Content, ExecutionConfigVersion: &version}
+	applyBotProfileToRun(&input, p.AssistantProfile)
+	data, _ := json.Marshal(input)
 	headers := http.Header{}
 	headers.Set("Idempotency-Key", p.IdempotencyKey)
-	resp, e := s.conn.Request(ctx, r.ConnectionEpoch, "POST", path(p.SessionID, "/run"), data, headers)
+	runPath := path(p.SessionID, "/run")
+	if p.TraceEnabled {
+		runPath = adminPath(p.SessionID, "/run")
+	}
+	resp, e := s.conn.Request(ctx, r.ConnectionEpoch, "POST", runPath, data, headers)
 	var out dto.RunReceipt
 	if e == nil {
 		defer resp.Body.Close()
@@ -117,7 +120,11 @@ func (s *Service) observeTerminal(ctx context.Context, r dto.SubscribeRequest) {
 		var history struct {
 			Events []json.RawMessage `json:"events"`
 		}
-		if s.conn.JSON(ctx, r.ConnectionEpoch, "GET", path(r.SessionID, "/events"), nil, &history) != nil {
+		eventsPath := path(r.SessionID, "/events")
+		if p.TraceEnabled {
+			eventsPath = adminPath(r.SessionID, "/events")
+		}
+		if s.conn.JSON(ctx, r.ConnectionEpoch, "GET", eventsPath, nil, &history) != nil {
 			return
 		}
 		verified := false
@@ -130,5 +137,33 @@ func (s *Service) observeTerminal(ctx context.Context, r dto.SubscribeRequest) {
 		if verified {
 			_ = s.pending.Update(scope, p.OperationID, func(p *Pending) error { p.TerminalVerified = true; return nil })
 		}
+	}
+}
+
+func (s *Service) reconcileTerminalPendingFromHistory(sessionID string, events []dto.ClientEvent) {
+	scope := s.conn.State().Scope
+	list, e := s.pending.List(scope)
+	if e != nil {
+		return
+	}
+	terminal := map[string]bool{}
+	for _, event := range events {
+		if event.SessionID != sessionID || event.InvocationID == "" || !event.Terminal || event.Partial || event.EventID == "" {
+			continue
+		}
+		terminal[event.InvocationID] = true
+	}
+	if len(terminal) == 0 {
+		return
+	}
+	for _, p := range list {
+		if p.SessionID != sessionID || p.InvocationID == "" || !terminal[p.InvocationID] {
+			continue
+		}
+		_ = s.pending.Update(scope, p.OperationID, func(p *Pending) error {
+			p.State = "terminalObserved"
+			p.TerminalVerified = true
+			return nil
+		})
 	}
 }

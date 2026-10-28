@@ -3,6 +3,7 @@ package host
 import (
 	"github.com/egoist/mygo"
 	"github.com/egoist/mygo/ui"
+	"github.com/superops-team/OpenMPA/desktop/internal/design"
 	"github.com/superops-team/OpenMPA/desktop/internal/dto"
 	"github.com/superops-team/OpenMPA/desktop/internal/localization"
 	"strings"
@@ -14,22 +15,37 @@ type RailAction struct {
 	Action string `json:"action"`
 	ID     string `json:"id,omitempty"`
 }
+type ThemeValue struct {
+	Theme string `json:"theme"`
+}
+
+type ThemeResult struct {
+	OK    bool           `json:"ok"`
+	Value *ThemeValue    `json:"value,omitempty"`
+	Error *dto.SafeError `json:"error,omitempty"`
+}
+
 type NavigationItem struct {
-	ID    string `json:"id"`
-	Title string `json:"title"`
+	ID      string `json:"id"`
+	Title   string `json:"title"`
+	AgentID string `json:"agentId,omitempty"`
 }
 type ShellState struct {
-	ConnectionEpoch uint64           `json:"connectionEpoch"`
-	View            string           `json:"view"`
-	Collapsed       bool             `json:"collapsed"`
-	Pane            bool             `json:"pane"`
-	Location        string           `json:"location"`
-	PageTitle       string           `json:"pageTitle"`
-	SelectedSession string           `json:"selectedSession"`
-	SelectedSpace   string           `json:"selectedSpace"`
-	Sessions        []NavigationItem `json:"sessions"`
-	Spaces          []NavigationItem `json:"spaces"`
-	Revision        uint64           `json:"revision"`
+	ConnectionEpoch   uint64           `json:"connectionEpoch"`
+	View              string           `json:"view"`
+	Collapsed         bool             `json:"collapsed"`
+	TraceOpen         bool             `json:"traceOpen,omitempty"`
+	Location          string           `json:"location"`
+	PageTitle         string           `json:"pageTitle"`
+	SelectedSession   string           `json:"selectedSession"`
+	SelectedSpace     string           `json:"selectedSpace"`
+	SelectedAssistant string           `json:"selectedAssistant,omitempty"`
+	SettingsSection   string           `json:"settingsSection,omitempty"`
+	Theme             string           `json:"theme,omitempty"`
+	Sessions          []NavigationItem `json:"sessions"`
+	Spaces            []NavigationItem `json:"spaces"`
+	Assistants        []NavigationItem `json:"assistants,omitempty"`
+	Revision          uint64           `json:"revision"`
 }
 
 var NavigationRequested = mygo.NewEvent[RailAction]("NavigationRequested")
@@ -42,11 +58,7 @@ type nativeRail struct {
 	page        *mygo.WebView
 	lastAction  string
 	actionCount int
-	content     func(*ui.Context, ShellState) bool
-	pane        func(*ui.Context, ShellState)
 	query       string
-	overlay     func(*ui.Context, ShellState)
-	handle      func(string, string) bool
 }
 
 func (r *nativeRail) snapshot() ShellState { r.mu.Lock(); defer r.mu.Unlock(); return r.state }
@@ -55,15 +67,12 @@ func (r *nativeRail) action(action, id string) {
 	r.lastAction = action
 	r.actionCount++
 	r.mu.Unlock()
-	if r.handle != nil && r.handle(action, id) {
-		return
-	}
 	if r.request != nil {
 		r.request(action, id)
 	}
 }
 
-// InspectNavigation reports safe shell evidence to a native harness.
+// InspectNavigation reports safe shell evidence to tests.
 func InspectNavigation(h *Host) (ShellState, string, int) {
 	h.mu.Lock()
 	r := h.rail
@@ -77,34 +86,46 @@ func InspectNavigation(h *Host) (ShellState, string, int) {
 }
 
 var railIcons = map[string]*ui.SVG{
+	"home":            nativeBrand,
 	"toggleSidebar":   ui.MustParseSVG([]byte(`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 3v18"/></svg>`)),
 	"newConversation": ui.MustParseSVG([]byte(`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M12 5v14M5 12h14"/></svg>`)),
 	"pages":           ui.MustParseSVG([]byte(`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M3 7V5a2 2 0 0 1 2-2h5l2 3h7a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z"/></svg>`)),
 	"tasks":           ui.MustParseSVG([]byte(`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>`)),
 	"settings":        ui.MustParseSVG([]byte(`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M4 7h6m4 0h6M4 17h10m4 0h2"/><circle cx="12" cy="7" r="2"/><circle cx="16" cy="17" r="2"/></svg>`)),
-	"artifacts":       ui.MustParseSVG([]byte(`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="3" y="3" width="18" height="14" rx="2"/><path d="M12 17v4M8 21h8"/></svg>`)),
+	"trace":           ui.MustParseSVG([]byte(`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M4 6h16M4 12h10M4 18h7"/><circle cx="18" cy="12" r="2"/><circle cx="15" cy="18" r="2"/></svg>`)),
 	"selectSpace":     ui.MustParseSVG([]byte(`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M3 7V5a2 2 0 0 1 2-2h5l2 3h7a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z"/></svg>`)),
 	"selectSession":   ui.MustParseSVG([]byte(`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M21 11a9 9 0 0 1-9 9c-2 0-3-.3-4-1L3 21l1-5c-1-1-1-3-1-5a9 9 0 0 1 18 0Z"/></svg>`)),
 	"knowledge":       ui.MustParseSVG([]byte(`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M12 5v16M3 4l9 2 9-2v16l-9 2-9-2Z"/></svg>`)),
 	"channels":        ui.MustParseSVG([]byte(`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="m12 3 10 5-10 5L2 8Z M2 12l10 5 10-5M2 16l10 5 10-5"/></svg>`)),
 }
-var shellTheme = ui.LightTheme()
 
-func buttonFeedback(b ui.Element) {
+var settingsSections = []struct{ id, label string }{
+	{"Account", "Account"},
+	{"Runtime", "Runtime"},
+	{"Assistant", "Assistant"},
+	{"Authentication", "Authentication"},
+	{"Deployment", "Deployment"},
+	{"Theme", "Theme"},
+	{"Language", "Language"},
+}
+
+func buttonFeedback(c *ui.Context, b ui.Element) {
 	if b.Pressed() {
-		b.Background(ui.RGB(215, 215, 215))
+		b.Background(design.Colors(c.Theme().Dark).SurfacePressed)
 	}
-	b.Transition(ui.ElementTransition{Colors: true, Duration: 120 * time.Millisecond})
+	if !c.Preferences().ReduceMotion {
+		b.Transition(ui.ElementTransition{Colors: true, Duration: design.PressDurationMs * time.Millisecond})
+	}
 }
 
 func iconButton(c *ui.Context, action, label string, selected bool, fn func()) ui.Element {
 	shown := localization.UI(label)
-	b := ui.Button(c.Key(action), "").Label(shown).Tooltip(shown).Size(32, 32).Padding(0).Radius(5).BorderWidth(0).Background(ui.Transparent).Selected(selected)
+	b := ui.Button(c.Key(action), "").Label(shown).Tooltip(shown).Size(design.ControlLg, design.ControlLg).Padding(0).Radius(design.RadiusMd).BorderWidth(0).Background(ui.Transparent).Selected(selected)
 	if selected || b.Hovered() {
-		b.Background(ui.RGB(228, 228, 228))
+		b.Background(c.Theme().Border)
 	}
-	buttonFeedback(b)
-	b.Children(func() { ui.Icon(c, railIcons[action]).FontSize(18).TextColor(ui.RGB(85, 85, 85)) })
+	buttonFeedback(c, b)
+	b.Children(func() { ui.Icon(c, railIcons[action]).FontSize(design.IconLg).TextColor(c.Theme().TextMuted) })
 	if b.Clicked() {
 		fn()
 	}
@@ -112,14 +133,16 @@ func iconButton(c *ui.Context, action, label string, selected bool, fn func()) u
 }
 func (r *nativeRail) controls(c *ui.Context) {
 	state := r.snapshot()
-	ui.Column(c).Fill().Padding(12, 6).Gap(10).AlignItems(ui.Center).Background(ui.RGB(245, 245, 245)).BorderWidth(0, 1, 0, 0).BorderColor(ui.RGB(228, 228, 228)).Children(func() {
+	ui.Column(c).Fill().Padding(design.Space3, design.Space2).Gap(design.Space2).AlignItems(ui.Center).Background(design.Colors(c.Theme().Dark).Sidebar).BorderWidth(0, 1, 0, 0).BorderColor(c.Theme().Border).Children(func() {
 		homeLabel := localization.Text("openMpaHome", nil)
-		home := ui.Button(c.Key("home"), "").Label(homeLabel).Tooltip(homeLabel).Size(36, 36).Padding(0).Radius(6).BorderWidth(0).Background(ui.Transparent)
+		home := ui.Button(c.Key("home"), "").Label(homeLabel).Tooltip(homeLabel).Size(design.ControlInput, design.ControlInput).Padding(0).Radius(design.RadiusMd).BorderWidth(0).Background(ui.Transparent)
 		if home.Hovered() {
-			home.Background(ui.RGB(228, 228, 228))
+			home.Background(c.Theme().Border)
 		}
-		buttonFeedback(home)
-		home.Children(func() { ui.Icon(c, nativeBrand).FontSize(28).TextColor(ui.RGB(48, 56, 50)) })
+		buttonFeedback(c, home)
+		home.Children(func() {
+			ui.Icon(c, nativeBrand).FontSize(design.IconBrand).TextColor(design.Colors(c.Theme().Dark).Brand)
+		})
 		if home.Clicked() {
 			r.action("home", "")
 		}
@@ -128,7 +151,7 @@ func (r *nativeRail) controls(c *ui.Context) {
 			selected      bool
 		}{
 			{"toggleSidebar", "Toggle sidebar", !state.Collapsed}, {"newConversation", "New conversation", false},
-			{"pages", "Open Spaces", state.View == "pages"}, {"tasks", "Open scheduled activity", state.View == "tasks"},
+			{"tasks", "Open scheduled activity", state.View == "tasks"},
 		} {
 			item := item
 			iconButton(c, item.action, item.label, item.selected, func() { r.action(item.action, "") })
@@ -140,14 +163,14 @@ func (r *nativeRail) controls(c *ui.Context) {
 func (r *nativeRail) titlebar(c *ui.Context) {
 	state := r.snapshot()
 	insets := c.TitleBar()
-	ui.Row(c).Key("titlebar").Label(localization.Text("titleBar", nil)).Height(44).Shrink(0).Gap(10).AlignItems(ui.Center).
-		Padding(0, insets.Right+14, 0, insets.Left+10).DragWindow().Background(ui.RGB(245, 245, 245)).
-		BorderWidth(0, 0, 1, 0).BorderColor(ui.RGB(228, 228, 228)).Children(func() {
-		ui.Text(c, "OpenMPA").FontSize(13).Bold().TextColor(ui.RGB(48, 48, 48)).SingleLine().Shrink(0)
+	ui.Row(c).Key("titlebar").Label(localization.Text("titleBar", nil)).Height(design.LayoutTitlebarHeight).Shrink(0).Gap(design.Space2).AlignItems(ui.Center).
+		Padding(0, insets.Right+design.Space4, 0, insets.Left+design.Space3).DragWindow().Background(design.Colors(c.Theme().Dark).Header).
+		BorderWidth(0, 0, 1, 0).BorderColor(c.Theme().Border).Children(func() {
+		ui.Text(c, "OpenMPA").FontSize(c.Theme().FontSize).Bold().TextColor(c.Theme().Text).SingleLine().Shrink(0)
 		iconButton(c, "toggleSidebar", "Toggle navigation", false, func() { r.action("toggleSidebar", "") })
 		// Divider defaults to Stretch, so a short titlebar rule must opt into centering.
-		ui.Divider(c).Key("titlebar-divider").Label(localization.Text("titleBarSeparator", nil)).Width(1).Height(16).AlignSelf(ui.Center).Background(ui.RGB(222, 222, 222)).Margin(0, 6)
-		ui.Row(c).Key("location").Label(localization.Text("currentLocation", nil)).Grow(1).MinWidth(0).Gap(12).Children(func() {
+		ui.Divider(c).Key("titlebar-divider").Label(localization.Text("titleBarSeparator", nil)).Width(1).Height(design.Space4).AlignSelf(ui.Center).Background(c.Theme().Border).Margin(0, design.Space2)
+		ui.Row(c).Key("location").Label(localization.Text("currentLocation", nil)).Grow(1).MinWidth(0).Gap(design.Space3).Children(func() {
 			location := state.Location
 			if location == "" {
 				location = localization.Text("yourWorkspace", nil)
@@ -156,34 +179,34 @@ func (r *nativeRail) titlebar(c *ui.Context) {
 			if title == "" {
 				title = localization.Text("chat", nil)
 			}
-			ui.Text(c, location).Tooltip(location).SingleLine().FontSize(13).TextColor(ui.RGB(105, 105, 105)).MinWidth(0).Shrink(1)
-			ui.Text(c, "/").FontSize(13).TextColor(ui.RGB(150, 150, 150)).Shrink(0)
-			ui.Text(c, title).Tooltip(title).SingleLine().FontSize(13).TextColor(ui.RGB(75, 75, 75)).MinWidth(0).Shrink(1)
+			ui.Text(c, location).Tooltip(location).SingleLine().FontSize(c.Theme().FontSize).TextColor(c.Theme().TextMuted).MinWidth(0).Shrink(1)
+			ui.Text(c, "/").FontSize(c.Theme().FontSize).TextColor(c.Theme().TextMuted).Shrink(0)
+			ui.Text(c, title).Tooltip(title).SingleLine().FontSize(c.Theme().FontSize).TextColor(c.Theme().Text).MinWidth(0).Shrink(1)
 		})
-		iconButton(c, "artifacts", "Show capabilities and artifacts", state.Pane, func() { r.action("artifacts", "") })
+		iconButton(c, "trace", "Open turn trace", state.TraceOpen, func() { r.action("trace", "") })
 	})
 }
 func (r *nativeRail) sidebar(c *ui.Context) {
 	state := r.snapshot()
 	row := func(action, id, title, subtitle string, selected bool) {
 		shown := localization.UI(title)
-		b := ui.Button(c.Key(action+":"+id), "").Label(shown).Tooltip(shown).FillWidth().MinHeight(36).Padding(7, 9).Radius(6).BorderWidth(0).Background(ui.Transparent).Selected(selected)
+		b := ui.Button(c.Key(action+":"+id), "").Label(shown).Tooltip(shown).FillWidth().MinHeight(design.ControlInput).Padding(design.Space2).Radius(design.RadiusMd).BorderWidth(0).Background(ui.Transparent).Selected(selected)
 		if selected {
-			b.Background(ui.RGB(235, 237, 246))
+			b.Background(design.Colors(c.Theme().Dark).CardSelected)
 		} else if b.Hovered() {
-			b.Background(ui.RGB(239, 239, 239))
+			b.Background(design.Colors(c.Theme().Dark).SurfaceHover)
 		}
-		buttonFeedback(b)
+		buttonFeedback(c, b)
 		b.Children(func() {
 			if action == "selectSession" && subtitle == "" {
 				ui.Image(c, avatarFor(id)).Size(28, 28).Shrink(0)
 			} else if icon := railIcons[action]; icon != nil {
-				ui.Icon(c, icon).FontSize(17).TextColor(ui.RGB(112, 112, 112))
+				ui.Icon(c, icon).FontSize(design.IconMd).TextColor(c.Theme().TextMuted)
 			}
 			ui.Column(c).Grow(1).MinWidth(0).Gap(2).Children(func() {
-				ui.Text(c, shown).FontSize(13).TextColor(ui.RGB(80, 80, 80)).SingleLine()
+				ui.Text(c, shown).FontSize(c.Theme().FontSize).TextColor(c.Theme().Text).SingleLine()
 				if subtitle != "" {
-					ui.Text(c, localization.UI(subtitle)).FontSize(11).TextColor(ui.RGB(120, 120, 120)).SingleLine()
+					ui.Text(c, localization.UI(subtitle)).FontSize(design.TypographyUiSm).TextColor(c.Theme().TextMuted).SingleLine()
 				}
 			})
 		})
@@ -193,15 +216,49 @@ func (r *nativeRail) sidebar(c *ui.Context) {
 	}
 	heading := func(label, action, actionLabel string) {
 		ui.Row(c).Margin(10, 4, 4).Children(func() {
-			ui.Text(c, localization.UI(label)).FontSize(11).Bold().TextColor(ui.RGB(115, 115, 115)).Grow(1)
+			ui.Text(c, localization.UI(label)).FontSize(design.TypographyUiSm).Bold().TextColor(c.Theme().TextMuted).Grow(1)
 			if action != "" {
-				iconButton(c, "newConversation", actionLabel, false, func() { r.action(action, "") }).Size(24, 24)
+				iconButton(c, "newConversation", actionLabel, false, func() { r.action(action, "") }).Size(design.ControlSm, design.ControlSm)
 			}
 		})
 	}
-	ui.Column(c).Key("sidebar").Label(localization.Text("workspaceNavigation", nil)).Fill().Padding(12, 10).Gap(4).Background(ui.RGB(249, 249, 249)).BorderWidth(0, 1, 0, 0).BorderColor(ui.RGB(228, 228, 228)).Children(func() {
+	ui.Column(c).Key("sidebar").Label(localization.Text("workspaceNavigation", nil)).Fill().Padding(design.Space3, design.Space2).Gap(design.Space1).Background(design.Colors(c.Theme().Dark).Sidebar).BorderWidth(0, 1, 0, 0).BorderColor(c.Theme().Border).Children(func() {
+		if state.View == "settings" {
+			heading("SETTINGS", "", "")
+			for _, section := range settingsSections {
+				selected := state.SettingsSection == section.id || (state.SettingsSection == "" && section.id == "Account")
+				row("selectSettingsSection", section.id, section.label, "", selected)
+			}
+			return
+		}
+		assistantLabels := []string{localization.UI("Select Runtime")}
+		selectedLabel := assistantLabels[0]
+		for _, item := range state.Assistants {
+			label := item.Title
+			if label == "" {
+				label = item.ID
+			}
+			if label != item.ID {
+				label += " (" + item.ID + ")"
+			}
+			assistantLabels = append(assistantLabels, label)
+			if item.ID == state.SelectedAssistant {
+				selectedLabel = label
+			}
+		}
+		ui.Combobox(c.Key("assistant-select"), &selectedLabel, assistantLabels).Label(localization.UI("Runtime")).FillWidth().OnChange(func() {
+			for i, label := range assistantLabels[1:] {
+				if label == selectedLabel {
+					r.action("selectAssistant", state.Assistants[i].ID)
+					return
+				}
+			}
+		})
+		if len(state.Assistants) == 0 {
+			ui.Text(c, localization.UI("Choose your Runtime in Settings.")).Padding(6).FontSize(design.TypographyUiSm).TextColor(c.Theme().TextMuted)
+		}
 		row("newConversation", "", "New conversation", "", false)
-		ui.TextInput(c.Key("navigation-search"), &r.query).Label(localization.Text("findConversations", nil)).Placeholder(localization.Text("searchAssistantsSpaces", nil)).FillWidth()
+		ui.TextInput(c.Key("navigation-search"), &r.query).Label(localization.Text("findConversations", nil)).Placeholder(localization.Text("searchConversations", nil)).FillWidth()
 		matches := func(item NavigationItem) bool {
 			return strings.Contains(strings.ToLower(item.ID+" "+item.Title), strings.ToLower(strings.TrimSpace(r.query)))
 		}
@@ -210,9 +267,9 @@ func (r *nativeRail) sidebar(c *ui.Context) {
 			heading, action, id, title, subtitle, actionLabel string
 			selected                                          bool
 		}
-		rows := []navRow{{heading: "ASSISTANTS", action: "newConversation", actionLabel: "Create assistant"}}
+		rows := []navRow{{heading: "CONVERSATIONS", action: "refreshSessions", actionLabel: "Refresh conversations"}}
 		if len(state.Sessions) == 0 {
-			rows = append(rows, navRow{title: "Choose your Runtime in Settings."})
+			rows = append(rows, navRow{title: "No conversations yet."})
 		}
 		for _, item := range state.Sessions {
 			if !matches(item) {
@@ -220,26 +277,12 @@ func (r *nativeRail) sidebar(c *ui.Context) {
 			}
 			rows = append(rows, navRow{action: "selectSession", id: item.ID, title: item.Title, selected: state.View == "chat" && state.SelectedSession == item.ID})
 		}
-		rows = append(rows, navRow{heading: "SPACES", action: "createSpace", actionLabel: "Create Space"})
-		for _, item := range state.Spaces {
-			if !matches(item) {
-				continue
-			}
-			rows = append(rows, navRow{action: "selectSpace", id: item.ID, title: item.Title, selected: state.View == "pages" && state.SelectedSpace == item.ID})
-		}
-		rows = append(rows, navRow{heading: "RECENT CHATS", action: "refreshSessions", actionLabel: "Refresh conversations"})
-		for _, item := range state.Sessions {
-			if !matches(item) {
-				continue
-			}
-			rows = append(rows, navRow{action: "selectSession", id: item.ID, title: item.Title, subtitle: "Session", selected: state.View == "chat" && state.SelectedSession == item.ID})
-		}
 		ui.List(c.Key("navigation-list"), nil, len(rows), func(i int) {
 			item := rows[i]
 			if item.heading != "" {
 				heading(item.heading, item.action, item.actionLabel)
 			} else if item.action == "" {
-				ui.Text(c, localization.UI(item.title)).Padding(8).FontSize(12).TextColor(ui.RGB(120, 120, 120))
+				ui.Text(c, localization.UI(item.title)).Padding(8).FontSize(design.TypographyUiSm).TextColor(c.Theme().TextMuted)
 			} else {
 				row(item.action, item.id, item.title, item.subtitle, item.selected)
 			}
@@ -252,41 +295,28 @@ func (r *nativeRail) sidebar(c *ui.Context) {
 	})
 }
 func (r *nativeRail) view(c *ui.Context) {
-	c.SetTheme(shellTheme)
+	dark := c.Theme().Dark
+	switch r.snapshot().Theme {
+	case "dark":
+		dark = true
+	case "light":
+		dark = false
+	}
+	c.SetTheme(design.Theme(dark, c.Preferences()))
 	ui.Column(c).Fill().AlignItems(ui.Stretch).Children(func() {
 		r.titlebar(c)
 		ui.Row(c).Grow(1).MinHeight(0).AlignItems(ui.Stretch).Children(func() {
-			ui.Column(c).Width(48).Shrink(0).Children(func() { r.controls(c) })
+			ui.Column(c).Width(design.LayoutRailWidth).Shrink(0).Children(func() { r.controls(c) })
 			if !r.snapshot().Collapsed {
-				ui.Column(c).Width(240).Shrink(0).Children(func() { r.sidebar(c) })
+				ui.Column(c).Width(design.LayoutSidebarWidth).Shrink(0).Children(func() { r.sidebar(c) })
 			}
 			if r.page != nil {
 				ui.Column(c).Grow(1).MinWidth(0).MinHeight(0).Children(func() {
-					if r.content == nil || !r.content(c, r.snapshot()) {
-						ui.WebView(c, r.page).Grow(1).MinWidth(0)
-					}
+					ui.WebView(c, r.page).Grow(1).MinWidth(0)
 				})
 			}
-			if r.pane != nil && r.snapshot().Pane {
-				r.pane(c, r.snapshot())
-			}
 		})
-		if r.overlay != nil {
-			r.overlay(c, r.snapshot())
-		}
 	})
-}
-
-// SetNativeContent composes native domain pages beside the retained chat/editor.
-// Call during window assembly on the UI thread.
-func SetNativeContent(h *Host, render func(*ui.Context, ShellState) bool) {
-	h.mu.Lock()
-	r := h.rail
-	h.mu.Unlock()
-	if r != nil {
-		r.content = render
-		r.window.Invalidate()
-	}
 }
 
 func NotifyConnection(h *Host) {
@@ -320,14 +350,14 @@ func NewDesktopWindow(h *Host, options mygo.WindowOptions) (*mygo.Window, *mygo.
 }
 func validShellState(state ShellState) bool {
 	switch state.View {
-	case "chat", "pages", "tasks", "channels", "settings", "knowledge":
+	case "chat", "tasks", "channels", "settings", "knowledge":
 	default:
 		return false
 	}
-	if len(state.Location) > 512 || len(state.PageTitle) > 512 || len(state.Sessions) > 1000 || len(state.Spaces) > 1000 {
+	if len(state.Location) > 512 || len(state.PageTitle) > 512 || len(state.SelectedAssistant) > 256 || len(state.SettingsSection) > 64 || len(state.Theme) > 16 || len(state.Sessions) > 1000 || len(state.Spaces) > 1000 || len(state.Assistants) > 1000 {
 		return false
 	}
-	for _, items := range [][]NavigationItem{state.Sessions, state.Spaces} {
+	for _, items := range [][]NavigationItem{state.Sessions, state.Spaces, state.Assistants} {
 		seen := map[string]bool{}
 		for _, item := range items {
 			if item.ID == "" || len(item.ID) > 256 || strings.ContainsRune(item.ID, 0) || len(item.Title) > 512 || seen[item.ID] {
@@ -344,6 +374,7 @@ func (h *Host) SetShellState(state ShellState) dto.EmptyResult {
 	}
 	state.Sessions = append([]NavigationItem(nil), state.Sessions...)
 	state.Spaces = append([]NavigationItem(nil), state.Spaces...)
+	state.Assistants = append([]NavigationItem(nil), state.Assistants...)
 	h.mu.Lock()
 	r := h.rail
 	h.mu.Unlock()
@@ -358,73 +389,23 @@ func (h *Host) SetShellState(state ShellState) dto.EmptyResult {
 	return dto.EmptyResult{OK: true, Value: &dto.Empty{}}
 }
 
-func SetNativePane(h *Host, render func(*ui.Context, ShellState)) {
-	h.mu.Lock()
-	r := h.rail
-	h.mu.Unlock()
-	if r != nil {
-		r.pane = render
-		r.window.Invalidate()
-	}
-}
-func ToggleArtifacts(h *Host) {
-	h.mu.Lock()
-	r := h.rail
-	h.mu.Unlock()
-	if r != nil {
-		r.action("artifacts", "")
-	}
-}
-
-func SetNativeOverlay(h *Host, render func(*ui.Context, ShellState)) {
-	h.mu.Lock()
-	r := h.rail
-	h.mu.Unlock()
-	if r != nil {
-		r.overlay = render
-		r.window.Invalidate()
-	}
-}
-func SetNativeActionHandler(h *Host, fn func(string, string) bool) {
-	h.mu.Lock()
-	r := h.rail
-	h.mu.Unlock()
-	if r != nil {
-		r.handle = fn
-	}
-}
-func (h *Host) RequestConversation() dto.EmptyResult {
-	h.mu.Lock()
-	r := h.rail
-	h.mu.Unlock()
-	if r == nil || r.handle == nil {
-		return dto.EmptyResult{Error: dto.Failure("nativeDialogUnavailable", "desktop", "never", 0)}
-	}
-	r.window.Update(func() { r.action("newConversation", "") })
-	return dto.EmptyResult{OK: true, Value: &dto.Empty{}}
-}
-func NotifyCreated(h *Host, action, id string) {
-	if action != "sessionCreated" && action != "spaceCreated" && action != "sessionChanged" && action != "sessionDeleted" {
-		return
+// Theme returns the persisted display theme for the WebView to apply on
+// mount. The change event remains for live updates.
+func (h *Host) Theme() ThemeResult {
+	if h == nil {
+		return ThemeResult{Error: dto.Failure("notReady", "desktop", "reload", 0)}
 	}
 	h.mu.Lock()
 	r := h.rail
 	h.mu.Unlock()
-	if r != nil {
-		NavigationRequested.Emit(r.window, RailAction{Action: action, ID: id})
+	if r == nil {
+		return ThemeResult{Error: dto.Failure("notReady", "desktop", "reload", 0)}
 	}
-}
-
-func (h *Host) RequestSessionAction(action string) dto.EmptyResult {
-	if action != "configureSession" && action != "renameSession" && action != "deleteSession" {
-		return dto.EmptyResult{Error: dto.Failure("invalidInput", "desktop", "never", 0)}
+	r.mu.Lock()
+	theme := r.state.Theme
+	r.mu.Unlock()
+	if theme == "" {
+		theme = "system"
 	}
-	h.mu.Lock()
-	r := h.rail
-	h.mu.Unlock()
-	if r == nil || r.handle == nil {
-		return dto.EmptyResult{Error: dto.Failure("nativeDialogUnavailable", "desktop", "never", 0)}
-	}
-	r.window.Update(func() { r.action(action, "") })
-	return dto.EmptyResult{OK: true, Value: &dto.Empty{}}
+	return ThemeResult{OK: true, Value: &ThemeValue{Theme: theme}}
 }

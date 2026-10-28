@@ -330,11 +330,11 @@ func (msgs Messages) English() string {
 	return Catalog.Format(msgs.locale, "english", nil)
 }
 
-// LanguageDescription says "OpenMPA 原生界面、系统菜单和内容页面使用同一种语言。"
+// LanguageDescription says "OpenMPA 桌面界面、系统菜单和内容页面使用同一种语言。"
 // in the language the app shows.
 func LanguageDescription() string { return In(i18n.Locale()).LanguageDescription() }
 
-// LanguageDescription says "OpenMPA 原生界面、系统菜单和内容页面使用同一种语言。"
+// LanguageDescription says "OpenMPA 桌面界面、系统菜单和内容页面使用同一种语言。"
 // in the language of msgs.
 func (msgs Messages) LanguageDescription() string {
 	return Catalog.Format(msgs.locale, "languageDescription", nil)
@@ -1032,11 +1032,11 @@ func (msgs Messages) SettingsSetup() string {
 	return Catalog.Format(msgs.locale, "settingsSetup", nil)
 }
 
-// NativeOperationStatus says "原生操作状态"
+// NativeOperationStatus says "宿主操作状态"
 // in the language the app shows.
 func NativeOperationStatus() string { return In(i18n.Locale()).NativeOperationStatus() }
 
-// NativeOperationStatus says "原生操作状态"
+// NativeOperationStatus says "宿主操作状态"
 // in the language of msgs.
 func (msgs Messages) NativeOperationStatus() string {
 	return Catalog.Format(msgs.locale, "nativeOperationStatus", nil)
@@ -1322,6 +1322,16 @@ func StopCurrentSession() string { return In(i18n.Locale()).StopCurrentSession()
 // in the language of msgs.
 func (msgs Messages) StopCurrentSession() string {
 	return Catalog.Format(msgs.locale, "stopCurrentSession", nil)
+}
+
+// VerifyingOutcome says "已确认停止 · 正在核验结果"
+// in the language the app shows.
+func VerifyingOutcome() string { return In(i18n.Locale()).VerifyingOutcome() }
+
+// VerifyingOutcome says "已确认停止 · 正在核验结果"
+// in the language of msgs.
+func (msgs Messages) VerifyingOutcome() string {
+	return Catalog.Format(msgs.locale, "verifyingOutcome", nil)
 }
 
 // Space says "SPACE"
@@ -1898,4 +1908,208 @@ func ForgetVaultConfirm() string { return In(i18n.Locale()).ForgetVaultConfirm()
 // in the language of msgs.
 func (msgs Messages) ForgetVaultConfirm() string {
 	return Catalog.Format(msgs.locale, "forgetVaultConfirm", nil)
+}
+
+// Assistant says "助手"
+// in the language the app shows.
+func Assistant() string { return In(i18n.Locale()).Assistant() }
+
+// Assistant says "助手"
+// in the language of msgs.
+func (msgs Messages) Assistant() string {
+	return Catalog.Format(msgs.locale, "assistant", nil)
+}
+
+// Conversations says "会话"
+// in the language the app shows.
+func Conversations() string { return In(i18n.Locale()).Conversations() }
+
+// Conversations says "会话"
+// in the language of msgs.
+func (msgs Messages) Conversations() string {
+	return Catalog.Format(msgs.locale, "conversations", nil)
+}
+
+// SettingsSectionsTitle says "设置"
+// in the language the app shows.
+func SettingsSectionsTitle() string { return In(i18n.Locale()).SettingsSectionsTitle() }
+
+// SettingsSectionsTitle says "设置"
+// in the language of msgs.
+func (msgs Messages) SettingsSectionsTitle() string {
+	return Catalog.Format(msgs.locale, "settingsSectionsTitle", nil)
+}
+
+// Home says "主页"
+// in the language the app shows.
+func Home() string { return In(i18n.Locale()).Home() }
+
+// Home says "主页"
+// in the language of msgs.
+func (msgs Messages) Home() string {
+	return Catalog.Format(msgs.locale, "home", nil)
+}
+
+// Theme says "主题"
+// in the language the app shows.
+func Theme() string { return In(i18n.Locale()).Theme() }
+
+// Theme says "主题"
+// in the language of msgs.
+func (msgs Messages) Theme() string {
+	return Catalog.Format(msgs.locale, "theme", nil)
+}
+
+// SearchConversations says "搜索会话"
+// in the language the app shows.
+func SearchConversations() string { return In(i18n.Locale()).SearchConversations() }
+
+// SearchConversations says "搜索会话"
+// in the language of msgs.
+func (msgs Messages) SearchConversations() string {
+	return Catalog.Format(msgs.locale, "searchConversations", nil)
+}
+
+// NoConversations says "暂无会话。"
+// in the language the app shows.
+func NoConversations() string { return In(i18n.Locale()).NoConversations() }
+
+// NoConversations says "暂无会话。"
+// in the language of msgs.
+func (msgs Messages) NoConversations() string {
+	return Catalog.Format(msgs.locale, "noConversations", nil)
+}
+
+// SelectConversationFirst says "请先选择一个会话。"
+// in the language the app shows.
+func SelectConversationFirst() string { return In(i18n.Locale()).SelectConversationFirst() }
+
+// SelectConversationFirst says "请先选择一个会话。"
+// in the language of msgs.
+func (msgs Messages) SelectConversationFirst() string {
+	return Catalog.Format(msgs.locale, "selectConversationFirst", nil)
+}
+
+// KnowledgeForConversation says "会话 {session} 的知识库"
+// in the language the app shows.
+func KnowledgeForConversation(session string) string {
+	return In(i18n.Locale()).KnowledgeForConversation(session)
+}
+
+// KnowledgeForConversation says "会话 {session} 的知识库"
+// in the language of msgs.
+func (msgs Messages) KnowledgeForConversation(session string) string {
+	return Catalog.Format(msgs.locale, "knowledgeForConversation", map[string]any{"session": session})
+}
+
+// ScheduledForAssistant says "当前助手的定时任务。"
+// in the language the app shows.
+func ScheduledForAssistant() string { return In(i18n.Locale()).ScheduledForAssistant() }
+
+// ScheduledForAssistant says "当前助手的定时任务。"
+// in the language of msgs.
+func (msgs Messages) ScheduledForAssistant() string {
+	return Catalog.Format(msgs.locale, "scheduledForAssistant", nil)
+}
+
+// SelectConversationForSchedules says "请选择一个会话，将定时任务限定到对应助手。"
+// in the language the app shows.
+func SelectConversationForSchedules() string {
+	return In(i18n.Locale()).SelectConversationForSchedules()
+}
+
+// SelectConversationForSchedules says "请选择一个会话，将定时任务限定到对应助手。"
+// in the language of msgs.
+func (msgs Messages) SelectConversationForSchedules() string {
+	return Catalog.Format(msgs.locale, "selectConversationForSchedules", nil)
+}
+
+// DisplayTheme says "显示主题"
+// in the language the app shows.
+func DisplayTheme() string { return In(i18n.Locale()).DisplayTheme() }
+
+// DisplayTheme says "显示主题"
+// in the language of msgs.
+func (msgs Messages) DisplayTheme() string {
+	return Catalog.Format(msgs.locale, "displayTheme", nil)
+}
+
+// ThemeDescription says "主题会应用到桌面外壳和对话内容。"
+// in the language the app shows.
+func ThemeDescription() string { return In(i18n.Locale()).ThemeDescription() }
+
+// ThemeDescription says "主题会应用到桌面外壳和对话内容。"
+// in the language of msgs.
+func (msgs Messages) ThemeDescription() string {
+	return Catalog.Format(msgs.locale, "themeDescription", nil)
+}
+
+// Light says "浅色"
+// in the language the app shows.
+func Light() string { return In(i18n.Locale()).Light() }
+
+// Light says "浅色"
+// in the language of msgs.
+func (msgs Messages) Light() string {
+	return Catalog.Format(msgs.locale, "light", nil)
+}
+
+// Dark says "深色"
+// in the language the app shows.
+func Dark() string { return In(i18n.Locale()).Dark() }
+
+// Dark says "深色"
+// in the language of msgs.
+func (msgs Messages) Dark() string {
+	return Catalog.Format(msgs.locale, "dark", nil)
+}
+
+// ThemeChanged says "显示主题已更新。"
+// in the language the app shows.
+func ThemeChanged() string { return In(i18n.Locale()).ThemeChanged() }
+
+// ThemeChanged says "显示主题已更新。"
+// in the language of msgs.
+func (msgs Messages) ThemeChanged() string {
+	return Catalog.Format(msgs.locale, "themeChanged", nil)
+}
+
+// SessionKnowledge says "会话知识库"
+// in the language the app shows.
+func SessionKnowledge() string { return In(i18n.Locale()).SessionKnowledge() }
+
+// SessionKnowledge says "会话知识库"
+// in the language of msgs.
+func (msgs Messages) SessionKnowledge() string {
+	return Catalog.Format(msgs.locale, "sessionKnowledge", nil)
+}
+
+// SelectAssistant says "选择助手"
+// in the language the app shows.
+func SelectAssistant() string { return In(i18n.Locale()).SelectAssistant() }
+
+// SelectAssistant says "选择助手"
+// in the language of msgs.
+func (msgs Messages) SelectAssistant() string {
+	return Catalog.Format(msgs.locale, "selectAssistant", nil)
+}
+
+// AssistantConfiguration says "助手配置"
+// in the language the app shows.
+func AssistantConfiguration() string { return In(i18n.Locale()).AssistantConfiguration() }
+
+// AssistantConfiguration says "助手配置"
+// in the language of msgs.
+func (msgs Messages) AssistantConfiguration() string {
+	return Catalog.Format(msgs.locale, "assistantConfiguration", nil)
+}
+
+// AssistantSkillScope says "这里只显示已配置的 skills。浏览 AgentKit skill space 需要当前客户端没有的目录 API。"
+// in the language the app shows.
+func AssistantSkillScope() string { return In(i18n.Locale()).AssistantSkillScope() }
+
+// AssistantSkillScope says "这里只显示已配置的 skills。浏览 AgentKit skill space 需要当前客户端没有的目录 API。"
+// in the language of msgs.
+func (msgs Messages) AssistantSkillScope() string {
+	return Catalog.Format(msgs.locale, "assistantSkillScope", nil)
 }

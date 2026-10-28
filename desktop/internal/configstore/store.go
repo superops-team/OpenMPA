@@ -17,6 +17,7 @@ import (
 
 const (
 	LanguageKey       = "display.language"
+	ThemeKey          = "display.theme"
 	RegionKey         = "platform.region"
 	ProjectKey        = "platform.project"
 	RuntimeKey        = "platform.runtime_id"
@@ -24,6 +25,7 @@ const (
 	RuntimeBindingKey = "platform.runtime_binding"
 
 	DefaultLanguage = "system"
+	DefaultTheme    = "system"
 	DefaultRegion   = "cn-beijing"
 	DefaultProject  = "default"
 
@@ -49,6 +51,7 @@ type VaultRecord struct {
 
 type Preferences struct {
 	Language       string
+	Theme          string
 	Region         string
 	Project        string
 	Runtime        string
@@ -191,8 +194,8 @@ func (s *Store) Close() error { return s.db.Close() }
 func (s *Store) Path() string { return s.path }
 
 func (s *Store) Snapshot(ctx context.Context) (Preferences, error) {
-	out := Preferences{Language: DefaultLanguage, Region: DefaultRegion, Project: DefaultProject}
-	rows, err := s.db.QueryContext(ctx, "SELECT key, value FROM settings WHERE key IN (?, ?, ?, ?, ?, ?)", LanguageKey, RegionKey, ProjectKey, RuntimeKey, PrincipalScopeKey, RuntimeBindingKey)
+	out := Preferences{Language: DefaultLanguage, Theme: DefaultTheme, Region: DefaultRegion, Project: DefaultProject}
+	rows, err := s.db.QueryContext(ctx, "SELECT key, value FROM settings WHERE key IN (?, ?, ?, ?, ?, ?, ?)", LanguageKey, ThemeKey, RegionKey, ProjectKey, RuntimeKey, PrincipalScopeKey, RuntimeBindingKey)
 	if err != nil {
 		return out, err
 	}
@@ -206,6 +209,8 @@ func (s *Store) Snapshot(ctx context.Context) (Preferences, error) {
 		switch key {
 		case LanguageKey:
 			out.Language = value
+		case ThemeKey:
+			out.Theme = value
 		case RegionKey:
 			out.Region = value
 		case ProjectKey:
@@ -232,6 +237,13 @@ func (s *Store) SetLanguage(ctx context.Context, language string) error {
 		return errors.New("invalid display language")
 	}
 	return s.put(ctx, LanguageKey, language)
+}
+
+func (s *Store) SetTheme(ctx context.Context, theme string) error {
+	if theme != "system" && theme != "light" && theme != "dark" {
+		return errors.New("invalid display theme")
+	}
+	return s.put(ctx, ThemeKey, theme)
 }
 
 func (s *Store) SetDirectory(ctx context.Context, region, project string) error {

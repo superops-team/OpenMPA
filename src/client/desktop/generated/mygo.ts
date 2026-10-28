@@ -70,6 +70,49 @@ export interface ActiveRun {
   recoveryDisposition: string;
 }
 
+export interface AgentListRequest {
+  connectionEpoch: number;
+  agentId: string;
+  includeDisabled?: boolean;
+  query?: string;
+}
+
+export interface AssistantConfig {
+  assistantId: string;
+  agentsMd: string;
+  skills: AssistantSkill[];
+  updatedAt?: string;
+}
+
+export interface AssistantConfigRequest {
+  connectionEpoch: number;
+  sessionId: string;
+  assistantId?: string;
+}
+
+export interface AssistantConfigResult {
+  ok: boolean;
+  value?: AssistantConfig;
+  error?: SafeError;
+}
+
+export interface AssistantConfigSaveRequest {
+  connectionEpoch: number;
+  sessionId: string;
+  assistantId?: string;
+  agentsMd: string;
+  skills: AssistantSkill[];
+}
+
+export interface AssistantSkill {
+  id: string;
+  name: string;
+  description?: string;
+  source: string;
+  spaceId?: string;
+  content?: string;
+}
+
 export interface Binding {
   operationId: string;
   id?: string;
@@ -190,11 +233,15 @@ export interface ClientEvent {
   invocationId: string;
   eventId?: string;
   blockId?: string;
+  partIndex?: number;
   kind: string;
   completeness: string;
   text?: string;
+  reasoningVisibility?: string;
   toolId?: string;
   toolName?: string;
+  toolStatus?: string;
+  toolSubject?: string;
   author?: string;
   partial: boolean;
   terminal: boolean;
@@ -257,6 +304,9 @@ export interface ConnectionState {
   connectionEpoch: number;
   scope: string;
   runtimeId: string;
+  runtimeName?: string;
+  workerToolId?: string;
+  runtimeImage?: string;
   endpointHost: string;
   endpointPath: string;
   hasCredential: boolean;
@@ -323,6 +373,7 @@ export interface CreatePageRequest {
 export interface CreateRequest {
   connectionEpoch: number;
   sessionId?: string;
+  mpaInstanceId?: string;
 }
 
 export interface CreateResult {
@@ -786,6 +837,7 @@ export interface MutationResult {
 export interface NavigationItem {
   id: string;
   title: string;
+  agentId?: string;
 }
 
 export interface Operation {
@@ -1059,6 +1111,12 @@ export interface ReadRequest {
   operationId: string;
 }
 
+export interface ReadResult {
+  ok: boolean;
+  value?: Trace;
+  error?: SafeError;
+}
+
 export interface ReadUpdateRequest {
   connectionEpoch: number;
   operationId: string;
@@ -1217,6 +1275,7 @@ export interface RuntimeList {
 export interface RuntimeListRequest {
   region: string;
   projectName: string;
+  forceRefresh?: boolean;
 }
 
 export interface RuntimeListResult {
@@ -1354,6 +1413,7 @@ export interface ScheduleListResult {
 
 export interface ScopeRequest {
   connectionEpoch: number;
+  forceRefresh?: boolean;
 }
 
 export interface SearchItem {
@@ -1432,6 +1492,8 @@ export interface SessionSummary {
   sessionId?: string;
   title: string;
   status: string;
+  mpaInstanceId?: string;
+  traceEnabled?: boolean;
   lastUpdateTime: number;
   createdAt?: string;
 }
@@ -1446,13 +1508,17 @@ export interface ShellState {
   connectionEpoch: number;
   view: string;
   collapsed: boolean;
-  pane: boolean;
+  traceOpen?: boolean;
   location: string;
   pageTitle: string;
   selectedSession: string;
   selectedSpace: string;
+  selectedAssistant?: string;
+  settingsSection?: string;
+  theme?: string;
   sessions: NavigationItem[];
   spaces: NavigationItem[];
+  assistants?: NavigationItem[];
   revision: number;
 }
 
@@ -1462,6 +1528,21 @@ export interface SignInRequest {
   securityToken?: string;
   expiresAt?: string;
   region: string;
+}
+
+export interface SkillCatalog {
+  skills: AssistantSkill[];
+}
+
+export interface SkillCatalogRequest {
+  connectionEpoch: number;
+  query?: string;
+}
+
+export interface SkillCatalogResult {
+  ok: boolean;
+  value?: SkillCatalog;
+  error?: SafeError;
 }
 
 export interface Snapshot {
@@ -1537,8 +1618,26 @@ export interface StatusCounts {
   Skipped: number;
 }
 
+export interface Step {
+  stepId: string;
+  parentStepId?: string;
+  sequence: number;
+  kind: string;
+  title: string;
+  status: string;
+  startedAt: string;
+  endedAt?: string;
+  durationMs?: number;
+  sourceEventId?: string;
+  category?: string;
+  timing?: Record<string, unknown>;
+  correlation?: Record<string, unknown>;
+  details?: Record<string, unknown>;
+}
+
 export interface SubmitRequest {
   attachmentRefs?: string[];
+  assistantId?: string;
   connectionEpoch: number;
   sessionId: string;
   operationId: string;
@@ -1629,6 +1728,32 @@ export interface TextImportRequest {
   idempotencyKey: string;
   displayName: string;
   content: string;
+}
+
+export interface ThemeResult {
+  ok: boolean;
+  value?: ThemeValue;
+  error?: SafeError;
+}
+
+export interface ThemeValue {
+  theme: string;
+}
+
+export interface Trace {
+  traceVersion: string;
+  sessionId: string;
+  invocationId: string;
+  correlation?: Record<string, unknown>;
+  run?: Record<string, unknown>;
+  coverage?: Record<string, unknown>;
+  steps: Step[];
+}
+
+export interface TraceReadRequest {
+  connectionEpoch: number;
+  sessionId: string;
+  invocationId: string;
 }
 
 export interface UpdateRequest {
@@ -1788,11 +1913,29 @@ export const Session = {
   abort(r: SessionRequest): Promise<AbortReceiptResult> {
     return call("Session.Abort", r);
   },
+  assistantConfig(r: AssistantConfigRequest): Promise<AssistantConfigResult> {
+    return call("Session.AssistantConfig", r);
+  },
   create(r: CreateRequest): Promise<SessionSummaryResult> {
     return call("Session.Create", r);
   },
+  /**
+   * CreateTraceSession is an explicit diagnostics operation. Product
+   * conversations use Create so their next-Turn model remains configurable.
+   */
+  createTraceSession(r: CreateRequest): Promise<SessionSummaryResult> {
+    return call("Session.CreateTraceSession", r);
+  },
   delete(r: SessionRequest): Promise<DeleteReceiptResult> {
     return call("Session.Delete", r);
+  },
+  /**
+   * EnsureExecutionConfig repairs a legacy normal Session only after the user
+   * explicitly chooses a model. It does not submit a Turn or change an active
+   * Turn's immutable execution snapshot.
+   */
+  ensureExecutionConfig(r: SessionRequest): Promise<ExecutionConfigResult> {
+    return call("Session.EnsureExecutionConfig", r);
   },
   executionConfig(r: SessionRequest): Promise<ExecutionConfigResult> {
     return call("Session.ExecutionConfig", r);
@@ -1803,6 +1946,10 @@ export const Session = {
   pending(r: ScopeRequest): Promise<PendingListResult> {
     return call("Session.Pending", r);
   },
+  /**
+   * Read projects authoritative Runtime history and reconciles durable pending
+   * receipts without changing the public Session service boundary.
+   */
   read(r: SessionRequest): Promise<SessionHistoryResult> {
     return call("Session.Read", r);
   },
@@ -1814,6 +1961,12 @@ export const Session = {
   },
   resolvePending(r: ResolvePendingRequest): Promise<EmptyResult> {
     return call("Session.ResolvePending", r);
+  },
+  saveAssistantConfig(r: AssistantConfigSaveRequest): Promise<AssistantConfigResult> {
+    return call("Session.SaveAssistantConfig", r);
+  },
+  skillCatalog(r: SkillCatalogRequest): Promise<SkillCatalogResult> {
+    return call("Session.SkillCatalog", r);
   },
   submit(r: SubmitRequest): Promise<RunReceiptResult> {
     return call("Session.Submit", r);
@@ -2011,17 +2164,18 @@ export const Host = {
   closeState(): Promise<HostCloseStateResult> {
     return call("Host.CloseState");
   },
-  requestConversation(): Promise<EmptyResult> {
-    return call("Host.RequestConversation");
-  },
-  requestSessionAction(action: string): Promise<EmptyResult> {
-    return call("Host.RequestSessionAction", action);
-  },
   resolveClose(r: CloseResolution): Promise<EmptyResult> {
     return call("Host.ResolveClose", r);
   },
   setShellState(state: ShellState): Promise<EmptyResult> {
     return call("Host.SetShellState", state);
+  },
+  /**
+   * Theme returns the persisted display theme for the WebView to apply on
+   * mount. The change event remains for live updates.
+   */
+  theme(): Promise<ThemeResult> {
+    return call("Host.Theme");
   },
 } as const;
 
@@ -2041,6 +2195,14 @@ export const Schedule = {
   },
   list(r: ListRequest): Promise<ScheduleListResult> {
     return call("Schedule.List", r);
+  },
+  /**
+   * ListForAgent reads the bounded task directory and filters by the assistant
+   * that owns each task. The deployed collection route has no agentId filter, so
+   * filtering only the first page would silently hide tasks from later pages.
+   */
+  listForAgent(r: AgentListRequest): Promise<ScheduleListResult> {
+    return call("Schedule.ListForAgent", r);
   },
   /**
    * Read uses the authoritative collection route; the deployed API has no GET /id.
@@ -2092,6 +2254,12 @@ export const RuntimeConfig = {
   },
   update(r: RuntimeconfigUpdateRequest): Promise<RuntimeconfigOperationResult> {
     return call("RuntimeConfig.Update", r);
+  },
+} as const;
+
+export const Trace = {
+  read(r: TraceReadRequest): Promise<ReadResult> {
+    return call("Trace.Read", r);
   },
 } as const;
 

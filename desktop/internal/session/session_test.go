@@ -2,10 +2,15 @@ package session
 
 import (
 	"context"
+	"encoding/json"
+	"github.com/superops-team/OpenMPA/desktop/internal/configstore"
 	"github.com/superops-team/OpenMPA/desktop/internal/connection"
 	"github.com/superops-team/OpenMPA/desktop/internal/dto"
+	"io"
 	"net/http"
 	"net/http/httptest"
+	"path/filepath"
+	"strconv"
 	"strings"
 	"sync/atomic"
 	"testing"
@@ -13,15 +18,258 @@ import (
 
 func TestSSEMultilineAndSafeProjection(t *testing.T) {
 	var out []dto.ClientEvent
-	text := "event: message\r\ndata: {\"id\":\"e1\",\"invocationId\":\"i1\",\r\ndata: \"content\":{\"parts\":[{\"text\":\"你好\"},{\"thought\":true,\"text\":\"hidden reasoning\"},{\"functionCall\":{\"id\":\"t1\",\"name\":\"safe_tool\",\"args\":{\"secret\":\"NEVER\"}}}]}}\r\n\r\nevent: done\ndata: {\"invocationId\":\"i1\",\"terminal\":true}\n\n"
+	text := "event: message\r\ndata: {\"id\":\"e1\",\"invocationId\":\"i1\",\r\ndata: \"content\":{\"parts\":[{\"text\":\"你好\"},{\"thought\":true,\"text\":\"hidden reasoning\"},{\"functionCall\":{\"id\":\"t1\",\"name\":\"read\",\"args\":{\"file_path\":\"src/client/desktop/Chat.tsx\",\"secret\":\"NEVER\"}}},{\"functionResponse\":{\"id\":\"t1\",\"name\":\"read\",\"response\":{\"content\":\"NEVER RETURN RAW\"}}}]}}\r\n\r\nevent: done\ndata: {\"invocationId\":\"i1\",\"terminal\":true}\n\n"
 	err := ParseSSE(strings.NewReader(text), dto.SubscribeRequest{SessionID: "s1", InvocationID: "i1"}, func(e dto.ClientEvent) error { out = append(out, e); return nil })
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(out) != 3 || out[0].Text != "你好" || out[1].ToolName != "safe_tool" || out[2].Kind != "done" {
+	if len(out) != 5 || out[0].Text != "你好" || out[1].Kind != "reasoning" || out[1].Text != "" || out[1].ReasoningVisibility != "hidden" || out[2].ToolName != "read" || out[2].ToolStatus != "running" || out[2].ToolSubject != "src/client/desktop/Chat.tsx" || out[3].Kind != "toolResult" || out[3].ToolStatus != "success" || out[4].Kind != "done" {
 		t.Fatalf("bad projection: %+v", out)
 	}
+	for _, event := range out {
+		encoded, marshalErr := json.Marshal(event)
+		if marshalErr != nil {
+			t.Fatal(marshalErr)
+		}
+		if strings.Contains(string(encoded), "hidden reasoning") || strings.Contains(string(encoded), "NEVER") {
+			t.Fatalf("unsafe projection: %s", encoded)
+		}
+		if event.Kind != "done" && (event.PartIndex == nil || event.SchemaVersion != 2) {
+			t.Fatalf("missing v2 identity: %+v", event)
+		}
+	}
 }
+
+func TestToolSubjectRejectsURLAndCredentialLikeValues(t *testing.T) {
+	for _, value := range []string{
+		"https://example.com/file?token=NEVER",
+		"Bearer NEVER",
+		"password=NEVER",
+	} {
+		payload := `{"id":"event","invocationId":"invocation","content":{"parts":[{"functionCall":{"id":"tool","name":"read","args":{"file_path":` + strconv.Quote(value) + `}}}]}}`
+		events, err := Project([]byte(payload), "message", dto.SubscribeRequest{SessionID: "session", InvocationID: "invocation"})
+		if err != nil {
+			t.Fatal(err)
+		}
+		if len(events) != 1 || events[0].ToolSubject != "" {
+			t.Fatalf("unsafe subject %q: %+v", value, events)
+		}
+	}
+}
+func TestProductConversationCreatesNormalSessionWithCurrentAgentProfile(t *testing.T) {
+	var calls []string
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		calls = append(calls, r.Method+" "+r.URL.Path)
+		switch r.URL.Path {
+		case "/api/v1/runtime-console/overview":
+			io.WriteString(w, `{"agent":{"id":"mi-current"}}`)
+		case "/api/v1/sessions":
+			var input dto.CreateRequest
+			if r.Method != http.MethodPost || json.NewDecoder(r.Body).Decode(&input) != nil || input.MPAInstanceID != "mi-current" {
+				t.Fatal("product conversation was not bound to the current agent")
+			}
+			w.WriteHeader(http.StatusCreated)
+			io.WriteString(w, `{"sessionId":"normal-session","createdAt":"2026-10-28T00:00:00Z","mpaInstanceId":"mi-current","executionConfigRevision":1}`)
+		case "/api/v1/sessions/normal-session/execution-config":
+			w.Header().Set("ETag", `"1"`)
+			io.WriteString(w, `{"revision":1,"profileRevision":1,"effectiveRefs":{"model":{"id":"default-model"},"mcpServers":[]}}`)
+		default:
+			t.Fatalf("unexpected request %s %s", r.Method, r.URL.Path)
+		}
+	}))
+	defer server.Close()
+	conn := connection.New()
+	epoch, _ := conn.Bind(connection.Binding{Endpoint: server.URL, Scope: "scope"}, true)
+	service := New(conn, NewPendingStore(func() (string, error) { return t.TempDir(), nil }))
+	created := service.Create(context.Background(), dto.CreateRequest{ConnectionEpoch: epoch})
+	if !created.OK || created.Value.SessionID != "normal-session" || created.Value.MPAInstanceID != "mi-current" || created.Value.TraceEnabled {
+		t.Fatalf("bad product Session %+v", created)
+	}
+	config := service.ExecutionConfig(context.Background(), dto.SessionRequest{ConnectionEpoch: epoch, SessionID: created.Value.SessionID})
+	if !config.OK || config.Value.ExecutionConfigVersion != "1" {
+		t.Fatalf("new product Session is not model configurable: %+v", config)
+	}
+	want := []string{"GET /api/v1/runtime-console/overview", "POST /api/v1/sessions", "GET /api/v1/sessions/normal-session/execution-config"}
+	if strings.Join(calls, "\n") != strings.Join(want, "\n") {
+		t.Fatalf("calls\n%s", strings.Join(calls, "\n"))
+	}
+}
+func TestCreatedSessionsUseRuntimeConsoleTracePath(t *testing.T) {
+	var calls []string
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		calls = append(calls, r.Method+" "+r.URL.Path)
+		switch {
+		case r.Method == "POST" && r.URL.Path == "/api/v1/runtime-console/admin/debug-sessions":
+			w.WriteHeader(http.StatusCreated)
+			io.WriteString(w, `{"sessionId":"debug-session","createdAt":"2026-10-27T00:00:00Z"}`)
+		case r.Method == "POST" && r.URL.Path == "/api/v1/runtime-console/admin/sessions/debug-session/run":
+			var body struct {
+				Content string `json:"content"`
+			}
+			if json.NewDecoder(r.Body).Decode(&body) != nil || body.Content != "hello" {
+				t.Fatal("bad run body")
+			}
+			io.WriteString(w, `{"sessionId":"debug-session","invocationId":"trace-run"}`)
+		case r.Method == "POST" && r.URL.Path == "/api/v1/runtime-console/admin/sessions/debug-session/sse":
+			io.WriteString(w, "event: done\ndata: {\"invocationId\":\"trace-run\",\"terminal\":true}\n\n")
+		case r.Method == "GET" && r.URL.Path == "/api/v1/runtime-console/admin/sessions/debug-session/events":
+			io.WriteString(w, `{"sessionId":"debug-session","events":[{"id":"done-1","invocationId":"trace-run","terminal":true}]}`)
+		case r.Method == "POST" && r.URL.Path == "/api/v1/runtime-console/admin/sessions/debug-session/abort":
+			io.WriteString(w, `{"sessionId":"debug-session","aborted":true}`)
+		case r.Method == "DELETE" && r.URL.Path == "/api/v1/runtime-console/admin/sessions/debug-session":
+			io.WriteString(w, `{"sessionId":"debug-session"}`)
+		default:
+			t.Fatalf("unexpected request %s %s", r.Method, r.URL.Path)
+		}
+	}))
+	defer server.Close()
+	conn := connection.New()
+	epoch, _ := conn.Bind(connection.Binding{Endpoint: server.URL, Scope: "scope"}, true)
+	service := New(conn, NewPendingStore(func() (string, error) { return t.TempDir(), nil }))
+
+	created := service.CreateTraceSession(context.Background(), dto.CreateRequest{ConnectionEpoch: epoch})
+	if !created.OK || created.Value.SessionID != "debug-session" || !created.Value.TraceEnabled {
+		t.Fatalf("bad create %+v", created)
+	}
+	run := service.Submit(context.Background(), dto.SubmitRequest{ConnectionEpoch: epoch, SessionID: "debug-session", OperationID: "op", IdempotencyKey: "key", Content: "hello"})
+	if !run.OK || run.Value.InvocationID != "trace-run" {
+		t.Fatalf("bad run %+v", run)
+	}
+	stream := service.stream(context.Background(), dto.SubscribeRequest{ConnectionEpoch: epoch, SessionID: "debug-session", InvocationID: "trace-run"}, func(dto.ClientEvent) error { return nil })
+	if !stream.OK {
+		t.Fatalf("bad stream %+v", stream)
+	}
+	abort := service.Abort(context.Background(), dto.SessionRequest{ConnectionEpoch: epoch, SessionID: "debug-session"})
+	if !abort.OK || !abort.Value.Aborted {
+		t.Fatalf("bad abort %+v", abort)
+	}
+	deleted := service.Delete(context.Background(), dto.SessionRequest{ConnectionEpoch: epoch, SessionID: "debug-session"})
+	if !deleted.OK {
+		t.Fatalf("bad delete %+v", deleted)
+	}
+	want := []string{
+		"POST /api/v1/runtime-console/admin/debug-sessions",
+		"POST /api/v1/runtime-console/admin/sessions/debug-session/run",
+		"POST /api/v1/runtime-console/admin/sessions/debug-session/sse",
+		"GET /api/v1/runtime-console/admin/sessions/debug-session/events",
+		"POST /api/v1/runtime-console/admin/sessions/debug-session/abort",
+		"DELETE /api/v1/runtime-console/admin/sessions/debug-session",
+	}
+	if strings.Join(calls, "\n") != strings.Join(want, "\n") {
+		t.Fatalf("calls\n%s", strings.Join(calls, "\n"))
+	}
+}
+
+func TestOrdinarySessionStreamDoesNotProbeAdminConsole(t *testing.T) {
+	var calls []string
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		calls = append(calls, r.Method+" "+r.URL.Path)
+		if r.Method != "POST" || r.URL.Path != "/api/v1/sessions/s/sse" {
+			t.Fatalf("unexpected request %s %s", r.Method, r.URL.Path)
+		}
+		io.WriteString(w, "event: done\ndata: {\"invocationId\":\"i\",\"terminal\":true}\n\n")
+	}))
+	defer server.Close()
+	conn := connection.New()
+	epoch, _ := conn.Bind(connection.Binding{Endpoint: server.URL, Scope: "scope"}, true)
+	service := New(conn, NewPendingStore(func() (string, error) { return t.TempDir(), nil }))
+	out := service.stream(context.Background(), dto.SubscribeRequest{ConnectionEpoch: epoch, SessionID: "s", InvocationID: "i"}, func(dto.ClientEvent) error { return nil })
+	if !out.OK || strings.Join(calls, "\n") != "POST /api/v1/sessions/s/sse" {
+		t.Fatalf("ordinary stream changed %+v calls=%v", out, calls)
+	}
+}
+
+func TestSessionListUsesCacheAndForceRefreshUpdatesIt(t *testing.T) {
+	var calls atomic.Int32
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		calls.Add(1)
+		switch r.URL.Path {
+		case "/api/v1/sessions":
+			if calls.Load() == 1 {
+				io.WriteString(w, `{"sessions":[{"id":"remote-1","title":"Remote one","status":"idle"}]}`)
+			} else {
+				io.WriteString(w, `{"sessions":[{"id":"remote-2","title":"Remote two","status":"idle"}]}`)
+			}
+		case "/api/v1/runtime-console/admin/sessions":
+			io.WriteString(w, `{"sessions":[]}`)
+		default:
+			t.Fatalf("unexpected request %s", r.URL.String())
+		}
+	}))
+	defer server.Close()
+	conn := connection.New()
+	epoch, _ := conn.Bind(connection.Binding{Endpoint: server.URL, Scope: "scope"}, true)
+	cache, err := configstore.Open(filepath.Join(t.TempDir(), "openmpa.db"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer cache.Close()
+	service := NewWithCache(conn, NewPendingStore(func() (string, error) { return t.TempDir(), nil }), cache)
+
+	first := service.List(context.Background(), dto.ScopeRequest{ConnectionEpoch: epoch})
+	if !first.OK || first.Value.Sessions[0].ID != "remote-1" {
+		t.Fatalf("first %+v", first)
+	}
+	cached := service.List(context.Background(), dto.ScopeRequest{ConnectionEpoch: epoch})
+	if !cached.OK || cached.Value.Sessions[0].ID != "remote-1" || calls.Load() != 2 {
+		t.Fatalf("cache not used %+v calls=%d", cached, calls.Load())
+	}
+	refreshed := service.List(context.Background(), dto.ScopeRequest{ConnectionEpoch: epoch, ForceRefresh: true})
+	if !refreshed.OK || refreshed.Value.Sessions[0].ID != "remote-2" {
+		t.Fatalf("refresh %+v", refreshed)
+	}
+}
+
+func TestSubmitIncludesLocalAssistantConfiguration(t *testing.T) {
+	var body map[string]any
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		switch {
+		case r.Method == "POST" && r.URL.Path == "/api/v1/sessions/s/run":
+			if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+				t.Fatal(err)
+			}
+			io.WriteString(w, `{"sessionId":"s","invocationId":"i"}`)
+		default:
+			t.Fatalf("unexpected request %s %s", r.Method, r.URL.Path)
+		}
+	}))
+	defer server.Close()
+	conn := connection.New()
+	epoch, _ := conn.Bind(connection.Binding{Endpoint: server.URL, Scope: "scope", RuntimeID: "runtime-a"}, true)
+	cache, err := configstore.Open(filepath.Join(t.TempDir(), "openmpa.db"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer cache.Close()
+	if _, err := cache.SaveAssistantConfig(context.Background(), "scope", dto.AssistantConfig{
+		AssistantID: "runtime-a",
+		AgentsMD:    "Use AGENTS.md",
+		Skills: []dto.AssistantSkill{{
+			ID:     "skill-a",
+			Name:   "skill-a",
+			Source: "local",
+		}},
+	}); err != nil {
+		t.Fatal(err)
+	}
+	service := NewWithCache(conn, NewPendingStore(func() (string, error) { return t.TempDir(), nil }), cache)
+	run := service.Submit(context.Background(), dto.SubmitRequest{ConnectionEpoch: epoch, SessionID: "s", OperationID: "op", IdempotencyKey: "key", Content: "hello", AssistantID: "runtime-a"})
+	if !run.OK {
+		t.Fatalf("run failed %+v", run)
+	}
+	if body["agentsMd"] != "Use AGENTS.md" {
+		t.Fatalf("agentsMd missing: %+v", body)
+	}
+	skills, ok := body["skills"].([]any)
+	if !ok || len(skills) != 1 || skills[0] != "skill-a" {
+		t.Fatalf("skills missing: %+v", body)
+	}
+	profile, ok := body["botProfile"].(map[string]any)
+	if !ok || profile["agentsMd"] != "Use AGENTS.md" {
+		t.Fatalf("bot profile missing: %+v", body)
+	}
+}
+
 func TestPendingPreservesOriginalOperation(t *testing.T) {
 	store := NewPendingStore(func() (string, error) { return t.TempDir(), nil })
 	p := Pending{Scope: "a", SessionID: "s", OperationID: "o", IdempotencyKey: "original", Content: "original content", ConfigVersion: "v1"}

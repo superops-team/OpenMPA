@@ -175,6 +175,37 @@ func TestResolveTerminalRequiresMatchingServiceTerminalAndHistory(t *testing.T) 
 		t.Fatal("verified matching terminal not resolved")
 	}
 }
+func TestReadHistoryMarksMatchingPendingTerminalVerified(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		switch r.URL.Path {
+		case "/api/v1/sessions/s":
+			io.WriteString(w, `{"id":"s","title":"Chat","status":"running"}`)
+		case "/api/v1/sessions/s/events":
+			io.WriteString(w, `{"events":[{"id":"done-1","invocationId":"i","terminal":true}]}`)
+		default:
+			t.Fatalf("unexpected request %s", r.URL.Path)
+		}
+	}))
+	defer server.Close()
+	c := connection.New()
+	epoch, _ := c.Bind(connection.Binding{Endpoint: server.URL, Scope: "scope"}, true)
+	store := NewPendingStore(func() (string, error) { return t.TempDir(), nil })
+	if err := store.Put(Pending{Scope: "scope", SessionID: "s", OperationID: "o", Content: "content", IdempotencyKey: "key"}); err != nil {
+		t.Fatal(err)
+	}
+	if err := store.Update("scope", "o", func(p *Pending) error { p.State = "accepted"; p.InvocationID = "i"; return nil }); err != nil {
+		t.Fatal(err)
+	}
+	s := New(c, store)
+	read := s.Read(context.Background(), dto.SessionRequest{ConnectionEpoch: epoch, SessionID: "s"})
+	if !read.OK {
+		t.Fatalf("read failed %+v", read)
+	}
+	pending := s.Pending(context.Background(), dto.ScopeRequest{ConnectionEpoch: epoch})
+	if !pending.OK || len(pending.Value.Operations) != 1 || !pending.Value.Operations[0].TerminalVerified {
+		t.Fatalf("pending not terminal verified %+v", pending)
+	}
+}
 func TestUnterminatedSSEFrameCannotProveTerminal(t *testing.T) {
 	emitted := 0
 	err := ParseSSE(strings.NewReader("event: done\ndata: {\"invocationId\":\"i\",\"terminal\":true}"), dto.SubscribeRequest{InvocationID: "i"}, func(dto.ClientEvent) error { emitted++; return nil })

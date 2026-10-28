@@ -23,6 +23,9 @@ it('lists the Runtime Sessions without probing an undeployed SessionBot API', as
   expect(await services.sessions.list(4)).toEqual([
     expect.objectContaining({ id: 's', title: 'Existing conversation' }),
   ]);
-  expect(api.sessionList).toHaveBeenCalledWith({ connectionEpoch: 4 });
+  expect(api.sessionList).toHaveBeenCalledWith({
+    connectionEpoch: 4,
+    forceRefresh: false,
+  });
   expect(api.botList).not.toHaveBeenCalled();
 });

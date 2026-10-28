@@ -51,6 +51,7 @@ it('discovers the original image operation on the same page after an unknown upd
           scope: 'scope',
           status: 'connected',
         }}
+        section="Deployment"
         onConnection={() => {}}
       />,
     );

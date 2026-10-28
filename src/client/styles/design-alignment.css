@@ -1,0 +1,365 @@
+:root {
+  font-family: var(--font-ui);
+  color: var(--color-foreground);
+  background: var(--color-background);
+  font-size: var(--text-ui-base);
+  line-height: var(--line-body);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+html,
+body,
+#root,
+.app,
+.workspace,
+.main-content,
+.desktop-content {
+  color: var(--color-foreground);
+  background: var(--color-background);
+}
+
+::selection {
+  background: var(--color-selection);
+  color: var(--color-foreground);
+}
+
+:root[data-theme-changing] *,
+:root[data-theme-changing] *::before,
+:root[data-theme-changing] *::after {
+  transition: none !important;
+}
+
+button,
+input,
+textarea,
+select {
+  font-family: var(--font-ui);
+  font-size: var(--text-ui-base);
+}
+
+button {
+  min-height: var(--control-md);
+  gap: var(--space-1);
+  padding: 0 var(--space-2);
+  border-color: var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-input);
+  color: var(--color-foreground);
+  transition:
+    background-color var(--motion-state-duration) var(--motion-ease-out),
+    border-color var(--motion-state-duration) var(--motion-ease-out),
+    color var(--motion-state-duration) var(--motion-ease-out),
+    transform var(--motion-press-duration) var(--motion-ease-out);
+}
+
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 2px;
+}
+
+button:active:not(:disabled) {
+  transform: scale(0.96);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  button:hover:not(:disabled) {
+    border-color: var(--color-border-hover);
+    background: var(--color-surface-hover);
+  }
+}
+
+input,
+textarea,
+select {
+  min-height: var(--control-input);
+  padding: var(--space-2) var(--space-3);
+  border-color: var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-input);
+  color: var(--color-foreground);
+  line-height: var(--line-compact);
+}
+
+textarea {
+  line-height: var(--line-body);
+}
+input::placeholder,
+textarea::placeholder {
+  color: var(--color-foreground-subtlest);
+}
+input:hover,
+textarea:hover,
+select:hover {
+  border-color: var(--color-border-hover);
+}
+input:focus,
+textarea:focus,
+select:focus {
+  border-color: var(--color-focus);
+  background: var(--color-input-focused);
+}
+
+.sidebar,
+.template-app .sidebar {
+  background: var(--color-sidebar);
+  border-color: var(--color-border);
+}
+.nav-item,
+.dot-nav {
+  color: var(--color-foreground-subtle);
+  border-radius: var(--radius-lg);
+}
+.nav-item.active,
+.dot-nav.active {
+  background: var(--color-card-selected);
+  color: var(--color-foreground);
+}
+.nav-item.active svg,
+.dot-nav.active svg {
+  color: var(--color-brand);
+}
+.sidebar-empty {
+  color: var(--color-foreground-subtlest);
+}
+.sidebar-error {
+  color: var(--color-destructive-surface-foreground);
+}
+
+.main-content {
+  color: var(--color-foreground);
+}
+.page-heading {
+  border-color: var(--color-border);
+}
+.page-heading h1 {
+  color: var(--color-foreground);
+  font-size: var(--text-ui-xl);
+  line-height: var(--line-heading);
+  text-wrap: balance;
+}
+.page-heading p {
+  max-width: 70ch;
+  color: var(--color-foreground-subtle);
+  font-size: var(--text-ui-sm);
+  line-height: var(--line-body);
+  text-wrap: pretty;
+}
+.eyebrow {
+  color: var(--color-foreground-subtlest);
+  font-size: var(--text-ui-xs);
+  letter-spacing: 0.08em;
+}
+
+.task-detail-card,
+.memory-card,
+.task-row,
+.task-event {
+  border-color: var(--color-card-border, var(--color-border));
+  border-radius: var(--radius-xl);
+  background: var(--color-card);
+  color: var(--color-foreground);
+  box-shadow: none;
+}
+
+.task-detail-card h2,
+.memory-card h2 {
+  color: var(--color-foreground);
+  font-size: var(--text-ui-lg);
+  line-height: var(--line-heading);
+}
+.task-detail-card small,
+.memory-card small {
+  color: var(--color-foreground-subtle);
+  font-size: var(--text-ui-sm);
+}
+
+.setup-card,
+.document-save-notice,
+.chat-status,
+.notice {
+  border-color: var(--color-border);
+  border-radius: var(--radius-xl);
+  background: var(--color-surface);
+  color: var(--color-foreground-subtle);
+  box-shadow: none;
+}
+
+.error-banner,
+.chat-status-error {
+  border-color: var(--color-destructive);
+  border-radius: var(--radius-lg);
+  background: var(--color-destructive-surface);
+  color: var(--color-destructive-surface-foreground);
+}
+
+.primary,
+button.primary,
+.template-app .primary {
+  border-color: transparent;
+  background: var(--color-primary);
+  color: var(--color-primary-foreground);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .primary:hover:not(:disabled),
+  button.primary:hover:not(:disabled),
+  .template-app .primary:hover:not(:disabled) {
+    background: var(--color-primary-hover);
+  }
+}
+
+.template-app {
+  --accent: var(--color-primary);
+  --accent-hover: var(--color-primary-hover);
+  --disabled-bg: var(--color-disabled);
+  --disabled-ink: var(--color-disabled-foreground);
+}
+.desktop-app.app .workspace {
+  background: var(--color-background);
+  color: var(--color-foreground);
+}
+.template-app :is(.primary, .send-button):disabled {
+  background: var(--color-disabled);
+  border-color: var(--color-disabled);
+  color: var(--color-disabled-foreground);
+}
+
+.text-button,
+.icon-button {
+  border-color: transparent;
+  background: transparent;
+  color: var(--color-foreground-subtle);
+  box-shadow: none;
+}
+
+.icon-button {
+  width: var(--control-md);
+  height: var(--control-md);
+  padding: 0;
+}
+.text-button {
+  min-height: var(--control-sm);
+  padding-inline: var(--space-1);
+  font-size: var(--text-ui-sm);
+}
+
+.desktop-form {
+  gap: var(--space-3);
+}
+.desktop-form label,
+.desktop-field > span {
+  color: var(--color-foreground-subtle);
+  font-size: var(--text-ui-sm);
+}
+.desktop-form input,
+.desktop-form select,
+.desktop-form textarea {
+  border-color: var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-input);
+  color: var(--color-foreground);
+}
+.desktop-form input:focus-visible,
+.desktop-form select:focus-visible,
+.desktop-form textarea:focus-visible {
+  border-color: var(--color-focus);
+  outline-color: var(--color-focus);
+}
+
+.desktop-segmented {
+  border-color: var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+}
+.desktop-segmented label:has(input:checked) {
+  background: var(--color-card-selected);
+  color: var(--color-foreground);
+}
+
+.chat-persona {
+  border-color: var(--color-border);
+  background: var(--color-panel);
+}
+.chat-persona strong {
+  color: var(--color-foreground);
+  font-size: var(--text-ui-base);
+}
+.chat-persona span {
+  color: var(--color-foreground-subtle);
+  font-size: var(--text-ui-sm);
+}
+.chat-bubble {
+  color: var(--color-foreground);
+  font-size: var(--text-ui-base);
+  line-height: var(--line-body);
+}
+.chat-bubble.user {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl) var(--radius-xl) var(--radius-sm)
+    var(--radius-xl);
+  background: var(--color-card-selected);
+  color: var(--color-foreground);
+  box-shadow: none;
+}
+.template-app .chat-bubble.user {
+  border-color: var(--color-border);
+  background: var(--color-card-selected);
+  color: var(--color-foreground);
+}
+.chat-bubble.assistant {
+  color: var(--color-foreground);
+}
+.chat-welcome > p,
+.composer-hint,
+.composer-model-notice {
+  color: var(--color-foreground-subtle);
+}
+.chat-jump {
+  border-color: var(--color-border);
+  background: var(--color-popover);
+  color: var(--color-foreground);
+  box-shadow: var(--shadow-overlay);
+}
+
+.composer-field,
+.ui-composer-shell.composer-field {
+  border-color: var(--color-border);
+  border-radius: var(--radius-2xl);
+  background: var(--color-input);
+  box-shadow: none;
+}
+.composer-field:focus-within,
+.ui-composer-shell.composer-field:focus-within {
+  border-color: var(--color-focus);
+  box-shadow: none;
+}
+.composer-field textarea {
+  color: var(--color-foreground);
+  font-size: var(--text-ui-base);
+  line-height: var(--line-body);
+}
+.composer-action.send {
+  background: var(--color-primary);
+  color: var(--color-primary-foreground);
+}
+.composer-action.stop {
+  background: var(--color-surface);
+  color: var(--color-warning);
+}
+
+.composer-model-menu {
+  border-color: var(--color-popover-border, var(--color-border));
+  border-radius: var(--radius-xl);
+  background: var(--color-popover);
+  color: var(--color-foreground);
+  box-shadow: var(--shadow-overlay);
+}
+.composer-model-option:hover,
+.composer-model-option:focus-visible {
+  background: var(--color-menu-hover);
+}

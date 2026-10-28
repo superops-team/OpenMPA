@@ -11,12 +11,16 @@
   --blue: #7285d5;
   --blue-dark: #5269bb;
   --lavender: #eeeffa;
+  overscroll-behavior: none;
 }
 * {
   box-sizing: border-box;
 }
+html,
 body {
   margin: 0;
+  height: 100%;
+  overscroll-behavior: none;
 }
 button,
 input,

@@ -46,7 +46,7 @@ it('clears an old conversation-load error after the same connection refresh succ
   expect(renderer.root.findAllByProps({ role: 'alert' })).toHaveLength(0);
   expect(setShellState).toHaveBeenLastCalledWith(
     expect.objectContaining({
-      sessions: [{ id: 's', title: 'A conversation' }],
+      sessions: [{ id: 's', title: 'A conversation', agentId: '' }],
     }),
   );
   await act(async () => renderer.unmount());

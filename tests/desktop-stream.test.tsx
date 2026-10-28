@@ -2,6 +2,25 @@ import { act, create, type ReactTestRenderer } from 'react-test-renderer';
 import { expect, it, vi } from 'vitest';
 import { DesktopChat } from '../src/client/desktop/Chat';
 import type { DesktopServices } from '../src/client/desktop/models';
+
+function deferred<T>() {
+  let resolve!: (value: T) => void;
+  let reject!: (error: unknown) => void;
+  const promise = new Promise<T>((res, rej) => {
+    resolve = res;
+    reject = rej;
+  });
+  return { promise, resolve, reject };
+}
+
+function sendButton(renderer: ReactTestRenderer) {
+  return renderer.root.findByProps({ 'aria-label': 'Send message' });
+}
+
+function stopButton(renderer: ReactTestRenderer) {
+  return renderer.root.findByProps({ 'aria-label': 'Stop current session' });
+}
+
 it('consumes a subscription while the Go call is still pending and closes without abort on unmount', async () => {
   vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true);
   let finish!: () => void;
@@ -72,6 +91,214 @@ it('consumes a subscription while the Go call is still pending and closes withou
   });
   expect(close).toHaveBeenCalledOnce();
   expect(abort).not.toHaveBeenCalled();
+});
+it('releases the next turn immediately after a terminal event even when the host call hangs', async () => {
+  vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true);
+  const hostCall = deferred<void>();
+  const terminalSent = deferred<void>();
+  const close = vi.fn();
+  const read = vi
+    .fn()
+    .mockResolvedValueOnce({
+      session: { id: 's', title: 'Chat' },
+      messages: [],
+    })
+    .mockResolvedValue({
+      session: { id: 's', title: 'Chat' },
+      messages: [],
+      completedInvocations: ['i'],
+    });
+  const service = {
+    sessions: {
+      pending: async () => [],
+      read,
+      submit: vi.fn(async () => ({ invocationId: 'i', status: 'accepted' })),
+      subscribe: vi.fn((_epoch, _id, _invocation, subscriptionEpoch) => ({
+        finished: hostCall.promise,
+        close,
+        events: (async function* () {
+          terminalSent.resolve();
+          yield {
+            connectionEpoch: 2,
+            subscriptionEpoch,
+            sessionId: 's',
+            invocationId: 'i',
+            eventId: 'done-i',
+            kind: 'done',
+            terminal: true,
+          };
+          await hostCall.promise;
+        })(),
+      })),
+    },
+  } as unknown as DesktopServices;
+  let renderer!: ReactTestRenderer;
+  await act(async () => {
+    renderer = create(
+      <DesktopChat
+        services={service}
+        connection={{
+          epoch: 2,
+          scope: 'scope',
+          runtimeId: 'r',
+          status: 'connected',
+        }}
+        session={{ id: 's', title: 'Chat' }}
+        onSchedule={() => {}}
+      />,
+    );
+  });
+  await act(async () =>
+    renderer.root
+      .findByProps({ 'aria-label': 'Message' })
+      .props.onChange({ target: { value: 'First' } }),
+  );
+  await act(async () => {
+    renderer.root.findByType('form').props.onSubmit({ preventDefault() {} });
+    await Promise.resolve();
+  });
+  await act(async () =>
+    renderer.root
+      .findByProps({ 'aria-label': 'Message' })
+      .props.onChange({ target: { value: 'Next' } }),
+  );
+  expect(close).toHaveBeenCalled();
+  expect(sendButton(renderer).props.disabled).toBe(false);
+  expect(
+    renderer.root.findAllByProps({ 'aria-label': 'Stop current session' }),
+  ).toHaveLength(0);
+  await act(async () => renderer.unmount());
+  hostCall.resolve();
+});
+it('releases the next turn after a terminal error while preserving the failure message', async () => {
+  vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true);
+  const hostCall = deferred<void>();
+  const read = vi.fn(async () => ({
+    session: { id: 's', title: 'Chat' },
+    messages: [],
+  }));
+  const service = {
+    sessions: {
+      pending: async () => [],
+      read,
+      submit: vi.fn(async () => ({ invocationId: 'i', status: 'accepted' })),
+      subscribe: vi.fn((_epoch, _id, _invocation, subscriptionEpoch) => ({
+        finished: hostCall.promise,
+        close() {},
+        events: (async function* () {
+          yield {
+            connectionEpoch: 2,
+            subscriptionEpoch,
+            sessionId: 's',
+            invocationId: 'i',
+            eventId: 'failed-i',
+            kind: 'error',
+            text: 'The model request failed.',
+            terminal: true,
+          };
+          await hostCall.promise;
+        })(),
+      })),
+    },
+  } as unknown as DesktopServices;
+  let renderer!: ReactTestRenderer;
+  await act(async () => {
+    renderer = create(
+      <DesktopChat
+        services={service}
+        connection={{
+          epoch: 2,
+          scope: 'scope',
+          runtimeId: 'r',
+          status: 'connected',
+        }}
+        session={{ id: 's', title: 'Chat' }}
+        onSchedule={() => {}}
+      />,
+    );
+  });
+  await act(async () =>
+    renderer.root
+      .findByProps({ 'aria-label': 'Message' })
+      .props.onChange({ target: { value: 'First' } }),
+  );
+  await act(async () => {
+    renderer.root.findByType('form').props.onSubmit({ preventDefault() {} });
+    await Promise.resolve();
+  });
+  await act(async () =>
+    renderer.root
+      .findByProps({ 'aria-label': 'Message' })
+      .props.onChange({ target: { value: 'Next' } }),
+  );
+  expect(sendButton(renderer).props.disabled).toBe(false);
+  expect(JSON.stringify(renderer.toJSON())).toContain(
+    'The model request failed.',
+  );
+  await act(async () => renderer.unmount());
+  hostCall.resolve();
+});
+it('clears the composer and renders the user message before slow submit returns', async () => {
+  vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true);
+  const submit = deferred<{ invocationId: string; status: string }>();
+  const service = {
+    sessions: {
+      pending: async () => [],
+      read: vi.fn(async () => ({
+        session: { id: 's', title: 'Chat' },
+        messages: [],
+      })),
+      submit: vi.fn(() => submit.promise),
+      subscribe: vi.fn((_epoch, _id, _invocation, subscriptionEpoch) => ({
+        finished: Promise.resolve(),
+        close() {},
+        events: (async function* () {
+          yield {
+            connectionEpoch: 2,
+            subscriptionEpoch,
+            sessionId: 's',
+            invocationId: 'i',
+            kind: 'done',
+            terminal: true,
+          };
+        })(),
+      })),
+    },
+  } as unknown as DesktopServices;
+  let renderer!: ReactTestRenderer;
+  await act(async () => {
+    renderer = create(
+      <DesktopChat
+        services={service}
+        connection={{
+          epoch: 2,
+          scope: 'scope',
+          runtimeId: 'r',
+          status: 'connected',
+        }}
+        session={{ id: 's', title: 'Chat' }}
+        onSchedule={() => {}}
+      />,
+    );
+  });
+  await act(async () => {
+    renderer.root
+      .findByProps({ 'aria-label': 'Message' })
+      .props.onChange({ target: { value: 'Hello while slow' } });
+  });
+  await act(async () => {
+    renderer.root.findByType('form').props.onSubmit({ preventDefault() {} });
+    await Promise.resolve();
+  });
+  expect(
+    renderer.root.findByProps({ 'aria-label': 'Message' }).props.value,
+  ).toBe('');
+  expect(JSON.stringify(renderer.toJSON())).toContain('Hello while slow');
+  expect(sendButton(renderer).props.disabled).toBe(true);
+  await act(async () =>
+    submit.resolve({ invocationId: 'i', status: 'accepted' }),
+  );
+  await act(async () => renderer.unmount());
 });
 it('prevents a submission while authoritative initial history is still loading', async () => {
   vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true);
@@ -179,6 +406,13 @@ it('keeps running when the Runtime returns aborted false and reads authoritative
   const read = vi.fn(async () => ({
     session: { id: 's', title: 'Chat', status: 'running' },
     messages: [],
+    activeRun: {
+      operationId: 'op',
+      invocationId: 'i',
+      state: 'accepted',
+      authority: 'localReceipt',
+      recoveryDisposition: 'subscribeAccepted',
+    },
   }));
   const abort = vi.fn(async () => false);
   const service = {
@@ -213,69 +447,25 @@ it('keeps running when the Runtime returns aborted false and reads authoritative
   expect(JSON.stringify(renderer.toJSON())).not.toContain('stop requested');
   await act(async () => renderer.unmount());
 });
-it('resumes the accepted invocation with its cursor and clears an expired cursor after rebuilding history', async () => {
+it('unlocks the composer after abort when authoritative history has already completed', async () => {
   vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true);
-  const pending = {
-    sessionId: 's',
-    operationId: 'original',
-    idempotencyKey: 'key',
-    content: 'Prompt',
-    state: 'accepted',
-    invocationId: 'i',
-    recoveryDisposition: 'subscribeAccepted',
-  };
   const read = vi.fn(async () => ({
-    session: { id: 's', title: 'Chat' },
+    session: { id: 's', title: 'Chat', status: 'running' },
     messages: [],
     activeRun: {
-      operationId: 'original',
+      operationId: 'op',
       invocationId: 'i',
       state: 'accepted',
       authority: 'localReceipt',
       recoveryDisposition: 'subscribeAccepted',
     },
+    completedInvocations: ['i'],
   }));
-  const recover = vi.fn(async () => ({
-    invocationId: 'i',
-    status: 'accepted',
-  }));
-  const submit = vi.fn();
-  let calls = 0;
-  const subscribe = vi.fn(
-    (_epoch, _id, _invocation, subscriptionEpoch, _lastEventId) => {
-      calls++;
-      const call = calls;
-      return {
-        close() {},
-        events: (async function* () {
-          if (call === 1)
-            yield {
-              connectionEpoch: 2,
-              subscriptionEpoch,
-              sessionId: 's',
-              invocationId: 'i',
-              eventId: 'cursor-1',
-              kind: 'text',
-              text: 'Partial',
-              partial: true,
-            };
-        })(),
-        finished:
-          call === 2
-            ? Promise.reject(
-                Object.assign(new Error('Cursor expired'), { httpStatus: 410 }),
-              )
-            : Promise.resolve(),
-      };
-    },
-  );
   const service = {
     sessions: {
       read,
-      pending: async () => [pending],
-      recover,
-      submit,
-      subscribe,
+      pending: async () => [],
+      abort: vi.fn(async () => true),
     },
   } as unknown as DesktopServices;
   let renderer!: ReactTestRenderer;
@@ -294,119 +484,135 @@ it('resumes the accepted invocation with its cursor and clears an expired cursor
       />,
     );
   });
-  const button = () =>
-    renderer.root
-      .findAllByType('button')
-      .find((button) =>
-        button.children.includes('Resume accepted invocation'),
-      )!;
-  await act(async () => button().props.onClick());
-  await act(async () => button().props.onClick());
-  expect(JSON.stringify(renderer.toJSON())).toContain('cursor expired');
-  await act(async () => button().props.onClick());
-  expect(
-    subscribe.mock.calls.map((call) => ({
-      invocation: call[2],
-      cursor: call[4],
-    })),
-  ).toEqual([
-    { invocation: 'i', cursor: undefined },
-    { invocation: 'i', cursor: 'cursor-1' },
-    { invocation: 'i', cursor: undefined },
-  ]);
-  expect(recover).toHaveBeenCalledWith(2, 'original', 'subscribeAccepted');
-  expect(submit).not.toHaveBeenCalled();
-  await act(async () => renderer.unmount());
-});
-it('reconciles a Go-verified terminal pending operation before enabling the next send', async () => {
-  vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true);
-  let submitted = false;
-  let resolved = false;
-  const pending = vi.fn(async () =>
-    submitted && !resolved
-      ? [
-          {
-            sessionId: 's',
-            operationId: 'op',
-            idempotencyKey: 'key',
-            content: 'Hello',
-            state: 'terminalObserved',
-            invocationId: 'i',
-            terminalVerified: true,
-            recoveryDisposition: 'subscribeAccepted',
-          },
-        ]
-      : [],
-  );
-  const resolvePending = vi.fn(async () => {
-    resolved = true;
-  });
-  const service = {
-    sessions: {
-      read: async () => ({
-        session: { id: 's', title: 'Chat' },
-        messages: [],
-        completedInvocations: submitted ? ['i'] : [],
-      }),
-      pending,
-      resolvePending,
-      submit: async () => {
-        submitted = true;
-        return { invocationId: 'i', status: 'accepted' };
-      },
-      subscribe: (
-        _epoch: number,
-        _id: string,
-        _invocation: string,
-        subscriptionEpoch: number,
-      ) => ({
-        events: (async function* () {
-          yield {
-            connectionEpoch: 2,
-            subscriptionEpoch,
-            sessionId: 's',
-            invocationId: 'i',
-            kind: 'done',
-            terminal: true,
-          };
-        })(),
-        finished: Promise.resolve(),
-        close() {},
-      }),
-    },
-  } as unknown as DesktopServices;
-  let renderer!: ReactTestRenderer;
-  await act(async () => {
-    renderer = create(
-      <DesktopChat
-        services={service}
-        connection={{
-          epoch: 2,
-          scope: 'scope',
-          runtimeId: 'r',
-          status: 'connected',
-        }}
-        session={{ id: 's', title: 'Chat' }}
-        onSchedule={() => {}}
-      />,
-    );
-  });
-  await act(async () =>
-    renderer.root
-      .findByProps({ 'aria-label': 'Message' })
-      .props.onChange({ target: { value: 'Hello' } }),
-  );
-  await act(async () =>
-    renderer.root.findByType('form').props.onSubmit({ preventDefault() {} }),
-  );
-  expect(resolvePending).toHaveBeenCalledWith(2, 'op', 'verifiedTerminal');
+  await act(async () => stopButton(renderer).props.onClick());
   await act(async () =>
     renderer.root
       .findByProps({ 'aria-label': 'Message' })
       .props.onChange({ target: { value: 'Next' } }),
   );
-  expect(
-    renderer.root.findByProps({ 'aria-label': 'Send message' }).props.disabled,
-  ).toBe(false);
+  expect(sendButton(renderer).props.disabled).toBe(false);
+  expect(JSON.stringify(renderer.toJSON())).not.toContain('verifying outcome');
+  await act(async () => renderer.unmount());
+});
+it('treats an abort race as completed when the turn ended before abort acknowledgement', async () => {
+  vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true);
+  const read = vi
+    .fn()
+    .mockResolvedValueOnce({
+      session: { id: 's', title: 'Chat', status: 'running' },
+      messages: [],
+      activeRun: {
+        operationId: 'op',
+        invocationId: 'i',
+        state: 'accepted',
+        authority: 'runtime',
+        recoveryDisposition: 'subscribeAccepted',
+      },
+    })
+    .mockResolvedValue({
+      session: { id: 's', title: 'Chat', status: 'completed' },
+      messages: [],
+      completedInvocations: ['i'],
+    });
+  const service = {
+    sessions: {
+      read,
+      pending: async () => [],
+      abort: vi.fn(async () => false),
+    },
+  } as unknown as DesktopServices;
+  let renderer!: ReactTestRenderer;
+  await act(async () => {
+    renderer = create(
+      <DesktopChat
+        services={service}
+        connection={{
+          epoch: 2,
+          scope: 'scope',
+          runtimeId: 'r',
+          status: 'connected',
+        }}
+        session={{ id: 's', title: 'Chat' }}
+        onSchedule={() => {}}
+      />,
+    );
+  });
+  await act(async () => stopButton(renderer).props.onClick());
+  await act(async () =>
+    renderer.root
+      .findByProps({ 'aria-label': 'Message' })
+      .props.onChange({ target: { value: 'Next' } }),
+  );
+  expect(sendButton(renderer).props.disabled).toBe(false);
+  expect(JSON.stringify(renderer.toJSON())).not.toContain(
+    'did not acknowledge an abort',
+  );
+  await act(async () => renderer.unmount());
+});
+it('waits for the terminal history after abort acknowledgement before unlocking', async () => {
+  vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true);
+  const firstStopRead = deferred<void>();
+  let stopReads = 0;
+  const active = {
+    session: { id: 's', title: 'Chat', status: 'running' },
+    messages: [],
+    activeRun: {
+      operationId: 'op',
+      invocationId: 'i',
+      state: 'accepted',
+      authority: 'runtime',
+      recoveryDisposition: 'subscribeAccepted',
+    },
+  };
+  const read = vi.fn(async () => {
+    if (read.mock.calls.length === 1) return active;
+    stopReads++;
+    if (stopReads === 1) {
+      firstStopRead.resolve();
+      return active;
+    }
+    return {
+      session: { id: 's', title: 'Chat', status: 'completed' },
+      messages: [],
+      completedInvocations: ['i'],
+    };
+  });
+  const service = {
+    sessions: {
+      read,
+      pending: async () => [],
+      abort: vi.fn(async () => true),
+    },
+  } as unknown as DesktopServices;
+  let renderer!: ReactTestRenderer;
+  await act(async () => {
+    renderer = create(
+      <DesktopChat
+        services={service}
+        connection={{
+          epoch: 2,
+          scope: 'scope',
+          runtimeId: 'r',
+          status: 'connected',
+        }}
+        session={{ id: 's', title: 'Chat' }}
+        onSchedule={() => {}}
+      />,
+    );
+  });
+  await act(async () => {
+    stopButton(renderer).props.onClick();
+    await firstStopRead.promise;
+  });
+  expect(JSON.stringify(renderer.toJSON())).toContain('verifying outcome');
+  await act(async () => {
+    await new Promise((resolve) => setTimeout(resolve, 180));
+  });
+  await act(async () =>
+    renderer.root
+      .findByProps({ 'aria-label': 'Message' })
+      .props.onChange({ target: { value: 'Next' } }),
+  );
+  expect(sendButton(renderer).props.disabled).toBe(false);
   await act(async () => renderer.unmount());
 });

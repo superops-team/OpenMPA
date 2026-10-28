@@ -11,6 +11,7 @@ export function SettingsAccountForm(
     setCredentials,
     setRegion,
     setNotice,
+    loadVaultStatus,
     busy,
     regions,
   } = props;
@@ -31,6 +32,7 @@ export function SettingsAccountForm(
             region: credentials.region,
           });
           setRegion(credentials.region);
+          await loadVaultStatus();
           setNotice('Signed in. Credential inputs cleared.');
         });
       }}
@@ -95,7 +97,10 @@ export function SettingsAccountForm(
           ))}
         </select>
       </label>
-      <p>Credentials remain in this OpenMPA process and are cleared on exit.</p>
+      <p>
+        Credentials stay in memory unless you save them to the encrypted local
+        vault after sign-in.
+      </p>
       <button className="primary" disabled={busy}>
         Sign in
       </button>

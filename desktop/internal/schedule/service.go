@@ -102,6 +102,50 @@ func (s *Service) List(r ListRequest) ListResult {
 	defer cancel()
 	return s.list(ctx, r)
 }
+
+// ListForAgent reads the bounded task directory and filters by the assistant
+// that owns each task. The deployed collection route has no agentId filter, so
+// filtering only the first page would silently hide tasks from later pages.
+func (s *Service) ListForAgent(r AgentListRequest) ListResult {
+	if !textValid(r.AgentID, 256) || !utf8.ValidString(r.Query) || len([]rune(r.Query)) > 256 {
+		return ListResult{Error: invalidInput()}
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+	const pageSize = 200
+	const maxTasks = 1000
+	offset := 0
+	items := []Task{}
+	for pages := 0; pages < 20; pages++ {
+		if ctx.Err() != nil {
+			return ListResult{Error: dto.Failure("unavailable", "schedule", "readOnly", 0)}
+		}
+		result := s.list(ctx, ListRequest{ConnectionEpoch: r.ConnectionEpoch, IncludeDisabled: r.IncludeDisabled, Query: r.Query, SortBy: "nextRunAt", SortDirection: "Asc", Limit: pageSize, Offset: offset})
+		if result.Error != nil {
+			return result
+		}
+		page := result.Value
+		for _, task := range page.Items {
+			if task.AgentID == r.AgentID {
+				items = append(items, task)
+				if len(items) > maxTasks {
+					return ListResult{Error: dto.Failure("boundedResult", "schedule", "readOnly", 0)}
+				}
+			}
+		}
+		if page.HasMore == nil {
+			return ListResult{Error: invalidResponse()}
+		}
+		if !*page.HasMore {
+			break
+		}
+		if page.NextOffset == nil || *page.NextOffset <= offset {
+			return ListResult{Error: invalidResponse()}
+		}
+		offset = *page.NextOffset
+	}
+	return ListResult{OK: true, Value: &TaskPage{Items: items, Limit: pageSize, Offset: 0, CountAvailable: false}}
+}
 func (s *Service) list(ctx context.Context, r ListRequest) ListResult {
 	if !pageValid(r.Limit, r.Offset) || !utf8.ValidString(r.Query) || len([]rune(r.Query)) > 256 {
 		return ListResult{Error: invalidInput()}

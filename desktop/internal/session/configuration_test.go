@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
+	"reflect"
 	"testing"
 
 	"github.com/superops-team/OpenMPA/desktop/internal/connection"
@@ -62,5 +63,65 @@ func TestConfigurationConflictDoesNotRetry(t *testing.T) {
 	r := s.UpdateExecutionConfig(context.Background(), dto.ExecutionConfigUpdateRequest{ConnectionEpoch: epoch, SessionID: "s", ETag: "\"1\"", ModelMode: "inherit", MCPMode: "inherit"})
 	if r.OK || r.Error.HTTPStatus != 412 || calls != 1 {
 		t.Fatal("CAS conflict retried or hidden")
+	}
+}
+
+func TestEnsureConfigurationRepairsLegacySessionOnlyOnExplicitCall(t *testing.T) {
+	var paths []string
+	configReads := 0
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		paths = append(paths, r.Method+" "+r.URL.Path)
+		switch r.URL.Path {
+		case "/api/v1/sessions/s/execution-config":
+			configReads++
+			if configReads == 1 {
+				w.WriteHeader(http.StatusNotFound)
+				w.Write([]byte(`{"detail":"missing"}`))
+				return
+			}
+			w.Header().Set("ETag", `"1"`)
+			w.Write([]byte(`{"revision":1,"profileRevision":1,"effectiveRefs":{"model":{"id":"default-model"},"mcpServers":[]}}`))
+		case "/api/v1/runtime-console/overview":
+			w.Write([]byte(`{"agent":{"id":"mi-current"}}`))
+		case "/api/v1/sessions":
+			var input dto.CreateRequest
+			if r.Method != http.MethodPost || json.NewDecoder(r.Body).Decode(&input) != nil || input.SessionID != "s" || input.MPAInstanceID != "mi-current" {
+				t.Fatal("legacy repair did not preserve the exact Session and current agent")
+			}
+			w.Write([]byte(`{"sessionId":"s"}`))
+		default:
+			t.Fatalf("unexpected path %s", r.URL.Path)
+		}
+	}))
+	defer server.Close()
+	c := connection.New()
+	epoch, _ := c.Bind(connection.Binding{Endpoint: server.URL}, true)
+	s := New(c, NewPendingStore(func() (string, error) { return t.TempDir(), nil }))
+	if len(paths) != 0 {
+		t.Fatal("repair ran without explicit invocation")
+	}
+	result := s.EnsureExecutionConfig(context.Background(), dto.SessionRequest{ConnectionEpoch: epoch, SessionID: "s"})
+	if !result.OK || result.Value.ExecutionConfigVersion != "1" || result.Value.Model != "default-model" {
+		t.Fatalf("legacy configuration was not repaired: %+v", result)
+	}
+	want := []string{"GET /api/v1/sessions/s/execution-config", "GET /api/v1/runtime-console/overview", "POST /api/v1/sessions", "GET /api/v1/sessions/s/execution-config"}
+	if !reflect.DeepEqual(paths, want) {
+		t.Fatalf("repair sequence %v", paths)
+	}
+}
+
+func TestEnsureConfigurationNeverRecreatesAnEditableSession(t *testing.T) {
+	requests := 0
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		requests++
+		w.Header().Set("ETag", `"3"`)
+		w.Write([]byte(`{"revision":3,"profileRevision":1,"effectiveRefs":{"model":{"id":"current"},"mcpServers":[]}}`))
+	}))
+	defer server.Close()
+	c := connection.New()
+	epoch, _ := c.Bind(connection.Binding{Endpoint: server.URL}, true)
+	result := New(c, NewPendingStore(func() (string, error) { return t.TempDir(), nil })).EnsureExecutionConfig(context.Background(), dto.SessionRequest{ConnectionEpoch: epoch, SessionID: "s"})
+	if !result.OK || requests != 1 {
+		t.Fatalf("editable Session was mutated: result=%+v requests=%d", result, requests)
 	}
 }

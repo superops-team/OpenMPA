@@ -15,18 +15,58 @@ export interface ConnectionVM {
   epoch: number;
   scope: string;
   runtimeId: string;
+  runtimeName?: string;
+  workerToolId?: string;
+  runtimeImage?: string;
   status: string;
   userId?: string;
 }
 export interface SessionVM {
   id: string;
   title: string;
+  mpaInstanceId?: string;
+  traceEnabled?: boolean;
   updatedAt?: number;
   configVersion?: string;
   source?: string;
   canConfigure?: boolean;
   profileVerified?: boolean;
   status?: string;
+}
+export interface TraceStepVM {
+  stepId: string;
+  parentStepId?: string;
+  sequence: number;
+  kind: string;
+  title: string;
+  status: string;
+  startedAt: string;
+  endedAt?: string;
+  durationMs?: number;
+  sourceEventId?: string;
+  category?: string;
+  timing?: Record<string, unknown>;
+  correlation?: Record<string, unknown>;
+  details?: Record<string, unknown>;
+}
+export interface TraceVM {
+  traceVersion: string;
+  sessionId: string;
+  invocationId: string;
+  correlation?: Record<string, unknown>;
+  run?: Record<string, unknown>;
+  coverage?: Record<string, unknown>;
+  steps: TraceStepVM[];
+}
+export interface ExecutionConfigVM {
+  executionConfigVersion: string;
+  model?: string;
+  profileBound: boolean;
+  etag?: string;
+  modelMode: string;
+  mcpMode: string;
+  mcpServers: string[];
+  invalidRefsCount: number;
 }
 export interface PendingRunVM {
   sessionId: string;
@@ -40,10 +80,30 @@ export interface PendingRunVM {
   recoveryDisposition?: string;
   terminalVerified?: boolean;
 }
+export interface AssistantSkillVM {
+  id: string;
+  name: string;
+  description?: string;
+  source: string;
+  spaceId?: string;
+  content?: string;
+}
+export interface AssistantConfigVM {
+  assistantId: string;
+  agentsMd: string;
+  skills: AssistantSkillVM[];
+  updatedAt?: string;
+}
 export interface PlatformVM {
   signedIn: boolean;
   accountId: string;
   region: string;
+}
+export interface VaultStatusVM {
+  exists: boolean;
+  accountId?: string;
+  region?: string;
+  updatedAt?: string;
 }
 export interface RegionVM {
   id: string;
@@ -129,21 +189,30 @@ export interface NativeShellState {
   connectionEpoch: number;
   view: string;
   collapsed: boolean;
-  pane: boolean;
+  traceOpen?: boolean;
   location: string;
   pageTitle: string;
   selectedSession: string;
   selectedSpace: string;
-  sessions: Array<{ id: string; title: string }>;
+  selectedAssistant?: string;
+  settingsSection?: string;
+  theme?: string;
+  sessions: Array<{ id: string; title: string; agentId?: string }>;
   spaces: Array<{ id: string; title: string }>;
+  assistants?: Array<{ id: string; title: string }>;
   revision: number;
 }
+export type DesktopSettingsSection =
+  | 'Account'
+  | 'Runtime'
+  | 'Assistant'
+  | 'Authentication'
+  | 'Deployment'
+  | 'Theme'
+  | 'Language';
 export interface DesktopServices {
   host?: {
-    requestConversation?(): Promise<void>;
-    requestSessionAction?(
-      action: 'configureSession' | 'renameSession' | 'deleteSession',
-    ): Promise<void>;
+    theme?(): Promise<{ theme: string }>;
     onNavigation?(listener: (action: string, id?: string) => void): () => void;
     setShellState?(state: NativeShellState): Promise<void>;
     onClose(listener: (requestId: number) => void): () => void;
@@ -154,6 +223,10 @@ export interface DesktopServices {
     status(): Promise<PlatformVM>;
     regions?(): Promise<RegionVM[]>;
     resetRuntime?(): Promise<void>;
+    vaultStatus?(): Promise<VaultStatusVM>;
+    saveVault?(passphrase: string): Promise<VaultStatusVM>;
+    unlockVault?(passphrase: string): Promise<PlatformVM>;
+    forgetVault?(): Promise<void>;
     signIn(input: {
       accessKey: string;
       secretKey: string;
@@ -161,12 +234,27 @@ export interface DesktopServices {
       region: string;
     }): Promise<PlatformVM>;
     signOut(): Promise<void>;
-    list(region: string, projectName: string): Promise<RuntimeVM[]>;
+    list(
+      region: string,
+      projectName: string,
+      forceRefresh?: boolean,
+    ): Promise<RuntimeVM[]>;
     bind(
       region: string,
       projectName: string,
       runtimeId: string,
     ): Promise<ConnectionVM>;
+  };
+  localization?: {
+    status(): Promise<{ mode: string; locale: string }>;
+    set(mode: string): Promise<{ mode: string; locale: string }>;
+  };
+  trace: {
+    read(
+      epoch: number,
+      sessionId: string,
+      invocationId: string,
+    ): Promise<TraceVM>;
   };
   connection: {
     status(): Promise<ConnectionVM | undefined>;
@@ -198,8 +286,12 @@ export interface DesktopServices {
       operationId: string,
       mode: string,
     ): Promise<void>;
-    list(epoch: number): Promise<SessionVM[]>;
-    create(epoch: number, title: string): Promise<SessionVM>;
+    list(epoch: number, forceRefresh?: boolean): Promise<SessionVM[]>;
+    create(
+      epoch: number,
+      title: string,
+      mpaInstanceId?: string,
+    ): Promise<SessionVM>;
     read(
       epoch: number,
       id: string,
@@ -222,6 +314,7 @@ export interface DesktopServices {
       id: string,
       content: string,
       configVersion?: string,
+      assistantId?: string,
     ): Promise<{ invocationId: string; status: string }>;
     subscribe(
       epoch: number,
@@ -231,6 +324,34 @@ export interface DesktopServices {
       lastEventId?: string,
     ): Stream;
     abort(epoch: number, id: string): Promise<boolean>;
+    executionConfig(epoch: number, id: string): Promise<ExecutionConfigVM>;
+    ensureExecutionConfig?(
+      epoch: number,
+      id: string,
+    ): Promise<ExecutionConfigVM>;
+    updateExecutionConfig(
+      epoch: number,
+      id: string,
+      input: {
+        etag: string;
+        modelMode: string;
+        model: string;
+        mcpMode: string;
+        mcpServers: string[];
+      },
+    ): Promise<ExecutionConfigVM>;
+    assistantConfig(
+      epoch: number,
+      sessionId: string,
+      assistantId?: string,
+    ): Promise<AssistantConfigVM>;
+    saveAssistantConfig(
+      epoch: number,
+      sessionId: string,
+      assistantId: string | undefined,
+      input: { agentsMd: string; skills: AssistantSkillVM[] },
+    ): Promise<AssistantConfigVM>;
+    skillCatalog(epoch: number, query?: string): Promise<AssistantSkillVM[]>;
   };
   workspace: {
     exportDraft(draft: RecoveryDraftVM): Promise<void>;
@@ -325,21 +446,6 @@ export interface DesktopServices {
     ): Promise<void>;
     remove(epoch: number, channel: ChannelVM): Promise<void>;
     diagnostics(epoch: number, channel: ChannelVM): Promise<string>;
-  };
-  artifacts?: {
-    download(
-      epoch: number,
-      sessionId: string,
-      remotePath: string,
-      onProgress: (bytes: number) => void,
-      signal: AbortSignal,
-    ): Promise<string>;
-  };
-  capabilities?: {
-    read(
-      epoch: number,
-      sessionId?: string,
-    ): Promise<Array<{ name: string; value: string }>>;
   };
   deployment?: {
     updates(

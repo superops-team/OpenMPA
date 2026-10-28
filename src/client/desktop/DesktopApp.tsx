@@ -1,7 +1,13 @@
+import { useState } from 'react';
 import { Settings2, X, Pencil, Trash2 } from 'lucide-react';
 import { Mascot } from '../Mascot';
+import { DesktopBotSettings } from './BotSettings';
+import { DesktopChannels } from './Channels';
 import { DesktopChat } from './Chat';
-import { DesktopPages } from './Pages';
+import { DesktopKnowledge } from './Knowledge';
+import { DesktopSchedules } from './Schedules';
+import { DesktopSettings } from './Settings';
+import { TracePanel } from './TracePanel';
 import type { DesktopServices } from './models';
 import { useDesktopAppState } from './DesktopAppState';
 import { LocaleProvider, useMessages } from './locale';
@@ -17,6 +23,7 @@ export function DesktopApp({ services }: { services: DesktopServices }) {
 function DesktopAppContent({ services }: { services: DesktopServices }) {
   const m = useMessages();
   const state = useDesktopAppState({ services });
+  const [configuringSession, setConfiguringSession] = useState(false);
   const {
     error,
     errorSource,
@@ -24,17 +31,20 @@ function DesktopAppContent({ services }: { services: DesktopServices }) {
     closeDrafts,
     setCloseDrafts,
     view,
-    space,
+    traceOpen,
+    setTraceOpen,
+    settingsSection,
+    setSettingsSection,
+    theme,
+    setTheme,
     connection,
-    sessions,
-    setDirty,
     navigate,
     setSelected,
     session,
-    reportFailure,
     epoch,
     refresh,
     createSession,
+    connect,
   } = state;
   return (
     <div className="app template-app desktop-app">
@@ -127,26 +137,29 @@ function DesktopAppContent({ services }: { services: DesktopServices }) {
           </section>
         )}
         {view === 'settings' ? (
-          <section aria-label="Native settings content" />
-        ) : view === 'channels' ? (
-          <section aria-label="Native channels content" />
-        ) : view === 'knowledge' ? (
-          <section aria-label="Native knowledge content" />
-        ) : view === 'tasks' ? (
-          <section aria-label="Native schedules content" />
-        ) : view === 'pages' && space ? (
-          <DesktopPages
-            key={space.id}
+          <DesktopSettings
             services={services}
-            space={space}
             connection={connection}
-            sessions={sessions}
-            onDirty={setDirty}
-            onSchedule={() => navigate('tasks')}
-            onOpenSession={(id) => {
-              setSelected(id);
-              navigate('chat');
-            }}
+            onConnection={connect}
+            section={settingsSection}
+            onSectionChange={setSettingsSection}
+            session={session}
+            theme={theme}
+            onThemeChange={setTheme}
+          />
+        ) : view === 'channels' ? (
+          <DesktopChannels
+            services={services}
+            connection={connection}
+            sessions={state.sessions}
+          />
+        ) : view === 'knowledge' ? (
+          <DesktopKnowledge connection={connection} sessions={state.sessions} />
+        ) : view === 'tasks' ? (
+          <DesktopSchedules
+            services={services}
+            connection={connection}
+            sessions={state.sessions}
           />
         ) : (
           <div className="chat-workspace">
@@ -156,13 +169,7 @@ function DesktopAppContent({ services }: { services: DesktopServices }) {
                   <div className="desktop-chat-actions">
                     <button
                       className="text-button"
-                      onClick={() => {
-                        void services.host
-                          ?.requestSessionAction?.('configureSession')
-                          .catch((error: unknown) =>
-                            reportFailure(error, 'sessions'),
-                          );
-                      }}
+                      onClick={() => setConfiguringSession(true)}
                     >
                       <Settings2 size={13} />
                       {m.openBotSettings()}
@@ -170,14 +177,6 @@ function DesktopAppContent({ services }: { services: DesktopServices }) {
                     <button
                       className="text-button"
                       onClick={() => {
-                        if (services.host?.requestSessionAction) {
-                          void services.host
-                            .requestSessionAction('renameSession')
-                            .catch((error: unknown) =>
-                              reportFailure(error, 'sessions'),
-                            );
-                          return;
-                        }
                         const title = window.prompt(
                           'Conversation title',
                           session.title,
@@ -187,7 +186,8 @@ function DesktopAppContent({ services }: { services: DesktopServices }) {
                           void services.sessions
                             .rename(current, session.id, title.trim())
                             .then(() => {
-                              if (epoch.current === current) return refresh();
+                              if (epoch.current === current)
+                                return refresh(true);
                             })
                             .catch((error: unknown) =>
                               setError(
@@ -205,14 +205,6 @@ function DesktopAppContent({ services }: { services: DesktopServices }) {
                     <button
                       className="text-button"
                       onClick={() => {
-                        if (services.host?.requestSessionAction) {
-                          void services.host
-                            .requestSessionAction('deleteSession')
-                            .catch((error: unknown) =>
-                              reportFailure(error, 'sessions'),
-                            );
-                          return;
-                        }
                         if (
                           window.confirm(
                             `Delete conversation ${session.id}? Server retention and memory policy apply.`,
@@ -224,7 +216,7 @@ function DesktopAppContent({ services }: { services: DesktopServices }) {
                             .then(() => {
                               if (epoch.current === current) {
                                 setSelected(undefined);
-                                return refresh();
+                                return refresh(true);
                               }
                             })
                             .catch((error: unknown) =>
@@ -241,33 +233,60 @@ function DesktopAppContent({ services }: { services: DesktopServices }) {
                       {m.delete()}
                     </button>
                   </div>
+                  {configuringSession && (
+                    <DesktopBotSettings
+                      services={services}
+                      connection={connection}
+                      session={session}
+                      onSaved={() => {
+                        setConfiguringSession(false);
+                        void refresh(true);
+                      }}
+                      onClose={() => setConfiguringSession(false)}
+                    />
+                  )}
 
                   <DesktopChat
                     key={`${connection.epoch}:${session.id}:${session.configVersion || ''}`}
                     services={services}
                     connection={connection}
                     session={session}
+                    traceOpen={traceOpen}
+                    onCloseTrace={() => setTraceOpen(false)}
+                    onOpenTrace={() => setTraceOpen(true)}
                     onSchedule={() => navigate('tasks')}
                   />
                 </>
               ) : (
-                <div className="new-conversation">
-                  <div className="empty-chat-persona">
-                    <Mascot name="OpenMPA" />
-                    <h2>{m.workspaceFollowThrough()}</h2>
-                    <p>{m.connectRuntimeOpenConversation()}</p>
-                    <button
-                      className="primary"
-                      onClick={() =>
-                        connection ? void createSession() : navigate('settings')
-                      }
-                    >
-                      {connection
-                        ? 'Start a conversation'
-                        : 'Connect your account'}
-                    </button>
+                <>
+                  <div className="new-conversation">
+                    <div className="empty-chat-persona">
+                      <Mascot name="OpenMPA" />
+                      <h2>{m.workspaceFollowThrough()}</h2>
+                      <p>{m.connectRuntimeOpenConversation()}</p>
+                      <button
+                        className="primary"
+                        onClick={() =>
+                          connection
+                            ? void createSession()
+                            : navigate('settings')
+                        }
+                      >
+                        {connection
+                          ? 'Start a conversation'
+                          : 'Connect your account'}
+                      </button>
+                    </div>
                   </div>
-                </div>
+                  {traceOpen && (
+                    <TracePanel
+                      services={services}
+                      connection={connection}
+                      invocationIds={[]}
+                      onClose={() => setTraceOpen(false)}
+                    />
+                  )}
+                </>
               )}
             </div>
           </div>

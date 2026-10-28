@@ -1,25 +1,24 @@
-import { ArrowDown, ArrowUp, Clock3, FileText, Square } from 'lucide-react';
-import { useEffect, useRef } from 'react';
-import ReactMarkdown from 'react-markdown';
+import { ArrowDown, ArrowUp, FileText, Square } from 'lucide-react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { submitComposerOnEnter } from '../chat-composer';
 import { Mascot } from '../Mascot';
 import { type DisplayMessage } from './projection';
 import type { ConnectionVM, DesktopServices, SessionVM } from './models';
 import { useDesktopChatState } from './ChatState';
 import { useMessages } from './locale';
-
-const toolKinds = new Set([
-  'toolCall',
-  'toolResult',
-  'tool_call',
-  'tool_result',
-]);
-
-function toolLabel(kind: string) {
-  return kind === 'toolResult' || kind === 'tool_result'
-    ? 'Tool result'
-    : 'Tool call';
-}
+import { ComposerModelPicker } from './ComposerModelPicker';
+import {
+  architectureDisplayLabel,
+  remoteArchitecture,
+} from './remote-architecture';
+import { useComposerModel } from './use-composer-model';
+import { TracePanel } from './TracePanel';
+import { TurnProcess } from './TurnProcess';
+import { buildConversationTurns, finalAssistantText } from './turn-model';
+import type { ConversationSegment } from './turn-model';
+import { AssistantMarkdown } from './AssistantMarkdown';
+import { Button, ComposerFooter, ComposerShell } from '../ui';
+import { ChatStatus } from './ChatStatus';
 
 export function DesktopChat({
   services,
@@ -28,6 +27,9 @@ export function DesktopChat({
   material,
   onSchedule,
   onSaveReply,
+  traceOpen,
+  onCloseTrace,
+  onOpenTrace,
 }: {
   services: DesktopServices;
   connection: ConnectionVM;
@@ -35,6 +37,9 @@ export function DesktopChat({
   material?: () => Promise<string>;
   onSchedule: () => void;
   onSaveReply?: (message: DisplayMessage) => Promise<void>;
+  traceOpen?: boolean;
+  onCloseTrace?: () => void;
+  onOpenTrace?: () => void;
 }) {
   const m = useMessages();
   const state = useDesktopChatState({
@@ -59,15 +64,65 @@ export function DesktopChat({
     setProjection,
     setPending,
     submitting,
-    resume,
     setExecution,
-    resumeInvocation,
+    setResumeInvocation,
     send,
     draft,
     setDraft,
     historyLoaded,
     activeInvocation,
+    completedInvocationIds,
+    setCompletedInvocationIds,
+    setConfigVersion,
+    cancelSubscription,
   } = state;
+  const [stopping, setStopping] = useState(false);
+  const [traceFocus, setTraceFocus] = useState<{
+    invocationId: string;
+    toolId?: string;
+  }>();
+  const model = useComposerModel({
+    services,
+    connection,
+    session,
+    onConfigVersion: setConfigVersion,
+    locked:
+      submitting ||
+      stopping ||
+      execution === 'running' ||
+      execution === 'submitting' ||
+      execution === 'unknown' ||
+      execution === 'stop acknowledged; verifying outcome' ||
+      pending.length > 0,
+  });
+  const architecture = remoteArchitecture({
+    runtimeName: connection.runtimeName,
+    workerToolId: connection.workerToolId,
+    runtimeImage: connection.runtimeImage,
+  });
+  const architectureLabel = architectureDisplayLabel(
+    architecture,
+    connection.runtimeName,
+    connection.runtimeId,
+  );
+  const invocationIds = useMemo(() => {
+    const ids: string[] = [];
+    for (const id of completedInvocationIds) {
+      if (id && !ids.includes(id)) ids.push(id);
+    }
+    for (const message of projection.messages) {
+      if (message.invocationId && !ids.includes(message.invocationId))
+        ids.push(message.invocationId);
+    }
+    if (activeInvocation.current && !ids.includes(activeInvocation.current))
+      ids.push(activeInvocation.current);
+    return ids.slice(-5);
+  }, [projection.messages, activeInvocation, completedInvocationIds]);
+  const currentInvocationId = activeInvocation.current || invocationIds.at(-1);
+  const turns = useMemo(
+    () => buildConversationTurns(projection.messages),
+    [projection.messages],
+  );
   const textarea = useRef<HTMLTextAreaElement>(null);
   useEffect(() => {
     const element = textarea.current;
@@ -86,42 +141,88 @@ export function DesktopChat({
     execution !== 'stop acknowledged; verifying outcome' &&
     pending.length === 0 &&
     session.profileVerified !== false;
-  const stopExecution = () => {
+  const stopExecution = async () => {
+    if (stopping) return;
     const current = generation.current;
-    void services.sessions
-      .abort(connection.epoch, session.id)
-      .then(async (aborted) => {
+    const invocation = activeInvocation.current;
+    setStopping(true);
+    setExecution('stop acknowledged; verifying outcome');
+    cancelSubscription();
+    try {
+      const aborted = await services.sessions.abort(
+        connection.epoch,
+        session.id,
+      );
+      for (let attempt = 0; attempt < 4; attempt++) {
         if (generation.current !== current) return;
-        const history = await services.sessions.read(
+        const [history, savedBeforeResolve] = await Promise.all([
+          services.sessions.read(connection.epoch, session.id),
+          services.sessions.pending(connection.epoch, session.id),
+        ]);
+        if (generation.current !== current) return;
+        for (const operation of savedBeforeResolve) {
+          if (
+            operation.terminalVerified &&
+            (!invocation || operation.invocationId === invocation)
+          )
+            await services.sessions.resolvePending(
+              connection.epoch,
+              operation.operationId,
+              'verifiedTerminal',
+            );
+        }
+        const saved = await services.sessions.pending(
           connection.epoch,
           session.id,
         );
         if (generation.current !== current) return;
+        const completed =
+          !!invocation && !!history.completedInvocations?.includes(invocation);
+        const active =
+          !!history.activeRun &&
+          (!invocation || history.activeRun.invocationId === invocation);
+        const unresolved = saved.some(
+          (operation) =>
+            !invocation ||
+            !operation.invocationId ||
+            operation.invocationId === invocation,
+        );
         setProjection((previous) => ({
           ...previous,
           messages: history.messages,
         }));
-        if (!aborted) {
-          setError(
-            'The Runtime did not acknowledge an abort. Current execution remains unverified; history has been refreshed.',
-          );
+        setCompletedInvocationIds(history.completedInvocations || []);
+        setPending(saved);
+        if (completed || (!active && !unresolved)) {
+          activeInvocation.current = undefined;
+          setResumeInvocation(undefined);
+          setError('');
+          setExecution(completed ? 'completed' : 'idle');
           return;
         }
-        const completed =
-          activeInvocation.current &&
-          history.completedInvocations?.includes(activeInvocation.current);
-        setExecution(
-          completed ? 'completed' : 'stop acknowledged; verifying outcome',
-        );
-      })
-      .catch((error: unknown) => {
-        if (generation.current === current)
+        if (!aborted) {
           setError(
-            error instanceof Error
-              ? error.message
-              : 'Could not stop execution.',
+            'The Runtime did not acknowledge an abort and still reports this turn as active.',
           );
-      });
+          setExecution('running');
+          return;
+        }
+        if (attempt < 3)
+          await new Promise((resolve) => setTimeout(resolve, 150));
+      }
+      setExecution('unknown');
+      setError(
+        'Stop was acknowledged, but the authoritative terminal result is still pending. History was refreshed; retry after the Runtime settles.',
+      );
+    } catch (error) {
+      if (generation.current !== current) return;
+      setExecution('unknown');
+      setError(
+        error instanceof Error ? error.message : 'Could not stop execution.',
+      );
+    } finally {
+      if (generation.current === current) setStopping(false);
+    }
   };
   const statusVisible =
     !!error ||
@@ -133,28 +234,6 @@ export function DesktopChat({
       className="persistent-chat live-chat"
       aria-label={m.conversation()}
     >
-      <header className="chat-persona">
-        <Mascot
-          identity={session.id}
-          name={session.title}
-          state={execution === 'running' ? 'working' : 'idle'}
-        />
-        <div>
-          <strong>{session.title}</strong>
-          <span>
-            Runtime {connection.runtimeId} · {execution}
-          </span>
-        </div>
-        <div className="chat-persona-actions">
-          <button
-            className="icon-button"
-            onClick={onSchedule}
-            aria-label={m.scheduleConversation()}
-          >
-            <Clock3 size={17} />
-          </button>
-        </div>
-      </header>
       <div className="chat-transcript-wrap">
         <div
           className="chat-transcript"
@@ -169,54 +248,79 @@ export function DesktopChat({
               <p>{m.messagesFromRuntime()}</p>
             </div>
           )}
-          {projection.messages.map((message) =>
-            toolKinds.has(message.kind) ? (
-              <div
-                key={message.id}
-                className="chat-tool"
-                aria-label={toolLabel(message.kind)}
+          {turns.map((turn) => {
+            const userSegments = turn.segments.filter(
+              (
+                segment,
+              ): segment is Extract<ConversationSegment, { type: 'text' }> =>
+                segment.type === 'text' && segment.role === 'user',
+            );
+            const answer = finalAssistantText(turn);
+            return (
+              <section
+                key={turn.invocationId}
+                className="conversation-turn"
+                data-turn-status={turn.status}
               >
-                <span className="chat-tool-dot" aria-hidden="true" />
-                <span className="chat-tool-kind">
-                  {toolLabel(message.kind)}
-                </span>
-                <code>{message.content}</code>
-              </div>
-            ) : (
-              <div key={message.id} className={`chat-bubble ${message.role}`}>
-                <ReactMarkdown
-                  components={{
-                    img: ({ alt }) => <span>{alt}</span>,
-                    a: ({ href, children }) => (
-                      <a href={href} target="_blank" rel="noreferrer">
-                        {children}
-                      </a>
-                    ),
-                  }}
-                >
-                  {message.content}
-                </ReactMarkdown>
-                {onSaveReply &&
-                  message.role === 'assistant' &&
-                  !message.partial && (
-                    <button
-                      className="text-button"
-                      onClick={() =>
-                        void onSaveReply(message).catch((error: unknown) =>
-                          setError(
-                            error instanceof Error
-                              ? error.message
-                              : 'Could not save reply.',
-                          ),
-                        )
-                      }
-                    >
-                      <FileText size={13} /> Review & save to page
-                    </button>
-                  )}
-              </div>
-            ),
-          )}
+                {userSegments.map((message) => (
+                  <div
+                    key={message.id}
+                    className={`chat-bubble ${message.role}`}
+                  >
+                    <AssistantMarkdown text={message.content} />
+                  </div>
+                ))}
+                <TurnProcess
+                  turn={turn}
+                  onInspectTool={
+                    onOpenTrace
+                      ? (toolId) => {
+                          setTraceFocus({
+                            invocationId: turn.invocationId,
+                            toolId,
+                          });
+                          onOpenTrace();
+                        }
+                      : undefined
+                  }
+                />
+                {answer &&
+                  [answer].map((message) => {
+                    const source = projection.messages.find(
+                      (candidate) => candidate.id === message.id,
+                    );
+                    return (
+                      <div
+                        key={message.id}
+                        className={`chat-bubble ${message.role}`}
+                      >
+                        <AssistantMarkdown text={message.content} />
+                        {source &&
+                          onSaveReply &&
+                          message.role === 'assistant' &&
+                          !message.partial && (
+                            <button
+                              className="text-button"
+                              onClick={() =>
+                                void onSaveReply(source).catch(
+                                  (error: unknown) =>
+                                    setError(
+                                      error instanceof Error
+                                        ? error.message
+                                        : 'Could not save reply.',
+                                    ),
+                                )
+                              }
+                            >
+                              <FileText size={13} /> Review & save to page
+                            </button>
+                          )}
+                      </div>
+                    );
+                  })}
+              </section>
+            );
+          })}
         </div>
         {showJump && (
           <button
@@ -229,171 +333,13 @@ export function DesktopChat({
           </button>
         )}
       </div>
-      {statusVisible && (
-        <section className="chat-status" aria-label="Conversation status">
-          {error && (
-            <div className="chat-status-error" role="alert">
-              {error}
-            </div>
-          )}
-          {pending.length > 0 && (
-            <details
-              className="chat-status-details"
-              open={pending.length === 1}
-            >
-              <summary>
-                Original operation needs review · {pending.length}
-              </summary>
-              {pending.map((operation) => (
-                <div
-                  className="chat-status-operation"
-                  key={operation.operationId}
-                >
-                  <p>
-                    {operation.operationId} · {operation.state} · configuration{' '}
-                    {operation.executionConfigVersion || 'not pinned'}
-                  </p>
-                  <p>
-                    The host retains the original message and idempotency key. A
-                    new request remains blocked while its outcome is unresolved.
-                  </p>
-                  <div className="chat-status-actions">
-                    <button
-                      type="button"
-                      className="text-button"
-                      onClick={() => {
-                        const current = generation.current;
-                        void Promise.all([
-                          services.sessions.read(connection.epoch, session.id),
-                          services.sessions.pending(
-                            connection.epoch,
-                            session.id,
-                          ),
-                        ])
-                          .then(([history, saved]) => {
-                            if (generation.current === current) {
-                              setProjection((previous) => ({
-                                ...previous,
-                                messages: history.messages,
-                              }));
-                              setPending(saved);
-                            }
-                          })
-                          .catch((error: unknown) => {
-                            if (generation.current === current)
-                              setError(
-                                error instanceof Error
-                                  ? error.message
-                                  : 'Could not verify the original operation.',
-                              );
-                          });
-                      }}
-                    >
-                      Read authoritative history
-                    </button>
-                    {['subscribeAccepted', 'retryDurable'].includes(
-                      operation.recoveryDisposition || '',
-                    ) && (
-                      <button
-                        type="button"
-                        className="text-button"
-                        disabled={submitting}
-                        onClick={() => {
-                          if (
-                            operation.recoveryDisposition === 'retryDurable' &&
-                            !window.confirm(
-                              'Recover this original request using its original content, key and execution version? The host verifies durable idempotency and permissions.',
-                            )
-                          )
-                            return;
-                          void resume(operation);
-                        }}
-                      >
-                        {operation.recoveryDisposition === 'retryDurable'
-                          ? 'Recover original durable submission'
-                          : 'Resume accepted invocation'}
-                      </button>
-                    )}
-                    <button
-                      type="button"
-                      className="text-button"
-                      disabled={submitting}
-                      onClick={() => {
-                        const mode = operation.terminalVerified
-                          ? 'verifiedTerminal'
-                          : 'userReviewed';
-                        if (
-                          !operation.terminalVerified &&
-                          !window.confirm(
-                            'After reviewing authoritative history, acknowledge this unknown operation? It may already have executed. This removes the recovery block; submitting the original prompt again can produce duplicate work.',
-                          )
-                        )
-                          return;
-                        const current = generation.current;
-                        void (async () => {
-                          await services.sessions.read(
-                            connection.epoch,
-                            session.id,
-                          );
-                          await services.sessions.resolvePending(
-                            connection.epoch,
-                            operation.operationId,
-                            mode,
-                          );
-                          const saved = await services.sessions.pending(
-                            connection.epoch,
-                            session.id,
-                          );
-                          if (generation.current === current) {
-                            setPending(saved);
-                            if (!saved.length) setExecution('idle');
-                          }
-                        })().catch((error: unknown) => {
-                          if (generation.current === current)
-                            setError(
-                              error instanceof Error
-                                ? error.message
-                                : 'Could not acknowledge this original operation.',
-                            );
-                        });
-                      }}
-                    >
-                      {operation.terminalVerified
-                        ? 'Resolve verified terminal operation'
-                        : 'Acknowledge outcome'}
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </details>
-          )}
-          {execution === 'unknown' && pending.length === 0 && (
-            <div className="chat-status-note" role="status">
-              <p>
-                The submission outcome needs review. Your message draft is
-                retained. Read authoritative history before starting another
-                message.
-              </p>
-              {resumeInvocation && (
-                <button
-                  type="button"
-                  className="text-button"
-                  disabled={submitting}
-                  onClick={() => void resume()}
-                >
-                  Read history and resume the same invocation
-                </button>
-              )}
-            </div>
-          )}
-          {session.profileVerified === false && (
-            <div className="chat-status-note" role="status">
-              This Bot profile snapshot is unverified. Open account settings to
-              establish its authorized configuration before sending.
-            </div>
-          )}
-        </section>
-      )}
+      <ChatStatus
+        visible={statusVisible}
+        state={state}
+        services={services}
+        connection={connection}
+        session={session}
+      />
       <form
         className="chat-composer"
         onSubmit={(event) => {
@@ -401,7 +347,30 @@ export function DesktopChat({
           void send();
         }}
       >
-        <div className="composer-field">
+        <div className="composer-context" aria-label="Conversation context">
+          <div className="composer-context-identity">
+            <Mascot
+              identity={session.id}
+              name={session.title}
+              small
+              decorative
+            />
+            <strong title={session.title}>{session.title}</strong>
+            <span
+              className={`composer-architecture ${
+                architecture.label === 'Codex Worker'
+                  ? 'codex-worker'
+                  : architecture.label === 'MPA'
+                    ? 'mpa'
+                    : 'runtime'
+              }`}
+              title={architecture.evidence || connection.runtimeId}
+            >
+              {architectureLabel}
+            </span>
+          </div>
+        </div>
+        <ComposerShell className="composer-field">
           <textarea
             ref={textarea}
             rows={1}
@@ -412,24 +381,48 @@ export function DesktopChat({
             onChange={(event) => setDraft(event.target.value)}
             onKeyDown={(event) => submitComposerOnEnter(event, canSend)}
           />
-          <div className="composer-bar">
+          <ComposerFooter className="composer-bar">
+            <ComposerModelPicker
+              config={model.config}
+              busy={model.busy}
+              needsInitialization={model.needsInitialization}
+              locked={model.locked}
+              onApply={model.apply}
+            />
             <span className="composer-hint">
-              {submitting ? m.submittingReceiving() : m.enterToSend()}
+              {execution === 'stop acknowledged; verifying outcome'
+                ? m.verifyingOutcome()
+                : submitting
+                  ? m.submittingReceiving()
+                  : m.enterToSend()}
             </span>
-            {execution === 'running' ? (
-              <button
+            {execution === 'running' || stopping ? (
+              <Button
                 type="button"
-                className="composer-action stop"
+                variant="secondary"
+                size="icon-lg"
+                className={`composer-action stop ${
+                  stopping ? 'is-submitting' : 'is-running'
+                }`}
                 aria-label={m.stopCurrentSession()}
+                aria-busy={stopping}
+                disabled={stopping}
                 onClick={stopExecution}
               >
                 <Square size={14} />
-              </button>
+              </Button>
             ) : (
-              <button
+              <Button
                 type="submit"
-                className="composer-action send"
+                variant="primary"
+                size="icon-lg"
+                className={`composer-action send ${
+                  submitting || execution === 'submitting'
+                    ? 'is-submitting'
+                    : ''
+                }`}
                 aria-label={m.sendMessage()}
+                aria-busy={submitting}
                 disabled={
                   submitting ||
                   execution === 'unknown' ||
@@ -441,11 +434,35 @@ export function DesktopChat({
                 }
               >
                 <ArrowUp size={16} />
-              </button>
+              </Button>
             )}
-          </div>
-        </div>
+          </ComposerFooter>
+        </ComposerShell>
+        {model.error && (
+          <p className="composer-model-error" role="alert">
+            {model.error}
+          </p>
+        )}
+        {!model.error && model.notice && (
+          <p className="composer-model-notice" role="status">
+            {model.notice}
+          </p>
+        )}
       </form>
+      {traceOpen && (
+        <TracePanel
+          services={services}
+          connection={connection}
+          session={session}
+          invocationIds={invocationIds}
+          currentInvocationId={currentInvocationId}
+          focus={traceFocus}
+          onClose={() => {
+            setTraceFocus(undefined);
+            onCloseTrace?.();
+          }}
+        />
+      )}
     </section>
   );
 }

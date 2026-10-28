@@ -5,9 +5,12 @@ import (
 	"database/sql"
 	"errors"
 	"github.com/egoist/mygo"
+	"github.com/superops-team/OpenMPA/desktop/internal/dto"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
+	"time"
 )
 
 func openTest(t *testing.T) *Store {
@@ -103,6 +106,80 @@ func TestClearRuntimePreservesCommittedDirectory(t *testing.T) {
 	snapshot, err := store.Snapshot(ctx)
 	if err != nil || snapshot.Region != "cn-beijing" || snapshot.Project != "project-one" || snapshot.Runtime != "" || snapshot.PrincipalScope != "" {
 		t.Fatalf("clearing Runtime changed the committed directory: %+v %v", snapshot, err)
+	}
+}
+
+func TestSessionListCacheRoundTripAndExpiry(t *testing.T) {
+	store := openTest(t)
+	ctx := context.Background()
+	payload := []byte(`{"sessions":[{"id":"s","title":"Cached"}]}`)
+	if err := store.SaveSessionListCache(ctx, "scope", payload); err != nil {
+		t.Fatal(err)
+	}
+	got, ok, err := store.LoadSessionListCache(ctx, "scope", time.Hour)
+	if err != nil || !ok || string(got) != string(payload) {
+		t.Fatalf("cache miss: ok=%v err=%v got=%s", ok, err, string(got))
+	}
+	time.Sleep(2 * time.Millisecond)
+	expired, ok, err := store.LoadSessionListCache(ctx, "scope", time.Nanosecond)
+	if err != nil || ok || expired != nil {
+		t.Fatalf("expired cache returned: ok=%v err=%v got=%s", ok, err, string(expired))
+	}
+}
+
+func TestAssistantConfigRoundTripAndValidation(t *testing.T) {
+	store := openTest(t)
+	ctx := context.Background()
+	empty, ok, err := store.LoadAssistantConfig(ctx, "scope", "assistant-a")
+	if err != nil || ok || empty.AssistantID != "assistant-a" || len(empty.Skills) != 0 {
+		t.Fatalf("empty config mismatch ok=%v config=%+v err=%v", ok, empty, err)
+	}
+	saved, err := store.SaveAssistantConfig(ctx, "scope", dto.AssistantConfig{
+		AssistantID: "assistant-a",
+		AgentsMD:    "You are careful.",
+		Skills: []dto.AssistantSkill{{
+			ID:          "skill-a",
+			Name:        "skill-a",
+			Description: "Local skill",
+			Source:      "local",
+			Content:     "Use skill-a.",
+		}},
+	})
+	if err != nil || saved.UpdatedAt == "" {
+		t.Fatalf("save failed %+v %v", saved, err)
+	}
+	loaded, ok, err := store.LoadAssistantConfig(ctx, "scope", "assistant-a")
+	if err != nil || !ok || loaded.AgentsMD != "You are careful." || len(loaded.Skills) != 1 || loaded.Skills[0].ID != "skill-a" || loaded.UpdatedAt == "" {
+		t.Fatalf("load failed ok=%v config=%+v err=%v", ok, loaded, err)
+	}
+	if _, err := store.SaveAssistantConfig(ctx, "scope", dto.AssistantConfig{AssistantID: "assistant-a", AgentsMD: strings.Repeat("x", 32001)}); err == nil {
+		t.Fatal("oversized AGENTS.md accepted")
+	}
+	if _, err := store.SaveAssistantConfig(ctx, "scope", dto.AssistantConfig{AssistantID: "assistant-a", Skills: []dto.AssistantSkill{{ID: "dup", Name: "A", Source: "local"}, {ID: "dup", Name: "B", Source: "local"}}}); err == nil {
+		t.Fatal("duplicate skill accepted")
+	}
+}
+
+func TestRuntimeListCacheRoundTripAndExpiry(t *testing.T) {
+	store := openTest(t)
+	ctx := context.Background()
+	request := dto.RuntimeListRequest{Region: "cn-beijing", ProjectName: "default"}
+	list := dto.RuntimeList{Complete: true, Runtimes: []dto.RuntimeSummary{{
+		RuntimeID: "r-one",
+		Name:      "Runtime one",
+		Status:    "Ready",
+	}}}
+	if err := store.SaveRuntimeListCache(ctx, "account/User/principal", request, list); err != nil {
+		t.Fatal(err)
+	}
+	got, ok, err := store.LoadRuntimeListCache(ctx, "account/User/principal", request, time.Hour)
+	if err != nil || !ok || len(got.Runtimes) != 1 || got.Runtimes[0].RuntimeID != "r-one" {
+		t.Fatalf("cache miss ok=%v list=%+v err=%v", ok, got, err)
+	}
+	time.Sleep(2 * time.Millisecond)
+	expired, ok, err := store.LoadRuntimeListCache(ctx, "account/User/principal", request, time.Nanosecond)
+	if err != nil || ok || len(expired.Runtimes) != 0 {
+		t.Fatalf("expired cache returned ok=%v list=%+v err=%v", ok, expired, err)
 	}
 }
 
@@ -244,5 +321,23 @@ func TestVaultTableMigratesFromVersionOne(t *testing.T) {
 	}
 	if _, err := reopened.LoadVault(context.Background()); !errors.Is(err, ErrNoVault) {
 		t.Fatalf("migrated vault table not empty: %v", err)
+	}
+}
+
+func TestThemePreferencePersists(t *testing.T) {
+	store := openTest(t)
+	snapshot, err := store.Snapshot(context.Background())
+	if err != nil || snapshot.Theme != DefaultTheme {
+		t.Fatalf("default theme = %+v, err=%v", snapshot, err)
+	}
+	if err := store.SetTheme(context.Background(), "dark"); err != nil {
+		t.Fatal(err)
+	}
+	snapshot, err = store.Snapshot(context.Background())
+	if err != nil || snapshot.Theme != "dark" {
+		t.Fatalf("saved theme = %+v, err=%v", snapshot, err)
+	}
+	if err := store.SetTheme(context.Background(), "sepia"); err == nil {
+		t.Fatal("invalid theme accepted")
 	}
 }

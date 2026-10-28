@@ -63,6 +63,7 @@ func SafeMessage(code string) string {
 
 type ScopeRequest struct {
 	ConnectionEpoch uint64 `json:"connectionEpoch"`
+	ForceRefresh    bool   `json:"forceRefresh,omitempty"`
 }
 type SignInRequest struct {
 	AccessKey     string `json:"accessKey"`
@@ -108,8 +109,9 @@ type RuntimeRequest struct {
 	RuntimeID   string `json:"runtimeId"`
 }
 type RuntimeListRequest struct {
-	Region      string `json:"region"`
-	ProjectName string `json:"projectName"`
+	Region       string `json:"region"`
+	ProjectName  string `json:"projectName"`
+	ForceRefresh bool   `json:"forceRefresh,omitempty"`
 }
 type RuntimeSummary struct {
 	RuntimeID            string `json:"runtimeId"`
@@ -152,6 +154,9 @@ type ConnectionState struct {
 	ConnectionEpoch     uint64 `json:"connectionEpoch"`
 	Scope               string `json:"scope"`
 	RuntimeID           string `json:"runtimeId"`
+	RuntimeName         string `json:"runtimeName,omitempty"`
+	WorkerToolID        string `json:"workerToolId,omitempty"`
+	RuntimeImage        string `json:"runtimeImage,omitempty"`
 	EndpointHost        string `json:"endpointHost"`
 	EndpointPath        string `json:"endpointPath"`
 	HasCredential       bool   `json:"hasCredential"`
@@ -174,6 +179,7 @@ type SessionRequest struct {
 type CreateRequest struct {
 	ConnectionEpoch uint64 `json:"connectionEpoch"`
 	SessionID       string `json:"sessionId,omitempty"`
+	MPAInstanceID   string `json:"mpaInstanceId,omitempty"`
 }
 type RenameRequest struct {
 	ConnectionEpoch uint64 `json:"connectionEpoch"`
@@ -185,6 +191,8 @@ type SessionSummary struct {
 	SessionID      string  `json:"sessionId,omitempty"`
 	Title          string  `json:"title"`
 	Status         string  `json:"status"`
+	MPAInstanceID  string  `json:"mpaInstanceId,omitempty"`
+	TraceEnabled   bool    `json:"traceEnabled,omitempty"`
 	LastUpdateTime float64 `json:"lastUpdateTime"`
 	CreatedAt      string  `json:"createdAt,omitempty"`
 }
@@ -205,6 +213,7 @@ type DeleteReceipt struct {
 }
 type SubmitRequest struct {
 	AttachmentRefs         []string `json:"attachmentRefs,omitempty"`
+	AssistantID            string   `json:"assistantId,omitempty"`
 	ConnectionEpoch        uint64   `json:"connectionEpoch"`
 	SessionID              string   `json:"sessionId"`
 	OperationID            string   `json:"operationId"`
@@ -227,22 +236,26 @@ type SubscribeRequest struct {
 	LastEventID       string `json:"lastEventId,omitempty"`
 }
 type ClientEvent struct {
-	SchemaVersion     int        `json:"schemaVersion"`
-	ConnectionEpoch   uint64     `json:"connectionEpoch"`
-	SubscriptionEpoch uint64     `json:"subscriptionEpoch"`
-	SessionID         string     `json:"sessionId"`
-	InvocationID      string     `json:"invocationId"`
-	EventID           string     `json:"eventId,omitempty"`
-	BlockID           string     `json:"blockId,omitempty"`
-	Kind              string     `json:"kind"`
-	Completeness      string     `json:"completeness"`
-	Text              string     `json:"text,omitempty"`
-	ToolID            string     `json:"toolId,omitempty"`
-	ToolName          string     `json:"toolName,omitempty"`
-	Author            string     `json:"author,omitempty"`
-	Partial           bool       `json:"partial"`
-	Terminal          bool       `json:"terminal"`
-	Error             *SafeError `json:"error,omitempty"`
+	SchemaVersion       int        `json:"schemaVersion"`
+	ConnectionEpoch     uint64     `json:"connectionEpoch"`
+	SubscriptionEpoch   uint64     `json:"subscriptionEpoch"`
+	SessionID           string     `json:"sessionId"`
+	InvocationID        string     `json:"invocationId"`
+	EventID             string     `json:"eventId,omitempty"`
+	BlockID             string     `json:"blockId,omitempty"`
+	PartIndex           *int       `json:"partIndex,omitempty"`
+	Kind                string     `json:"kind"`
+	Completeness        string     `json:"completeness"`
+	Text                string     `json:"text,omitempty"`
+	ReasoningVisibility string     `json:"reasoningVisibility,omitempty"`
+	ToolID              string     `json:"toolId,omitempty"`
+	ToolName            string     `json:"toolName,omitempty"`
+	ToolStatus          string     `json:"toolStatus,omitempty"`
+	ToolSubject         string     `json:"toolSubject,omitempty"`
+	Author              string     `json:"author,omitempty"`
+	Partial             bool       `json:"partial"`
+	Terminal            bool       `json:"terminal"`
+	Error               *SafeError `json:"error,omitempty"`
 }
 type AbortReceipt struct {
 	SessionID string `json:"sessionId"`
@@ -297,6 +310,40 @@ type BotProfile struct {
 	Model    *string   `json:"model"`
 	Skills   *[]string `json:"skills"`
 	MCP      *[]string `json:"mcp"`
+}
+
+type AssistantSkill struct {
+	ID          string `json:"id"`
+	Name        string `json:"name"`
+	Description string `json:"description,omitempty"`
+	Source      string `json:"source"`
+	SpaceID     string `json:"spaceId,omitempty"`
+	Content     string `json:"content,omitempty"`
+}
+type AssistantConfig struct {
+	AssistantID string           `json:"assistantId"`
+	AgentsMD    string           `json:"agentsMd"`
+	Skills      []AssistantSkill `json:"skills"`
+	UpdatedAt   string           `json:"updatedAt,omitempty"`
+}
+type AssistantConfigRequest struct {
+	ConnectionEpoch uint64 `json:"connectionEpoch"`
+	SessionID       string `json:"sessionId"`
+	AssistantID     string `json:"assistantId,omitempty"`
+}
+type AssistantConfigSaveRequest struct {
+	ConnectionEpoch uint64           `json:"connectionEpoch"`
+	SessionID       string           `json:"sessionId"`
+	AssistantID     string           `json:"assistantId,omitempty"`
+	AgentsMD        string           `json:"agentsMd"`
+	Skills          []AssistantSkill `json:"skills"`
+}
+type SkillCatalogRequest struct {
+	ConnectionEpoch uint64 `json:"connectionEpoch"`
+	Query           string `json:"query,omitempty"`
+}
+type SkillCatalog struct {
+	Skills []AssistantSkill `json:"skills"`
 }
 type Bot struct {
 	CanConfigure           bool       `json:"canConfigure"`

@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"github.com/superops-team/OpenMPA/desktop/internal/cloud"
+	"github.com/superops-team/OpenMPA/desktop/internal/configstore"
 	"github.com/superops-team/OpenMPA/desktop/internal/connection"
 	"github.com/superops-team/OpenMPA/desktop/internal/deployment"
 	"github.com/superops-team/OpenMPA/desktop/internal/dto"
@@ -17,6 +18,7 @@ type Platform struct {
 	Cloud           *cloud.Client
 	Connection      *connection.Client
 	Vault           *vault.Service
+	Settings        *configstore.Store
 	mu              sync.RWMutex
 	target          dto.RuntimeRequest
 	toolID          string
@@ -32,6 +34,12 @@ func NewPlatform(c *cloud.Client, conn *connection.Client) *Platform {
 func NewPlatformWithVault(c *cloud.Client, conn *connection.Client, v *vault.Service) *Platform {
 	p := NewPlatform(c, conn)
 	p.Vault = v
+	return p
+}
+
+func NewPlatformWithStore(c *cloud.Client, conn *connection.Client, v *vault.Service, store *configstore.Store) *Platform {
+	p := NewPlatformWithVault(c, conn, v)
+	p.Settings = store
 	return p
 }
 func (p *Platform) Status() dto.PlatformStateResult {
@@ -130,6 +138,7 @@ func (p *Platform) UnlockVault(ctx context.Context, r dto.VaultPassphraseRequest
 	}
 	p.Connection.Disconnect()
 	clearTarget(p)
+	p.restorePreferredRuntime(ctx, state)
 	return dto.PlatformStateResult{OK: true, Value: &state}
 }
 
@@ -152,11 +161,31 @@ func (p *Platform) SignIn(ctx context.Context, r dto.SignInRequest) dto.Platform
 	if e == nil {
 		p.Connection.Disconnect()
 		clearTarget(p)
+		p.restorePreferredRuntime(ctx, out)
 	}
 	return dto.PlatformStateResult{OK: e == nil, Value: only(&out, e), Error: e}
 }
 func (p *Platform) ListRuntimes(ctx context.Context, r dto.RuntimeListRequest) dto.RuntimeListResult {
+	state := p.Cloud.State()
+	if state.Principal == nil {
+		return dto.RuntimeListResult{Error: dto.Failure("authRequired", "platform", "reauthenticate", 0)}
+	}
+	if !r.ForceRefresh && p.Settings != nil {
+		if cached, ok, err := p.Settings.LoadRuntimeListCache(ctx, state.Principal.Scope, r, configstore.RuntimeListCacheTTL()); err == nil && ok {
+			return dto.RuntimeListResult{OK: true, Value: &cached}
+		}
+	}
 	out, e := p.Cloud.List(ctx, r)
+	if e == nil && p.Settings != nil {
+		_ = p.Settings.SetDirectory(ctx, r.Region, r.ProjectName)
+		if out.Complete {
+			_ = p.Settings.SaveRuntimeListCache(ctx, state.Principal.Scope, r, out)
+		}
+	} else if e != nil && p.Settings != nil {
+		if cached, ok, err := p.Settings.LoadRuntimeListCache(ctx, state.Principal.Scope, r, 7*24*time.Hour); err == nil && ok {
+			return dto.RuntimeListResult{OK: true, Value: &cached}
+		}
+	}
 	return dto.RuntimeListResult{OK: e == nil, Value: only(&out, e), Error: e}
 }
 func (p *Platform) Runtime(ctx context.Context, r dto.RuntimeRequest) dto.RuntimeSummaryResult {
@@ -196,7 +225,7 @@ func (p *Platform) bindRuntime(ctx context.Context, r dto.RuntimeRequest) dto.Co
 	}
 	scope := cloudState.Principal.Scope + "/" + r.Region + "/" + r.ProjectName + "/" + r.RuntimeID
 	e = p.Cloud.WithEpoch(cloudState.Epoch, func() *dto.SafeError {
-		_, bindingError := p.Connection.Bind(connection.Binding{Endpoint: endpoint, RuntimeID: r.RuntimeID, Scope: scope, RuntimeKey: key}, false)
+		_, bindingError := p.Connection.Bind(connection.Binding{Endpoint: endpoint, RuntimeID: r.RuntimeID, Scope: scope, RuntimeKey: key, RuntimeName: raw.Name, WorkerToolID: raw.ToolID, RuntimeImage: raw.ArtifactURL}, false)
 		if bindingError == nil {
 			p.mu.Lock()
 			p.target = r
@@ -204,6 +233,9 @@ func (p *Platform) bindRuntime(ctx context.Context, r dto.RuntimeRequest) dto.Co
 			p.boundScope = cloudState.Principal.Scope
 			p.boundCloudEpoch = cloudState.Epoch
 			p.mu.Unlock()
+			if p.Settings != nil {
+				_ = p.Settings.SetRuntime(ctx, cloudState.Principal.Scope, r.Region, r.ProjectName, r.RuntimeID)
+			}
 		}
 		return bindingError
 	})
@@ -223,6 +255,21 @@ func (p *Platform) SignOut() dto.EmptyResult {
 	return dto.EmptyResult{OK: true, Value: &dto.Empty{}}
 }
 
+func (p *Platform) restorePreferredRuntime(ctx context.Context, state dto.PlatformState) {
+	if p.Settings == nil || state.Principal == nil {
+		return
+	}
+	snapshot, err := p.Settings.Snapshot(ctx)
+	if err != nil || snapshot.Runtime == "" || snapshot.PrincipalScope != state.Principal.Scope {
+		return
+	}
+	_ = p.bindRuntime(ctx, dto.RuntimeRequest{
+		Region:      snapshot.Region,
+		ProjectName: snapshot.Project,
+		RuntimeID:   snapshot.Runtime,
+	})
+}
+
 // ResetRuntime drops the current Runtime projection without signing the cloud
 // account out. Region or project changes must not retain a binding from the
 // previous Runtime directory.
@@ -231,6 +278,11 @@ func (p *Platform) ResetRuntime() dto.EmptyResult {
 	defer p.operationMu.Unlock()
 	p.Connection.Disconnect()
 	clearTarget(p)
+	if p.Settings != nil {
+		ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+		defer cancel()
+		_ = p.Settings.ClearRuntime(ctx)
+	}
 	return dto.EmptyResult{OK: true, Value: &dto.Empty{}}
 }
 

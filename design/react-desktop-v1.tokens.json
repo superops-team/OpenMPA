@@ -1,0 +1,72 @@
+{
+  "$schema": "https://design-tokens.org/schema.json",
+  "name": "OpenMPA React desktop v1",
+  "version": "1.0.0",
+  "color": {
+    "canvas": "#f7f7f5",
+    "surface": "#ffffff",
+    "surface-subtle": "#f4f4f2",
+    "surface-hover": "#efefec",
+    "surface-selected": "#e8f1ee",
+    "border": "#e3e3e0",
+    "border-strong": "#cfd2cd",
+    "text": "#1f1f1d",
+    "text-muted": "#6b6b66",
+    "text-faint": "#92928b",
+    "accent": "#5f8f87",
+    "accent-hover": "#527f78",
+    "accent-soft": "#e8f1ee",
+    "focus": "#75b9b4",
+    "danger": "#b3261e",
+    "warning": "#8a5a12",
+    "success": "#2f6b4f"
+  },
+  "space": {
+    "1": "4px",
+    "2": "8px",
+    "3": "12px",
+    "4": "16px",
+    "5": "24px",
+    "6": "32px"
+  },
+  "radius": {
+    "control": "6px",
+    "card": "10px",
+    "popover": "14px",
+    "composer": "22px",
+    "pill": "999px"
+  },
+  "typography": {
+    "caption": { "size": "10px", "lineHeight": "14px", "weight": 500 },
+    "small": { "size": "11px", "lineHeight": "16px", "weight": 500 },
+    "body": { "size": "13px", "lineHeight": "20px", "weight": 400 },
+    "body-strong": { "size": "13px", "lineHeight": "20px", "weight": 600 },
+    "title": { "size": "18px", "lineHeight": "24px", "weight": 600 },
+    "page-title": { "size": "22px", "lineHeight": "28px", "weight": 600 }
+  },
+  "motion": {
+    "press": {
+      "duration": "120ms",
+      "easing": "cubic-bezier(0.23, 1, 0.32, 1)"
+    },
+    "state": {
+      "duration": "150ms",
+      "easing": "cubic-bezier(0.23, 1, 0.32, 1)"
+    },
+    "popover": {
+      "duration": "160ms",
+      "easing": "cubic-bezier(0.23, 1, 0.32, 1)"
+    },
+    "dialog": {
+      "duration": "200ms",
+      "easing": "cubic-bezier(0.23, 1, 0.32, 1)"
+    }
+  },
+  "layout": {
+    "rail-width": "48px",
+    "sidebar-width": "240px",
+    "titlebar-height": "44px",
+    "reading-column": "760px",
+    "settings-column": "800px"
+  }
+}

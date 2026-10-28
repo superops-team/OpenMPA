@@ -15,17 +15,20 @@ import (
 var ErrPendingExists = errors.New("operation already saved")
 
 type Pending struct {
-	AttachmentRefs   []string `json:"attachmentRefs"`
-	Scope            string   `json:"scope"`
-	SessionID        string   `json:"sessionId"`
-	OperationID      string   `json:"operationId"`
-	IdempotencyKey   string   `json:"idempotencyKey"`
-	Content          string   `json:"content"`
-	ConfigVersion    string   `json:"configVersion"`
-	State            string   `json:"state"`
-	InvocationID     string   `json:"invocationId,omitempty"`
-	DurableBot       bool     `json:"durableBot"`
-	TerminalVerified bool     `json:"terminalVerified"`
+	AttachmentRefs   []string        `json:"attachmentRefs"`
+	AssistantID      string          `json:"assistantId,omitempty"`
+	AssistantProfile *dto.BotProfile `json:"assistantProfile,omitempty"`
+	Scope            string          `json:"scope"`
+	SessionID        string          `json:"sessionId"`
+	OperationID      string          `json:"operationId"`
+	IdempotencyKey   string          `json:"idempotencyKey"`
+	Content          string          `json:"content"`
+	ConfigVersion    string          `json:"configVersion"`
+	State            string          `json:"state"`
+	InvocationID     string          `json:"invocationId,omitempty"`
+	DurableBot       bool            `json:"durableBot"`
+	TraceEnabled     bool            `json:"traceEnabled"`
+	TerminalVerified bool            `json:"terminalVerified"`
 }
 type PendingStore struct {
 	mu       sync.Mutex
@@ -51,6 +54,14 @@ func pendingFile(scope, op string) string {
 	h := sha256.Sum256([]byte(scope + "\x00" + op))
 	return hex.EncodeToString(h[:]) + ".json"
 }
+func equalBotProfile(a, b *dto.BotProfile) bool {
+	if a == nil || b == nil {
+		return a == nil && b == nil
+	}
+	left, leftErr := json.Marshal(a)
+	right, rightErr := json.Marshal(b)
+	return leftErr == nil && rightErr == nil && string(left) == string(right)
+}
 func (s *PendingStore) Put(p Pending) error {
 	if !validAttachmentRefs(p.AttachmentRefs) {
 		return fmt.Errorf("invalid attachment refs")
@@ -68,7 +79,7 @@ func (s *PendingStore) Put(p Pending) error {
 		if json.Unmarshal(previous, &old) != nil {
 			return fmt.Errorf("invalid pending store")
 		}
-		if old.SessionID != p.SessionID || old.IdempotencyKey != p.IdempotencyKey || old.Content != p.Content || old.ConfigVersion != p.ConfigVersion || !equalAttachmentRefs(old.AttachmentRefs, p.AttachmentRefs) {
+		if old.SessionID != p.SessionID || old.IdempotencyKey != p.IdempotencyKey || old.Content != p.Content || old.ConfigVersion != p.ConfigVersion || old.AssistantID != p.AssistantID || !equalBotProfile(old.AssistantProfile, p.AssistantProfile) || !equalAttachmentRefs(old.AttachmentRefs, p.AttachmentRefs) {
 			return fmt.Errorf("pending mismatch")
 		}
 		return ErrPendingExists
@@ -179,7 +190,7 @@ func (s *PendingStore) Update(scope, operation string, change func(*Pending) err
 	if e = change(&p); e != nil {
 		return e
 	}
-	if p.Scope != original.Scope || p.SessionID != original.SessionID || p.OperationID != original.OperationID || p.IdempotencyKey != original.IdempotencyKey || p.Content != original.Content || p.ConfigVersion != original.ConfigVersion || !equalAttachmentRefs(p.AttachmentRefs, original.AttachmentRefs) {
+	if p.Scope != original.Scope || p.SessionID != original.SessionID || p.OperationID != original.OperationID || p.IdempotencyKey != original.IdempotencyKey || p.Content != original.Content || p.ConfigVersion != original.ConfigVersion || p.AssistantID != original.AssistantID || !equalBotProfile(p.AssistantProfile, original.AssistantProfile) || !equalAttachmentRefs(p.AttachmentRefs, original.AttachmentRefs) {
 		return fmt.Errorf("pending immutable payload changed")
 	}
 	p.AttachmentRefs = cloneAttachmentRefs(p.AttachmentRefs)

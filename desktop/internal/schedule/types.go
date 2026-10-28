@@ -147,6 +147,13 @@ type ListRequest struct {
 	Limit           int    `json:"limit,omitempty"`
 	Offset          int    `json:"offset,omitempty"`
 }
+
+type AgentListRequest struct {
+	ConnectionEpoch uint64 `json:"connectionEpoch"`
+	AgentID         string `json:"agentId"`
+	IncludeDisabled *bool  `json:"includeDisabled,omitempty"`
+	Query           string `json:"query,omitempty"`
+}
 type RunsRequest struct {
 	ConnectionEpoch uint64 `json:"connectionEpoch"`
 	TaskID          string `json:"taskId"`

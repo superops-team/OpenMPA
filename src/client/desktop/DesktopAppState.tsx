@@ -2,6 +2,7 @@ import {
   useCallback,
   useEffect,
   useEffectEvent,
+  useMemo,
   useRef,
   useState,
 } from 'react';
@@ -9,11 +10,17 @@ import {
 import type {
   ConnectionVM,
   DesktopServices,
+  DesktopSettingsSection,
   RecoveryDraftVM,
+  RuntimeVM,
   SessionVM,
-  Space,
 } from './models';
-type View = 'chat' | 'pages' | 'tasks' | 'channels' | 'settings' | 'knowledge';
+import {
+  setThemePreference,
+  themePreference,
+  type ThemePreference,
+} from '../theme';
+type View = 'chat' | 'tasks' | 'channels' | 'settings' | 'knowledge';
 export function useDesktopAppState({
   services,
 }: {
@@ -21,13 +28,17 @@ export function useDesktopAppState({
 }) {
   const [view, setView] = useState<View>('chat');
   const [connection, setConnection] = useState<ConnectionVM>();
+  const [runtimeOptions, setRuntimeOptions] = useState<RuntimeVM[]>([]);
   const [sessions, setSessions] = useState<SessionVM[]>([]);
   const [sessionEpoch, setSessionEpoch] = useState(0);
   const [selected, setSelected] = useState<string>();
-  const [spaces, setSpaces] = useState<Space[]>([]);
-  const [spaceId, setSpaceId] = useState<string>();
   const [collapsed, setCollapsed] = useState(false);
-  const [pane, setPane] = useState(false);
+  const [traceOpen, setTraceOpen] = useState(false);
+  const [settingsSection, setSettingsSection] =
+    useState<DesktopSettingsSection>('Account');
+  const [theme, setTheme] = useState<ThemePreference>(themePreference());
+  const platformRegion = useRef('cn-beijing');
+  const platformSignedIn = useRef(false);
   const [error, setError] = useState('');
   const [closeDrafts, setCloseDrafts] = useState<RecoveryDraftVM[]>([]);
   const errorSource = useRef('');
@@ -107,18 +118,17 @@ export function useDesktopAppState({
     };
   }, [services]);
   useEffect(() => {
-    const current = ++lifecycle.current;
-    void services.workspace
-      .spaces()
-      .then((list) => {
-        if (lifecycle.current === current) {
-          setSpaces(list);
-          setSpaceId(list[0]?.id);
-        }
+    void services.host
+      ?.theme?.()
+      .then(({ theme }) => {
+        const next = theme as ThemePreference;
+        setThemePreference(next);
+        setTheme(next);
       })
-      .catch((error: unknown) => {
-        if (lifecycle.current === current) reportFailure(error, 'workspace');
-      });
+      .catch(() => {});
+  }, [services]);
+  useEffect(() => {
+    const current = ++lifecycle.current;
     void services.connection
       .status()
       .then((value) => {
@@ -131,16 +141,44 @@ export function useDesktopAppState({
       lifecycle.current++;
     };
   }, [services]);
-  const refresh = useCallback(async () => {
-    if (!connection) return;
-    const current = connection.epoch;
-    const list = await services.sessions.list(current);
-    if (epoch.current === current) {
-      setSessions(list);
-      setSessionEpoch(current);
-      if (errorSource.current === 'sessions') setError('');
-    }
-  }, [services, connection]);
+  useEffect(() => {
+    let active = true;
+    void services.platform
+      ?.status()
+      .then((platform) => {
+        if (!active) return;
+        platformSignedIn.current = platform.signedIn;
+        platformRegion.current = platform.region || 'cn-beijing';
+        if (!platform.signedIn) {
+          setRuntimeOptions([]);
+          return;
+        }
+        return services.platform
+          .list(platform.region || 'cn-beijing', 'default', false)
+          .then((list) => {
+            if (active) setRuntimeOptions(list);
+          });
+      })
+      .catch(() => {
+        if (active) setRuntimeOptions([]);
+      });
+    return () => {
+      active = false;
+    };
+  }, [services, connection?.epoch]);
+  const refresh = useCallback(
+    async (forceRefresh = false) => {
+      if (!connection) return;
+      const current = connection.epoch;
+      const list = await services.sessions.list(current, forceRefresh);
+      if (epoch.current === current) {
+        setSessions(list);
+        setSessionEpoch(current);
+        if (errorSource.current === 'sessions') setError('');
+      }
+    },
+    [services, connection],
+  );
   useEffect(() => {
     setSessions([]);
     setSessionEpoch(0);
@@ -177,19 +215,16 @@ export function useDesktopAppState({
       navigate('settings');
       return;
     }
-    if (services.host?.requestConversation) {
-      try {
-        await services.host.requestConversation();
-      } catch (error) {
-        reportFailure(error, 'bots');
-      }
-      return;
-    }
     const current = connection.epoch;
     try {
-      const name = window.prompt('Bot name', 'New assistant');
+      const name = window.prompt('Conversation title', 'New conversation');
       if (!name?.trim()) return;
-      const next = await services.sessions.create(current, name.trim());
+      const next = await services.sessions.create(
+        current,
+        name.trim(),
+        session?.mpaInstanceId ||
+          sessions.find((item) => item.mpaInstanceId)?.mpaInstanceId,
+      );
       if (epoch.current === current) {
         setSessions((previous) => [next, ...previous]);
         setSessionEpoch(current);
@@ -201,7 +236,21 @@ export function useDesktopAppState({
     }
   };
   const session = sessions.find((session) => session.id === selected);
-  const space = spaces.find((space) => space.id === spaceId);
+  const shellAssistants = useMemo(() => {
+    const items = runtimeOptions.map((runtime) => ({
+      id: runtime.id,
+      title: runtime.name || runtime.id,
+    }));
+    if (
+      connection?.runtimeId &&
+      !items.some((item) => item.id === connection.runtimeId)
+    )
+      items.unshift({
+        id: connection.runtimeId,
+        title: connection.runtimeName || connection.runtimeId,
+      });
+    return items;
+  }, [runtimeOptions, connection?.runtimeId, connection?.runtimeName]);
   const shellRevision = useRef(Date.now() * 1000);
   const onNativeNavigation = useEffectEvent((action: string, id?: string) => {
     if (action === 'connectionChanged')
@@ -218,7 +267,7 @@ export function useDesktopAppState({
     ) {
       const current = connection.epoch;
       void services.sessions
-        .list(current)
+        .list(current, true)
         .then((list) => {
           if (epoch.current !== current) return;
           setSessions(list);
@@ -231,24 +280,48 @@ export function useDesktopAppState({
           }
         })
         .catch((error: unknown) => reportFailure(error, 'sessions'));
-    } else if (action === 'spaceCreated' && id) {
-      void services.workspace
-        .spaces()
-        .then((list) => {
-          setSpaces(list);
-          if (list.some((item) => item.id === id)) {
-            setSpaceId(id);
-            navigate('pages');
-          }
-        })
-        .catch((error: unknown) => reportFailure(error, 'workspace'));
+    } else if (action === 'themeChanged' && id) {
+      const next = id as ThemePreference;
+      setThemePreference(next);
+      setTheme(next);
     } else if (action === 'toggleSidebar')
       setCollapsed((previous) => !previous);
-    else if (action === 'artifacts') setPane((previous) => !previous);
-    else if (action === 'newConversation') void createSession();
-    else if (action === 'home') navigate('chat');
-    else if (action === 'refreshSessions')
-      void refresh().catch((error: unknown) =>
+    else if (action === 'trace') setTraceOpen((previous) => !previous);
+    else if (
+      action === 'selectSettingsSection' &&
+      [
+        'Account',
+        'Runtime',
+        'Assistant',
+        'Authentication',
+        'Deployment',
+        'Theme',
+        'Language',
+      ].includes(id || '')
+    ) {
+      setSettingsSection(id as DesktopSettingsSection);
+      navigate('settings');
+    } else if (action === 'newConversation') void createSession();
+    else if (action === 'selectAssistant' && id) {
+      if (connection?.runtimeId === id) return;
+      const runtime = runtimeOptions.find((item) => item.id === id);
+      if (!runtime || !platformSignedIn.current) {
+        setSettingsSection('Runtime');
+        navigate('settings');
+        return;
+      }
+      void services.platform
+        .bind(platformRegion.current, 'default', runtime.id)
+        .then((next) => {
+          connect(next);
+          navigate('chat');
+        })
+        .catch((error: unknown) => reportFailure(error, 'connection'));
+    } else if (action === 'home') {
+      setCollapsed(false);
+      navigate('chat');
+    } else if (action === 'refreshSessions')
+      void refresh(true).catch((error: unknown) =>
         reportFailure(error, 'sessions'),
       );
     else if (
@@ -257,30 +330,6 @@ export function useDesktopAppState({
     ) {
       if (navigate('chat')) setSelected(id);
     } else if (
-      action === 'selectSpace' &&
-      spaces.some((item) => item.id === id)
-    ) {
-      if (
-        dirty.current &&
-        view === 'pages' &&
-        id !== spaceId &&
-        !window.confirm('Discard unsaved page draft and switch Spaces?')
-      )
-        return;
-      if (navigate('pages')) setSpaceId(id);
-    } else if (action === 'createSpace') {
-      const name = window.prompt('Space name');
-      if (name?.trim())
-        void services.workspace
-          .createSpace(name.trim())
-          .then((next) => {
-            setSpaces((previous) => [...previous, next]);
-            setSpaceId(next.id);
-            navigate('pages');
-          })
-          .catch((error: unknown) => reportFailure(error, 'workspace'));
-    } else if (
-      action === 'pages' ||
       action === 'tasks' ||
       action === 'settings' ||
       action === 'channels' ||
@@ -298,16 +347,21 @@ export function useDesktopAppState({
         connectionEpoch: sessionEpoch,
         view,
         collapsed,
-        pane,
+        traceOpen,
         location: connection?.runtimeId ?? 'Your workspace',
-        pageTitle: view === 'pages' ? (space?.name ?? 'Spaces') : view,
+        pageTitle: view,
         selectedSession: selected ?? '',
-        selectedSpace: spaceId ?? '',
+        selectedSpace: '',
+        selectedAssistant: connection?.runtimeId ?? '',
+        settingsSection,
+        theme,
         sessions: sessions.map((item) => ({
           id: item.id,
           title: item.title || item.id,
+          agentId: item.mpaInstanceId ?? '',
         })),
-        spaces: spaces.map((item) => ({ id: item.id, title: item.name })),
+        spaces: [],
+        assistants: shellAssistants,
         revision: ++shellRevision.current,
       })
       .catch(() => {});
@@ -315,14 +369,14 @@ export function useDesktopAppState({
     services,
     view,
     collapsed,
-    pane,
+    traceOpen,
     connection?.runtimeId,
-    space?.name,
+    shellAssistants,
     selected,
-    spaceId,
     sessions,
-    spaces,
     sessionEpoch,
+    settingsSection,
+    theme,
   ]);
   return {
     error,
@@ -332,7 +386,12 @@ export function useDesktopAppState({
     services,
     setCloseDrafts,
     view,
-    space,
+    traceOpen,
+    setTraceOpen,
+    settingsSection,
+    setSettingsSection,
+    theme,
+    setTheme,
     connection,
     sessions,
     setDirty,
@@ -343,5 +402,6 @@ export function useDesktopAppState({
     epoch,
     refresh,
     createSession,
+    connect,
   };
 }

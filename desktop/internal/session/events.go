@@ -25,12 +25,14 @@ type adkEvent struct {
 			Text         string `json:"text"`
 			Thought      bool   `json:"thought"`
 			FunctionCall *struct {
-				ID   string `json:"id"`
-				Name string `json:"name"`
+				ID   string          `json:"id"`
+				Name string          `json:"name"`
+				Args json.RawMessage `json:"args"`
 			} `json:"functionCall"`
 			FunctionResponse *struct {
-				ID   string `json:"id"`
-				Name string `json:"name"`
+				ID       string          `json:"id"`
+				Name     string          `json:"name"`
+				Response json.RawMessage `json:"response"`
 			} `json:"functionResponse"`
 		} `json:"parts"`
 	} `json:"content"`
@@ -41,7 +43,7 @@ func Project(data []byte, kind string, r dto.SubscribeRequest) ([]dto.ClientEven
 	if json.Unmarshal(data, &wire) != nil {
 		return nil, fmt.Errorf("invalid event")
 	}
-	base := dto.ClientEvent{SchemaVersion: 1, ConnectionEpoch: r.ConnectionEpoch, SubscriptionEpoch: r.SubscriptionEpoch, SessionID: r.SessionID, InvocationID: wire.InvocationID, EventID: wire.ID, Author: wire.Author, Kind: kind, Completeness: "complete", Partial: wire.Partial, Terminal: wire.Terminal}
+	base := dto.ClientEvent{SchemaVersion: 2, ConnectionEpoch: r.ConnectionEpoch, SubscriptionEpoch: r.SubscriptionEpoch, SessionID: r.SessionID, InvocationID: wire.InvocationID, EventID: wire.ID, Author: wire.Author, Kind: kind, Completeness: "complete", Partial: wire.Partial, Terminal: wire.Terminal}
 	if base.InvocationID == "" {
 		base.InvocationID = r.InvocationID
 	}
@@ -71,7 +73,13 @@ func Project(data []byte, kind string, r dto.SubscribeRequest) ([]dto.ClientEven
 	out := []dto.ClientEvent{}
 	for index, p := range wire.Content.Parts {
 		base.BlockID = wire.ID + "/part/" + strconv.Itoa(index)
+		partIndex := index
+		base.PartIndex = &partIndex
 		if p.Thought {
+			e := base
+			e.Kind = "reasoning"
+			e.ReasoningVisibility = "hidden"
+			out = append(out, e)
 			continue
 		}
 		if p.Text != "" {
@@ -85,6 +93,8 @@ func Project(data []byte, kind string, r dto.SubscribeRequest) ([]dto.ClientEven
 			e.Kind = "toolCall"
 			e.ToolID = p.FunctionCall.ID
 			e.ToolName = p.FunctionCall.Name
+			e.ToolStatus = "running"
+			e.ToolSubject = safeToolSubject(p.FunctionCall.Name, p.FunctionCall.Args)
 			out = append(out, e)
 		}
 		if p.FunctionResponse != nil {
@@ -92,6 +102,7 @@ func Project(data []byte, kind string, r dto.SubscribeRequest) ([]dto.ClientEven
 			e.Kind = "toolResult"
 			e.ToolID = p.FunctionResponse.ID
 			e.ToolName = p.FunctionResponse.Name
+			e.ToolStatus = "success"
 			out = append(out, e)
 		}
 	}
@@ -100,6 +111,58 @@ func Project(data []byte, kind string, r dto.SubscribeRequest) ([]dto.ClientEven
 		out = append(out, base)
 	}
 	return out, nil
+}
+
+func safeToolSubject(name string, raw json.RawMessage) string {
+	var args map[string]json.RawMessage
+	if len(raw) == 0 || json.Unmarshal(raw, &args) != nil {
+		return ""
+	}
+	var keys []string
+	switch strings.ToLower(name) {
+	case "read", "read_file", "write", "write_file", "edit", "edit_file":
+		keys = []string{"file_path", "path"}
+	case "search", "grep", "find":
+		keys = []string{"query", "pattern"}
+	case "bash", "shell", "run", "run_command":
+		keys = []string{"description"}
+	default:
+		return ""
+	}
+	for _, key := range keys {
+		var value string
+		if candidate, ok := args[key]; ok && json.Unmarshal(candidate, &value) == nil {
+			if unsafeDisplaySubject(value) {
+				return ""
+			}
+			return boundedDisplayText(value, 240)
+		}
+	}
+	return ""
+}
+
+func unsafeDisplaySubject(value string) bool {
+	normalized := strings.ToLower(value)
+	if strings.Contains(normalized, "://") {
+		return true
+	}
+	for _, marker := range []string{
+		"authorization", "bearer ", "token=", "secret=", "password=", "api_key", "apikey", "cookie=",
+	} {
+		if strings.Contains(normalized, marker) {
+			return true
+		}
+	}
+	return false
+}
+
+func boundedDisplayText(value string, limit int) string {
+	value = strings.Join(strings.Fields(value), " ")
+	runes := []rune(value)
+	if len(runes) <= limit {
+		return value
+	}
+	return string(runes[:limit]) + "…"
 }
 func ParseSSE(reader io.Reader, r dto.SubscribeRequest, send func(dto.ClientEvent) error) error {
 	scanner := bufio.NewScanner(reader)

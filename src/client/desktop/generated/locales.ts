@@ -120,7 +120,7 @@ export interface Messages {
    */
   english(): string;
   /**
-   * `OpenMPA 原生界面、系统菜单和内容页面使用同一种语言。`
+   * `OpenMPA 桌面界面、系统菜单和内容页面使用同一种语言。`
    */
   languageDescription(): string;
   /**
@@ -400,7 +400,7 @@ export interface Messages {
    */
   settingsSetup(): string;
   /**
-   * `原生操作状态`
+   * `宿主操作状态`
    */
   nativeOperationStatus(): string;
   /**
@@ -515,6 +515,10 @@ export interface Messages {
    * `停止当前会话`
    */
   stopCurrentSession(): string;
+  /**
+   * `已确认停止 · 正在核验结果`
+   */
+  verifyingOutcome(): string;
   /**
    * `SPACE`
    */
@@ -743,6 +747,86 @@ export interface Messages {
    * `删除这台 Mac 上的加密凭据？之后需要重新输入 AK/SK。`
    */
   forgetVaultConfirm(): string;
+  /**
+   * `助手`
+   */
+  assistant(): string;
+  /**
+   * `会话`
+   */
+  conversations(): string;
+  /**
+   * `设置`
+   */
+  settingsSectionsTitle(): string;
+  /**
+   * `主页`
+   */
+  home(): string;
+  /**
+   * `主题`
+   */
+  theme(): string;
+  /**
+   * `搜索会话`
+   */
+  searchConversations(): string;
+  /**
+   * `暂无会话。`
+   */
+  noConversations(): string;
+  /**
+   * `请先选择一个会话。`
+   */
+  selectConversationFirst(): string;
+  /**
+   * `会话 {session} 的知识库`
+   */
+  knowledgeForConversation(session: string): string;
+  /**
+   * `当前助手的定时任务。`
+   */
+  scheduledForAssistant(): string;
+  /**
+   * `请选择一个会话，将定时任务限定到对应助手。`
+   */
+  selectConversationForSchedules(): string;
+  /**
+   * `显示主题`
+   */
+  displayTheme(): string;
+  /**
+   * `主题会应用到桌面外壳和对话内容。`
+   */
+  themeDescription(): string;
+  /**
+   * `浅色`
+   */
+  light(): string;
+  /**
+   * `深色`
+   */
+  dark(): string;
+  /**
+   * `显示主题已更新。`
+   */
+  themeChanged(): string;
+  /**
+   * `会话知识库`
+   */
+  sessionKnowledge(): string;
+  /**
+   * `选择助手`
+   */
+  selectAssistant(): string;
+  /**
+   * `助手配置`
+   */
+  assistantConfiguration(): string;
+  /**
+   * `这里只显示已配置的 skills。浏览 AgentKit skill space 需要当前客户端没有的目录 API。`
+   */
+  assistantSkillScope(): string;
 }
 
 const catalog = createCatalog<Messages>({
@@ -881,6 +965,7 @@ const catalog = createCatalog<Messages>({
     "submittingReceiving": [],
     "enterToSend": [],
     "stopCurrentSession": [],
+    "verifyingOutcome": [],
     "space": [],
     "newPage": [],
     "searchPages": [],
@@ -938,6 +1023,26 @@ const catalog = createCatalog<Messages>({
     "forgetSavedCredentials": [],
     "saveCredentials": [],
     "forgetVaultConfirm": [],
+    "assistant": [],
+    "conversations": [],
+    "settingsSectionsTitle": [],
+    "home": [],
+    "theme": [],
+    "searchConversations": [],
+    "noConversations": [],
+    "selectConversationFirst": [],
+    "knowledgeForConversation": ["session"],
+    "scheduledForAssistant": [],
+    "selectConversationForSchedules": [],
+    "displayTheme": [],
+    "themeDescription": [],
+    "light": [],
+    "dark": [],
+    "themeChanged": [],
+    "sessionKnowledge": [],
+    "selectAssistant": [],
+    "assistantConfiguration": [],
+    "assistantSkillScope": [],
   },
   messages: {
     "zh-Hans": {
@@ -970,7 +1075,7 @@ const catalog = createCatalog<Messages>({
       "followSystem": "跟随系统",
       "chinese": "中文",
       "english": "English",
-      "languageDescription": "OpenMPA 原生界面、系统菜单和内容页面使用同一种语言。",
+      "languageDescription": "OpenMPA 桌面界面、系统菜单和内容页面使用同一种语言。",
       "languageChanged": "显示语言已更新。",
       "volcengineAccount": "火山引擎账户",
       "signOut": "退出登录",
@@ -1040,7 +1145,7 @@ const catalog = createCatalog<Messages>({
       "scheduledActivity": "定时任务与活动",
       "channelsTemplates": "渠道与模板",
       "settingsSetup": "设置与配置",
-      "nativeOperationStatus": "原生操作状态",
+      "nativeOperationStatus": "宿主操作状态",
       "dismiss": "关闭",
       "runtimeKeyStatus": "Runtime Key 身份",
       "explicitIdentityStatus": "显式业务身份",
@@ -1069,6 +1174,7 @@ const catalog = createCatalog<Messages>({
       "submittingReceiving": "正在提交 / 接收",
       "enterToSend": "Enter 发送 · Shift Enter 换行",
       "stopCurrentSession": "停止当前会话",
+      "verifyingOutcome": "已确认停止 · 正在核验结果",
       "space": "SPACE",
       "newPage": "新建页面",
       "searchPages": "搜索页面",
@@ -1126,6 +1232,26 @@ const catalog = createCatalog<Messages>({
       "forgetSavedCredentials": "删除已保存凭据",
       "saveCredentials": "保存凭据",
       "forgetVaultConfirm": "删除这台 Mac 上的加密凭据？之后需要重新输入 AK/SK。",
+      "assistant": "助手",
+      "conversations": "会话",
+      "settingsSectionsTitle": "设置",
+      "home": "主页",
+      "theme": "主题",
+      "searchConversations": "搜索会话",
+      "noConversations": "暂无会话。",
+      "selectConversationFirst": "请先选择一个会话。",
+      "knowledgeForConversation": "会话 {session} 的知识库",
+      "scheduledForAssistant": "当前助手的定时任务。",
+      "selectConversationForSchedules": "请选择一个会话，将定时任务限定到对应助手。",
+      "displayTheme": "显示主题",
+      "themeDescription": "主题会应用到桌面外壳和对话内容。",
+      "light": "浅色",
+      "dark": "深色",
+      "themeChanged": "显示主题已更新。",
+      "sessionKnowledge": "会话知识库",
+      "selectAssistant": "选择助手",
+      "assistantConfiguration": "助手配置",
+      "assistantSkillScope": "这里只显示已配置的 skills。浏览 AgentKit skill space 需要当前客户端没有的目录 API。",
     },
     "en": {
       "settings": "Settings",
@@ -1157,7 +1283,7 @@ const catalog = createCatalog<Messages>({
       "followSystem": "Follow system",
       "chinese": "中文",
       "english": "English",
-      "languageDescription": "OpenMPA uses one language across native UI, system menus and content pages.",
+      "languageDescription": "OpenMPA uses one language across the desktop UI, system menus and content pages.",
       "languageChanged": "Display language updated.",
       "volcengineAccount": "Volcengine account",
       "signOut": "Sign out",
@@ -1227,7 +1353,7 @@ const catalog = createCatalog<Messages>({
       "scheduledActivity": "Scheduled & activity",
       "channelsTemplates": "Channels & templates",
       "settingsSetup": "Settings & setup",
-      "nativeOperationStatus": "Native operation status",
+      "nativeOperationStatus": "Host operation status",
       "dismiss": "Dismiss",
       "runtimeKeyStatus": "Runtime key identity",
       "explicitIdentityStatus": "Explicit business identity",
@@ -1256,6 +1382,7 @@ const catalog = createCatalog<Messages>({
       "submittingReceiving": "Submitting / receiving",
       "enterToSend": "Enter to send · Shift Enter for a new line",
       "stopCurrentSession": "Stop current session",
+      "verifyingOutcome": "Stop acknowledged · verifying outcome",
       "space": "SPACE",
       "newPage": "New page",
       "searchPages": "Search pages",
@@ -1313,6 +1440,26 @@ const catalog = createCatalog<Messages>({
       "forgetSavedCredentials": "Forget saved credentials",
       "saveCredentials": "Save credentials",
       "forgetVaultConfirm": "Delete the encrypted credential from this Mac? You will need to enter AK/SK again.",
+      "assistant": "Assistant",
+      "conversations": "CONVERSATIONS",
+      "settingsSectionsTitle": "SETTINGS",
+      "home": "Home",
+      "theme": "Theme",
+      "searchConversations": "Search conversations",
+      "noConversations": "No conversations yet.",
+      "selectConversationFirst": "Select a conversation first.",
+      "knowledgeForConversation": "Knowledge for conversation {session}",
+      "scheduledForAssistant": "Scheduled tasks for this assistant.",
+      "selectConversationForSchedules": "Select a conversation to scope scheduled tasks to its assistant.",
+      "displayTheme": "Display theme",
+      "themeDescription": "The theme applies to the desktop shell and the conversation content.",
+      "light": "Light",
+      "dark": "Dark",
+      "themeChanged": "Display theme updated.",
+      "sessionKnowledge": "Session knowledge",
+      "selectAssistant": "Select an assistant",
+      "assistantConfiguration": "Assistant configuration",
+      "assistantSkillScope": "Configured skills only. Browsing the AgentKit skill space needs a catalog API this client does not have.",
     },
   },
 });

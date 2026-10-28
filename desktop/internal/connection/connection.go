@@ -15,7 +15,10 @@ import (
 	"time"
 )
 
-type Binding struct{ Endpoint, RuntimeID, Scope, RuntimeKey string }
+type Binding struct {
+	Endpoint, RuntimeID, Scope, RuntimeKey  string
+	RuntimeName, WorkerToolID, RuntimeImage string
+}
 type Client struct {
 	mu                                                       sync.RWMutex
 	binding                                                  Binding
@@ -97,7 +100,7 @@ func (c *Client) State() dto.ConnectionState {
 	c.mu.RLock()
 	defer c.mu.RUnlock()
 	u, _ := url.Parse(c.binding.Endpoint)
-	out := dto.ConnectionState{Connected: c.binding.Endpoint != "", ConnectionEpoch: c.epoch, Scope: c.binding.Scope + c.businessScope, RuntimeID: c.binding.RuntimeID, HasCredential: c.binding.RuntimeKey != "", HasBusinessIdentity: c.userID != "" || c.legacyJWT != ""}
+	out := dto.ConnectionState{Connected: c.binding.Endpoint != "", ConnectionEpoch: c.epoch, Scope: c.binding.Scope + c.businessScope, RuntimeID: c.binding.RuntimeID, RuntimeName: c.binding.RuntimeName, WorkerToolID: c.binding.WorkerToolID, RuntimeImage: c.binding.RuntimeImage, HasCredential: c.binding.RuntimeKey != "", HasBusinessIdentity: c.userID != "" || c.legacyJWT != ""}
 	if u != nil {
 		out.EndpointHost = u.Host
 		out.EndpointPath = u.Path
