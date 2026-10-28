@@ -31,6 +31,7 @@ desktop/openmpa
 
 # Local agent tooling and account-bound live acceptance
 .trae/
+.trae-html-share-packages/
 skills-lock.json
 desktop/cmd/verify-*/
 

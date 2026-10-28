@@ -1,4 +1,4 @@
-/** Model choices are read from the selected Runtime's Agent Card, like Studio. */
+/** Host filters Runtime model choices by the Studio account catalog when available. */
 export interface ModelOption {
   id: string;
 }

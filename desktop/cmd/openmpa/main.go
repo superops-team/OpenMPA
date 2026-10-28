@@ -69,7 +69,7 @@ func main() {
 	configService := runtimeconfig.New(cloudClient, func() deployment.Target { return ipc.DeploymentTarget(platform) }, func() (string, error) { return dataPath("runtime-config-operations") })
 	mygo.BindAs("Connection", connectionService)
 	mygo.BindAs("Usage", usage.NewBridge(usage.New(conn, cloudClient, func() deployment.Target { return ipc.DeploymentTarget(platform) })))
-	sessions := session.NewWithCache(conn, pending, settingsDB)
+	sessions := session.NewWithCache(conn, pending, settingsDB, cloudClient)
 	mygo.BindAs("Session", sessions)
 	mygo.BindAs("Channels", channelService)
 	artifactService := artifact.New(conn)

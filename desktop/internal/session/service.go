@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"github.com/egoist/mygo"
+	"github.com/superops-team/OpenMPA/desktop/internal/cloud"
 	"github.com/superops-team/OpenMPA/desktop/internal/configstore"
 	"github.com/superops-team/OpenMPA/desktop/internal/connection"
 	"github.com/superops-team/OpenMPA/desktop/internal/dto"
@@ -20,6 +21,7 @@ import (
 type Service struct {
 	operationMu sync.Mutex
 	conn        *connection.Client
+	platform    *cloud.Client
 	pending     *PendingStore
 	cache       *configstore.Store
 	traceMu     sync.Mutex
@@ -37,9 +39,12 @@ type runInput struct {
 func New(c *connection.Client, p *PendingStore) *Service {
 	return &Service{conn: c, pending: p, traceIDs: map[string]bool{}, traceTitles: map[string]string{}}
 }
-func NewWithCache(c *connection.Client, p *PendingStore, cache *configstore.Store) *Service {
+func NewWithCache(c *connection.Client, p *PendingStore, cache *configstore.Store, platform ...*cloud.Client) *Service {
 	service := New(c, p)
 	service.cache = cache
+	if len(platform) > 0 {
+		service.platform = platform[0]
+	}
 	return service
 }
 func path(id, suffix string) string { return "/api/v1/sessions/" + url.PathEscape(id) + suffix }

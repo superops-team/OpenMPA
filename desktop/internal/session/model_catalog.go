@@ -31,6 +31,17 @@ func (s *Service) Models(ctx context.Context, r dto.ScopeRequest) ModelCatalogRe
 	if s.conn == nil || !s.conn.Current(r.ConnectionEpoch) {
 		return ModelCatalogResult{Error: dto.Failure("staleConnection", "transport", "reload", 0)}
 	}
+	var platformEpoch uint64
+	if s.platform != nil {
+		platformEpoch = s.platform.Epoch()
+	}
+	scope, err := s.conn.ScopeContext(r.ConnectionEpoch)
+	if err != nil {
+		return ModelCatalogResult{Error: err}
+	}
+	ctx, cancel := context.WithCancel(ctx)
+	stop := context.AfterFunc(scope, cancel)
+	defer func() { stop(); cancel() }()
 	var card struct {
 		Capabilities struct {
 			Extensions []struct {
@@ -72,16 +83,40 @@ func (s *Service) Models(ctx context.Context, r dto.ScopeRequest) ModelCatalogRe
 			}
 		}
 		out.DefaultModel = strings.TrimSpace(config.DefaultModel)
-		if out.DefaultModel != "" {
-			if !validModelID(out.DefaultModel) {
-				return invalidModelCatalog()
+		if out.DefaultModel != "" && !validModelID(out.DefaultModel) {
+			return invalidModelCatalog()
+		}
+		// Studio intersects Runtime choices with available account models. If the
+		// account catalog is unavailable, it falls back to the Runtime choices.
+		if s.platform != nil && len(out.Models) > 0 {
+			available, err := s.platform.AvailableModelIDs(ctx)
+			if s.platform.Epoch() != platformEpoch || !s.conn.Current(r.ConnectionEpoch) {
+				return ModelCatalogResult{Error: dto.Failure("staleConnection", "platform", "reload", 0)}
 			}
-			if !seen[out.DefaultModel] {
+			if err == nil {
+				filtered := []string{}
+				for _, id := range out.Models {
+					if available[id] {
+						filtered = append(filtered, id)
+					}
+				}
+				out.Models = filtered
+			}
+		}
+		if out.DefaultModel != "" {
+			found := false
+			for _, id := range out.Models {
+				found = found || id == out.DefaultModel
+			}
+			if !found {
 				out.Models = append([]string{out.DefaultModel}, out.Models...)
 			}
 		}
 		out.Supported = len(out.Models) > 0
 		break
+	}
+	if !s.conn.Current(r.ConnectionEpoch) || (s.platform != nil && s.platform.Epoch() != platformEpoch) {
+		return ModelCatalogResult{Error: dto.Failure("staleConnection", "transport", "reload", 0)}
 	}
 	return ModelCatalogResult{OK: true, Value: &out}
 }

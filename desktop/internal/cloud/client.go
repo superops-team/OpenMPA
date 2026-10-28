@@ -32,6 +32,9 @@ func New() *Client {
 		if service == "sts" {
 			return "https://sts.volcengineapi.com"
 		}
+		if service == "ark" {
+			return "https://open.volcengineapi.com"
+		}
 		endpoint, _ := AgentKitEndpoint(region)
 		return endpoint
 	}}
@@ -175,6 +178,9 @@ func (c *Client) call(ctx context.Context, cred Credentials, service, region, ac
 	version := APIVersion
 	if service == "sts" {
 		version = "2018-01-01"
+	}
+	if service == "ark" {
+		version = "2024-01-01"
 	}
 	u, _ := url.Parse(c.endpoint(service, region))
 	q := u.Query()
