@@ -1,6 +1,6 @@
 {
   "name": "opendots",
-  "version": "0.1.1",
+  "version": "0.1.3",
   "description": "OpenMPA desktop client for AgentKit MPA Runtime, built with MyGo.",
   "directories": {
     "doc": "docs",
@@ -19,6 +19,9 @@
     "lint": "eslint src tests vite.config.ts",
     "format": "prettier --write src tests *.json *.ts *.js index.html public .github Dockerfile \"compose*.yml\" deployment README.md docs .env.example --ignore-unknown",
     "check-format": "prettier --check src tests *.json *.ts *.js index.html public .github Dockerfile \"compose*.yml\" deployment README.md docs .env.example --ignore-unknown",
+    "design:generate": "node scripts/generate-design-tokens.mjs",
+    "design:check": "node scripts/generate-design-tokens.mjs --check && node scripts/check-design-usage.mjs",
+    "design:verify": "node scripts/verify-desktop-design.mjs",
     "dev:desktop:frontend": "vite --config vite.desktop.config.ts",
     "build:desktop:frontend": "vite build --config vite.desktop.config.ts",
     "desktop:generate": "cd desktop && GOTOOLCHAIN=go1.27.3 CGO_ENABLED=0 go run github.com/egoist/mygo/cmd/mygo generate .",

@@ -1,5 +1,26 @@
 # Changelog
 
+## 0.1.3 — 2026-10-28
+
+### Features
+
+- Establish a project-wide semantic design-token system for light and dark appearances, with shared React primitives for buttons, dialogs, tabs, disclosures, composers, code blocks, Markdown tables and status rows.
+- Add a Turn process view with safe Markdown rendering, structured execution summaries and a detailed trace panel for tool calls, service events and recovered runs.
+- Move Assistant Settings into an accessible portal dialog with dedicated AGENTS.md and Skills tabs, and support model selection for the next Turn without rewriting an active Turn.
+- Cache Runtime directories per account and project authoritative pending and selected states consistently across Settings, assistant creation and ordinary Session creation.
+
+### Fixes
+
+- Reconcile terminal, Stop and subscription state so completed, stopped and recovered runs release the composer promptly and do not leave the Session permanently unusable.
+- Align Assistant Settings, Runtime selection, text inputs, focus rings, selected borders, responsive Skills layouts and Markdown disclosure motion with the shared design language.
+- Bind ordinary Session creation to the selected MPA Runtime instead of allowing page-local Runtime state to drift.
+- Preserve keyboard access, reduced-motion behavior and usable layouts down to a 320px viewport.
+
+### Known limitations
+
+- AgentKit Runtime v51 can persist a canonical final answer while suppressing the SSE completion event when it returns `status=running should_publish_done=False`. The desktop client recovers terminal state where it has authoritative evidence, but this release does not deploy the Runtime backend fix.
+- The macOS application remains ad-hoc signed and is not Apple-notarized. The GitHub prerelease provides both DMG and app ZIP packages with `SHA256SUMS` and `build-verification.json`.
+
 ## 0.1.1 — 2026-10-26
 
 ### Features
