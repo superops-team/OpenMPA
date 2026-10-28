@@ -1,3 +1,5 @@
+import { messages } from './generated/locales';
+import { localized, LocalizedError } from './locale';
 import { Channel } from 'mygo-runtime';
 import {
   Artifact,
@@ -23,16 +25,19 @@ type NativePage = NonNullable<
 import { unwrap } from './result';
 import type { ConnectionVM, DesktopServices, Page, SessionVM } from './models';
 import { displayEvent, historyMessages } from './service-events';
+import { createStudioServices } from './studio-services';
 export { displayEvent } from './service-events';
 
 const platformVM = (state: {
   signedIn: boolean;
   principal?: { accountId?: string } | null;
   region?: string;
+  epoch?: number;
 }) => ({
   signedIn: state.signedIn,
   accountId: state.principal?.accountId || '',
   region: state.region || 'cn-beijing',
+  epoch: state.epoch,
 });
 const connectionVM = (state: ConnectionState): ConnectionVM => ({
   epoch: state.connectionEpoch,
@@ -45,8 +50,8 @@ const connectionVM = (state: ConnectionState): ConnectionVM => ({
     ? state.hasBusinessIdentity
       ? 'Explicit business identity'
       : state.hasCredential
-        ? 'Runtime key identity'
-        : 'Authentication required'
+        ? messages.runtimeKeyStatus()
+        : messages.authenticationRequired()
     : 'Disconnected',
 });
 const pageVM = (page: NativePage): Page => ({ ...page, sourceThreadId: null });
@@ -77,6 +82,7 @@ export function createDesktopServices(): DesktopServices {
   };
   return {
     ...desktopFeatures(),
+    ...createStudioServices(),
     host: {
       theme: async () => {
         const value = unwrap(await Host.theme());
@@ -119,11 +125,7 @@ export function createDesktopServices(): DesktopServices {
       },
       signIn: async (input) => {
         const state = unwrap(await Platform.signIn(input));
-        return {
-          signedIn: state.signedIn,
-          accountId: state.principal?.accountId || '',
-          region: input.region,
-        };
+        return platformVM(state);
       },
       signOut: async () => {
         unwrap(await Platform.signOut());
@@ -133,8 +135,8 @@ export function createDesktopServices(): DesktopServices {
           await Platform.listRuntimes({ region, projectName, forceRefresh }),
         );
         if (!result.complete)
-          throw new Error(
-            'The Runtime directory is incomplete. Refresh before choosing a Runtime.',
+          throw new LocalizedError(
+            localized((m) => m.runtimeDirectoryIncomplete()),
           );
         return result.runtimes.map((runtime) => ({
           id: runtime.runtimeId,
@@ -185,8 +187,8 @@ export function createDesktopServices(): DesktopServices {
         testDeployment,
       ) => {
         if (gatewayToken || taskToken || channelToken)
-          throw new Error(
-            'Separate credential slots are not supported by this connection. Runtime gateway credentials are held by the host.',
+          throw new LocalizedError(
+            localized((m) => m.connectionSlotsUnsupported()),
           );
         return connectionVM(
           unwrap(
@@ -211,6 +213,14 @@ export function createDesktopServices(): DesktopServices {
         unwrap(await Trace.read({ connectionEpoch, sessionId, invocationId })),
     },
     sessions: {
+      models: async (connectionEpoch) => {
+        const catalog = unwrap(await Session.models({ connectionEpoch }));
+        return {
+          models: catalog.models.map((id) => ({ id })),
+          defaultModel: catalog.defaultModel,
+          supported: catalog.supported,
+        };
+      },
       recover: async (connectionEpoch, operationId, mode) => {
         const result = unwrap(
           await Session.recover({ connectionEpoch, operationId, mode }),
@@ -289,8 +299,10 @@ export function createDesktopServices(): DesktopServices {
           await Session.pending({ connectionEpoch }),
         ).operations.find((operation) => operation.sessionId === sessionId);
         if (pending)
-          throw new Error(
-            `Original submission ${pending.operationId} requires verification. Reopen and review its saved request before starting another run.`,
+          throw new LocalizedError(
+            localized((m) =>
+              m.originalSubmissionNeedsReview(pending.operationId),
+            ),
           );
         const operationId = crypto.randomUUID();
         const result = unwrap(
@@ -430,14 +442,14 @@ export function createDesktopServices(): DesktopServices {
             await Workspace.createPage({
               spaceId,
               parentId,
-              title: 'Untitled page',
+              title: messages.desktopUntitledPage(),
               content: '',
             }),
           ),
         ),
       save: async (id, patch, signal) => {
         if (signal.aborted)
-          throw new Error('Save cancelled before submission.');
+          throw new LocalizedError(localized((m) => m.saveCancelled()));
         const capturedAt = drafts.get(id);
         await draftWrites;
         const result = pageVM(
@@ -540,9 +552,7 @@ export function createDesktopServices(): DesktopServices {
           }),
         );
         if (!result.page)
-          throw new Error(
-            'The saved page was deleted. The review receipt remains available.',
-          );
+          throw new LocalizedError(localized((m) => m.savedPageDeleted()));
         return pageVM(result.page);
       },
       flush: async () => {
@@ -550,7 +560,7 @@ export function createDesktopServices(): DesktopServices {
         const result = unwrap(await Workspace.flush({}));
         if (result.closeState?.safeClose === false)
           throw Object.assign(
-            new Error('Unsaved recovery drafts prevent closing.'),
+            new LocalizedError(localized((m) => m.unsavedDraftsPreventClose())),
             { closeState: result.closeState },
           );
         if (draftFailure && result.closeState?.safeClose !== true)

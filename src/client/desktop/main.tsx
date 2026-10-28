@@ -3,6 +3,7 @@ import { createRoot } from 'react-dom/client';
 import { isMyGo } from 'mygo-runtime';
 import { DesktopApp } from './DesktopApp';
 import { createDesktopServices } from './services';
+import { messages } from './generated/locales';
 import '../style.css';
 import '../editor.css';
 import './style.css';
@@ -28,10 +29,9 @@ createRoot(document.getElementById('root')!).render(
       <main className="main-content">
         <div className="page-heading">
           <div>
-            <h1>OpenMPA Desktop</h1>
+            <h1>{messages.desktopOpenMPADesktop()}</h1>
             <p>
-              Open this frontend through the MyGo desktop application to connect
-              real platform and workspace services.
+              {messages.desktopOpenThisFrontendThroughTheMyGoDesktopApplicationTo()}
             </p>
           </div>
         </div>

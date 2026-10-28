@@ -18,6 +18,7 @@ import (
 type Binding struct {
 	Endpoint, RuntimeID, Scope, RuntimeKey  string
 	RuntimeName, WorkerToolID, RuntimeImage string
+	ChannelOwnerID                          string
 }
 type Client struct {
 	mu                                                       sync.RWMutex
@@ -149,12 +150,19 @@ func (c *Client) Request(ctx context.Context, epoch uint64, method, path string,
 	}
 	if b.RuntimeKey != "" {
 		req.Header.Set("Authorization", "Bearer "+b.RuntimeKey)
+		if studioMetadataPath(parsed.Path) {
+			req.Header.Set("X-MPA-Studio-Key", b.RuntimeKey)
+		}
 	}
 	if id != "" {
 		req.Header.Set("X-User-Id", id)
 	}
 	if jwt != "" {
 		req.Header.Set("X-Jwt-Token", jwt)
+	}
+	if owner, ok := ctx.Value(channelOwnerContextKey{}).(string); ok && owner != "" {
+		req.Header.Set("X-User-Id", owner)
+		req.Header.Del("X-Jwt-Token")
 	}
 	for _, k := range []string{"Idempotency-Key", "If-Match", "X-MPA-Channel-Key", "X-Jwt-Token", "Content-Type"} {
 		if v := headers.Get(k); v != "" {
@@ -185,6 +193,26 @@ func (c *Client) Request(ctx context.Context, epoch uint64, method, path string,
 	resp.Body = &epochBody{ReadCloser: resp.Body, stop: stop, cancel: cancel}
 	transferred = true
 	return resp, nil
+}
+
+func studioMetadataPath(path string) bool {
+	switch path {
+	case "/api/v1/studio/agents-md", "/api/v1/studio/agent-info",
+		"/api/v1/studio/collaborators/registry/spaces",
+		"/api/v1/studio/collaborators/registry/agents",
+		"/api/v1/studio/collaborators/registry/binding":
+		return true
+	}
+	id, ok := strings.CutPrefix(path, "/api/v1/studio/collaborators/registry/aliases/")
+	if !ok || !strings.HasPrefix(id, "a-") || len(id) <= 2 || len(id) > 102 {
+		return false
+	}
+	for _, c := range id[2:] {
+		if !(c >= 'a' && c <= 'z' || c >= 'A' && c <= 'Z' || c >= '0' && c <= '9' || c == '_' || c == '-') {
+			return false
+		}
+	}
+	return true
 }
 
 type epochBody struct {
@@ -253,6 +281,14 @@ func ErrorFromResponse(status int, data []byte) *dto.SafeError {
 		out.Code = detailCode
 		out.Message = dto.SafeMessage(detailCode)
 	}
+	if status == http.StatusUnprocessableEntity && detailCode == "x-user-id header is required" {
+		out.Code = "businessIdentityRequired"
+		out.Message = dto.SafeMessage(out.Code)
+	}
+	if status == http.StatusUnauthorized && detailCode == "X-Jwt-Token header is required" {
+		out.Code = "businessJWTRequired"
+		out.Message = dto.SafeMessage(out.Code)
+	}
 	var detail struct {
 		Code         string          `json:"code"`
 		CurrentState json.RawMessage `json:"currentState"`
@@ -300,6 +336,11 @@ func (c *Client) Do(ctx context.Context, epoch uint64, method, path string, inpu
 	if family == "channel" {
 		c.mu.RLock()
 		key, jwt := c.channelKey, c.channelJWT
+		owner := ""
+		if key == "" && jwt == "" {
+			key = c.binding.RuntimeKey
+			owner = c.binding.ChannelOwnerID
+		}
 		c.mu.RUnlock()
 		if key == "" && jwt == "" {
 			return dto.Failure("authRequired", "mpa", "never", 0)
@@ -309,6 +350,9 @@ func (c *Client) Do(ctx context.Context, epoch uint64, method, path string, inpu
 		}
 		if jwt != "" {
 			headers.Set("X-Jwt-Token", jwt)
+		}
+		if owner != "" {
+			ctx = context.WithValue(ctx, channelOwnerContextKey{}, owner)
 		}
 	}
 	ctx, cancel := context.WithTimeout(ctx, 30*time.Second)
@@ -398,8 +442,11 @@ func (c *Client) ConfigureChannelAuth(r dto.ChannelAuthRequest) *dto.SafeError {
 func (c *Client) HasChannelOwnerIdentity() bool {
 	c.mu.RLock()
 	defer c.mu.RUnlock()
-	return c.channelJWT != "" || (c.verifiedTest && c.userID != "" && c.channelKey != "")
+	return c.channelJWT != "" || (c.verifiedTest && c.userID != "" && c.channelKey != "") || (c.channelKey == "" && c.channelJWT == "" && c.binding.RuntimeKey != "" && c.binding.ChannelOwnerID != "")
 }
+
+type channelOwnerContextKey struct{}
+
 func (c *Client) SetBusinessScope(epoch uint64, scope string) *dto.SafeError {
 	c.mu.Lock()
 	defer c.mu.Unlock()

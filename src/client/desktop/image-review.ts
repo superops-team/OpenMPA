@@ -6,9 +6,14 @@ export interface ImageDraft {
   toolVersion: string;
   toolImage: string;
 }
+export class ImageReviewError extends Error {
+  constructor(readonly field: string) {
+    super(`${field} is required before review.`);
+  }
+}
 export function reviewImages(draft: ImageDraft) {
   for (const [name, value] of Object.entries(draft))
-    if (!value.trim()) throw new Error(`${name} is required before review.`);
+    if (!value.trim()) throw new ImageReviewError(name);
   return Object.freeze({
     runtimeId: draft.runtimeId,
     expectedRuntimeVersion: draft.runtimeVersion,

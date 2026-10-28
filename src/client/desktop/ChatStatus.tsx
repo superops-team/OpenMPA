@@ -1,3 +1,4 @@
+import { localized, useMessages } from './locale';
 import type { ConnectionVM, DesktopServices, SessionVM } from './models';
 import type { useDesktopChatState } from './ChatState';
 
@@ -16,6 +17,7 @@ export function ChatStatus({
   connection: ConnectionVM;
   session: SessionVM;
 }) {
+  const m = useMessages();
   if (!visible) return null;
   const {
     error,
@@ -31,7 +33,7 @@ export function ChatStatus({
     execution,
   } = state;
   return (
-    <section className="chat-status" aria-label="Conversation status">
+    <section className="chat-status" aria-label={m.desktopConversationStatus()}>
       {error && (
         <div className="chat-status-error" role="alert">
           {error}
@@ -39,16 +41,18 @@ export function ChatStatus({
       )}
       {pending.length > 0 && (
         <details className="chat-status-details" open={pending.length === 1}>
-          <summary>Original operation needs review · {pending.length}</summary>
+          <summary>{m.chatOriginalNeedsReview(pending.length)}</summary>
           {pending.map((operation) => (
             <div className="chat-status-operation" key={operation.operationId}>
               <p>
-                {operation.operationId} · {operation.state} · configuration{' '}
-                {operation.executionConfigVersion || 'not pinned'}
+                {m.chatOperationConfiguration(
+                  operation.operationId,
+                  operation.state,
+                  operation.executionConfigVersion || m.desktopNotPinned(),
+                )}
               </p>
               <p>
-                The host retains the original message and idempotency key. A new
-                request remains blocked while its outcome is unresolved.
+                {m.desktopTheHostRetainsTheOriginalMessageAndIdempotencyKey()}
               </p>
               <div className="chat-status-actions">
                 <button
@@ -74,12 +78,14 @@ export function ChatStatus({
                           setError(
                             failure instanceof Error
                               ? failure.message
-                              : 'Could not verify the original operation.',
+                              : localized((m) =>
+                                  m.desktopCouldNotVerifyTheOriginalOperation(),
+                                ),
                           );
                       });
                   }}
                 >
-                  Read authoritative history
+                  {m.desktopReadAuthoritativeHistory()}
                 </button>
                 {['subscribeAccepted', 'retryDurable'].includes(
                   operation.recoveryDisposition || '',
@@ -91,17 +97,15 @@ export function ChatStatus({
                     onClick={() => {
                       if (
                         operation.recoveryDisposition === 'retryDurable' &&
-                        !window.confirm(
-                          'Recover this original request using its original content, key and execution version? The host verifies durable idempotency and permissions.',
-                        )
+                        !window.confirm(m.chatRecoverConfirm())
                       )
                         return;
                       void resume(operation);
                     }}
                   >
                     {operation.recoveryDisposition === 'retryDurable'
-                      ? 'Recover original durable submission'
-                      : 'Resume accepted invocation'}
+                      ? m.desktopRecoverOriginalDurableSubmission()
+                      : m.desktopResumeAcceptedInvocation()}
                   </button>
                 )}
                 <button
@@ -114,9 +118,7 @@ export function ChatStatus({
                       : 'userReviewed';
                     if (
                       !operation.terminalVerified &&
-                      !window.confirm(
-                        'After reviewing authoritative history, acknowledge this unknown operation? It may already have executed. This removes the recovery block; submitting the original prompt again can produce duplicate work.',
-                      )
+                      !window.confirm(m.chatAcknowledgeConfirm())
                     )
                       return;
                     const current = generation.current;
@@ -143,14 +145,16 @@ export function ChatStatus({
                         setError(
                           failure instanceof Error
                             ? failure.message
-                            : 'Could not acknowledge this original operation.',
+                            : localized((m) =>
+                                m.desktopCouldNotAcknowledgeThisOriginalOperation(),
+                              ),
                         );
                     });
                   }}
                 >
                   {operation.terminalVerified
-                    ? 'Resolve verified terminal operation'
-                    : 'Acknowledge outcome'}
+                    ? m.chatResolveTerminal()
+                    : m.chatAcknowledgeOutcome()}
                 </button>
               </div>
             </div>
@@ -159,10 +163,7 @@ export function ChatStatus({
       )}
       {execution === 'unknown' && pending.length === 0 && (
         <div className="chat-status-note" role="status">
-          <p>
-            The submission outcome needs review. Your message draft is retained.
-            Read authoritative history before starting another message.
-          </p>
+          <p>{m.desktopTheSubmissionOutcomeNeedsReviewYourMessageDraftIs()}</p>
           {resumeInvocation && (
             <button
               type="button"
@@ -170,15 +171,14 @@ export function ChatStatus({
               disabled={submitting}
               onClick={() => void resume()}
             >
-              Read history and resume the same invocation
+              {m.desktopReadHistoryAndResumeTheSameInvocation()}
             </button>
           )}
         </div>
       )}
       {session.profileVerified === false && (
         <div className="chat-status-note" role="status">
-          This Bot profile snapshot is unverified. Open account settings to
-          establish its authorized configuration before sending.
+          {m.desktopThisBotProfileSnapshotIsUnverifiedOpenAccountSettings()}
         </div>
       )}
     </section>

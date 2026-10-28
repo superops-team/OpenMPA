@@ -1,3 +1,9 @@
+import {
+  localized,
+  renderMessage,
+  useMessages,
+  type MessageText,
+} from './locale';
 import { useEffect, useState } from 'react';
 import type { DesktopServices, TraceVM } from './models';
 
@@ -8,19 +14,21 @@ function failureMessage(failure: unknown) {
       : {};
   const status = Number(metadata.status ?? metadata.httpStatus);
   if (status === 404 || /notfound|not_found/i.test(String(metadata.code ?? '')))
-    return 'Trace is unavailable for this turn. It may not have been collected, may have expired, or may require a Runtime with ordinary-session tracing enabled. Some Runtime versions only collect admin_debug traces.';
+    return localized((m) => m.desktopTraceIsUnavailableForThisTurnItMayNot());
   if (status === 401 || status === 403)
-    return 'The current Runtime identity is not allowed to read this trace.';
+    return localized((m) =>
+      m.desktopTheCurrentRuntimeIdentityIsNotAllowedToRead(),
+    );
   return failure instanceof Error
     ? failure.message
-    : 'Could not load this trace. Retry after the turn is accepted.';
+    : localized((m) => m.desktopCouldNotLoadThisTraceRetryAfterTheTurn());
 }
 
 type Resource = {
   key: string;
   trace?: TraceVM;
   loading: boolean;
-  error: string;
+  error: MessageText;
 };
 
 export function useTraceResource({
@@ -34,6 +42,7 @@ export function useTraceResource({
   sessionId?: string;
   invocationId: string;
 }) {
+  const m = useMessages();
   const key = JSON.stringify([epoch, sessionId, invocationId]);
   const enabled = epoch !== undefined && !!sessionId && !!invocationId;
   const [resource, setResource] = useState<Resource>({
@@ -78,5 +87,9 @@ export function useTraceResource({
     enabled && resource.key === key
       ? resource
       : { trace: undefined, loading: enabled, error: '' };
-  return { ...visible, reload: () => setRefresh((value) => value + 1) };
+  return {
+    ...visible,
+    error: renderMessage(visible.error, m),
+    reload: () => setRefresh((value) => value + 1),
+  };
 }

@@ -225,7 +225,7 @@ func (p *Platform) bindRuntime(ctx context.Context, r dto.RuntimeRequest) dto.Co
 	}
 	scope := cloudState.Principal.Scope + "/" + r.Region + "/" + r.ProjectName + "/" + r.RuntimeID
 	e = p.Cloud.WithEpoch(cloudState.Epoch, func() *dto.SafeError {
-		_, bindingError := p.Connection.Bind(connection.Binding{Endpoint: endpoint, RuntimeID: r.RuntimeID, Scope: scope, RuntimeKey: key, RuntimeName: raw.Name, WorkerToolID: raw.ToolID, RuntimeImage: raw.ArtifactURL}, false)
+		_, bindingError := p.Connection.Bind(connection.Binding{Endpoint: endpoint, RuntimeID: r.RuntimeID, Scope: scope, RuntimeKey: key, RuntimeName: raw.Name, WorkerToolID: raw.ToolID, RuntimeImage: raw.ArtifactURL, ChannelOwnerID: cloudState.Principal.Scope}, false)
 		if bindingError == nil {
 			p.mu.Lock()
 			p.target = r

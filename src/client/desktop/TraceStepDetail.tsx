@@ -1,8 +1,10 @@
+import { useMessages } from './locale';
 import { X } from 'lucide-react';
 import { IconButton } from '../ui';
 import {
   formatTraceDuration,
   safeTraceDetails,
+  traceCategoryLabel,
   traceStatusLabel,
   traceStepCategory,
   traceStepTitle,
@@ -16,47 +18,50 @@ export function TraceStepDetail({
   step: TraceStep;
   onClose: () => void;
 }) {
+  const m = useMessages();
   return (
-    <aside className="trace-detail" aria-label="Trace step details">
+    <aside className="trace-detail" aria-label={m.desktopTraceStepDetails()}>
       <header>
         <div>
           <span>
-            {traceStepCategory(step)} · {step.kind}
+            {traceCategoryLabel(traceStepCategory(step), m)} · {step.kind}
           </span>
           <strong>{traceStepTitle(step)}</strong>
         </div>
         <IconButton
           className="trace-icon-button"
-          label="Close step details"
+          label={m.desktopCloseStepDetails()}
           onClick={onClose}
         >
           <X size={14} />
         </IconButton>
       </header>
       <dl>
-        <dt>Status</dt>
-        <dd className={step.status}>{traceStatusLabel(step.status)}</dd>
-        <dt>Duration</dt>
-        <dd>{formatTraceDuration(step.duration)}</dd>
-        <dt>Started</dt>
-        <dd>{step.startedAt || 'Unavailable'}</dd>
-        <dt>Ended</dt>
+        <dt>{m.desktopStatus()}</dt>
+        <dd className={step.status}>{traceStatusLabel(step.status, m)}</dd>
+        <dt>{m.desktopDuration()}</dt>
+        <dd>{formatTraceDuration(step.duration, m)}</dd>
+        <dt>{m.desktopStarted()}</dt>
+        <dd>{step.startedAt || m.valueUnavailable()}</dd>
+        <dt>{m.desktopEnded()}</dt>
         <dd>
           {step.endedAt ||
-            (step.status === 'running' ? 'Running' : 'Unavailable')}
+            (step.status === 'running'
+              ? m.desktopRunning()
+              : m.valueUnavailable())}
         </dd>
-        <dt>Step ID</dt>
+        <dt>{m.desktopStepID()}</dt>
         <dd>{step.stepId}</dd>
         {step.sourceEventId && (
           <>
-            <dt>Source event</dt>
+            <dt>{m.desktopSourceEvent()}</dt>
             <dd>{step.sourceEventId}</dd>
           </>
         )}
       </dl>
       {step.details && Object.keys(step.details).length > 0 && (
         <details>
-          <summary>Safe details</summary>
+          <summary>{m.desktopSafeDetails()}</summary>
           <pre>{JSON.stringify(safeTraceDetails(step.details), null, 2)}</pre>
         </details>
       )}

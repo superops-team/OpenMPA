@@ -2,6 +2,9 @@ import { act, create, type ReactTestRenderer } from 'react-test-renderer';
 import { expect, it, vi } from 'vitest';
 import { DesktopChat } from '../src/client/desktop/Chat';
 import type { DesktopServices } from '../src/client/desktop/models';
+import { messages } from '../src/client/desktop/generated/locales';
+
+const m = messages;
 
 function deferred<T>() {
   let resolve!: (value: T) => void;
@@ -14,7 +17,7 @@ function deferred<T>() {
 }
 
 function sendButton(renderer: ReactTestRenderer) {
-  return renderer.root.findByProps({ 'aria-label': 'Send message' });
+  return renderer.root.findByProps({ 'aria-label': m.sendMessage() });
 }
 
 it('treats stale running history without an active run as completed locally', async () => {
@@ -47,11 +50,11 @@ it('treats stale running history without an active run as completed locally', as
     );
   });
   expect(
-    renderer.root.findAllByProps({ 'aria-label': 'Stop current session' }),
+    renderer.root.findAllByProps({ 'aria-label': m.stopCurrentSession() }),
   ).toHaveLength(0);
   await act(async () =>
     renderer.root
-      .findByProps({ 'aria-label': 'Message' })
+      .findByProps({ 'aria-label': m.message() })
       .props.onChange({ target: { value: 'Next' } }),
   );
   expect(sendButton(renderer).props.disabled).toBe(false);
@@ -142,11 +145,13 @@ it('resumes the accepted invocation with its cursor and clears an expired cursor
     renderer.root
       .findAllByType('button')
       .find((button) =>
-        button.children.includes('Resume accepted invocation'),
+        button.children.includes(m.desktopResumeAcceptedInvocation()),
       )!;
   await act(async () => button().props.onClick());
   await act(async () => button().props.onClick());
-  expect(JSON.stringify(renderer.toJSON())).toContain('cursor expired');
+  expect(JSON.stringify(renderer.toJSON())).toContain(
+    m.desktopTheSavedStreamCursorExpiredHistoryHasBeenRebuiltInlineResumeTheSameInvocationAgainWithoutACursor(),
+  );
   await act(async () => button().props.onClick());
   expect(
     subscribe.mock.calls.map((call) => ({
@@ -237,7 +242,7 @@ it('reconciles a Go-verified terminal pending operation before enabling the next
   });
   await act(async () =>
     renderer.root
-      .findByProps({ 'aria-label': 'Message' })
+      .findByProps({ 'aria-label': m.message() })
       .props.onChange({ target: { value: 'Hello' } }),
   );
   await act(async () =>
@@ -246,11 +251,11 @@ it('reconciles a Go-verified terminal pending operation before enabling the next
   expect(resolvePending).toHaveBeenCalledWith(2, 'op', 'verifiedTerminal');
   await act(async () =>
     renderer.root
-      .findByProps({ 'aria-label': 'Message' })
+      .findByProps({ 'aria-label': m.message() })
       .props.onChange({ target: { value: 'Next' } }),
   );
   expect(
-    renderer.root.findByProps({ 'aria-label': 'Send message' }).props.disabled,
+    renderer.root.findByProps({ 'aria-label': m.sendMessage() }).props.disabled,
   ).toBe(false);
   await act(async () => renderer.unmount());
 });
@@ -339,7 +344,9 @@ it('releases a recovered turn on terminal without waiting for the recovered host
   });
   const resumeButton = renderer.root
     .findAllByType('button')
-    .find((button) => button.children.includes('Resume accepted invocation'))!;
+    .find((button) =>
+      button.children.includes(m.desktopResumeAcceptedInvocation()),
+    )!;
   await act(async () => {
     resumeButton.props.onClick();
     await recoveredTerminal.promise;
@@ -347,7 +354,7 @@ it('releases a recovered turn on terminal without waiting for the recovered host
   });
   await act(async () =>
     renderer.root
-      .findByProps({ 'aria-label': 'Message' })
+      .findByProps({ 'aria-label': m.message() })
       .props.onChange({ target: { value: 'Next' } }),
   );
   expect(close).toHaveBeenCalled();

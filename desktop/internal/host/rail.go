@@ -97,6 +97,8 @@ var railIcons = map[string]*ui.SVG{
 	"selectSession":   ui.MustParseSVG([]byte(`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M21 11a9 9 0 0 1-9 9c-2 0-3-.3-4-1L3 21l1-5c-1-1-1-3-1-5a9 9 0 0 1 18 0Z"/></svg>`)),
 	"knowledge":       ui.MustParseSVG([]byte(`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M12 5v16M3 4l9 2 9-2v16l-9 2-9-2Z"/></svg>`)),
 	"channels":        ui.MustParseSVG([]byte(`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="m12 3 10 5-10 5L2 8Z M2 12l10 5 10-5M2 16l10 5 10-5"/></svg>`)),
+	"resources":       ui.MustParseSVG([]byte(`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><path d="M14 17h7M17.5 14v7"/></svg>`)),
+	"collaboration":   ui.MustParseSVG([]byte(`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="8" cy="7" r="3"/><path d="M2 21v-3a6 6 0 0 1 12 0v3M16 4a3 3 0 0 1 0 6M17 15a5 5 0 0 1 5 5"/></svg>`)),
 }
 
 var settingsSections = []struct{ id, label string }{
@@ -289,7 +291,7 @@ func (r *nativeRail) sidebar(c *ui.Context) {
 		}).Grow(1).MinHeight(0).Gap(3)
 
 		ui.Divider(c).Margin(8, 0)
-		for _, item := range []struct{ action, label string }{{"tasks", "Scheduled & activity"}, {"knowledge", "Knowledge"}, {"channels", "Channels & templates"}, {"settings", "Settings & setup"}} {
+		for _, item := range []struct{ action, label string }{{"tasks", "Scheduled & activity"}, {"resources", "Skills, MCP & instructions"}, {"collaboration", "A2A collaboration"}, {"knowledge", "Knowledge"}, {"channels", "Channels & templates"}, {"settings", "Settings & setup"}} {
 			row(item.action, "", item.label, "", state.View == item.action)
 		}
 	})
@@ -350,7 +352,7 @@ func NewDesktopWindow(h *Host, options mygo.WindowOptions) (*mygo.Window, *mygo.
 }
 func validShellState(state ShellState) bool {
 	switch state.View {
-	case "chat", "tasks", "channels", "settings", "knowledge":
+	case "chat", "tasks", "channels", "settings", "knowledge", "resources", "collaboration":
 	default:
 		return false
 	}

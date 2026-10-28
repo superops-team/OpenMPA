@@ -1,7 +1,12 @@
 import { act, create, type ReactTestRenderer } from 'react-test-renderer';
-import { expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import { TracePanel } from '../src/client/desktop/TracePanel';
 import type { DesktopServices, TraceVM } from '../src/client/desktop/models';
+import { messages } from '../src/client/desktop/generated/locales';
+
+const m = messages;
+beforeEach(() => vi.stubGlobal('mygo', { locale: 'zh-Hans' }));
+afterEach(() => vi.unstubAllGlobals());
 
 const connection = {
   epoch: 2,
@@ -72,9 +77,11 @@ it('validates the current turn trace by default', async () => {
   });
   await act(async () => {});
   expect(read).toHaveBeenCalledWith(2, 'session-1', 'inv-1');
-  expect(JSON.stringify(renderer.toJSON())).toContain('Trace validated');
+  expect(JSON.stringify(renderer.toJSON())).toContain(
+    m.traceValidatedStatus(m.desktopSuccess()),
+  );
   expect(JSON.stringify(renderer.toJSON())).toContain('Read file');
-  expect(JSON.stringify(renderer.toJSON())).toContain('Duration');
+  expect(JSON.stringify(renderer.toJSON())).toContain(m.desktopDuration());
   await act(async () => renderer.unmount());
 });
 
@@ -156,7 +163,7 @@ it('waits for an accepted turn when no invocation exists', async () => {
   });
   await act(async () => {});
   expect(JSON.stringify(renderer.toJSON())).toContain(
-    'Waiting for an accepted turn',
+    m.desktopWaitingForAnAcceptedTurn(),
   );
   await act(async () => renderer.unmount());
 });

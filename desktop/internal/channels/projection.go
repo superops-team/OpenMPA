@@ -4,7 +4,9 @@ import (
 	"bytes"
 	"encoding/base64"
 	"encoding/json"
-	"image/png"
+	"image"
+	_ "image/jpeg"
+	_ "image/png"
 	"net/url"
 	"strings"
 	"time"
@@ -97,7 +99,7 @@ func qrImage(v string) string {
 			if e != nil || len(raw) == 0 {
 				return ""
 			}
-			config, e := png.DecodeConfig(bytes.NewReader(raw))
+			config, _, e := image.DecodeConfig(bytes.NewReader(raw))
 			if e != nil || config.Width < 1 || config.Height < 1 || config.Width > 4096 || config.Height > 4096 {
 				return ""
 			}
@@ -118,7 +120,7 @@ func authorizedQR(loginURL, channel string) string {
 	host := strings.ToLower(u.Hostname())
 	allowedHost := false
 	if channel == "feishu" {
-		allowedHost = enum(host, "accounts.feishu.cn", "accounts.feishu-boe.cn", "accounts.feishu-pre.cn", "accounts.larksuite.com") != ""
+		allowedHost = enum(host, "accounts.feishu.cn", "accounts.feishu-boe.cn", "accounts.feishu-pre.cn", "accounts.larksuite.com", "open.feishu.cn", "open.larksuite.com") != ""
 	}
 	if channel == "dingtalk" {
 		allowedHost = host == "dingtalk.com" || strings.HasSuffix(host, ".dingtalk.com")
@@ -211,7 +213,9 @@ func projectBinding(v bindingWire, op, channel, domain, kind string) Binding {
 	}
 	if result.State == "waiting" || result.State == "registering" {
 		if v.LoginURL != "" {
-			result.QRCodeImage = authorizedQR(v.LoginURL, channel)
+			if generated := authorizedQR(v.LoginURL, channel); generated != "" {
+				result.QRCodeImage = generated
+			}
 		}
 		if result.QRCodeImage == "" {
 			result.LoginURL = ""

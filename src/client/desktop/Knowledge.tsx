@@ -1,3 +1,4 @@
+import { localized, useMessages, useMessageState } from './locale';
 import { useEffect, useRef, useState } from 'react';
 import { FileText, Plus, Search, Upload } from 'lucide-react';
 import { Knowledge } from './generated/mygo';
@@ -25,6 +26,8 @@ type PendingImport = {
     content?: string;
   };
 };
+const scopeRequired = localized((m) => m.desktopChooseARuntimeConversation());
+const itemRequired = localized((m) => m.desktopChooseAnItemForTheNewVersion());
 export function DesktopKnowledge({
   connection,
   sessions,
@@ -32,6 +35,7 @@ export function DesktopKnowledge({
   connection?: ConnectionVM;
   sessions: SessionVM[];
 }) {
+  const m = useMessages();
   const [sessionId, setSessionId] = useState('');
   const [items, setItems] = useState<Item[]>([]);
   const [selected, setSelected] = useState<Item>();
@@ -45,13 +49,27 @@ export function DesktopKnowledge({
   const [receipt, setReceipt] = useState<Receipt>();
   const [pending, setPending] = useState<PendingImport>();
   const [busy, setBusy] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useMessageState();
+  const statusLabel = (status: string) => {
+    const labels: Record<string, string> = {
+      received: m.knowledgeReceived(),
+      pending: m.pagePending(),
+      processing: m.knowledgeProcessing(),
+      ready: m.knowledgeReady(),
+      failed: m.desktopFailed(),
+      deleted: m.knowledgeDeleted(),
+      complete: m.pageCompleted(),
+      bounded: m.knowledgeBounded(),
+      partial: m.knowledgePartial(),
+    };
+    const key = status.toLowerCase();
+    return Object.hasOwn(labels, key) ? labels[key] : status;
+  };
   const generation = useRef(0);
   const pendingImports = useRef(new Map<string, PendingImport>());
   const scopeKey = `${connection?.epoch}:${sessionId}`;
   const scope = () => {
-    if (!connection || !sessionId)
-      throw new Error('Choose a Runtime conversation.');
+    if (!connection || !sessionId) throw scopeRequired;
     return { connectionEpoch: connection.epoch, sessionId };
   };
   const run = async (action: (current: () => boolean) => Promise<void>) => {
@@ -66,7 +84,11 @@ export function DesktopKnowledge({
         setError(
           error instanceof Error
             ? error.message
-            : 'Knowledge operation failed.',
+            : error === scopeRequired
+              ? scopeRequired
+              : error === itemRequired
+                ? itemRequired
+                : localized((m) => m.desktopKnowledgeOperationFailed()),
         );
     } finally {
       if (matches()) setBusy(false);
@@ -141,12 +163,12 @@ export function DesktopKnowledge({
   };
   const importKnowledge = (mode: 'text' | 'file', version: boolean) =>
     void run(async (matches) => {
-      if (pending)
-        throw new Error(
-          `Import ${pending.input.idempotencyKey} has an unknown outcome. Verify and recover that exact submission before creating a new import.`,
-        );
-      if (version && !selected)
-        throw new Error('Choose an item for the new version.');
+      if (pending) {
+        const key = pending.input.idempotencyKey;
+        setError(localized((m) => m.knowledgeImportUnknown(key)));
+        return;
+      }
+      if (version && !selected) throw itemRequired;
       const input: PendingImport = {
         mode,
         version,
@@ -166,21 +188,20 @@ export function DesktopKnowledge({
     <main className="main-content">
       <div className="page-heading">
         <div>
-          <span className="eyebrow">SESSION KNOWLEDGE</span>
-          <h1>Reference material, with provenance.</h1>
+          <span className="eyebrow">{m.desktopSESSIONKNOWLEDGE()}</span>
+          <h1>{m.desktopReferenceMaterialWithProvenance()}</h1>
           <p>
-            Imported knowledge belongs to the selected conversation. It does not
-            create executable sandbox attachments.
+            {m.desktopImportedKnowledgeBelongsToTheSelectedConversationItDoes()}
           </p>
         </div>
       </div>
       <label>
-        Conversation
+        {m.conversation()}
         <select
           value={sessionId}
           onChange={(event) => setSessionId(event.target.value)}
         >
-          <option value="">Choose a conversation</option>
+          <option value="">{m.chooseConversation()}</option>
           {sessions.map((session) => (
             <option key={session.id} value={session.id}>
               {session.title}
@@ -195,23 +216,29 @@ export function DesktopKnowledge({
       )}
       {!connection && (
         <div className="setup-card">
-          Connect a Runtime to access session knowledge.
+          {m.desktopConnectARuntimeToAccessSessionKnowledge()}
+        </div>
+      )}
+      {connection && !sessionId && (
+        <div className="setup-card">
+          {m.desktopChooseARuntimeConversation()}
         </div>
       )}
       {connection && sessionId && (
         <>
           <section className="task-detail-card desktop-form">
             <div className="desktop-inline">
-              <h2>Knowledge library</h2>
+              <h2>{m.desktopKnowledgeLibrary()}</h2>
               <button
                 className="text-button"
                 disabled={busy}
                 onClick={() => void run(load)}
               >
-                Refresh library
+                {m.desktopRefreshLibrary()}
               </button>
             </div>
             <div className="task-list">
+              {!items.length && !busy && <p>{m.knowledgeNoItems()}</p>}
               {items.map((item) => (
                 <button
                   className="task-row"
@@ -236,7 +263,8 @@ export function DesktopKnowledge({
                   <div>
                     <strong>{item.displayName}</strong>
                     <span>
-                      Version {item.version} · {item.status} · {item.sourceType}
+                      {m.desktopVersionInline()} {item.version} ·{' '}
+                      {statusLabel(item.status)} · {item.sourceType}
                     </span>
                   </div>
                 </button>
@@ -244,16 +272,16 @@ export function DesktopKnowledge({
             </div>
           </section>
           <section className="task-detail-card desktop-form">
-            <h2>Import material</h2>
+            <h2>{m.desktopImportMaterial()}</h2>
             <label>
-              Display name
+              {m.desktopDisplayName()}
               <input
                 value={name}
                 onChange={(event) => setName(event.target.value)}
               />
             </label>
             <label>
-              Text material
+              {m.desktopTextMaterial()}
               <textarea
                 value={text}
                 onChange={(event) => setText(event.target.value)}
@@ -266,7 +294,7 @@ export function DesktopKnowledge({
                 onClick={() => importKnowledge('text', false)}
               >
                 <Plus size={14} />
-                Import text
+                {m.desktopImportText()}
               </button>
               <button
                 className="text-button"
@@ -274,69 +302,62 @@ export function DesktopKnowledge({
                 onClick={() => importKnowledge('file', false)}
               >
                 <Upload size={14} />
-                Choose file & import
+                {m.desktopChooseFileImport()}
               </button>
               <button
                 className="text-button"
                 disabled={busy || !selected || !text.trim() || !!pending}
                 onClick={() => importKnowledge('text', true)}
               >
-                Add text version to selected item
+                {m.desktopAddTextVersionToSelectedItem()}
               </button>
               <button
                 className="text-button"
                 disabled={busy || !selected || !!pending}
                 onClick={() => importKnowledge('file', true)}
               >
-                Choose file for a new version
+                {m.desktopChooseFileForANewVersion()}
               </button>
             </div>
-            <p>
-              File selection is provided by the native host. An accepted import
-              must be checked before treating it as ready.
-            </p>
+            <p>{m.desktopFileSelectionIsProvidedByTheNativeHostAn()}</p>
             {pending && (
               <div className="document-save-notice">
                 <p>
-                  Pending import key {pending.input.idempotencyKey}. The
-                  original {pending.mode} submission is retained. Verify the
-                  library and import status before recovery.
+                  {m.desktopPendingImportKey()} {pending.input.idempotencyKey}
+                  {m.desktopTheOriginal()}{' '}
+                  {pending.mode === 'text'
+                    ? m.knowledgeText()
+                    : m.knowledgeFile()}{' '}
+                  {m.desktopSubmissionIsRetainedVerifyTheLibraryAndImportStatus()}
                 </p>
                 <button
                   disabled={busy}
                   onClick={() => {
-                    if (
-                      window.confirm(
-                        'Recover this exact import using its original idempotency key? For files, select the same original file.',
-                      )
-                    )
+                    if (window.confirm(m.knowledgeRecoverConfirm()))
                       void run((matches) => submit(pending, matches));
                   }}
                 >
-                  Recover original import
+                  {m.desktopRecoverOriginalImport()}
                 </button>
                 <button
                   disabled={busy}
                   onClick={() => {
-                    if (
-                      window.confirm(
-                        'Forget this unresolved import locally? This does not cancel a server import. Verify its outcome before importing the same material again.',
-                      )
-                    ) {
+                    if (window.confirm(m.knowledgeDiscardConfirm())) {
                       pendingImports.current.delete(scopeKey);
                       setPending(undefined);
                     }
                   }}
                 >
-                  Discard local recovery after review
+                  {m.desktopDiscardLocalRecoveryAfterReview()}
                 </button>
               </div>
             )}
             {receipt && (
               <div role="status">
                 <p>
-                  Import {receipt.importId} · Knowledge {receipt.knowledgeId} ·
-                  Version {receipt.version} · {receipt.status}
+                  {m.desktopImport()} {receipt.importId} {m.desktopKnowledge()}{' '}
+                  {receipt.knowledgeId} {m.desktopVersionInlineLabel()}{' '}
+                  {receipt.version} · {statusLabel(receipt.status)}
                 </p>
                 <button
                   className="text-button"
@@ -354,7 +375,7 @@ export function DesktopKnowledge({
                     })
                   }
                 >
-                  Read authoritative import status
+                  {m.desktopReadAuthoritativeImportStatus()}
                 </button>
               </div>
             )}
@@ -363,8 +384,10 @@ export function DesktopKnowledge({
             <section className="task-detail-card desktop-form">
               <h2>{selected.displayName}</h2>
               <p>
-                Knowledge {selected.knowledgeId} · Version {selected.version} ·{' '}
-                {selected.status} · {selected.chunkCount} chunks
+                {m.knowledge()} {selected.knowledgeId}{' '}
+                {m.desktopVersionInlineLabel()} {selected.version} ·{' '}
+                {statusLabel(selected.status)} · {selected.chunkCount}{' '}
+                {m.desktopChunks()}
               </p>
               {selected.safeMessage && (
                 <p role="status">{selected.safeMessage}</p>
@@ -387,7 +410,7 @@ export function DesktopKnowledge({
                     })
                   }
                 >
-                  Read selected content
+                  {m.desktopReadSelectedContent()}
                 </button>
                 <button
                   className="text-button"
@@ -395,7 +418,7 @@ export function DesktopKnowledge({
                   onClick={() => {
                     if (
                       window.confirm(
-                        `Delete knowledge ${selected.knowledgeId}?`,
+                        m.knowledgeDeleteConfirm(selected.knowledgeId),
                       )
                     )
                       void run(async (matches) => {
@@ -414,15 +437,16 @@ export function DesktopKnowledge({
                       });
                   }}
                 >
-                  Delete knowledge
+                  {m.desktopDeleteKnowledge()}
                 </button>
               </div>
               {content && (
                 <>
                   <pre className="desktop-content">{content.content}</pre>
                   <p>
-                    {content.completeness} · Citation {content.citation.ref} ·{' '}
-                    {content.visibleBytes} bytes visible
+                    {statusLabel(content.completeness)} {m.desktopCitation()}{' '}
+                    {content.citation.ref} · {content.visibleBytes}{' '}
+                    {m.desktopBytesVisible()}
                   </p>
                   {content.nextCursor && (
                     <button
@@ -447,7 +471,7 @@ export function DesktopKnowledge({
                         })
                       }
                     >
-                      Read more content
+                      {m.desktopReadMoreContent()}
                     </button>
                   )}
                 </>
@@ -476,9 +500,9 @@ export function DesktopKnowledge({
               });
             }}
           >
-            <h2>Search reference material</h2>
+            <h2>{m.desktopSearchReferenceMaterial()}</h2>
             <label>
-              Search query
+              {m.desktopSearchQuery()}
               <input
                 required
                 value={query}
@@ -486,14 +510,14 @@ export function DesktopKnowledge({
               />
             </label>
             <label>
-              Source types (optional, comma separated)
+              {m.desktopSourceTypesOptionalCommaSeparated()}
               <input
                 value={sources}
                 onChange={(event) => setSources(event.target.value)}
               />
             </label>
             <label>
-              Updated after (optional RFC3339)
+              {m.desktopUpdatedAfterOptionalRFC3339()}
               <input
                 value={updatedAfter}
                 onChange={(event) => setUpdatedAfter(event.target.value)}
@@ -501,25 +525,27 @@ export function DesktopKnowledge({
             </label>
             <p>
               {selected
-                ? `Searching selected knowledge ${selected.knowledgeId}`
-                : 'Searching this conversation knowledge'}
+                ? m.knowledgeSearchingItem(selected.knowledgeId)
+                : m.knowledgeSearchingConversation()}
             </p>
             <button className="primary" disabled={busy}>
               <Search size={14} />
-              Search
+              {m.desktopSearch()}
             </button>
             {search && (
               <>
                 <p>
-                  {search.completeness}
+                  {statusLabel(search.completeness)}
                   {search.boundedReason ? ` · ${search.boundedReason}` : ''}
                 </p>
+                {!search.items.length && <p>{m.knowledgeNoMatches()}</p>}
                 {search.items.map((item) => (
                   <article key={item.ref}>
                     <strong>{item.displayName}</strong>
                     <p>{item.content}</p>
                     <small>
-                      Citation {item.citation.ref} · Version {item.version}
+                      {m.desktopCitationInline()} {item.citation.ref}{' '}
+                      {m.desktopVersionInlineLabel()} {item.version}
                     </small>
                   </article>
                 ))}
@@ -554,7 +580,7 @@ export function DesktopKnowledge({
                       })
                     }
                   >
-                    Load more matches
+                    {m.desktopLoadMoreMatches()}
                   </button>
                 )}
               </>

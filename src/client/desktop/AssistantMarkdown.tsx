@@ -7,6 +7,7 @@ import {
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { CodeBlock, MarkdownTable } from '../ui';
+import { useMessages } from './locale';
 
 function safeHTTPURL(value: string | undefined) {
   if (!value) return undefined;
@@ -30,6 +31,7 @@ function textFromNode(value: ReactNode): string {
 }
 
 export function AssistantMarkdown({ text }: { text: string }) {
+  const m = useMessages();
   return (
     <div className="assistant-markdown">
       <ReactMarkdown
@@ -74,11 +76,23 @@ export function AssistantMarkdown({ text }: { text: string }) {
               <span>{children}</span>
             );
           },
-          table: ({ children }) => <MarkdownTable>{children}</MarkdownTable>,
+          table: ({ children }) => (
+            <MarkdownTable label={m.scrollableMarkdownTable()}>
+              {children}
+            </MarkdownTable>
+          ),
           pre: ({ children }) => {
             const child = Children.toArray(children)[0];
             return isValidElement<ComponentPropsWithoutRef<'code'>>(child) ? (
               <CodeBlock
+                labels={{
+                  plainText: m.plainTextCode(),
+                  wrap: m.wrapCode(),
+                  noWrap: m.noWrapCode(),
+                  copy: m.copyCode(),
+                  copied: m.codeCopied(),
+                  copyFailed: m.codeCopyFailed(),
+                }}
                 code={textFromNode(child.props.children).replace(/\n$/u, '')}
                 language={
                   /language-([^ ]+)/u.exec(child.props.className || '')?.[1] ||

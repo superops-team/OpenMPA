@@ -8,12 +8,12 @@ import type {
   DesktopSettingsSection,
   SessionVM,
 } from './models';
-import { reviewImages } from './image-review';
+import { ImageReviewError, reviewImages } from './image-review';
 import { RuntimeConfiguration } from './RuntimeConfiguration';
 import { useDesktopSettingsState } from './SettingsState';
 import { SettingsAccount } from './SettingsAccount';
 import { SettingsRuntime } from './SettingsRuntime';
-import { useMessages } from './locale';
+import { localized, renderMessage, useMessages } from './locale';
 export function DesktopSettings({
   services,
   connection,
@@ -121,10 +121,13 @@ export function DesktopSettings({
       )}
       {section === 'Authentication' && connection && (
         <section className="task-detail-card">
-          <h2>Business connection</h2>
+          <h2>{m.settingsBusinessConnection()}</h2>
           <p>
-            {connection.runtimeId} · {connection.status} · scope{' '}
-            {connection.scope}
+            {m.settingsConnectionSummary(
+              connection.runtimeId,
+              connection.status,
+              connection.scope,
+            )}
           </p>
           <button
             className="text-button"
@@ -135,7 +138,7 @@ export function DesktopSettings({
               )
             }
           >
-            Test connection
+            {m.testConnection()}
           </button>
           <form
             className="desktop-form"
@@ -156,14 +159,12 @@ export function DesktopSettings({
                 if (generation.current !== current) return;
                 onConnection(next);
                 setIdentity({ ...identity, applicationToken: '' });
-                setNotice(
-                  'Business identity saved. Credential inputs cleared.',
-                );
+                setNotice(localized((m) => m.settingsBusinessIdentitySaved()));
               });
             }}
           >
             <label>
-              Business user ID
+              {m.businessUserId()}
               <input
                 required
                 value={identity.userId}
@@ -183,12 +184,11 @@ export function DesktopSettings({
                   })
                 }
               />{' '}
-              This is a verified test deployment with JWT authentication
-              disabled
+              {m.verifiedTest()}
             </label>
             {(['applicationToken'] as const).map((slot) => (
               <label key={slot}>
-                Legacy JWT (for authenticated deployments)
+                {m.settingsLegacyJwtAuthenticated()}
                 <input
                   type="password"
                   autoComplete="off"
@@ -200,18 +200,15 @@ export function DesktopSettings({
               </label>
             ))}
             <button className="primary" disabled={busy}>
-              Save business identity
+              {m.saveBusinessIdentity()}
             </button>
           </form>
         </section>
       )}
       {section === 'Authentication' && connection && (
         <section className="task-detail-card">
-          <h2>Channel administrator credentials</h2>
-          <p>
-            Gateway credentials and channel management credentials occupy
-            separate host slots.
-          </p>
+          <h2>{m.settingsChannelAdministratorCredentials()}</h2>
+          <p>{m.settingsChannelCredentialsHint()}</p>
           <form
             className="desktop-form"
             onSubmit={(event) => {
@@ -227,27 +224,29 @@ export function DesktopSettings({
                 onConnection(next);
                 setChannelAuth({ ...channelAuth, secret: '' });
                 setNotice(
-                  'Channel authentication saved. Credential input cleared.',
+                  localized((m) => m.settingsChannelAuthenticationSaved()),
                 );
               });
             }}
           >
             <label>
-              Authentication mode
+              {m.channelAuthenticationMode()}
               <select
                 value={channelAuth.mode}
                 onChange={(event) =>
                   setChannelAuth({ mode: event.target.value, secret: '' })
                 }
               >
-                <option value="runtimeKey">Runtime channel key</option>
-                <option value="legacyJwt">Legacy JWT</option>
-                <option value="none">No administrator credential</option>
+                <option value="runtimeKey">
+                  {m.settingsRuntimeChannelKey()}
+                </option>
+                <option value="legacyJwt">{m.legacyJwt()}</option>
+                <option value="none">{m.channelUseRuntimeIdentity()}</option>
               </select>
             </label>
             {channelAuth.mode !== 'none' && (
               <label>
-                Channel credential
+                {m.channelCredential()}
                 <input
                   required
                   type="password"
@@ -263,7 +262,7 @@ export function DesktopSettings({
               </label>
             )}
             <button className="primary" disabled={busy}>
-              Save channel authentication
+              {m.saveChannelAuthentication()}
             </button>
           </form>
         </section>
@@ -272,16 +271,13 @@ export function DesktopSettings({
         (connection && session ? (
           <>
             <section className="task-detail-card desktop-form assistant-settings-launcher">
-              <h2>Assistant settings</h2>
-              <p>
-                Persistent instructions and selected skills apply to new turns.
-                They do not rewrite conversation history.
-              </p>
+              <h2>{m.settingsAssistantTitle()}</h2>
+              <p>{m.settingsAssistantPersistenceHint()}</p>
               <Button
                 variant="primary"
                 onClick={() => setAssistantSettingsOpen(true)}
               >
-                Open assistant settings
+                {m.settingsOpenAssistantSettings()}
               </Button>
             </section>
             {assistantSettingsOpen && (
@@ -290,7 +286,7 @@ export function DesktopSettings({
                 connection={connection}
                 session={session}
                 onSaved={() =>
-                  setNotice('Assistant conversation configuration saved.')
+                  setNotice(localized((m) => m.settingsAssistantSaved()))
                 }
                 onClose={() => setAssistantSettingsOpen(false)}
               />
@@ -299,18 +295,16 @@ export function DesktopSettings({
         ) : (
           <section className="task-detail-card">
             <div className="setup-card">
-              Select a Runtime conversation before editing assistant settings.
+              {m.settingsAssistantSelectConversation()}
             </div>
           </section>
         ))}
       {section === 'Theme' && (
         <section className="task-detail-card desktop-form">
-          <h2>Display theme</h2>
-          <p>
-            The theme applies to the desktop shell and conversation content.
-          </p>
+          <h2>{m.displayTheme()}</h2>
+          <p>{m.themeDescription()}</p>
           <fieldset className="desktop-segmented">
-            <legend>Theme</legend>
+            <legend>{m.theme()}</legend>
             {(['system', 'light', 'dark'] as const).map((option) => (
               <label key={option}>
                 <input
@@ -320,15 +314,15 @@ export function DesktopSettings({
                   onChange={() => {
                     setThemePreference(option);
                     onThemeChange?.(option);
-                    setNotice('Display theme updated.');
+                    setNotice(localized((m) => m.themeChanged()));
                   }}
                 />
                 <span>
                   {option === 'system'
-                    ? 'Follow system'
+                    ? m.followSystem()
                     : option === 'light'
-                      ? 'Light'
-                      : 'Dark'}
+                      ? m.light()
+                      : m.dark()}
                 </span>
               </label>
             ))}
@@ -337,17 +331,14 @@ export function DesktopSettings({
       )}
       {section === 'Language' && (
         <section className="task-detail-card desktop-form">
-          <h2>Display language</h2>
-          <p>
-            OpenMPA uses one language across the desktop UI, system menus and
-            content pages.
-          </p>
+          <h2>{m.displayLanguage()}</h2>
+          <p>{m.languageDescription()}</p>
           <fieldset className="desktop-segmented">
-            <legend>Language</legend>
+            <legend>{m.language()}</legend>
             {[
-              ['system', 'Follow system'],
-              ['zh-Hans', '中文'],
-              ['en', 'English'],
+              ['system', m.followSystem()],
+              ['zh-Hans', m.chinese()],
+              ['en', m.english()],
             ].map(([mode, label]) => (
               <label key={mode}>
                 <input
@@ -359,7 +350,7 @@ export function DesktopSettings({
                     void act(async () => {
                       const next = await services.localization!.set(mode);
                       setLanguageMode(next.mode);
-                      setNotice('Display language updated.');
+                      setNotice(localized((m) => m.languageChanged()));
                     })
                   }
                 />
@@ -379,7 +370,7 @@ export function DesktopSettings({
       )}
       {section === 'Deployment' && connection && (
         <section className="task-detail-card desktop-form">
-          <h2>Runtime and Worker Tool images</h2>
+          <h2>{m.runtimeWorkerImages()}</h2>
           <button
             className="text-button"
             disabled={busy || !services.deployment}
@@ -393,13 +384,9 @@ export function DesktopSettings({
               })
             }
           >
-            Refresh saved receipts
+            {m.settingsRefreshSavedReceipts()}
           </button>
-          <p>
-            Read the server-verified Tool binding, review exact resource IDs and
-            versions, then apply each update. Submission and deployment status
-            appear separately.
-          </p>
+          <p>{m.settingsImageReviewHint()}</p>
           <button
             className="text-button"
             disabled={busy || !services.deployment}
@@ -413,20 +400,21 @@ export function DesktopSettings({
               })
             }
           >
-            Read current images
+            {m.readCurrentImages()}
           </button>
-          {!services.deployment && (
-            <p>Image update capability is unavailable in this build.</p>
-          )}
+          {!services.deployment && <p>{m.settingsImageUpdateUnavailable()}</p>}
           {images && (
             <>
               <p>
-                Runtime {images.runtimeId} · version {images.runtimeVersion}
+                {m.settingsRuntimeImageVersion(
+                  images.runtimeId,
+                  images.runtimeVersion,
+                )}
                 <br />
-                Tool {images.toolId} · updated at {images.toolVersion}
+                {m.settingsToolImageVersion(images.toolId, images.toolVersion)}
               </p>
               <label>
-                Runtime image
+                {m.runtimeImage()}
                 <input
                   value={images.runtimeImage}
                   onChange={(event) => {
@@ -436,7 +424,7 @@ export function DesktopSettings({
                 />
               </label>
               <label>
-                Worker Tool image
+                {m.settingsWorkerToolImage()}
                 <input
                   value={images.toolImage}
                   onChange={(event) => {
@@ -453,24 +441,30 @@ export function DesktopSettings({
                     setReview(reviewImages(images));
                   } catch (error) {
                     setError(
-                      error instanceof Error ? error.message : 'Review failed.',
+                      error instanceof ImageReviewError
+                        ? localized((m) =>
+                            m.settingsReviewRequired(error.field),
+                          )
+                        : error instanceof Error
+                          ? error.message
+                          : localized((m) => m.settingsReviewFailed()),
                     );
                   }
                 }}
               >
-                Review exact targets
+                {m.settingsReviewExactTargets()}
               </button>
             </>
           )}
           {review && services.deployment && (
             <div className="document-save-notice">
-              <h3>Review updates</h3>
+              <h3>{m.settingsReviewUpdates()}</h3>
               <p>
-                Runtime ID: {review.runtimeId}
+                {m.settingsRuntimeId(review.runtimeId)}
                 <br />
-                Expected version: {review.expectedRuntimeVersion}
+                {m.settingsExpectedVersion(review.expectedRuntimeVersion)}
                 <br />
-                Image: {review.runtimeImage}
+                {m.settingsImageValue(review.runtimeImage)}
               </p>
               <button
                 disabled={busy}
@@ -480,19 +474,20 @@ export function DesktopSettings({
                       await services.deployment!.runtime(review);
                     setUpdate({
                       operationId,
-                      status: 'Submitted; effectiveness not yet verified',
                     });
                   })
                 }
               >
-                Apply Runtime image
+                {m.settingsApplyRuntimeImage()}
               </button>
               <p>
-                Tool ID: {review.toolId}
+                {m.settingsToolId(review.toolId)}
                 <br />
-                Worker configuration updated at: {review.expectedToolVersion}
+                {m.settingsWorkerConfigurationUpdated(
+                  review.expectedToolVersion,
+                )}
                 <br />
-                Image: {review.toolImage}
+                {m.settingsImageValue(review.toolImage)}
               </p>
               <button
                 disabled={busy}
@@ -502,22 +497,22 @@ export function DesktopSettings({
                       await services.deployment!.worker(review);
                     setUpdate({
                       operationId,
-                      status: 'Submitted; effectiveness not yet verified',
                     });
                   })
                 }
               >
-                Apply Worker image
+                {m.settingsApplyWorkerImage()}
               </button>
             </div>
           )}
           {updates.length > 0 && services.deployment && (
             <div>
-              <h3>Saved image update receipts</h3>
+              <h3>{m.settingsSavedImageReceipts()}</h3>
               {updates.map((operation) => (
                 <div key={operation.operationId}>
                   <p>
-                    {operation.operationId} · {operation.status}
+                    {operation.operationId} ·{' '}
+                    {renderMessage(operation.status, m)}
                   </p>
                   <button
                     className="text-button"
@@ -535,7 +530,7 @@ export function DesktopSettings({
                       })
                     }
                   >
-                    Read current status of this operation
+                    {m.settingsReadOperationStatus()}
                   </button>
                 </div>
               ))}
@@ -544,7 +539,12 @@ export function DesktopSettings({
           {update && services.deployment && (
             <div role="status">
               <p>
-                Operation {update.operationId} · {update.status}
+                {m.settingsOperationStatus(
+                  update.operationId,
+                  update.status === undefined
+                    ? m.settingsImageSubmitted()
+                    : renderMessage(update.status, m),
+                )}
               </p>
               <button
                 disabled={busy}
@@ -560,7 +560,7 @@ export function DesktopSettings({
                   )
                 }
               >
-                Read update status
+                {m.settingsReadUpdateStatus()}
               </button>
             </div>
           )}

@@ -2,7 +2,7 @@ import { Check, LogOut } from 'lucide-react';
 import type { ConnectionVM, DesktopServices } from './models';
 import { SettingsAccountForm } from './SettingsAccountForm';
 import type { useDesktopSettingsState } from './SettingsState';
-import { useMessages } from './locale';
+import { localized, useMessages } from './locale';
 
 type AccountSettingsState = ReturnType<typeof useDesktopSettingsState>;
 
@@ -35,13 +35,14 @@ export function SettingsAccount({
     loadVaultStatus,
     setRegion,
     setNotice,
+    setError,
   } = state;
   const unlockSavedCredentials = (
     <div className="desktop-vault-unlock">
       <p>
         {m.vaultAccount(
-          vaultStatus.accountId || 'unknown',
-          vaultStatus.region || 'unknown',
+          vaultStatus.accountId || m.settingsUnknown(),
+          vaultStatus.region || m.settingsUnknown(),
         )}
       </p>
       <label className="desktop-field">
@@ -77,7 +78,7 @@ export function SettingsAccount({
             setVaultUnlockPassphrase('');
             setPlatform(value);
             setRegion(value.region || 'cn-beijing');
-            setNotice('Signed in with saved credentials. Passphrase cleared.');
+            setNotice(localized((m) => m.settingsVaultSignedIn()));
             await loadVaultStatus();
           })
         }
@@ -93,7 +94,7 @@ export function SettingsAccount({
         {platform?.signedIn ? (
           <>
             <p>
-              <Check size={14} /> Account {platform.accountId}
+              <Check size={14} /> {m.settingsAccountId(platform.accountId)}
             </p>
             <button
               className="text-button"
@@ -108,7 +109,7 @@ export function SettingsAccount({
                 })
               }
             >
-              <LogOut size={14} /> Sign out
+              <LogOut size={14} /> {m.signOut()}
             </button>
           </>
         ) : vaultStatus.exists && services.platform.unlockVault ? (
@@ -127,13 +128,13 @@ export function SettingsAccount({
       <section className="task-detail-card desktop-form">
         <h2>{m.savedCredentials()}</h2>
         {!services.platform.vaultStatus ? (
-          <p>Encrypted credential storage is unavailable in this build.</p>
+          <p>{m.settingsVaultUnavailable()}</p>
         ) : vaultStatus.exists ? (
           <>
             <p>
               {m.vaultAccount(
-                vaultStatus.accountId || 'unknown',
-                vaultStatus.region || 'unknown',
+                vaultStatus.accountId || m.settingsUnknown(),
+                vaultStatus.region || m.settingsUnknown(),
               )}
               {vaultStatus.updatedAt ? ` · ${vaultStatus.updatedAt}` : ''}
             </p>
@@ -151,7 +152,7 @@ export function SettingsAccount({
                     setVaultConfirm('');
                     setVaultUnlockPassphrase('');
                     setVaultStatus({ exists: false });
-                    setNotice('Saved credentials removed.');
+                    setNotice(localized((m) => m.settingsVaultRemoved()));
                   });
               }}
             >
@@ -199,16 +200,16 @@ export function SettingsAccount({
               }
               onClick={() =>
                 void act(async () => {
-                  if (vaultPassphrase !== vaultConfirm)
-                    throw new Error('Passphrases do not match.');
+                  if (vaultPassphrase !== vaultConfirm) {
+                    setError(localized((m) => m.settingsPassphrasesMismatch()));
+                    return;
+                  }
                   const next =
                     await services.platform.saveVault!(vaultPassphrase);
                   setVaultPassphrase('');
                   setVaultConfirm('');
                   setVaultStatus(next);
-                  setNotice(
-                    'Saved credentials encrypted. Passphrase inputs cleared.',
-                  );
+                  setNotice(localized((m) => m.settingsVaultSaved()));
                 })
               }
             >

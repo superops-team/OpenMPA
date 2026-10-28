@@ -2,6 +2,7 @@ package channels
 
 import (
 	"context"
+	"encoding/json"
 	"net/http"
 	"net/url"
 	"strings"
@@ -115,21 +116,62 @@ func (s *Channels) Capabilities(r ScopeRequest) CapabilitiesResult {
 	return CapabilitiesResult{OK: true, Value: &v}
 }
 func (s *Channels) List(r ScopeRequest) ListResult {
-	var v AccountList
-	if e := s.call(r.ConnectionEpoch, http.MethodGet, base, nil, &v, false); e != nil {
+	var wire struct {
+		Channels *[]json.RawMessage `json:"channels"`
+	}
+	if e := s.call(r.ConnectionEpoch, http.MethodGet, base, nil, &wire, false); e != nil {
 		return ListResult{Error: e}
 	}
-	clean := make([]Account, 0, len(v.Channels))
-	for _, a := range v.Channels {
-		if validChannel(a.Channel) && validID(a.AppID, 256) {
-			clean = append(clean, cleanAccount(a))
-		} else {
-			return ListResult{Error: dto.Failure("invalidResponse", "runtimeIngress", "verifyOnly", 200)}
-		}
+	bad := func() ListResult {
+		return ListResult{Error: dto.Failure("invalidResponse", "runtimeIngress", "verifyOnly", 200)}
 	}
-	v.Channels = clean
-	v.ManagementScope = "runtimeAdmin"
-	return ListResult{OK: true, Value: &v}
+	if wire.Channels == nil {
+		return bad()
+	}
+	clean := make([]Account, 0, len(*wire.Channels))
+	seen := map[string]bool{}
+	for _, raw := range *wire.Channels {
+		var a Account
+		if json.Unmarshal(raw, &a) != nil || a.Channel == "" {
+			return bad()
+		}
+		// Other channel types do not invalidate the supported multi-Bot directory.
+		if !validChannel(a.Channel) {
+			continue
+		}
+		if a.AppID == "" {
+			var legacy struct {
+				Config struct {
+					AppID    string `json:"appId"`
+					ClientID string `json:"clientId"`
+					BotID    string `json:"botId"`
+				} `json:"config"`
+			}
+			if json.Unmarshal(raw, &legacy) != nil {
+				return bad()
+			}
+			switch a.Channel {
+			case "feishu":
+				a.AppID = legacy.Config.AppID
+			case "dingtalk":
+				a.AppID = legacy.Config.ClientID
+			case "wecom":
+				a.AppID = legacy.Config.BotID
+			}
+		}
+		// Historical non-Feishu records can omit their provider identifier. They are
+		// visible but cannot be passed to account-scoped mutations without an ID.
+		if (a.AppID != "" && !validID(a.AppID, 256)) || (a.Channel == "feishu" && a.AppID == "") {
+			return bad()
+		}
+		key := a.Channel + ":" + a.AppID
+		if seen[key] {
+			return bad()
+		}
+		seen[key] = true
+		clean = append(clean, cleanAccount(a))
+	}
+	return ListResult{OK: true, Value: &AccountList{Channels: clean, ManagementScope: "runtimeAdmin"}}
 }
 
 type feishuConfig struct {
@@ -478,11 +520,18 @@ func (s *Channels) Diagnostics(r AccountRequest) DiagnosticsResult {
 			return DiagnosticsResult{Error: e}
 		}
 	}
-	var v Diagnostics
-	if e := s.call(r.ConnectionEpoch, http.MethodGet, path, nil, &v, false); e != nil {
+	var wire struct {
+		Diagnostics
+		LastInboundAt  json.RawMessage `json:"lastInboundAt"`
+		LastDeliveryAt json.RawMessage `json:"lastDeliveryAt"`
+	}
+	if e := s.call(r.ConnectionEpoch, http.MethodGet, path, nil, &wire, false); e != nil {
 		return DiagnosticsResult{Error: e}
 	}
-	if v.Channel != r.Channel || v.AppID != r.AppID {
+	v := wire.Diagnostics
+	inbound, inboundOK := diagnosticTime(wire.LastInboundAt)
+	delivery, deliveryOK := diagnosticTime(wire.LastDeliveryAt)
+	if !inboundOK || !deliveryOK || v.Channel != r.Channel || v.AppID != r.AppID {
 		return DiagnosticsResult{Error: dto.Failure("invalidResponse", "runtimeIngress", "verifyOnly", 200)}
 	}
 	v.MissingConfiguration = allowed(v.MissingConfiguration, "private_endpoint", "runtime_api_key", "apig_instance_id")
@@ -492,8 +541,8 @@ func (s *Channels) Diagnostics(r AccountRequest) DiagnosticsResult {
 	}
 	v.GroupSessionScope = enum(v.GroupSessionScope, "group", "group_sender", "group_topic", "group_topic_sender")
 	v.GroupTrigger = enum(v.GroupTrigger, "mention", "platform_default")
-	v.LastInboundAt = timestamp(v.LastInboundAt)
-	v.LastDeliveryAt = timestamp(v.LastDeliveryAt)
+	v.LastInboundAt = inbound
+	v.LastDeliveryAt = delivery
 	return DiagnosticsResult{OK: true, Value: &v}
 }
 func (s *Channels) Remove(r AccountRequest) RemovalResult {

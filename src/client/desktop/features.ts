@@ -2,6 +2,7 @@ import { Channels, Connection, Deployment, Schedule } from './generated/mygo';
 import { unwrap } from './result';
 import { parseProfile } from './profile';
 import type { DesktopServices, ScheduleVM } from './models';
+import { localized, LocalizedError } from './locale';
 type NativeTask = NonNullable<
   Awaited<ReturnType<typeof Schedule.read>>['value']
 >['task'];
@@ -41,7 +42,9 @@ export function desktopFeatures(): Pick<
   const target = async (runtimeId: string) => {
     const state = unwrap(await Connection.status());
     if (!state.connected || state.runtimeId !== runtimeId)
-      throw new Error('Runtime changed. Read and review images again.');
+      throw new LocalizedError(
+        localized((m) => m.desktopRuntimeChangedReadAndReviewImagesAgain()),
+      );
     return state.connectionEpoch;
   };
   const describeOperation = (
@@ -49,7 +52,17 @@ export function desktopFeatures(): Pick<
       Awaited<ReturnType<typeof Deployment.readUpdate>>['value']
     >,
   ) =>
-    `${operation.accepted ? 'Accepted' : 'Not accepted'} · ${operation.state} · Runtime ready: ${operation.runtimeReady} · Business health verified: ${operation.businessHealthVerified} · Worker config updated: ${operation.workerConfigUpdated} · Existing sandboxes verified: ${operation.existingSandboxesVerified}. ${operation.message}`;
+    localized((m) =>
+      m.deploymentOperationSummary(
+        operation.accepted ? m.deploymentAccepted() : m.deploymentNotAccepted(),
+        operation.state,
+        operation.runtimeReady ? m.pageYes() : m.pageNo(),
+        operation.businessHealthVerified ? m.pageYes() : m.pageNo(),
+        operation.workerConfigUpdated ? m.pageYes() : m.pageNo(),
+        operation.existingSandboxesVerified ? m.pageYes() : m.pageNo(),
+        operation.message,
+      ),
+    );
   return {
     schedules: {
       deliveryTargets: async (connectionEpoch, channel, appId) =>
@@ -75,12 +88,16 @@ export function desktopFeatures(): Pick<
           all.push(...value.items);
           if (value.hasMore === false) break;
           if (value.hasMore === undefined)
-            throw new Error(
-              'The server did not provide authoritative scheduled-task pagination.',
+            throw new LocalizedError(
+              localized((m) =>
+                m.desktopTheServerDidNotProvideAuthoritativeScheduledTaskPagination(),
+              ),
             );
           const next = value.nextOffset;
           if (typeof next !== 'number' || next <= offset)
-            throw new Error('Scheduled-task pagination did not advance.');
+            throw new LocalizedError(
+              localized((m) => m.desktopScheduledTaskPaginationDidNotAdvance()),
+            );
           offset = next;
         }
         return all.map(taskVM);
@@ -109,12 +126,8 @@ export function desktopFeatures(): Pick<
             status: run.status,
             startedAt: run.startedAt ?? undefined,
             error: run.errorCode ?? undefined,
-            output: [
-              run.sessionId ? `Session ${run.sessionId}` : '',
-              run.invocationId ? `Invocation ${run.invocationId}` : '',
-            ]
-              .filter(Boolean)
-              .join(' · '),
+            sessionId: run.sessionId ?? undefined,
+            invocationId: run.invocationId ?? undefined,
           })),
         };
       },
@@ -133,12 +146,8 @@ export function desktopFeatures(): Pick<
             status: run.status,
             startedAt: run.startedAt ?? undefined,
             error: run.errorCode ?? undefined,
-            output: [
-              run.sessionId ? `Session ${run.sessionId}` : '',
-              run.invocationId ? `Invocation ${run.invocationId}` : '',
-            ]
-              .filter(Boolean)
-              .join(' · '),
+            sessionId: run.sessionId ?? undefined,
+            invocationId: run.invocationId ?? undefined,
           })),
         };
       },
@@ -158,8 +167,10 @@ export function desktopFeatures(): Pick<
           pendingCreate &&
           JSON.stringify(input) !== JSON.stringify(pendingCreate)
         )
-          throw new Error(
-            `Scheduled-task submission ${pendingCreate.clientToken} needs verification. Preserve its original form and token before starting another submission.`,
+          throw new LocalizedError(
+            localized((m) =>
+              m.schedulePendingSubmission(pendingCreate.clientToken),
+            ),
           );
         pendingCreates.set(connectionEpoch, input);
         try {
@@ -174,8 +185,10 @@ export function desktopFeatures(): Pick<
             error.retryDisposition === 'verifyOnly'
           )
             throw Object.assign(
-              new Error(
-                `Submission outcome unknown. Verify client token ${input.clientToken}; this exact form and token are retained for an explicit recovery.`,
+              new LocalizedError(
+                localized((m) =>
+                  m.scheduleSubmissionUnknown(input.clientToken),
+                ),
               ),
               error,
             );
@@ -227,12 +240,8 @@ export function desktopFeatures(): Pick<
             status: run.status,
             startedAt: run.startedAt ?? undefined,
             error: run.errorCode ?? undefined,
-            output: [
-              run.sessionId ? `Session ${run.sessionId}` : '',
-              run.invocationId ? `Invocation ${run.invocationId}` : '',
-            ]
-              .filter(Boolean)
-              .join(' · '),
+            sessionId: run.sessionId ?? undefined,
+            invocationId: run.invocationId ?? undefined,
           };
         } catch (error) {
           if (
@@ -242,8 +251,8 @@ export function desktopFeatures(): Pick<
             error.retryDisposition === 'verifyOnly'
           )
             throw Object.assign(
-              new Error(
-                `Trigger outcome unknown. Verify client token ${input.clientToken}. An explicit recovery reuses the same request.`,
+              new LocalizedError(
+                localized((m) => m.scheduleTriggerUnknown(input.clientToken)),
               ),
               error,
             );
@@ -259,11 +268,17 @@ export function desktopFeatures(): Pick<
       list: async (connectionEpoch) =>
         unwrap(await Channels.list({ connectionEpoch })).channels.map(
           (account) => ({
-            id: account.appId,
+            id: account.appId || account.channel,
+            domain:
+              account.channel === 'feishu'
+                ? account.config.domain || 'feishu'
+                : undefined,
+            bindingType: account.bindingType,
+            addressable: !!account.appId,
             type: account.channel,
             name: account.appName || account.config.robotName || account.appId,
             enabled: account.enabled,
-            status: account.bindingType || 'configured',
+            status: 'configured',
             ownerId: account.ownerUserId,
           }),
         ),
@@ -278,8 +293,10 @@ export function desktopFeatures(): Pick<
         );
       },
       templates: async () => {
-        throw new Error(
-          'The selected Runtime does not expose a template catalog. Read an authorized Bot profile to review its template.',
+        throw new LocalizedError(
+          localized((m) =>
+            m.desktopTheSelectedRuntimeDoesNotExposeATemplateCatalog(),
+          ),
         );
       },
       readProfile: async (connectionEpoch, channel) => {
@@ -307,7 +324,9 @@ export function desktopFeatures(): Pick<
       },
       saveProfile: async (connectionEpoch, channel, text) => {
         if (!channel.version)
-          throw new Error('Read the current profile before saving.');
+          throw new LocalizedError(
+            localized((m) => m.desktopReadTheCurrentProfileBeforeSaving()),
+          );
         unwrap(
           await Channels.saveProfile({
             connectionEpoch,
@@ -385,8 +404,10 @@ export function desktopFeatures(): Pick<
           value.runtimeVersion !== input.expectedRuntimeVersion ||
           value.connectionEpoch !== connectionEpoch
         )
-          throw new Error(
-            'Read and review the current Runtime images before applying.',
+          throw new LocalizedError(
+            localized((m) =>
+              m.desktopReadAndReviewTheCurrentRuntimeImagesBeforeApplying(),
+            ),
           );
         const operation = unwrap(
           await Deployment.updateRuntimeImage({
@@ -408,8 +429,10 @@ export function desktopFeatures(): Pick<
           value.workerUpdatedAt !== input.expectedToolVersion ||
           value.connectionEpoch !== connectionEpoch
         )
-          throw new Error(
-            'The Tool binding changed. Read and review images again.',
+          throw new LocalizedError(
+            localized((m) =>
+              m.desktopTheToolBindingChangedReadAndReviewImagesAgain(),
+            ),
           );
         const operation = unwrap(
           await Deployment.updateWorkerImage({

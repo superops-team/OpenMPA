@@ -38,22 +38,38 @@ async function copyText(value: string) {
 export function CodeBlock({
   code,
   language = 'text',
+  labels,
 }: {
   code: string;
   language?: string;
+  labels?: {
+    plainText: string;
+    wrap: string;
+    noWrap: string;
+    copy: string;
+    copied: string;
+    copyFailed: string;
+  };
 }) {
   const [wrapped, setWrapped] = useState(false);
   const [copyState, setCopyState] = useState<'idle' | 'copied' | 'failed'>(
     'idle',
   );
-  const label = languageNames[language.toLowerCase()] || language.toUpperCase();
+  const label =
+    language.toLowerCase() === 'text' && labels
+      ? labels.plainText
+      : languageNames[language.toLowerCase()] || language.toUpperCase();
   return (
     <section className="ui-code-block">
       <header>
         <span>{label}</span>
         <div>
           <IconButton
-            label={wrapped ? 'Do not wrap code lines' : 'Wrap code lines'}
+            label={
+              wrapped
+                ? (labels?.noWrap ?? 'Do not wrap code lines')
+                : (labels?.wrap ?? 'Wrap code lines')
+            }
             size="icon-sm"
             variant="ghost"
             aria-pressed={wrapped}
@@ -62,7 +78,7 @@ export function CodeBlock({
             <WrapText aria-hidden="true" />
           </IconButton>
           <IconButton
-            label="Copy code"
+            label={labels?.copy ?? 'Copy code'}
             size="icon-sm"
             variant="ghost"
             onClick={() => {
@@ -87,9 +103,9 @@ export function CodeBlock({
       </pre>
       <span className="sr-only" role="status">
         {copyState === 'copied'
-          ? 'Code copied'
+          ? (labels?.copied ?? 'Code copied')
           : copyState === 'failed'
-            ? 'Unable to copy code'
+            ? (labels?.copyFailed ?? 'Unable to copy code')
             : ''}
       </span>
     </section>

@@ -2,6 +2,9 @@ import { act, create, type ReactTestRenderer } from 'react-test-renderer';
 import { expect, it, vi } from 'vitest';
 import { DesktopChat } from '../src/client/desktop/Chat';
 import type { DesktopServices } from '../src/client/desktop/models';
+import { messages } from '../src/client/desktop/generated/locales';
+
+const m = messages;
 
 function deferred<T>() {
   let resolve!: (value: T) => void;
@@ -14,11 +17,11 @@ function deferred<T>() {
 }
 
 function sendButton(renderer: ReactTestRenderer) {
-  return renderer.root.findByProps({ 'aria-label': 'Send message' });
+  return renderer.root.findByProps({ 'aria-label': m.sendMessage() });
 }
 
 function stopButton(renderer: ReactTestRenderer) {
-  return renderer.root.findByProps({ 'aria-label': 'Stop current session' });
+  return renderer.root.findByProps({ 'aria-label': m.stopCurrentSession() });
 }
 
 it('consumes a subscription while the Go call is still pending and closes without abort on unmount', async () => {
@@ -75,7 +78,7 @@ it('consumes a subscription while the Go call is still pending and closes withou
   });
   await act(async () => {
     renderer.root
-      .findByProps({ 'aria-label': 'Message' })
+      .findByProps({ 'aria-label': m.message() })
       .props.onChange({ target: { value: 'Hello' } });
   });
   await act(async () => {
@@ -150,7 +153,7 @@ it('releases the next turn immediately after a terminal event even when the host
   });
   await act(async () =>
     renderer.root
-      .findByProps({ 'aria-label': 'Message' })
+      .findByProps({ 'aria-label': m.message() })
       .props.onChange({ target: { value: 'First' } }),
   );
   await act(async () => {
@@ -159,13 +162,13 @@ it('releases the next turn immediately after a terminal event even when the host
   });
   await act(async () =>
     renderer.root
-      .findByProps({ 'aria-label': 'Message' })
+      .findByProps({ 'aria-label': m.message() })
       .props.onChange({ target: { value: 'Next' } }),
   );
   expect(close).toHaveBeenCalled();
   expect(sendButton(renderer).props.disabled).toBe(false);
   expect(
-    renderer.root.findAllByProps({ 'aria-label': 'Stop current session' }),
+    renderer.root.findAllByProps({ 'aria-label': m.stopCurrentSession() }),
   ).toHaveLength(0);
   await act(async () => renderer.unmount());
   hostCall.resolve();
@@ -219,7 +222,7 @@ it('releases the next turn after a terminal error while preserving the failure m
   });
   await act(async () =>
     renderer.root
-      .findByProps({ 'aria-label': 'Message' })
+      .findByProps({ 'aria-label': m.message() })
       .props.onChange({ target: { value: 'First' } }),
   );
   await act(async () => {
@@ -228,7 +231,7 @@ it('releases the next turn after a terminal error while preserving the failure m
   });
   await act(async () =>
     renderer.root
-      .findByProps({ 'aria-label': 'Message' })
+      .findByProps({ 'aria-label': m.message() })
       .props.onChange({ target: { value: 'Next' } }),
   );
   expect(sendButton(renderer).props.disabled).toBe(false);
@@ -283,7 +286,7 @@ it('clears the composer and renders the user message before slow submit returns'
   });
   await act(async () => {
     renderer.root
-      .findByProps({ 'aria-label': 'Message' })
+      .findByProps({ 'aria-label': m.message() })
       .props.onChange({ target: { value: 'Hello while slow' } });
   });
   await act(async () => {
@@ -291,7 +294,7 @@ it('clears the composer and renders the user message before slow submit returns'
     await Promise.resolve();
   });
   expect(
-    renderer.root.findByProps({ 'aria-label': 'Message' }).props.value,
+    renderer.root.findByProps({ 'aria-label': m.message() }).props.value,
   ).toBe('');
   expect(JSON.stringify(renderer.toJSON())).toContain('Hello while slow');
   expect(sendButton(renderer).props.disabled).toBe(true);
@@ -334,11 +337,11 @@ it('prevents a submission while authoritative initial history is still loading',
   });
   await act(async () => {
     renderer.root
-      .findByProps({ 'aria-label': 'Message' })
+      .findByProps({ 'aria-label': m.message() })
       .props.onChange({ target: { value: 'Hello' } });
   });
   expect(
-    renderer.root.findByProps({ 'aria-label': 'Send message' }).props.disabled,
+    renderer.root.findByProps({ 'aria-label': m.sendMessage() }).props.disabled,
   ).toBe(true);
   await act(async () => {
     renderer.root.findByType('form').props.onSubmit({ preventDefault() {} });
@@ -348,7 +351,7 @@ it('prevents a submission while authoritative initial history is still loading',
     resolve({ session: { id: 's', title: 'Chat' }, messages: [] }),
   );
   expect(
-    renderer.root.findByProps({ 'aria-label': 'Send message' }).props.disabled,
+    renderer.root.findByProps({ 'aria-label': m.sendMessage() }).props.disabled,
   ).toBe(false);
   await act(async () => renderer.unmount());
 });
@@ -390,10 +393,10 @@ it('restores an unresolved original request after unmount and reopening and prev
     renderer = create(<DesktopChat {...props} />);
   });
   expect(
-    renderer.root.findByProps({ 'aria-label': 'Message' }).props.value,
+    renderer.root.findByProps({ 'aria-label': m.message() }).props.value,
   ).toBe('Original saved prompt');
   expect(
-    renderer.root.findByProps({ 'aria-label': 'Send message' }).props.disabled,
+    renderer.root.findByProps({ 'aria-label': m.sendMessage() }).props.disabled,
   ).toBe(true);
   await act(async () =>
     renderer.root.findByType('form').props.onSubmit({ preventDefault() {} }),
@@ -437,12 +440,12 @@ it('keeps running when the Runtime returns aborted false and reads authoritative
   await act(async () =>
     renderer.root
       .findAllByType('button')
-      .find((button) => button.props['aria-label'] === 'Stop current session')!
+      .find((button) => button.props['aria-label'] === m.stopCurrentSession())!
       .props.onClick(),
   );
   expect(read).toHaveBeenCalledTimes(2);
   expect(JSON.stringify(renderer.toJSON())).toContain(
-    'did not acknowledge an abort',
+    m.desktopTheRuntimeDidNotAcknowledgeAnAbortAndStill(),
   );
   expect(JSON.stringify(renderer.toJSON())).not.toContain('stop requested');
   await act(async () => renderer.unmount());
@@ -487,11 +490,11 @@ it('unlocks the composer after abort when authoritative history has already comp
   await act(async () => stopButton(renderer).props.onClick());
   await act(async () =>
     renderer.root
-      .findByProps({ 'aria-label': 'Message' })
+      .findByProps({ 'aria-label': m.message() })
       .props.onChange({ target: { value: 'Next' } }),
   );
   expect(sendButton(renderer).props.disabled).toBe(false);
-  expect(JSON.stringify(renderer.toJSON())).not.toContain('verifying outcome');
+  expect(JSON.stringify(renderer.toJSON())).not.toContain(m.verifyingOutcome());
   await act(async () => renderer.unmount());
 });
 it('treats an abort race as completed when the turn ended before abort acknowledgement', async () => {
@@ -540,12 +543,12 @@ it('treats an abort race as completed when the turn ended before abort acknowled
   await act(async () => stopButton(renderer).props.onClick());
   await act(async () =>
     renderer.root
-      .findByProps({ 'aria-label': 'Message' })
+      .findByProps({ 'aria-label': m.message() })
       .props.onChange({ target: { value: 'Next' } }),
   );
   expect(sendButton(renderer).props.disabled).toBe(false);
   expect(JSON.stringify(renderer.toJSON())).not.toContain(
-    'did not acknowledge an abort',
+    m.desktopTheRuntimeDidNotAcknowledgeAnAbortAndStill(),
   );
   await act(async () => renderer.unmount());
 });
@@ -604,13 +607,13 @@ it('waits for the terminal history after abort acknowledgement before unlocking'
     stopButton(renderer).props.onClick();
     await firstStopRead.promise;
   });
-  expect(JSON.stringify(renderer.toJSON())).toContain('verifying outcome');
+  expect(JSON.stringify(renderer.toJSON())).toContain(m.verifyingOutcome());
   await act(async () => {
     await new Promise((resolve) => setTimeout(resolve, 180));
   });
   await act(async () =>
     renderer.root
-      .findByProps({ 'aria-label': 'Message' })
+      .findByProps({ 'aria-label': m.message() })
       .props.onChange({ target: { value: 'Next' } }),
   );
   expect(sendButton(renderer).props.disabled).toBe(false);

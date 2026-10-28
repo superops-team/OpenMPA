@@ -41,6 +41,12 @@
   display: grid;
   gap: 14px;
 }
+.desktop-app .desktop-form[hidden] {
+  display: none;
+}
+.desktop-app .desktop-studio-page {
+  align-content: start;
+}
 .desktop-form label {
   display: grid;
   gap: 6px;

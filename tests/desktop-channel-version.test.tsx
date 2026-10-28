@@ -1,7 +1,10 @@
 import { act, create, type ReactTestRenderer } from 'react-test-renderer';
 import { beforeEach, expect, it, vi } from 'vitest';
+import { messages } from '../src/client/desktop/generated/locales';
 const channels = vi.hoisted(() => ({
   capabilities: vi.fn(),
+  diagnostics: vi.fn(),
+  permissions: vi.fn(),
   privateUser: vi.fn(),
   resetPrivateUser: vi.fn(),
   createBinding: vi.fn(),
@@ -10,11 +13,28 @@ vi.mock('../src/client/desktop/generated/mygo', () => ({ Channels: channels }));
 import { ChannelManagement } from '../src/client/desktop/ChannelManagement';
 beforeEach(() => {
   vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true);
+  channels.diagnostics.mockResolvedValue({
+    ok: true,
+    value: {
+      configured: true,
+      gatewayConfigured: true,
+      routeConfigured: true,
+      deliveryHealth: 'not_observed',
+      missingConfiguration: [],
+    },
+  });
+  channels.permissions.mockResolvedValue({
+    ok: true,
+    value: { permissions: [] },
+  });
   vi.stubGlobal('window', { confirm: () => true });
   channels.capabilities.mockResolvedValue({
     ok: true,
     value: {
       channels: ['feishu', 'dingtalk', 'wecom'],
+      serverSideBinding: true,
+      bindingReady: true,
+      credentialBindingChannels: ['feishu', 'dingtalk', 'wecom'],
       feishuDomains: ['feishu', 'lark'],
       botBindingTypes: ['shared', 'private'],
       managementScope: 'runtimeAdmin',
@@ -52,9 +72,15 @@ it('displays the safe QR image while the canonical binding state is waiting', as
       />,
     );
   });
+  await act(async () =>
+    renderer.root
+      .findAllByType('button')
+      .find((b) => b.children.includes(messages.channelAddAccountTitle()))!
+      .props.onClick(),
+  );
   await act(async () => {
     renderer.root
-      .findAllByType('form')[0]
+      .findByProps({ 'data-testid': 'channel-binding-form' })
       .props.onSubmit({ preventDefault() {} });
   });
   expect(
@@ -127,10 +153,10 @@ it('uses the reviewed private-user slot version and preserves it after a conflic
       .findAllByType('button')
       .find((button) => button.children.includes(text))!;
   await act(async () => {
-    button('Read private user and slot').props.onClick();
+    button(messages.desktopReadPrivateUserAndSlot()).props.onClick();
   });
   await act(async () => {
-    button('Reset private user').props.onClick();
+    button(messages.desktopResetPrivateUser()).props.onClick();
   });
   expect(channels.resetPrivateUser).toHaveBeenLastCalledWith({
     connectionEpoch: 7,

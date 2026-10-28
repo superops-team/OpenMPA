@@ -17,6 +17,7 @@ import (
 	"github.com/superops-team/OpenMPA/desktop/internal/schedule"
 	"github.com/superops-team/OpenMPA/desktop/internal/session"
 	"github.com/superops-team/OpenMPA/desktop/internal/trace"
+	"github.com/superops-team/OpenMPA/desktop/internal/usage"
 	"github.com/superops-team/OpenMPA/desktop/internal/vault"
 	"github.com/superops-team/OpenMPA/desktop/internal/workspace"
 	"log"
@@ -67,6 +68,7 @@ func main() {
 	deploymentService := deployment.NewWithLedger(cloud.DeploymentProvider{Client: cloudClient}, func() deployment.Target { return ipc.DeploymentTarget(platform) }, func() (string, error) { return dataPath("deployment-operations.json") })
 	configService := runtimeconfig.New(cloudClient, func() deployment.Target { return ipc.DeploymentTarget(platform) }, func() (string, error) { return dataPath("runtime-config-operations") })
 	mygo.BindAs("Connection", connectionService)
+	mygo.BindAs("Usage", usage.NewBridge(usage.New(conn, cloudClient, func() deployment.Target { return ipc.DeploymentTarget(platform) })))
 	sessions := session.NewWithCache(conn, pending, settingsDB)
 	mygo.BindAs("Session", sessions)
 	mygo.BindAs("Channels", channelService)

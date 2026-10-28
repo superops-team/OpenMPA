@@ -1,8 +1,11 @@
+import type { RuntimeModelCatalog } from './model-catalog';
 import type { Page } from '../../shared/page-types';
 import type { Space } from '../../shared/types';
 import type { SavePage } from '../editor/autosave';
 import type { PageDraft } from '../editor/autosave';
 import type { DisplayEvent, DisplayMessage } from './projection';
+import type { MessageText } from './locale';
+import type { ResourcesServices, CollaborationServices } from './studio-models';
 export type { Page, Space };
 export interface RuntimeVM {
   id: string;
@@ -98,6 +101,7 @@ export interface PlatformVM {
   signedIn: boolean;
   accountId: string;
   region: string;
+  epoch?: number;
 }
 export interface VaultStatusVM {
   exists: boolean;
@@ -166,9 +170,14 @@ export interface RunVM {
   startedAt?: string;
   error?: string;
   output?: string;
+  sessionId?: string;
+  invocationId?: string;
 }
 export interface ChannelVM {
   id: string;
+  domain?: string;
+  bindingType?: string;
+  addressable?: boolean;
   type: string;
   name: string;
   enabled: boolean;
@@ -211,6 +220,8 @@ export type DesktopSettingsSection =
   | 'Theme'
   | 'Language';
 export interface DesktopServices {
+  resources?: ResourcesServices;
+  collaboration?: CollaborationServices;
   host?: {
     theme?(): Promise<{ theme: string }>;
     onNavigation?(listener: (action: string, id?: string) => void): () => void;
@@ -324,6 +335,7 @@ export interface DesktopServices {
       lastEventId?: string,
     ): Stream;
     abort(epoch: number, id: string): Promise<boolean>;
+    models?(epoch: number): Promise<RuntimeModelCatalog>;
     executionConfig(epoch: number, id: string): Promise<ExecutionConfigVM>;
     ensureExecutionConfig?(
       epoch: number,
@@ -450,7 +462,7 @@ export interface DesktopServices {
   deployment?: {
     updates(
       runtimeId: string,
-    ): Promise<Array<{ operationId: string; status: string }>>;
+    ): Promise<Array<{ operationId: string; status: MessageText }>>;
     images(runtimeId: string): Promise<ImagesVM>;
     runtime(input: {
       runtimeId: string;
@@ -463,6 +475,6 @@ export interface DesktopServices {
       expectedToolVersion: string;
       toolImage: string;
     }): Promise<string>;
-    read(runtimeId: string, operationId: string): Promise<string>;
+    read(runtimeId: string, operationId: string): Promise<MessageText>;
   };
 }

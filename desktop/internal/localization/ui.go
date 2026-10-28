@@ -4,6 +4,8 @@ import "strings"
 
 var uiKeys = map[string]string{
 	"Settings": "settings", "Channels": "channels", "Scheduled tasks": "scheduledTasks", "Knowledge": "knowledge", "Working…": "working",
+	"Resources": "resources", "Collaboration": "collaboration",
+	"Skills, MCP & instructions": "skillsMcpInstructions", "A2A collaboration": "a2aCollaboration",
 	"Account": "account", "Runtime": "runtime", "Authentication": "authentication", "Deployment": "deployment", "Language": "language",
 	"Current Runtime": "currentRuntime", "Runtime for this account": "runtimeForThisAccount", "Default Runtime": "defaultRuntime", "Last selected Runtime": "lastSelectedRuntime", "Last Runtime connection restored.": "lastRuntimeRestored",
 	"Select Runtime": "selectRuntime",

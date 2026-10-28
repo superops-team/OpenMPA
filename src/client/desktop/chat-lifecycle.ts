@@ -1,3 +1,5 @@
+import type { MessageText } from './locale';
+import { errorMessage, localized } from './locale';
 import {
   useEffect,
   useRef,
@@ -49,10 +51,10 @@ export function useChatBootstrap({
   setCompletedInvocationIds: Dispatch<SetStateAction<string[]>>;
   setConfigVersion: Dispatch<SetStateAction<string | undefined>>;
   setPending: Dispatch<SetStateAction<PendingRunVM[]>>;
-  setDraft: Dispatch<SetStateAction<string>>;
+  setDraft: Dispatch<SetStateAction<string | undefined>>;
   setExecution: Dispatch<SetStateAction<string>>;
   setHistoryScope: Dispatch<SetStateAction<string>>;
-  setError: Dispatch<SetStateAction<string>>;
+  setError: Dispatch<SetStateAction<MessageText>>;
   setResumeInvocation: Dispatch<SetStateAction<string | undefined>>;
 }) {
   useEffect(() => {
@@ -96,7 +98,7 @@ export function useChatBootstrap({
         activeInvocation.current = invocation;
         setResumeInvocation(invocation);
         if (saved.length) {
-          setDraft(saved[0].content);
+          setDraft((previous) => previous ?? saved[0].content);
           setExecution('unknown');
         } else if (invocation) setExecution('running');
         else if (history.completedInvocations?.length)
@@ -108,9 +110,10 @@ export function useChatBootstrap({
       .catch((error: unknown) => {
         if (generation.current === current)
           setError(
-            error instanceof Error
-              ? error.message
-              : 'Could not load conversation.',
+            errorMessage(
+              error,
+              localized((m) => m.desktopCouldNotLoadConversation()),
+            ),
           );
       });
     return () => {

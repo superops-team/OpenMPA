@@ -77,6 +77,34 @@ export interface AgentListRequest {
   query?: string;
 }
 
+export interface AgentRegisterRequest {
+  connectionEpoch: number;
+  spaceId: string;
+  projectName: string;
+  source: string;
+  runtimeId: string;
+  networkType: string;
+  importType: string;
+  cardUrl: string;
+  agentCard: string;
+}
+
+export interface AgentsMDDocument {
+  content: string;
+  revision: number;
+}
+
+export interface AgentsMDResult {
+  ok: boolean;
+  value?: AgentsMDDocument;
+  error?: SafeError;
+}
+
+export interface AgentsMDSaveRequest {
+  connectionEpoch: number;
+  document: AgentsMDDocument;
+}
+
 export interface AssistantConfig {
   assistantId: string;
   agentsMd: string;
@@ -180,6 +208,7 @@ export interface Capabilities {
   feishuDomains: string[];
   botBindingTypes: string[];
   serverSideBinding: boolean;
+  bindingReady: boolean;
   groupPermissions: boolean;
   diagnostics: boolean;
   botProfiles: boolean;
@@ -269,6 +298,201 @@ export interface CloseStateResult {
   ok: boolean;
   value?: CloseState;
   error?: ServiceError;
+}
+
+export interface CollaborationAgent {
+  Id: string;
+  Name: string;
+  Description: string;
+  Status: string;
+  Alias: string | null;
+  AliasRevision: number;
+  AliasAvailable: boolean;
+  runtimeId: string;
+  card?: CollaborationCard;
+}
+
+export interface CollaborationAgentPage {
+  items: CollaborationAgent[];
+  total: number;
+  page: number;
+  page_size: number;
+}
+
+export interface CollaborationAgentPageResult {
+  ok: boolean;
+  value?: CollaborationAgentPage;
+  error?: SafeError;
+}
+
+export interface CollaborationAgentsRequest {
+  connectionEpoch: number;
+  spaceId: string;
+  page: number;
+}
+
+export interface CollaborationAlias {
+  alias: string | null;
+  revision: number;
+}
+
+export interface CollaborationAliasResult {
+  ok: boolean;
+  value?: CollaborationAlias;
+  error?: SafeError;
+}
+
+export interface CollaborationAliasSaveRequest {
+  connectionEpoch: number;
+  spaceId: string;
+  agentId: string;
+  alias: string | null;
+  revision: number;
+}
+
+export interface CollaborationBinding {
+  space_id: string | null;
+  space_name: string | null;
+  region: string;
+  revision: number;
+}
+
+export interface CollaborationBindingResult {
+  ok: boolean;
+  value?: CollaborationBinding;
+  error?: SafeError;
+}
+
+export interface CollaborationBindingSaveRequest {
+  connectionEpoch: number;
+  spaceId: string | null;
+  revision: number;
+}
+
+/** CollaborationCard deliberately excludes endpoints, credentials and tool schemas. */
+export interface CollaborationCard {
+  name: string;
+  description: string;
+  version: string;
+  protocolVersion: string;
+}
+
+export interface CollaborationDetail {
+  id: string;
+  name: string;
+  status: string;
+  source: string;
+  defaultVersion: string;
+  projectName: string;
+  runtimeId: string;
+  networkType: string;
+  importType: string;
+  serviceAddress: string;
+  skills: CollaborationSkill[];
+  skillsTruncated: boolean;
+}
+
+export interface CollaborationDetailResult {
+  ok: boolean;
+  value?: CollaborationDetail;
+  error?: SafeError;
+}
+
+export interface CollaborationEndpoint {
+  networkType: string;
+  url: string;
+}
+
+export interface CollaborationEndpoints {
+  runtimeId: string;
+  endpoints: CollaborationEndpoint[];
+}
+
+export interface CollaborationEndpointsResult {
+  ok: boolean;
+  value?: CollaborationEndpoints;
+  error?: SafeError;
+}
+
+export interface CollaborationMemberRequest {
+  connectionEpoch: number;
+  spaceId: string;
+  agentId: string;
+}
+
+export interface CollaborationMentionRequest {
+  connectionEpoch: number;
+  spaceId: string;
+  bindingRevision: number;
+  agentId: string;
+  aliasRevision: number;
+  page: number;
+  task: string;
+}
+
+export interface CollaborationPageRequest {
+  connectionEpoch: number;
+  page: number;
+}
+
+export interface CollaborationRuntimeList {
+  items: CollaborationRuntimeOption[];
+  nextToken: string;
+}
+
+export interface CollaborationRuntimeListRequest {
+  connectionEpoch: number;
+  nextToken: string;
+}
+
+export interface CollaborationRuntimeListResult {
+  ok: boolean;
+  value?: CollaborationRuntimeList;
+  error?: SafeError;
+}
+
+export interface CollaborationRuntimeOption {
+  id: string;
+  name: string;
+}
+
+export interface CollaborationRuntimeRequest {
+  connectionEpoch: number;
+  runtimeId: string;
+}
+
+export interface CollaborationSkill {
+  id: string;
+  name: string;
+  description: string;
+  tags: string[];
+  examples: string[];
+}
+
+export interface CollaborationSpace {
+  Id: string;
+  Name: string;
+  IsDefault: boolean;
+  IntentEnabled: boolean;
+  ProjectName: string;
+}
+
+export interface CollaborationSpacePage {
+  items: CollaborationSpace[];
+  total: number;
+  page: number;
+  page_size: number;
+}
+
+export interface CollaborationSpacePageResult {
+  ok: boolean;
+  value?: CollaborationSpacePage;
+  error?: SafeError;
+}
+
+export interface CollaborationSpaceRequest {
+  connectionEpoch: number;
+  spaceId: string;
 }
 
 /**
@@ -387,6 +611,16 @@ export interface CreateSpaceRequest {
   name: string;
 }
 
+export interface CreatedResource {
+  id: string;
+}
+
+export interface CreatedResourceResult {
+  ok: boolean;
+  value?: CreatedResource;
+  error?: SafeError;
+}
+
 export interface CurrentState {
   memoryRef?: string;
   operationRef?: string;
@@ -443,6 +677,16 @@ export interface DeleteValue {
 export interface DeletedPage {
   page: Page;
   deletedAt: number;
+}
+
+export interface DeletedResource {
+  deleted: boolean;
+}
+
+export interface DeletedResourceResult {
+  ok: boolean;
+  value?: DeletedResource;
+  error?: SafeError;
 }
 
 export interface Delivery {
@@ -809,6 +1053,116 @@ export interface ListSpacesRequest {}
 export interface LocalizationState {
   mode: string;
   locale: string;
+}
+
+export interface MCPDirectory {
+  sessionId: string;
+  servers: MCPServer[];
+}
+
+export interface MCPDirectoryResult {
+  ok: boolean;
+  value?: MCPDirectory;
+  error?: SafeError;
+}
+
+/** MCPServer excludes gateway URLs, credentials and tool input schemas. */
+export interface MCPServer {
+  id: string;
+  name: string;
+  alias: string;
+  description: string;
+  tools: MCPTool[];
+  toolsKnown: boolean;
+  source: string;
+  address: string;
+}
+
+export interface MCPTool {
+  name: string;
+  description: string;
+}
+
+/** MainProfile affects only Main. Shared AGENTS.md can also affect Worker. */
+export interface MainProfile {
+  agentsMd: string;
+  model: MainProfileModel | null;
+  skills: MainProfileSkill[];
+}
+
+export interface MainProfileModel {
+  id: string;
+}
+
+export interface MainProfileReadRequest {
+  connectionEpoch: number;
+  mpaInstanceId: string;
+}
+
+export interface MainProfileRecord {
+  mpaInstanceId: string;
+  revision: number;
+  digest: string;
+  etag: string;
+  profile: MainProfile;
+  sourceProfileId: string | null;
+  sourceProfileDigest: string | null;
+  updatedBy: string;
+  createdAt: string;
+}
+
+export interface MainProfileResult {
+  ok: boolean;
+  status: MainProfileStatus;
+  value?: MainProfileView;
+  error?: SafeError;
+}
+
+export interface MainProfileSaveRequest {
+  connectionEpoch: number;
+  snapshotId: string;
+  instructions: string;
+}
+
+export interface MainProfileSkill {
+  name: string;
+  version: string;
+  content: string;
+}
+
+export type MainProfileStatus = "configured" | "unsupported" | "unconfigured" | "unsupportedOrUnconfigured" | "unavailable";
+
+export interface MainProfileView {
+  status: MainProfileStatus;
+  record?: MainProfileRecord;
+  connectionEpoch: number;
+  snapshotId?: string;
+}
+
+export interface MentionResult {
+  ok: boolean;
+  value?: MentionText;
+  error?: SafeError;
+}
+
+export interface MentionText {
+  text: string;
+}
+
+/**
+ * ModelCatalog contains only models advertised by the currently bound Runtime.
+ * It never exposes the Agent Card's endpoints, credentials or unrelated metadata.
+ */
+export interface ModelCatalog {
+  models: string[];
+  defaultModel: string;
+  supported: boolean;
+}
+
+export interface ModelCatalogResult {
+  ok: boolean;
+  value?: ModelCatalog;
+  error?: SafeError;
 }
 
 export interface MovePageRequest {
@@ -1179,6 +1533,16 @@ export interface ResolvePendingRequest {
   confirm: boolean;
 }
 
+export interface ResourceIdentity {
+  mpaInstanceId: string;
+}
+
+export interface ResourceIdentityResult {
+  ok: boolean;
+  value?: ResourceIdentity;
+  error?: SafeError;
+}
+
 export interface ReviewReceipt {
   id: string;
   sourceRef: SourceRef;
@@ -1530,6 +1894,14 @@ export interface SignInRequest {
   region: string;
 }
 
+export interface Skill {
+  id: string;
+  version: string;
+  status: string;
+  name: string;
+  description: string;
+}
+
 export interface SkillCatalog {
   skills: AssistantSkill[];
 }
@@ -1543,6 +1915,85 @@ export interface SkillCatalogResult {
   ok: boolean;
   value?: SkillCatalog;
   error?: SafeError;
+}
+
+export interface SkillDeleteRequest {
+  connectionEpoch: number;
+  spaceId: string;
+  skillId: string;
+}
+
+export interface SkillListRequest {
+  connectionEpoch: number;
+  region: string;
+  spaceId: string;
+  pageNumber: number;
+  pageSize: number;
+}
+
+export interface SkillMounts {
+  spaces: SkillSpace[];
+}
+
+export interface SkillMountsResult {
+  ok: boolean;
+  value?: SkillMounts;
+  error?: SafeError;
+}
+
+export interface SkillPage {
+  spaceId: string;
+  region: string;
+  items: Skill[];
+  totalCount: number;
+  pageNumber: number;
+  pageSize: number;
+  hasMore: boolean;
+  serverPaginated: boolean;
+  connectionEpoch: number;
+  platformEpoch: number;
+}
+
+export interface SkillPageResult {
+  ok: boolean;
+  value?: SkillPage;
+  error?: SafeError;
+}
+
+export interface SkillSpace {
+  description: string;
+  projectName: string;
+  region: string;
+  id: string;
+  name: string;
+}
+
+export interface SkillUploadReadRequest {
+  connectionEpoch: number;
+  operationId: string;
+}
+
+export interface SkillUploadRequest {
+  connectionEpoch: number;
+  operationId: string;
+  spaceId: string;
+  filename: string;
+  archiveBase64: string;
+}
+
+export interface SkillUploadResult {
+  ok: boolean;
+  value?: SkillUploadView;
+  error?: SafeError;
+}
+
+export interface SkillUploadView {
+  operationId: string;
+  spaceId: string;
+  name: string;
+  skillId: string;
+  version: string;
+  status: string;
 }
 
 export interface Snapshot {
@@ -1575,6 +2026,13 @@ export interface Space {
   revision: number;
   createdAt: number;
   updatedAt: number;
+}
+
+export interface SpaceCreateRequest {
+  connectionEpoch: number;
+  name: string;
+  projectName: string;
+  intentEnabled: boolean;
 }
 
 export interface SpaceList {
@@ -1909,6 +2367,92 @@ export const Connection = {
   },
 } as const;
 
+/** Bridge owns the IPC surface; embedding Service would expose invalid bindings. */
+export const Usage = {
+  boundSkillSpaces(r: ScopeRequest): Promise<SkillMountsResult> {
+    return call("Usage.BoundSkillSpaces", r);
+  },
+  collaborationAgentDetail(r: CollaborationMemberRequest): Promise<CollaborationDetailResult> {
+    return call("Usage.CollaborationAgentDetail", r);
+  },
+  collaborationAgents(r: CollaborationAgentsRequest): Promise<CollaborationAgentPageResult> {
+    return call("Usage.CollaborationAgents", r);
+  },
+  collaborationBinding(r: ScopeRequest): Promise<CollaborationBindingResult> {
+    return call("Usage.CollaborationBinding", r);
+  },
+  /** CollaborationMention rechecks persisted metadata and returns text, never a run. */
+  collaborationMention(r: CollaborationMentionRequest): Promise<MentionResult> {
+    return call("Usage.CollaborationMention", r);
+  },
+  collaborationRuntimeEndpoints(r: CollaborationRuntimeRequest): Promise<CollaborationEndpointsResult> {
+    return call("Usage.CollaborationRuntimeEndpoints", r);
+  },
+  collaborationRuntimes(r: CollaborationRuntimeListRequest): Promise<CollaborationRuntimeListResult> {
+    return call("Usage.CollaborationRuntimes", r);
+  },
+  collaborationSpaces(r: CollaborationPageRequest): Promise<CollaborationSpacePageResult> {
+    return call("Usage.CollaborationSpaces", r);
+  },
+  createCollaborationSpace(r: SpaceCreateRequest): Promise<CreatedResourceResult> {
+    return call("Usage.CreateCollaborationSpace", r);
+  },
+  deleteCollaborationAgent(r: CollaborationMemberRequest): Promise<DeletedResourceResult> {
+    return call("Usage.DeleteCollaborationAgent", r);
+  },
+  deleteCollaborationSpace(r: CollaborationSpaceRequest): Promise<DeletedResourceResult> {
+    return call("Usage.DeleteCollaborationSpace", r);
+  },
+  deleteSkill(r: SkillDeleteRequest): Promise<DeletedResourceResult> {
+    return call("Usage.DeleteSkill", r);
+  },
+  discoverSkillSpaces(r: ScopeRequest): Promise<SkillMountsResult> {
+    return call("Usage.DiscoverSkillSpaces", r);
+  },
+  listMCPServers(r: SessionRequest): Promise<MCPDirectoryResult> {
+    return call("Usage.ListMCPServers", r);
+  },
+  listSkills(r: SkillListRequest): Promise<SkillPageResult> {
+    return call("Usage.ListSkills", r);
+  },
+  listWorkerSkills(r: SkillListRequest): Promise<SkillPageResult> {
+    return call("Usage.ListWorkerSkills", r);
+  },
+  readAgentsMD(r: ScopeRequest): Promise<AgentsMDResult> {
+    return call("Usage.ReadAgentsMD", r);
+  },
+  readMainProfile(r: MainProfileReadRequest): Promise<MainProfileResult> {
+    return call("Usage.ReadMainProfile", r);
+  },
+  readSkillUpload(r: SkillUploadReadRequest): Promise<SkillUploadResult> {
+    return call("Usage.ReadSkillUpload", r);
+  },
+  registerCollaborationAgent(r: AgentRegisterRequest): Promise<CreatedResourceResult> {
+    return call("Usage.RegisterCollaborationAgent", r);
+  },
+  resourceInstanceID(r: ScopeRequest): Promise<ResourceIdentityResult> {
+    return call("Usage.ResourceInstanceID", r);
+  },
+  saveAgentsMD(r: AgentsMDSaveRequest): Promise<AgentsMDResult> {
+    return call("Usage.SaveAgentsMD", r);
+  },
+  saveMainProfileInstructions(r: MainProfileSaveRequest): Promise<MainProfileResult> {
+    return call("Usage.SaveMainProfileInstructions", r);
+  },
+  setCollaborationAlias(r: CollaborationAliasSaveRequest): Promise<CollaborationAliasResult> {
+    return call("Usage.SetCollaborationAlias", r);
+  },
+  setCollaborationBinding(r: CollaborationBindingSaveRequest): Promise<CollaborationBindingResult> {
+    return call("Usage.SetCollaborationBinding", r);
+  },
+  uploadSkill(r: SkillUploadRequest): Promise<SkillUploadResult> {
+    return call("Usage.UploadSkill", r);
+  },
+  workerMCPServers(r: ScopeRequest): Promise<MCPDirectoryResult> {
+    return call("Usage.WorkerMCPServers", r);
+  },
+} as const;
+
 export const Session = {
   abort(r: SessionRequest): Promise<AbortReceiptResult> {
     return call("Session.Abort", r);
@@ -1942,6 +2486,13 @@ export const Session = {
   },
   list(r: ScopeRequest): Promise<SessionListResult> {
     return call("Session.List", r);
+  },
+  /**
+   * Models follows the same model-selection extension consumed by AgentKit Studio.
+   * A legacy Runtime without this capability has no client-invented fallback list.
+   */
+  models(r: ScopeRequest): Promise<ModelCatalogResult> {
+    return call("Session.Models", r);
   },
   pending(r: ScopeRequest): Promise<PendingListResult> {
     return call("Session.Pending", r);

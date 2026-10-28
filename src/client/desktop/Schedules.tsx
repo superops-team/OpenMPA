@@ -1,3 +1,9 @@
+import {
+  errorMessage,
+  localized,
+  useMessages,
+  useMessageState,
+} from './locale';
 import { useEffect, useRef, useState } from 'react';
 import { Clock3, Plus, Play, Pause, Trash2, RefreshCw } from 'lucide-react';
 import type {
@@ -16,6 +22,7 @@ export function DesktopSchedules({
   connection?: ConnectionVM;
   sessions: SessionVM[];
 }) {
+  const m = useMessages();
   const [tasks, setTasks] = useState<ScheduleVM[]>([]);
   const [detail, setDetail] = useState<{
     task: ScheduleVM;
@@ -29,8 +36,33 @@ export function DesktopSchedules({
     Array<{ appId?: string; targetId: string; name: string; channel: string }>
   >([]);
   const [query, setQuery] = useState('');
-  const [error, setError] = useState('');
-  const [notice, setNotice] = useState('');
+  const [error, setError] = useMessageState();
+  const [notice, setNotice] = useMessageState();
+  const typeLabels: Record<string, string> = {
+    Once: m.scheduleOnce(),
+    Interval: m.scheduleInterval(),
+    Daily: m.scheduleDaily(),
+    Weekly: m.scheduleWeekly(),
+    Monthly: m.scheduleMonthly(),
+    Cron: m.scheduleCron(),
+  };
+  const typeLabel = (type: string) =>
+    Object.hasOwn(typeLabels, type) ? typeLabels[type] : type;
+  const statusLabel = (status: string) => {
+    const labels: Record<string, string> = {
+      queued: m.scheduleQueued(),
+      pending: m.pagePending(),
+      running: m.desktopRunning(),
+      succeeded: m.desktopSuccess(),
+      success: m.desktopSuccess(),
+      completed: m.pageCompleted(),
+      failed: m.desktopFailed(),
+      cancelled: m.pageCancelled(),
+      canceled: m.pageCancelled(),
+    };
+    const key = status.toLowerCase();
+    return Object.hasOwn(labels, key) ? labels[key] : status;
+  };
   const [busy, setBusy] = useState(false);
   const epoch = useRef(connection?.epoch);
   epoch.current = connection?.epoch;
@@ -42,7 +74,9 @@ export function DesktopSchedules({
   useEffect(() => {
     void refresh().catch((error: unknown) =>
       setError(
-        error instanceof Error ? error.message : 'Could not load schedules.',
+        error instanceof Error
+          ? error.message
+          : localized((m) => m.desktopCouldNotLoadSchedules()),
       ),
     );
   }, [services, connection?.epoch]);
@@ -54,7 +88,10 @@ export function DesktopSchedules({
       await refresh();
     } catch (error) {
       setError(
-        error instanceof Error ? error.message : 'Schedule operation failed.',
+        errorMessage(
+          error,
+          localized((m) => m.desktopScheduleOperationFailed()),
+        ),
       );
     } finally {
       setBusy(false);
@@ -64,12 +101,9 @@ export function DesktopSchedules({
     <main className="main-content">
       <div className="page-heading">
         <div>
-          <span className="eyebrow">YOUR WORKSPACE</span>
-          <h1>A little follow-through.</h1>
-          <p>
-            Scheduled tasks execute on the Runtime and continue when this app is
-            closed.
-          </p>
+          <span className="eyebrow">{m.desktopYOURWORKSPACE()}</span>
+          <h1>{m.desktopALittleFollowThrough()}</h1>
+          <p>{m.desktopScheduledTasksExecuteOnTheRuntimeAndContinueWhen()}</p>
         </div>
         <button
           className="primary"
@@ -87,7 +121,7 @@ export function DesktopSchedules({
             })
           }
         >
-          <Plus size={15} /> New scheduled task
+          <Plus size={15} /> {m.desktopNewScheduledTask()}
         </button>
       </div>
       {error && (
@@ -103,17 +137,14 @@ export function DesktopSchedules({
       {!services.schedules || !connection ? (
         <div className="setup-card">
           <Clock3 size={24} />
-          <p>
-            Connect a Runtime with a verified scheduled-task identity to manage
-            server schedules.
-          </p>
+          <p>{m.desktopConnectARuntimeWithAVerifiedScheduledTaskIdentity()}</p>
         </div>
       ) : (
         <>
           <label className="search-box">
             <input
-              aria-label="Search tasks"
-              placeholder="Find a task…"
+              aria-label={m.desktopSearchTasks()}
+              placeholder={m.scheduleFindTask()}
               value={query}
               onChange={(event) => setQuery(event.target.value)}
             />
@@ -143,8 +174,8 @@ export function DesktopSchedules({
                   <div>
                     <strong>{task.name || task.prompt}</strong>
                     <span>
-                      {task.enabled ? 'Enabled' : 'Disabled'} ·{' '}
-                      {task.schedule.type}{' '}
+                      {task.enabled ? m.pageEnabled() : m.pageDisabled()} ·{' '}
+                      {typeLabel(task.schedule.type)}{' '}
                       {task.schedule.cronExpression ||
                         task.schedule.time ||
                         task.schedule.runAt ||
@@ -158,10 +189,21 @@ export function DesktopSchedules({
           {!tasks.length && (
             <div className="large-empty">
               <Clock3 size={32} />
-              <h2>Let a thought come back around.</h2>
-              <p>Create a server schedule for this Runtime.</p>
+              <h2>{m.desktopLetAThoughtComeBackAround()}</h2>
+              <p>{m.desktopCreateAServerScheduleForThisRuntime()}</p>
             </div>
           )}
+          {!!tasks.length &&
+            !tasks.some((task) =>
+              `${task.name} ${task.prompt}`
+                .toLowerCase()
+                .includes(query.toLowerCase()),
+            ) && (
+              <div className="large-empty">
+                <h2>{m.scheduleNoMatches()}</h2>
+                <p>{m.tryDifferentSearch()}</p>
+              </div>
+            )}
         </>
       )}
       {detail && connection && services.schedules && (
@@ -169,17 +211,17 @@ export function DesktopSchedules({
           <h2>{detail.task.name}</h2>
           <p>{detail.task.prompt}</p>
           <p>
-            {detail.task.schedule.type}{' '}
+            {typeLabel(detail.task.schedule.type)}{' '}
             {detail.task.schedule.cronExpression ||
               detail.task.schedule.time ||
               detail.task.schedule.runAt ||
               detail.task.schedule.intervalSeconds}{' '}
-            · {detail.task.timezone} · Next:{' '}
-            {detail.task.nextRun ?? 'Unavailable'}
+            · {detail.task.timezone} {m.desktopNext()}{' '}
+            {detail.task.nextRun ?? m.valueUnavailable()}
           </p>
           <div className="task-controls">
             <button disabled={busy} onClick={() => setDraft(detail.task)}>
-              Edit
+              {m.desktopEdit()}
             </button>
             <button
               disabled={busy}
@@ -195,7 +237,7 @@ export function DesktopSchedules({
               }
             >
               {detail.task.enabled ? <Pause size={14} /> : <Play size={14} />}
-              {detail.task.enabled ? 'Disable schedule' : 'Enable schedule'}
+              {detail.task.enabled ? m.scheduleDisable() : m.scheduleEnable()}
             </button>
             <button
               disabled={busy}
@@ -220,13 +262,13 @@ export function DesktopSchedules({
                         : previous,
                     );
                     setNotice(
-                      `Run ${run.id} accepted with server status ${run.status}. Refresh history to verify completion.`,
+                      localized((m) => m.runAcceptedNotice(run.id, run.status)),
                     );
                   }
                 })
               }
             >
-              <Play size={14} /> Run now
+              <Play size={14} /> {m.desktopRunNow()}
             </button>
             <button
               disabled={busy}
@@ -240,12 +282,12 @@ export function DesktopSchedules({
                 })
               }
             >
-              <RefreshCw size={14} /> Refresh history
+              <RefreshCw size={14} /> {m.desktopRefreshHistory()}
             </button>
             <button
               disabled={busy}
               onClick={() => {
-                if (window.confirm(`Delete scheduled task ${detail.task.id}?`))
+                if (window.confirm(m.scheduleDeleteConfirm(detail.task.id)))
                   void action(async () => {
                     await services.schedules!.remove(
                       connection.epoch,
@@ -255,16 +297,16 @@ export function DesktopSchedules({
                   });
               }}
             >
-              <Trash2 size={14} /> Delete
+              <Trash2 size={14} /> {m.delete()}
             </button>
           </div>
           <p>
             {detail.count === undefined
-              ? 'Authoritative run count unavailable.'
+              ? m.scheduleCountUnavailable()
               : `${detail.count} runs`}
           </p>
           <p>
-            {detail.runs.length} runs shown
+            {detail.runs.length} {m.desktopRunsShown()}
             {detail.hasMore === undefined
               ? ' · History pagination metadata unavailable'
               : detail.hasMore
@@ -291,13 +333,23 @@ export function DesktopSchedules({
                 })
               }
             >
-              Load more history
+              {m.desktopLoadMoreHistory()}
             </button>
           )}
           {detail.runs.map((run) => (
             <article className="task-event" key={run.id}>
-              <strong>{run.status}</strong> · {run.startedAt}
-              <p>{run.output}</p>
+              <strong>{statusLabel(run.status)}</strong> · {run.startedAt}
+              <p>
+                {[
+                  run.sessionId ? m.runSessionLabel(run.sessionId) : '',
+                  run.invocationId
+                    ? m.runInvocationLabel(run.invocationId)
+                    : '',
+                  run.output || '',
+                ]
+                  .filter(Boolean)
+                  .join(' · ')}
+              </p>
               {run.error && <p role="alert">{run.error}</p>}
             </article>
           ))}
@@ -317,9 +369,9 @@ export function DesktopSchedules({
             });
           }}
         >
-          <h2>{draft.id ? 'Edit scheduled task' : 'New scheduled task'}</h2>
+          <h2>{draft.id ? m.scheduleEdit() : m.desktopNewScheduledTask()}</h2>
           <label>
-            Name
+            {m.desktopName()}
             <input
               required
               value={draft.name}
@@ -329,7 +381,7 @@ export function DesktopSchedules({
             />
           </label>
           <label>
-            Agent ID (optional)
+            {m.desktopAgentIDOptional()}
             <input
               value={draft.agentId}
               onChange={(event) =>
@@ -338,7 +390,7 @@ export function DesktopSchedules({
             />
           </label>
           <label>
-            Prompt
+            {m.desktopPrompt()}
             <textarea
               required
               value={draft.prompt}
@@ -348,7 +400,7 @@ export function DesktopSchedules({
             />
           </label>
           <label>
-            Schedule type
+            {m.desktopScheduleType()}
             <select
               value={draft.schedule.type}
               onChange={(event) =>
@@ -357,14 +409,16 @@ export function DesktopSchedules({
             >
               {['Once', 'Interval', 'Daily', 'Weekly', 'Monthly', 'Cron'].map(
                 (type) => (
-                  <option key={type}>{type}</option>
+                  <option key={type} value={type}>
+                    {typeLabels[type]}
+                  </option>
                 ),
               )}
             </select>
           </label>
           {draft.schedule.type === 'Cron' && (
             <label>
-              Cron expression
+              {m.desktopCronExpression()}
               <input
                 required
                 placeholder="0 9 * * *"
@@ -383,7 +437,7 @@ export function DesktopSchedules({
           )}
           {draft.schedule.type === 'Once' && (
             <label>
-              Run at (RFC3339)
+              {m.desktopRunAtRFC3339()}
               <input
                 required
                 placeholder="2026-10-26T09:00:00+08:00"
@@ -399,7 +453,7 @@ export function DesktopSchedules({
           )}
           {draft.schedule.type === 'Interval' && (
             <label>
-              Interval seconds
+              {m.desktopIntervalSeconds()}
               <input
                 required
                 type="number"
@@ -420,7 +474,7 @@ export function DesktopSchedules({
           )}
           {['Daily', 'Weekly', 'Monthly'].includes(draft.schedule.type) && (
             <label>
-              Time
+              {m.scheduleTime()}
               <input
                 required
                 type="time"
@@ -436,7 +490,7 @@ export function DesktopSchedules({
           )}
           {draft.schedule.type === 'Weekly' && (
             <label>
-              Weekdays (1 Monday through 7 Sunday)
+              {m.desktopWeekdays1MondayThrough7Sunday()}
               <input
                 required
                 value={draft.schedule.weekdays?.join(',') || ''}
@@ -454,7 +508,7 @@ export function DesktopSchedules({
           )}
           {draft.schedule.type === 'Monthly' && (
             <label>
-              Month days (1 through 31)
+              {m.desktopMonthDays1Through31()}
               <input
                 required
                 value={draft.schedule.monthDays?.join(',') || ''}
@@ -471,7 +525,7 @@ export function DesktopSchedules({
             </label>
           )}
           <label>
-            Time zone
+            {m.desktopTimeZone()}
             <input
               required
               value={draft.timezone}
@@ -481,7 +535,7 @@ export function DesktopSchedules({
             />
           </label>
           <label>
-            Delivery channel
+            {m.desktopDeliveryChannel()}
             <select
               value={draft.delivery?.channel || 'Web'}
               onChange={(event) =>
@@ -495,14 +549,14 @@ export function DesktopSchedules({
                 })
               }
             >
-              <option>Web</option>
-              <option>Feishu</option>
+              <option value="Web">{m.desktopWeb()}</option>
+              <option value="Feishu">{m.desktopFeishu()}</option>
             </select>
           </label>
           {draft.delivery?.channel === 'Feishu' && (
             <>
               <label>
-                Feishu app ID
+                {m.desktopFeishuAppID()}
                 <input
                   value={draft.delivery.appId || ''}
                   onChange={(event) =>
@@ -531,10 +585,10 @@ export function DesktopSchedules({
                   })
                 }
               >
-                Read permitted delivery targets
+                {m.desktopReadPermittedDeliveryTargets()}
               </button>
               <label>
-                Delivery target
+                {m.desktopDeliveryTarget()}
                 <select
                   required
                   value={draft.delivery.targetId || ''}
@@ -548,7 +602,7 @@ export function DesktopSchedules({
                     })
                   }
                 >
-                  <option value="">Choose a permitted group</option>
+                  <option value="">{m.desktopChooseAPermittedGroup()}</option>
                   {targets.map((target) => (
                     <option
                       key={`${target.appId}:${target.targetId}`}
@@ -562,14 +616,14 @@ export function DesktopSchedules({
             </>
           )}
           <button className="primary" disabled={busy}>
-            Save schedule
+            {m.desktopSaveSchedule()}
           </button>
           <button
             type="button"
             className="text-button"
             onClick={() => setDraft(undefined)}
           >
-            Cancel
+            {m.cancel()}
           </button>
         </form>
       )}

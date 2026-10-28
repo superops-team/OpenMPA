@@ -1,5 +1,13 @@
+import {
+  errorMessage,
+  localized,
+  useMessages,
+  useMessageState,
+} from './locale';
 import { useEffect, useRef, useState } from 'react';
 import { MessageCircle, RefreshCw } from 'lucide-react';
+import { ModalDialog } from '../ui/ModalDialog';
+import './channel-page.css';
 import { ChannelManagement } from './ChannelManagement';
 import type { ChannelVM, ConnectionVM, DesktopServices } from './models';
 export function DesktopChannels({
@@ -11,104 +19,165 @@ export function DesktopChannels({
   connection?: ConnectionVM;
   sessions: import('./models').SessionVM[];
 }) {
+  const m = useMessages();
   const [channels, setChannels] = useState<ChannelVM[]>([]);
-  const [templates, setTemplates] = useState<string[]>([]);
+  const [revision, setRevision] = useState(0);
+  const [diagnostics, setDiagnostics] = useState<{
+    accountId: string;
+    value: string;
+  }>();
   const [edit, setEdit] = useState<{ channel: ChannelVM; profile: string }>();
   const [configDraft, setConfigDraft] = useState<{
     channel: ChannelVM;
     secret: string;
   }>();
-  const [error, setError] = useState('');
+  const [error, setError] = useMessageState();
+  const [loading, setLoading] = useState(false);
+  const [loaded, setLoaded] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const reading = useRef(0);
+  const writing = useRef(false);
   const epoch = useRef(connection?.epoch);
   epoch.current = connection?.epoch;
   const load = async () => {
     if (!services.channels || !connection) return;
     const current = connection.epoch;
-    const value = await services.channels.list(current);
-    if (epoch.current === current) setChannels(value);
+    const id = ++reading.current;
+    setLoading(true);
+    try {
+      const value = await services.channels.list(current);
+      if (epoch.current === current && id === reading.current) {
+        setChannels(value);
+        setLoaded(true);
+        setRevision((value) => value + 1);
+      }
+    } catch (error) {
+      if (epoch.current === current && id === reading.current) setLoaded(false);
+      throw error;
+    } finally {
+      if (epoch.current === current && id === reading.current)
+        setLoading(false);
+    }
   };
   useEffect(() => {
-    void load().catch((error: unknown) =>
-      setError(
-        error instanceof Error ? error.message : 'Could not read channels.',
-      ),
+    setChannels([]);
+    setDiagnostics(undefined);
+    setLoaded(false);
+    setEdit(undefined);
+    setConfigDraft(undefined);
+    setError('');
+    const current = connection?.epoch;
+    void load().catch(
+      (error: unknown) =>
+        epoch.current === current &&
+        setError(
+          errorMessage(
+            error,
+            localized((m) => m.desktopCouldNotReadChannels()),
+          ),
+        ),
     );
+    return () => {
+      reading.current++;
+    };
   }, [services, connection?.epoch]);
   const run = async (action: () => Promise<void>) => {
+    if (writing.current) return;
+    const current = epoch.current;
+    writing.current = true;
+    setBusy(true);
+    setError('');
     try {
       await action();
-      await load();
+      if (epoch.current === current) await load();
     } catch (error) {
-      setError(
-        error instanceof Error ? error.message : 'Channel action failed.',
-      );
+      if (epoch.current === current)
+        setError(
+          errorMessage(
+            error,
+            localized((m) => m.desktopChannelActionFailed()),
+          ),
+        );
+    } finally {
+      writing.current = false;
+      if (epoch.current === current) setBusy(false);
     }
   };
   return (
-    <main className="main-content">
-      <div className="page-heading">
+    <main className="main-content channel-page">
+      <header className="page-heading">
         <div>
-          <span className="eyebrow">CONNECTIONS</span>
-          <h1>Channels and templates.</h1>
-          <p>
-            Channel management uses the Runtime administrator identity;
-            conversation access remains independently authorized.
-          </p>
+          <h1>{m.channelPageTitle()}</h1>
+          <p>{m.channelPageDescription()}</p>
         </div>
-        <button className="text-button" onClick={() => void run(load)}>
-          <RefreshCw size={15} /> Refresh
+        <button
+          type="button"
+          className="channel-button"
+          disabled={busy || loading}
+          onClick={() => void run(async () => {})}
+        >
+          <RefreshCw size={16} aria-hidden="true" />
+          {m.desktopRefresh()}
         </button>
-      </div>
+      </header>
       {error && (
-        <div role="alert" className="error-banner">
+        <p role="alert" className="channel-inline-error">
           {error}
-        </div>
+        </p>
       )}
       {!services.channels || !connection ? (
-        <div className="setup-card">
-          <MessageCircle size={24} />
+        <div className="channel-empty">
+          <MessageCircle size={28} aria-hidden="true" />
           <p>
-            Connect a Runtime with channel-management credentials to view
-            accounts and templates.
+            {m.desktopConnectARuntimeWithChannelManagementCredentialsToView()}
           </p>
         </div>
       ) : (
-        <>
-          <div className="memory-grid">
-            {channels.map((channel) => (
-              <article className="memory-card" key={channel.id}>
-                <h2>{channel.name || channel.id}</h2>
-                <p>
-                  {channel.type} · {channel.status} ·{' '}
-                  {channel.enabled ? 'Enabled' : 'Disabled'}
+        <ChannelManagement
+          key={connection.epoch}
+          connection={connection}
+          accounts={channels}
+          sessions={sessions}
+          onChanged={load}
+          loading={loading}
+          loaded={loaded}
+          externalBusy={busy}
+          revision={revision}
+          onToggleAccount={(account) =>
+            void run(() =>
+              services.channels!.enable(
+                connection.epoch,
+                account,
+                !account.enabled,
+              ),
+            )
+          }
+          onRemoveAccount={(account) => {
+            if (window.confirm(m.channelRemoveConfirm(account.id)))
+              void run(() =>
+                services.channels!.remove(connection.epoch, account),
+              );
+          }}
+          renderAccountTools={(account) => (
+            <section className="channel-account-tools">
+              <h3>{m.desktopBotProfile()}</h3>
+              <code>{account.id}</code>
+              {account.ownerId && (
+                <p className="channel-muted">
+                  {m.desktopOwner()} {account.ownerId}
                 </p>
-                <small>
-                  Account {channel.id} · Owner{' '}
-                  {channel.ownerId ?? 'Unavailable'}
-                </small>
-                <div>
+              )}
+              <div className="channel-actions">
+                {account.type === 'feishu' && (
                   <button
-                    className="text-button"
-                    disabled={channel.type.toLowerCase() !== 'feishu'}
-                    onClick={() =>
-                      void run(() =>
-                        services.channels!.enable(
-                          connection.epoch,
-                          channel,
-                          !channel.enabled,
-                        ),
-                      )
-                    }
-                  >
-                    {channel.enabled ? 'Disable account' : 'Enable account'}
-                  </button>
-                  <button
-                    className="text-button"
+                    type="button"
+                    className="channel-button"
+                    disabled={busy || !loaded || account.addressable === false}
                     onClick={() =>
                       void run(async () => {
                         const value = await services.channels!.readProfile(
                           connection.epoch,
-                          channel,
+                          account,
                         );
                         if (epoch.current === connection.epoch)
                           setEdit({
@@ -118,155 +187,164 @@ export function DesktopChannels({
                       })
                     }
                   >
-                    Bot profile
+                    {m.desktopBotProfile()}
                   </button>
-                  <button
-                    className="text-button"
-                    onClick={() => setConfigDraft({ channel, secret: '' })}
-                  >
-                    Update configuration
-                  </button>
-                  <button
-                    className="text-button"
-                    onClick={() =>
-                      void run(async () =>
-                        setError(
-                          await services.channels!.diagnostics(
-                            connection.epoch,
-                            channel,
-                          ),
-                        ),
-                      )
-                    }
-                  >
-                    Diagnostics
-                  </button>
-                  <button
-                    className="text-button"
-                    onClick={() => {
-                      if (
-                        window.confirm(
-                          `Remove channel account ${channel.id}? Conversation history is retained.`,
-                        )
-                      )
-                        void run(() =>
-                          services.channels!.remove(connection.epoch, channel),
-                        );
-                    }}
-                  >
-                    Remove
-                  </button>
-                </div>
-              </article>
-            ))}
-          </div>
-          <section className="task-detail-card">
-            <h2>Runtime templates</h2>
-            <button
-              className="text-button"
-              onClick={() =>
-                void run(async () => {
-                  const current = connection.epoch;
-                  const list = await services.channels!.templates(current);
-                  if (epoch.current === current) setTemplates(list);
-                })
-              }
-            >
-              Read templates
-            </button>
-            {templates.map((template, index) => (
-              <pre key={index}>{template}</pre>
-            ))}
-          </section>
-        </>
-      )}
-      {connection && services.channels && (
-        <ChannelManagement
-          key={connection.epoch}
-          connection={connection}
-          accounts={channels}
-          sessions={sessions}
-          onChanged={load}
+                )}
+                <button
+                  type="button"
+                  className="channel-button"
+                  disabled={busy || !loaded || account.addressable === false}
+                  onClick={() =>
+                    setConfigDraft({ channel: account, secret: '' })
+                  }
+                >
+                  {m.desktopUpdateConfiguration()}
+                </button>
+                <button
+                  type="button"
+                  className="channel-button"
+                  disabled={busy || !loaded || account.addressable === false}
+                  onClick={() =>
+                    void run(async () => {
+                      const result = await services.channels!.diagnostics(
+                        connection.epoch,
+                        account,
+                      );
+                      if (epoch.current === connection.epoch)
+                        setDiagnostics({
+                          accountId: account.id,
+                          value: result,
+                        });
+                    })
+                  }
+                >
+                  {m.desktopDiagnostics()}
+                </button>
+              </div>
+              {diagnostics?.accountId === account.id && (
+                <pre className="channel-diagnostics-output">
+                  {diagnostics.value}
+                </pre>
+              )}
+            </section>
+          )}
+          advancedContent={
+            <details className="channel-template-tools">
+              <summary>{m.desktopRuntimeTemplates()}</summary>
+              <p className="channel-muted">
+                {m.desktopTheSelectedRuntimeDoesNotExposeATemplateCatalog()}
+              </p>
+            </details>
+          }
         />
       )}
       {edit && connection && services.channels && (
-        <form
-          className="task-detail-card desktop-form"
-          onSubmit={(event) => {
-            event.preventDefault();
-            void run(async () => {
-              await services.channels!.saveProfile(
-                connection.epoch,
-                edit.channel,
-                edit.profile,
-              );
-              setEdit(undefined);
-            });
+        <ModalDialog
+          title={m.desktopBotProfile()}
+          description={edit.channel.name || edit.channel.id}
+          closeLabel={m.closeDialog(m.desktopBotProfile())}
+          onClose={() => {
+            if (!busy) setEdit(undefined);
           }}
         >
-          <h2>Profile · {edit.channel.id}</h2>
-          <p>
-            Review the current profile version{' '}
-            {edit.channel.version ?? 'unavailable'} before saving.
-          </p>
-          <textarea
-            aria-label="Bot profile JSON"
-            value={edit.profile}
-            onChange={(event) =>
-              setEdit({ ...edit, profile: event.target.value })
-            }
-          />
-          <button className="primary">Save profile</button>
-          <button
-            type="button"
-            className="text-button"
-            onClick={() => setEdit(undefined)}
+          <form
+            className="desktop-form channel-dialog-form"
+            onSubmit={(event) => {
+              event.preventDefault();
+              void run(async () => {
+                await services.channels!.saveProfile(
+                  connection.epoch,
+                  edit.channel,
+                  edit.profile,
+                );
+                setEdit(undefined);
+              });
+            }}
           >
-            Cancel
-          </button>
-        </form>
-      )}
-      {configDraft && connection && services.channels && (
-        <form
-          className="task-detail-card desktop-form"
-          onSubmit={(event) => {
-            event.preventDefault();
-            void run(async () => {
-              await services.channels!.saveConfig(
-                connection.epoch,
-                configDraft.channel,
-                configDraft.secret,
-              );
-              setConfigDraft(undefined);
-            });
-          }}
-        >
-          <h2>Configuration · {configDraft.channel.id}</h2>
-          <label>
-            New channel credential
-            <input
-              type="password"
-              required
-              autoComplete="off"
-              value={configDraft.secret}
+            <p className="channel-muted">
+              {m.desktopReviewTheCurrentProfileVersion()}{' '}
+              {edit.channel.version ?? m.valueUnavailable()}{' '}
+              {m.desktopBeforeSaving()}
+            </p>
+            <textarea
+              aria-label={m.desktopBotProfileJSON()}
+              rows={12}
+              disabled={busy}
+              value={edit.profile}
               onChange={(event) =>
-                setConfigDraft({ ...configDraft, secret: event.target.value })
+                setEdit({ ...edit, profile: event.target.value })
               }
             />
-          </label>
-          <p>
-            This update has no server CAS. Read configuration again after
-            saving.
-          </p>
-          <button className="primary">Save credential</button>
-          <button
-            type="button"
-            className="text-button"
-            onClick={() => setConfigDraft(undefined)}
+            <div className="channel-actions">
+              <button
+                type="button"
+                className="channel-button"
+                disabled={busy}
+                onClick={() => setEdit(undefined)}
+              >
+                {m.cancel()}
+              </button>
+              <button className="channel-button is-primary" disabled={busy}>
+                {m.desktopSaveProfile()}
+              </button>
+            </div>
+          </form>
+        </ModalDialog>
+      )}
+      {configDraft && connection && services.channels && (
+        <ModalDialog
+          title={m.desktopUpdateConfiguration()}
+          description={configDraft.channel.name || configDraft.channel.id}
+          closeLabel={m.closeDialog(m.desktopUpdateConfiguration())}
+          onClose={() => {
+            if (!busy) setConfigDraft(undefined);
+          }}
+        >
+          <form
+            className="desktop-form channel-dialog-form"
+            onSubmit={(event) => {
+              event.preventDefault();
+              void run(async () => {
+                await services.channels!.saveConfig(
+                  connection.epoch,
+                  configDraft.channel,
+                  configDraft.secret,
+                );
+                setConfigDraft(undefined);
+              });
+            }}
           >
-            Cancel
-          </button>
-        </form>
+            <label className="channel-field">
+              <span>{m.desktopNewChannelCredential()}</span>
+              <input
+                type="password"
+                required
+                autoComplete="off"
+                disabled={busy}
+                value={configDraft.secret}
+                onChange={(event) =>
+                  setConfigDraft({ ...configDraft, secret: event.target.value })
+                }
+              />
+            </label>
+            <p className="channel-muted">
+              {m.desktopThisUpdateHasNoServerCASReadConfigurationAgain()}
+            </p>
+            <div className="channel-actions">
+              <button
+                type="button"
+                className="channel-button"
+                disabled={busy}
+                onClick={() => setConfigDraft(undefined)}
+              >
+                {m.cancel()}
+              </button>
+              <button className="channel-button is-primary" disabled={busy}>
+                {m.desktopSaveCredential()}
+              </button>
+            </div>
+          </form>
+        </ModalDialog>
       )}
     </main>
   );

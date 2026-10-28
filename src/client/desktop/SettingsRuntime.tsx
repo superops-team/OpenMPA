@@ -2,6 +2,7 @@ import { RefreshCw } from 'lucide-react';
 import { Button } from '../ui';
 import type { ConnectionVM, DesktopServices } from './models';
 import type { useDesktopSettingsState } from './SettingsState';
+import { localized, useMessages } from './locale';
 
 type RuntimeSettingsState = ReturnType<typeof useDesktopSettingsState>;
 
@@ -20,6 +21,7 @@ export function SettingsRuntime({
   selectingRuntimeId: string;
   setSelectingRuntimeId: React.Dispatch<React.SetStateAction<string>>;
 }) {
+  const m = useMessages();
   const {
     platform,
     busy,
@@ -37,17 +39,23 @@ export function SettingsRuntime({
     visibleRuntimes,
     setNotice,
   } = state;
+  const statuses: Record<string, string> = {
+    ready: m.knowledgeReady(),
+    running: m.desktopRunning(),
+    stopped: m.desktopStopped(),
+    failed: m.desktopFailed(),
+  };
   return (
     <section className="task-detail-card desktop-form">
-      <h2>AgentKit MPA Runtimes</h2>
+      <h2>{m.settingsRuntimeDirectory()}</h2>
       <p>
         {platform?.signedIn
-          ? `Account ${platform.accountId} · ${region} · ${project}`
-          : 'Sign in to choose an MPA Runtime.'}
+          ? m.runtimeAccountContext(platform.accountId, region, project)
+          : m.settingsRuntimeSignInFirst()}
       </p>
       <div className="desktop-inline">
         <label>
-          Region
+          {m.region()}
           <select
             disabled={busy}
             value={region}
@@ -62,13 +70,18 @@ export function SettingsRuntime({
           >
             {regions.map((item) => (
               <option key={item.id} value={item.id}>
-                {item.name} ({item.id})
+                {item.id === 'cn-beijing'
+                  ? m.settingsRegionBeijing()
+                  : item.id === 'cn-shanghai'
+                    ? m.settingsRegionShanghai()
+                    : item.name}{' '}
+                ({item.id})
               </option>
             ))}
           </select>
         </label>
         <label>
-          Project
+          {m.project()}
           <input
             disabled={busy}
             value={project}
@@ -82,23 +95,20 @@ export function SettingsRuntime({
           disabled={busy || directoryLoading || !platform?.signedIn}
           onClick={() => void act(() => load(true))}
         >
-          List current account
+          {m.settingsListCurrentAccount()}
         </Button>
       </div>
       <label>
-        Filter Runtimes
+        {m.settingsFilterRuntimes()}
         <input
-          placeholder="Name or Runtime ID"
+          placeholder={m.settingsRuntimeFilterPlaceholder()}
           value={query}
           onChange={(event) => setQuery(event.target.value)}
         />
       </label>
-      {directoryLoading && <p role="status">Loading MPA Runtimes…</p>}
+      {directoryLoading && <p role="status">{m.settingsRuntimesLoading()}</p>}
       {platform?.signedIn && !directoryLoading && !visibleRuntimes.length && (
-        <p>
-          No matching MPA Runtimes. Check the region, project or filter, then
-          refresh.
-        </p>
+        <p>{m.settingsRuntimesNoMatches()}</p>
       )}
       <div className="task-list">
         {visibleRuntimes.map((runtime) => {
@@ -114,7 +124,13 @@ export function SettingsRuntime({
               <div>
                 <strong>{runtime.name || runtime.id}</strong>
                 <p>
-                  {runtime.id} · {runtime.status} · version {runtime.version}
+                  {m.settingsRuntimeVersion(
+                    runtime.id,
+                    Object.hasOwn(statuses, runtime.status.toLowerCase())
+                      ? statuses[runtime.status.toLowerCase()]
+                      : runtime.status,
+                    runtime.version,
+                  )}
                 </p>
               </div>
               <Button
@@ -132,9 +148,7 @@ export function SettingsRuntime({
                     );
                     if (generation.current === current) {
                       onConnection(next);
-                      setNotice(
-                        'Runtime selected. Verify business identity and connection.',
-                      );
+                      setNotice(localized((m) => m.settingsRuntimeSelected()));
                     }
                   }).finally(() =>
                     setSelectingRuntimeId((current) =>
@@ -144,10 +158,10 @@ export function SettingsRuntime({
                 }}
               >
                 {selecting
-                  ? 'Selecting…'
+                  ? m.settingsRuntimeSelecting()
                   : selected
-                    ? 'Selected'
-                    : 'Use Runtime'}
+                    ? m.settingsRuntimeIsSelected()
+                    : m.settingsUseRuntime()}
               </Button>
             </div>
           );

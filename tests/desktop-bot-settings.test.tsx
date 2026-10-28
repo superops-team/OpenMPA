@@ -2,9 +2,25 @@ import { act, create, type ReactTestRenderer } from 'react-test-renderer';
 import { expect, it, vi } from 'vitest';
 import { DesktopBotSettings } from '../src/client/desktop/BotSettings';
 import type { DesktopServices } from '../src/client/desktop/models';
+import { messages, messagesIn } from '../src/client/desktop/generated/locales';
+import { LocaleProvider } from '../src/client/desktop/locale';
+
+const m = messages;
 
 it('edits local AGENTS.md and selected skills for the assistant', async () => {
   vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true);
+  let locale = 'zh-Hans';
+  let changed!: (payload: { locale: string; dir: string }) => void;
+  const previousMyGo = (globalThis as { mygo?: unknown }).mygo;
+  (globalThis as { mygo?: unknown }).mygo = {
+    get locale() {
+      return locale;
+    },
+    on: (_name: string, listener: typeof changed) => {
+      changed = listener;
+      return () => {};
+    },
+  };
   const saveAssistantConfig = vi.fn(
     async (_epoch, _session, assistantId, input) => ({
       assistantId,
@@ -35,22 +51,26 @@ it('edits local AGENTS.md and selected skills for the assistant', async () => {
   let renderer!: ReactTestRenderer;
   await act(async () => {
     renderer = create(
-      <DesktopBotSettings
-        services={service}
-        connection={{
-          epoch: 2,
-          scope: 'scope',
-          runtimeId: 'runtime-a',
-          status: 'connected',
-        }}
-        session={{ id: 's', title: 'Assistant' }}
-        onSaved={() => {}}
-        onClose={() => {}}
-      />,
+      <LocaleProvider>
+        <DesktopBotSettings
+          services={service}
+          connection={{
+            epoch: 2,
+            scope: 'scope',
+            runtimeId: 'runtime-a',
+            status: 'connected',
+          }}
+          session={{ id: 's', title: 'Assistant' }}
+          onSaved={() => {}}
+          onClose={() => {}}
+        />
+      </LocaleProvider>,
     );
   });
   await act(async () => {});
-  expect(JSON.stringify(renderer.toJSON())).toContain('Assistant settings');
+  expect(JSON.stringify(renderer.toJSON())).toContain(
+    m.settingsAssistantTitle(),
+  );
   expect(renderer.root.findAllByProps({ role: 'dialog' })).toHaveLength(1);
   expect(
     renderer.root.findAll(
@@ -63,21 +83,23 @@ it('edits local AGENTS.md and selected skills for the assistant', async () => {
     'Conversation configuration',
   );
   const agents = renderer.root.findByProps({
-    placeholder: 'Write persistent instructions for this assistant.',
+    placeholder: m.settingsAssistantInstructionsPlaceholder(),
   });
   await act(async () =>
     agents.props.onChange({ target: { value: 'Use concise answers.' } }),
   );
-  expect(JSON.stringify(renderer.toJSON())).not.toContain('Skill space');
+  expect(JSON.stringify(renderer.toJSON())).not.toContain(
+    m.settingsSkillSpace(),
+  );
   const skillsTab = renderer.root
     .findAllByProps({ role: 'tab' })
     .find((tab) =>
       tab
         .findAllByType('span')
-        .some((span) => span.children.includes('Skills')),
+        .some((span) => span.children.includes(m.settingsSkills())),
     )!;
   await act(async () => skillsTab.props.onClick());
-  expect(JSON.stringify(renderer.toJSON())).toContain('Skill space');
+  expect(JSON.stringify(renderer.toJSON())).toContain(m.settingsSkillSpace());
   const skill = renderer.root
     .findAllByType('button')
     .find((button) =>
@@ -86,6 +108,25 @@ it('edits local AGENTS.md and selected skills for the assistant', async () => {
         .some((node) => node.children.includes('meegle')),
     )!;
   await act(async () => skill.props.onClick());
+  await act(async () =>
+    renderer.root
+      .findByProps({ placeholder: m.settingsSkillImportPlaceholder() })
+      .props.onChange({ target: { value: 'Unsaved skill instruction' } }),
+  );
+  const en = messagesIn('en');
+  await act(async () => {
+    locale = 'en';
+    changed({ locale, dir: 'ltr' });
+  });
+  expect(JSON.stringify(renderer.toJSON())).toContain(en.settingsSkillSpace());
+  expect(JSON.stringify(renderer.toJSON())).toContain('飞书项目操作');
+  expect(
+    renderer.root.findByProps({
+      placeholder: en.settingsSkillImportPlaceholder(),
+    }).props.value,
+  ).toBe('Unsaved skill instruction');
+  expect(service.sessions.assistantConfig).toHaveBeenCalledTimes(1);
+  expect(service.sessions.skillCatalog).toHaveBeenCalledTimes(1);
   await act(async () =>
     renderer.root.findByType('form').props.onSubmit({ preventDefault() {} }),
   );
@@ -102,6 +143,7 @@ it('edits local AGENTS.md and selected skills for the assistant', async () => {
     ],
   });
   await act(async () => renderer.unmount());
+  (globalThis as { mygo?: unknown }).mygo = previousMyGo;
 });
 
 it('closes the shared modal on cancel instead of changing page layout', async () => {

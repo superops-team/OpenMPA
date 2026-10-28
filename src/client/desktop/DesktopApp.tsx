@@ -5,12 +5,14 @@ import { DesktopBotSettings } from './BotSettings';
 import { DesktopChannels } from './Channels';
 import { DesktopChat } from './Chat';
 import { DesktopKnowledge } from './Knowledge';
+import { DesktopResources } from './Resources';
+import { DesktopCollaboration } from './Collaboration';
 import { DesktopSchedules } from './Schedules';
 import { DesktopSettings } from './Settings';
 import { TracePanel } from './TracePanel';
 import type { DesktopServices } from './models';
 import { useDesktopAppState } from './DesktopAppState';
-import { LocaleProvider, useMessages } from './locale';
+import { LocaleProvider, localized, useMessages } from './locale';
 
 export function DesktopApp({ services }: { services: DesktopServices }) {
   return (
@@ -67,17 +69,16 @@ function DesktopAppContent({ services }: { services: DesktopServices }) {
         )}
         {closeDrafts.length > 0 && (
           <section className="document-save-notice desktop-form">
-            <h2>Preserve your unsaved drafts before closing</h2>
+            <h2>{m.desktopPreserveYourUnsavedDraftsBeforeClosing()}</h2>
             <p>
-              Continue editing, export an exact copy, or explicitly abandon the
-              indicated in-memory draft. Saved recovery files remain protected.
+              {m.desktopContinueEditingExportAnExactCopyOrExplicitlyAbandon()}
             </p>
             {closeDrafts.map((draft) => (
               <article key={`${draft.pageId}:${draft.capturedAt}`}>
                 <strong>{draft.title}</strong>
                 <p>
-                  Page {draft.pageId} · Base revision {draft.baseRevision} ·
-                  Captured {draft.capturedAt}
+                  {m.desktopPage()} {draft.pageId} {m.desktopBaseRevision()}{' '}
+                  {draft.baseRevision} {m.desktopCaptured()} {draft.capturedAt}
                 </p>
                 <button
                   className="text-button"
@@ -88,19 +89,24 @@ function DesktopAppContent({ services }: { services: DesktopServices }) {
                         setError(
                           error instanceof Error
                             ? error.message
-                            : 'Could not export unsaved draft.',
+                            : localized((m) =>
+                                m.desktopCouldNotExportUnsavedDraft(),
+                              ),
                         ),
                       )
                   }
                 >
-                  Export this draft
+                  {m.desktopExportThisDraft()}
                 </button>
                 <button
                   className="text-button"
                   onClick={() => {
                     if (
                       !window.confirm(
-                        `Abandon exactly the in-memory draft for ${draft.title}, captured ${draft.capturedAt}? This does not delete the saved recovery file.`,
+                        m.abandonDraftConfirm(
+                          draft.title,
+                          String(draft.capturedAt),
+                        ),
                       )
                     )
                       return;
@@ -115,28 +121,62 @@ function DesktopAppContent({ services }: { services: DesktopServices }) {
                           ),
                         );
                         setError(
-                          'The indicated in-memory draft was abandoned. Close the window again to recheck safe closing.',
+                          localized((m) =>
+                            m.desktopTheIndicatedInMemoryDraftWasAbandonedCloseThe(),
+                          ),
                         );
                       })
                       .catch((error: unknown) =>
                         setError(
                           error instanceof Error
                             ? error.message
-                            : 'Could not abandon this exact draft.',
+                            : localized((m) =>
+                                m.desktopCouldNotAbandonThisExactDraft(),
+                              ),
                         ),
                       );
                   }}
                 >
-                  Abandon this exact draft
+                  {m.desktopAbandonThisExactDraft()}
                 </button>
               </article>
             ))}
             <button className="text-button" onClick={() => setCloseDrafts([])}>
-              Continue editing
+              {m.desktopContinueEditing()}
             </button>
           </section>
         )}
-        {view === 'settings' ? (
+        <DesktopResources
+          key={`resources:${JSON.stringify([connection?.epoch, connection?.scope, state.platform?.epoch, state.platform?.region])}`}
+          services={services.resources}
+          connection={connection}
+          platform={state.platform}
+          session={session}
+          target={state.conversationTarget}
+          onUse={state.useInConversation}
+          onConfigureMCP={() => setConfiguringSession(true)}
+          hidden={view !== 'resources'}
+        />
+        <DesktopCollaboration
+          key={`collaboration:${JSON.stringify([connection?.epoch, connection?.scope])}`}
+          services={services.collaboration}
+          connection={connection}
+          hidden={view !== 'collaboration'}
+        />
+        {configuringSession && connection && session && (
+          <DesktopBotSettings
+            services={services}
+            connection={connection}
+            session={session}
+            onSaved={() => {
+              setConfiguringSession(false);
+              void refresh(true);
+            }}
+            onClose={() => setConfiguringSession(false)}
+          />
+        )}
+        {view === 'resources' || view === 'collaboration' ? null : view ===
+          'settings' ? (
           <DesktopSettings
             services={services}
             connection={connection}
@@ -149,6 +189,7 @@ function DesktopAppContent({ services }: { services: DesktopServices }) {
           />
         ) : view === 'channels' ? (
           <DesktopChannels
+            key={`channels:${connection?.epoch}:${connection?.scope}`}
             services={services}
             connection={connection}
             sessions={state.sessions}
@@ -178,7 +219,7 @@ function DesktopAppContent({ services }: { services: DesktopServices }) {
                       className="text-button"
                       onClick={() => {
                         const title = window.prompt(
-                          'Conversation title',
+                          m.conversationTitle(),
                           session.title,
                         );
                         if (title?.trim()) {
@@ -193,7 +234,7 @@ function DesktopAppContent({ services }: { services: DesktopServices }) {
                               setError(
                                 error instanceof Error
                                   ? error.message
-                                  : 'Rename failed.',
+                                  : localized((m) => m.desktopRenameFailed()),
                               ),
                             );
                         }
@@ -207,7 +248,7 @@ function DesktopAppContent({ services }: { services: DesktopServices }) {
                       onClick={() => {
                         if (
                           window.confirm(
-                            `Delete conversation ${session.id}? Server retention and memory policy apply.`,
+                            m.deleteConversationConfirm(session.id),
                           )
                         ) {
                           const current = connection.epoch;
@@ -223,7 +264,7 @@ function DesktopAppContent({ services }: { services: DesktopServices }) {
                               setError(
                                 error instanceof Error
                                   ? error.message
-                                  : 'Delete failed.',
+                                  : localized((m) => m.desktopDeleteFailed()),
                               ),
                             );
                         }
@@ -233,24 +274,12 @@ function DesktopAppContent({ services }: { services: DesktopServices }) {
                       {m.delete()}
                     </button>
                   </div>
-                  {configuringSession && (
-                    <DesktopBotSettings
-                      services={services}
-                      connection={connection}
-                      session={session}
-                      onSaved={() => {
-                        setConfiguringSession(false);
-                        void refresh(true);
-                      }}
-                      onClose={() => setConfiguringSession(false)}
-                    />
-                  )}
-
                   <DesktopChat
-                    key={`${connection.epoch}:${session.id}:${session.configVersion || ''}`}
+                    key={`${connection.epoch}:${connection.scope}:${session.id}:${session.configVersion || ''}`}
                     services={services}
                     connection={connection}
                     session={session}
+                    composerDraft={state.composerDraft}
                     traceOpen={traceOpen}
                     onCloseTrace={() => setTraceOpen(false)}
                     onOpenTrace={() => setTraceOpen(true)}
@@ -273,8 +302,8 @@ function DesktopAppContent({ services }: { services: DesktopServices }) {
                         }
                       >
                         {connection
-                          ? 'Start a conversation'
-                          : 'Connect your account'}
+                          ? m.startConversation()
+                          : m.connectAccount()}
                       </button>
                     </div>
                   </div>

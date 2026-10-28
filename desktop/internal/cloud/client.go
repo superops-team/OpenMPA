@@ -147,7 +147,7 @@ func (c *Client) Action(ctx context.Context, region, action string, input, outpu
 		return dto.Failure("invalidInput", "platform", "never", 0)
 	}
 	switch action {
-	case "ListRuntimes", "GetRuntime", "ListRuntimeVersions", "GetRuntimeVersion", "GetTool", "UpdateRuntime", "UpdateTool":
+	case "ListRuntimes", "GetRuntime", "ListRuntimeVersions", "GetRuntimeVersion", "GetTool", "UpdateRuntime", "UpdateTool", "ListSkillsBySpaceId", "ListSkillsBySkillSpace", "GetSkillSpace", "GetSkillInfo", "CreateSkill", "DeleteSkill", "ListSkillVersions", "PublishSkillToSkillSpace", "GetMCPToolset", "CreateA2aSpace", "GetA2aSpace", "DeleteA2aSpace", "ListA2aAgents", "GetA2aAgent", "CreateA2aAgent", "DeleteA2aAgent":
 	default:
 		return dto.Failure("actionUnsupported", "platform", "never", 0)
 	}
@@ -194,7 +194,7 @@ func (c *Client) call(ctx context.Context, cred Credentials, service, region, ac
 	resp, e := client.Do(req)
 	if e != nil {
 		code, retry := "connectionFailure", "readOnly"
-		if action == "UpdateRuntime" || action == "UpdateTool" {
+		if mutatingAction(action) {
 			code, retry = "outcomeUnknown", "verifyOnly"
 		}
 		return dto.Failure(code, "platform", retry, 0)
@@ -259,13 +259,18 @@ type RuntimeRecord struct {
 	Endpoint             string `json:"Endpoint"`
 	ArtifactURL          string `json:"ArtifactUrl"`
 	ToolID               string `json:"ToolId"`
-	Description          string `json:"Description"`
-	CPUMilli             int    `json:"CpuMilli"`
-	MemoryMB             int    `json:"MemoryMb"`
-	MinInstance          int    `json:"MinInstance"`
-	MaxInstance          int    `json:"MaxInstance"`
-	MaxConcurrency       int    `json:"MaxConcurrency"`
-	Tags                 []struct {
+	MCPToolsetID         string `json:"MCPToolsetId"`
+	Envs                 []struct {
+		Key   string `json:"Key"`
+		Value string `json:"Value"`
+	} `json:"Envs"`
+	Description    string `json:"Description"`
+	CPUMilli       int    `json:"CpuMilli"`
+	MemoryMB       int    `json:"MemoryMb"`
+	MinInstance    int    `json:"MinInstance"`
+	MaxInstance    int    `json:"MaxInstance"`
+	MaxConcurrency int    `json:"MaxConcurrency"`
+	Tags           []struct {
 		Key   string `json:"Key"`
 		Value string `json:"Value"`
 	} `json:"Tags"`

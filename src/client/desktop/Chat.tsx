@@ -5,7 +5,7 @@ import { Mascot } from '../Mascot';
 import { type DisplayMessage } from './projection';
 import type { ConnectionVM, DesktopServices, SessionVM } from './models';
 import { useDesktopChatState } from './ChatState';
-import { useMessages } from './locale';
+import { localized, useMessages } from './locale';
 import { ComposerModelPicker } from './ComposerModelPicker';
 import {
   architectureDisplayLabel,
@@ -19,6 +19,7 @@ import type { ConversationSegment } from './turn-model';
 import { AssistantMarkdown } from './AssistantMarkdown';
 import { Button, ComposerFooter, ComposerShell } from '../ui';
 import { ChatStatus } from './ChatStatus';
+import type { ComposerDraft } from './studio-models';
 
 export function DesktopChat({
   services,
@@ -30,6 +31,7 @@ export function DesktopChat({
   traceOpen,
   onCloseTrace,
   onOpenTrace,
+  composerDraft,
 }: {
   services: DesktopServices;
   connection: ConnectionVM;
@@ -40,6 +42,7 @@ export function DesktopChat({
   traceOpen?: boolean;
   onCloseTrace?: () => void;
   onOpenTrace?: () => void;
+  composerDraft?: ComposerDraft;
 }) {
   const m = useMessages();
   const state = useDesktopChatState({
@@ -49,6 +52,7 @@ export function DesktopChat({
     material,
     onSchedule,
     onSaveReply,
+    composerDraft,
   });
   const {
     execution,
@@ -202,7 +206,9 @@ export function DesktopChat({
         }
         if (!aborted) {
           setError(
-            'The Runtime did not acknowledge an abort and still reports this turn as active.',
+            localized((m) =>
+              m.desktopTheRuntimeDidNotAcknowledgeAnAbortAndStill(),
+            ),
           );
           setExecution('running');
           return;
@@ -212,13 +218,17 @@ export function DesktopChat({
       }
       setExecution('unknown');
       setError(
-        'Stop was acknowledged, but the authoritative terminal result is still pending. History was refreshed; retry after the Runtime settles.',
+        localized((m) =>
+          m.desktopStopWasAcknowledgedButTheAuthoritativeTerminalResultIs(),
+        ),
       );
     } catch (error) {
       if (generation.current !== current) return;
       setExecution('unknown');
       setError(
-        error instanceof Error ? error.message : 'Could not stop execution.',
+        error instanceof Error
+          ? error.message
+          : localized((m) => m.desktopCouldNotStopExecution()),
       );
     } finally {
       if (generation.current === current) setStopping(false);
@@ -307,12 +317,15 @@ export function DesktopChat({
                                     setError(
                                       error instanceof Error
                                         ? error.message
-                                        : 'Could not save reply.',
+                                        : localized((m) =>
+                                            m.desktopCouldNotSaveReply(),
+                                          ),
                                     ),
                                 )
                               }
                             >
-                              <FileText size={13} /> Review & save to page
+                              <FileText size={13} />{' '}
+                              {m.desktopReviewSaveToPage()}
                             </button>
                           )}
                       </div>
@@ -347,7 +360,10 @@ export function DesktopChat({
           void send();
         }}
       >
-        <div className="composer-context" aria-label="Conversation context">
+        <div
+          className="composer-context"
+          aria-label={m.desktopConversationContext()}
+        >
           <div className="composer-context-identity">
             <Mascot
               identity={session.id}
@@ -383,6 +399,10 @@ export function DesktopChat({
           />
           <ComposerFooter className="composer-bar">
             <ComposerModelPicker
+              catalog={model.catalog}
+              catalogLoading={model.catalogLoading}
+              catalogError={model.catalogError}
+              onRefreshCatalog={model.refreshCatalog}
               config={model.config}
               busy={model.busy}
               needsInitialization={model.needsInitialization}
