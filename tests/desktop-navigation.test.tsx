@@ -337,7 +337,7 @@ it('reads the persisted native theme on mount', async () => {
   await act(async () => renderer.unmount());
 });
 
-it('opens and closes the trace overlay from the native titlebar action', async () => {
+it('ignores the native trace action without a selected Runtime conversation', async () => {
   vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true);
   let navigation!: (action: string, id?: string) => void;
   const setShellState = vi.fn(async (state: NativeShellState) => {
@@ -368,6 +368,153 @@ it('opens and closes the trace overlay from the native titlebar action', async (
   await act(async () => {
     renderer = create(<DesktopApp services={services} />);
   });
+  await act(async () => navigation('trace'));
+  expect(setShellState).toHaveBeenLastCalledWith(
+    expect.objectContaining({ traceOpen: false }),
+  );
+  await act(async () => renderer.unmount());
+});
+
+it('enables Runtime terminal and trace only when a Runtime conversation is selected', async () => {
+  vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true);
+  let navigation!: (action: string, id?: string) => void;
+  const terminalOpen = vi.fn(async () => {});
+  const services = {
+    host: {
+      onNavigation: (listener: typeof navigation) => {
+        navigation = listener;
+        return () => {};
+      },
+      setShellState: async () => {},
+      onClose: () => () => {},
+      closeState: async () => ({ pending: false, requestId: 0 }),
+    },
+    connection: {
+      status: async () => ({
+        epoch: 2,
+        scope: 'a',
+        runtimeId: 'r',
+        status: 'connected',
+      }),
+    },
+    platform: {
+      status: async () => ({
+        signedIn: true,
+        accountId: '123',
+        region: 'cn-beijing',
+      }),
+      list: async () => [
+        { id: 'r', name: 'Runtime A', status: 'Ready', version: '1' },
+      ],
+    },
+    sessions: {
+      list: async () => [{ id: 's', title: 'Runtime chat' }],
+      read: async () => ({
+        session: { id: 's', title: 'Runtime chat' },
+        messages: [],
+      }),
+      pending: async () => [],
+    },
+    terminal: { open: terminalOpen },
+    trace: { read: vi.fn() },
+  } as unknown as DesktopServices;
+  let renderer!: ReactTestRenderer;
+  await act(async () => {
+    renderer = create(<DesktopApp services={services} />);
+  });
+  await act(async () => {});
+  let terminal = renderer.root.findByProps({
+    'aria-label': 'Open Runtime terminal',
+  });
+  let trace = renderer.root.findByProps({ 'aria-label': 'Open turn trace' });
+  expect(terminal.props.disabled).toBe(true);
+  expect(trace.props.disabled).toBe(true);
+
+  await act(async () => navigation('selectSession', 's'));
+  await act(async () => {});
+  terminal = renderer.root.findByProps({
+    'aria-label': 'Open Runtime terminal',
+  });
+  trace = renderer.root.findByProps({ 'aria-label': 'Open turn trace' });
+  expect(terminal.props.disabled).toBe(false);
+  expect(trace.props.disabled).toBe(false);
+  await act(async () => terminal.props.onClick());
+  expect(terminalOpen).toHaveBeenCalledWith(2, 's', 'Runtime chat');
+  await act(async () => renderer.unmount());
+});
+
+it('keeps chat tool buttons disabled without a Runtime connection', async () => {
+  vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true);
+  const terminalOpen = vi.fn(async () => {});
+  const services = {
+    host: {
+      onNavigation: () => () => {},
+      setShellState: async () => {},
+      onClose: () => () => {},
+      closeState: async () => ({ pending: false, requestId: 0 }),
+    },
+    platform: {
+      status: async () => ({ signedIn: false, accountId: '', region: '' }),
+    },
+    connection: { status: async () => undefined },
+    terminal: { open: terminalOpen },
+  } as unknown as DesktopServices;
+  let renderer!: ReactTestRenderer;
+  await act(async () => {
+    renderer = create(<DesktopApp services={services} />);
+  });
+  await act(async () => {});
+  expect(
+    renderer.root.findByProps({ 'aria-label': 'Open Runtime terminal' }).props
+      .disabled,
+  ).toBe(true);
+  expect(
+    renderer.root.findByProps({ 'aria-label': 'Open turn trace' }).props
+      .disabled,
+  ).toBe(true);
+  expect(terminalOpen).not.toHaveBeenCalled();
+  await act(async () => renderer.unmount());
+});
+
+it('opens and closes the trace overlay from the native titlebar action after selecting a conversation', async () => {
+  vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true);
+  let navigation!: (action: string, id?: string) => void;
+  const setShellState = vi.fn(async (state: NativeShellState) => {
+    void state;
+  });
+  const services = {
+    host: {
+      onNavigation: (listener: typeof navigation) => {
+        navigation = listener;
+        return () => {};
+      },
+      setShellState,
+      onClose: () => () => {},
+      closeState: async () => ({ pending: false, requestId: 0 }),
+    },
+    connection: {
+      status: async () => ({
+        epoch: 2,
+        scope: 'a',
+        runtimeId: 'r',
+        status: 'connected',
+      }),
+    },
+    sessions: {
+      list: async () => [{ id: 's', title: 'Trace chat' }],
+      read: async () => ({
+        session: { id: 's', title: 'Trace chat' },
+        messages: [],
+      }),
+      pending: async () => [],
+    },
+    trace: { read: vi.fn() },
+  } as unknown as DesktopServices;
+  let renderer!: ReactTestRenderer;
+  await act(async () => {
+    renderer = create(<DesktopApp services={services} />);
+  });
+  await act(async () => navigation('selectSession', 's'));
   await act(async () => navigation('trace'));
   expect(setShellState).toHaveBeenLastCalledWith(
     expect.objectContaining({ traceOpen: true }),

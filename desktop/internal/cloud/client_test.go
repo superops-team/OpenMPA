@@ -132,6 +132,39 @@ func TestListPaginationExplicitMPATags(t *testing.T) {
 		t.Fatalf("list %+v %v", out, e)
 	}
 }
+
+func TestRuntimeInstancesAndWebshellEndpointUseFixedActions(t *testing.T) {
+	var actions []string
+	c := testCloud(t, func(w http.ResponseWriter, r *http.Request) {
+		actions = append(actions, r.URL.Query().Get("Action")+"@"+r.URL.Query().Get("Version"))
+		if !strings.Contains(r.Header.Get("Authorization"), "/cn-beijing/") {
+			t.Error("signed request missing region")
+		}
+		switch r.URL.Query().Get("Action") {
+		case "ListRuntimeInstances":
+			w.Write([]byte(`{"Result":{"InstanceItems":[{"InstanceName":"vefaas-fn-abc","InstanceStatus":"Running"}]}}`))
+		case "GenWebshellEndpoint":
+			w.Write([]byte(`{"Result":{"Endpoint":"wss://webshell.example/session"}}`))
+		default:
+			t.Fatalf("unexpected action %s", r.URL.Query().Get("Action"))
+		}
+	})
+	c.credential = Credentials{AccessKey: "ak", SecretKey: "sk"}
+	c.state = dto.PlatformState{SignedIn: true, Epoch: 4}
+	instances, e := c.RuntimeInstances(context.Background(), dto.RuntimeRequest{Region: "cn-beijing", RuntimeID: "r-1"})
+	if e != nil || len(instances) != 1 || instances[0].InstanceName != "vefaas-fn-abc" {
+		t.Fatalf("instances %+v %v", instances, e)
+	}
+	endpoint, e := c.WebshellEndpoint(context.Background(), "cn-beijing", "fn", "vefaas-fn-abc")
+	if e != nil || endpoint != "wss://webshell.example/session" {
+		t.Fatalf("endpoint %q %v", endpoint, e)
+	}
+	want := []string{"ListRuntimeInstances@2025-10-30", "GenWebshellEndpoint@2021-03-03"}
+	if strings.Join(actions, ",") != strings.Join(want, ",") {
+		t.Fatalf("actions %v want %v", actions, want)
+	}
+}
+
 func TestNumericAccountIdentityAndStableProfileAcrossRestart(t *testing.T) {
 	dir := t.TempDir()
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

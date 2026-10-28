@@ -1,5 +1,12 @@
-import { useState } from 'react';
-import { Settings2, X, Pencil, Trash2 } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import {
+  ActivitySquare,
+  Pencil,
+  Settings2,
+  SquareTerminal,
+  Trash2,
+  X,
+} from 'lucide-react';
 import { Mascot } from '../Mascot';
 import { DesktopBotSettings } from './BotSettings';
 import { DesktopChannels } from './Channels';
@@ -46,6 +53,22 @@ function DesktopAppContent({ services }: { services: DesktopServices }) {
     createSession,
     connect,
   } = state;
+  const canUseConversationTools = Boolean(connection && session);
+  useEffect(() => {
+    if (!canUseConversationTools && traceOpen) setTraceOpen(false);
+  }, [canUseConversationTools, traceOpen, setTraceOpen]);
+  const openRuntimeTerminal = () => {
+    if (!connection || !session || !services.terminal) return;
+    void services.terminal
+      .open(connection.epoch, session.id, session.title)
+      .catch((error: unknown) =>
+        setError(
+          error instanceof Error
+            ? error.message
+            : 'Could not open the Runtime terminal.',
+        ),
+      );
+  };
   return (
     <div className="app template-app desktop-app">
       <div className="workspace">
@@ -164,9 +187,38 @@ function DesktopAppContent({ services }: { services: DesktopServices }) {
         ) : (
           <div className="chat-workspace">
             <div className="chat-column">
-              {connection && session ? (
-                <>
-                  <div className="desktop-chat-actions">
+              <div className="desktop-chat-actions">
+                <button
+                  className="text-button"
+                  aria-label="Open Runtime terminal"
+                  title={
+                    canUseConversationTools
+                      ? 'Open Runtime terminal'
+                      : 'Connect a Runtime and choose a conversation first'
+                  }
+                  disabled={!canUseConversationTools || !services.terminal}
+                  onClick={openRuntimeTerminal}
+                >
+                  <SquareTerminal size={13} />
+                  Terminal
+                </button>
+                <button
+                  className="text-button"
+                  aria-label="Open turn trace"
+                  title={
+                    canUseConversationTools
+                      ? 'Open turn trace'
+                      : 'Connect a Runtime and choose a conversation first'
+                  }
+                  disabled={!canUseConversationTools}
+                  aria-pressed={traceOpen}
+                  onClick={() => setTraceOpen((previous) => !previous)}
+                >
+                  <ActivitySquare size={13} />
+                  Trace
+                </button>
+                {connection && session && (
+                  <>
                     <button
                       className="text-button"
                       onClick={() => setConfiguringSession(true)}
@@ -232,7 +284,11 @@ function DesktopAppContent({ services }: { services: DesktopServices }) {
                       <Trash2 size={13} />
                       {m.delete()}
                     </button>
-                  </div>
+                  </>
+                )}
+              </div>
+              {connection && session ? (
+                <>
                   {configuringSession && (
                     <DesktopBotSettings
                       services={services}
@@ -278,14 +334,6 @@ function DesktopAppContent({ services }: { services: DesktopServices }) {
                       </button>
                     </div>
                   </div>
-                  {traceOpen && (
-                    <TracePanel
-                      services={services}
-                      connection={connection}
-                      invocationIds={[]}
-                      onClose={() => setTraceOpen(false)}
-                    />
-                  )}
                 </>
               )}
             </div>

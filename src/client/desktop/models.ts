@@ -256,6 +256,9 @@ export interface DesktopServices {
       invocationId: string,
     ): Promise<TraceVM>;
   };
+  terminal?: {
+    open(epoch: number, sessionId: string, title: string): Promise<void>;
+  };
   connection: {
     status(): Promise<ConnectionVM | undefined>;
     test(epoch: number): Promise<string>;

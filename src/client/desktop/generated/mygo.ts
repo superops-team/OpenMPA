@@ -840,6 +840,23 @@ export interface NavigationItem {
   agentId?: string;
 }
 
+export interface OpenReceipt {
+  sessionId: string;
+  runtimeId: string;
+}
+
+export interface OpenRequest {
+  connectionEpoch: number;
+  sessionId: string;
+  title?: string;
+}
+
+export interface OpenResult {
+  ok: boolean;
+  value?: OpenReceipt;
+  error?: SafeError;
+}
+
 export interface Operation {
   connectionEpoch: number;
   operationId: string;
@@ -2260,6 +2277,12 @@ export const RuntimeConfig = {
 export const Trace = {
   read(r: TraceReadRequest): Promise<ReadResult> {
     return call("Trace.Read", r);
+  },
+} as const;
+
+export const Terminal = {
+  open(r: OpenRequest): Promise<OpenResult> {
+    return call("Terminal.Open", r);
   },
 } as const;
 

@@ -53,9 +53,11 @@ func TestNativeShellLayoutAndState(t *testing.T) {
 	}
 	toggle, _ := tt.Find("Toggle navigation")
 	location, _ := tt.Find("Current location")
-	action, _ := tt.Find("Open turn trace")
-	if toggle.Y+toggle.H/2 != location.Y+location.H/2 || action.Y+action.H/2 != toggle.Y+toggle.H/2 || location.X < toggle.X+toggle.W || location.X+location.W > action.X {
-		t.Fatalf("top controls overlap or misalign: %v %v %v", toggle, location, action)
+	if toggle.Y+toggle.H/2 != location.Y+location.H/2 || location.X < toggle.X+toggle.W {
+		t.Fatalf("top controls overlap or misalign: %v %v", toggle, location)
+	}
+	if _, found := tt.Find("Open turn trace"); found {
+		t.Fatal("duplicate native titlebar trace action should not render")
 	}
 	rail.state.Collapsed = true
 	tt.Frame()
@@ -114,6 +116,9 @@ func TestNativeSidebarSelection(t *testing.T) {
 	}
 	if action != "newConversation" {
 		t.Fatal("new conversation action missing")
+	}
+	if _, found := tt.Find("Settings & setup"); found {
+		t.Fatal("sidebar settings shortcut should not duplicate the rail settings button")
 	}
 	if _, found := tt.Find("SPACES"); found {
 		t.Fatal("Spaces navigation must be removed")

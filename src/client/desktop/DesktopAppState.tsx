@@ -286,7 +286,9 @@ export function useDesktopAppState({
       setTheme(next);
     } else if (action === 'toggleSidebar')
       setCollapsed((previous) => !previous);
-    else if (action === 'trace') setTraceOpen((previous) => !previous);
+    else if (action === 'trace') {
+      if (connection && selected) setTraceOpen((previous) => !previous);
+    }
     else if (
       action === 'selectSettingsSection' &&
       [

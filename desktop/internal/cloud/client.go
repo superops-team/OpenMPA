@@ -32,6 +32,9 @@ func New() *Client {
 		if service == "sts" {
 			return "https://sts.volcengineapi.com"
 		}
+		if service == "vefaas" {
+			return "https://open.volcengineapi.com"
+		}
 		endpoint, _ := AgentKitEndpoint(region)
 		return endpoint
 	}}
@@ -147,7 +150,7 @@ func (c *Client) Action(ctx context.Context, region, action string, input, outpu
 		return dto.Failure("invalidInput", "platform", "never", 0)
 	}
 	switch action {
-	case "ListRuntimes", "GetRuntime", "ListRuntimeVersions", "GetRuntimeVersion", "GetTool", "UpdateRuntime", "UpdateTool":
+	case "ListRuntimes", "GetRuntime", "ListRuntimeVersions", "GetRuntimeVersion", "ListRuntimeInstances", "GetTool", "UpdateRuntime", "UpdateTool":
 	default:
 		return dto.Failure("actionUnsupported", "platform", "never", 0)
 	}
@@ -175,6 +178,8 @@ func (c *Client) call(ctx context.Context, cred Credentials, service, region, ac
 	version := APIVersion
 	if service == "sts" {
 		version = "2018-01-01"
+	} else if service == "vefaas" {
+		version = "2021-03-03"
 	}
 	u, _ := url.Parse(c.endpoint(service, region))
 	q := u.Query()
@@ -394,6 +399,62 @@ func (c *Client) Versions(ctx context.Context, r dto.RuntimeRequest) (dto.Versio
 		seen[token] = true
 	}
 	return out, nil
+}
+
+type RuntimeInstance struct {
+	InstanceName   string `json:"InstanceName"`
+	InstanceStatus string `json:"InstanceStatus"`
+	AliasName      string `json:"AliasName"`
+	RevisionNumber int    `json:"RevisionNumber"`
+	CreateTime     string `json:"CreateTime"`
+}
+
+func (c *Client) RuntimeInstances(ctx context.Context, r dto.RuntimeRequest) ([]RuntimeInstance, *dto.SafeError) {
+	var out struct {
+		InstanceItems []RuntimeInstance `json:"InstanceItems"`
+	}
+	if e := c.Action(ctx, r.Region, "ListRuntimeInstances", struct {
+		RuntimeID string `json:"RuntimeId"`
+	}{r.RuntimeID}, &out); e != nil {
+		return nil, e
+	}
+	for _, instance := range out.InstanceItems {
+		if instance.InstanceName == "" || len(instance.InstanceName) > 512 || strings.ContainsAny(instance.InstanceName, "\r\n\x00") {
+			return nil, dto.Failure("invalidResponse", "platform", "readOnly", 200)
+		}
+	}
+	return out.InstanceItems, nil
+}
+
+func (c *Client) WebshellEndpoint(ctx context.Context, region, functionID, instanceName string) (string, *dto.SafeError) {
+	if !ValidRegion(region) || functionID == "" || instanceName == "" || len(functionID) > 256 || len(instanceName) > 512 || strings.ContainsAny(functionID+instanceName, "\r\n\x00") {
+		return "", dto.Failure("invalidInput", "platform", "never", 0)
+	}
+	cred, epoch, e := c.snapshot()
+	if e != nil {
+		return "", e
+	}
+	var out struct {
+		Endpoint string `json:"Endpoint"`
+	}
+	e = c.call(ctx, cred, "vefaas", region, "GenWebshellEndpoint", struct {
+		FunctionID   string `json:"FunctionId"`
+		InstanceName string `json:"InstanceName"`
+	}{functionID, instanceName}, &out)
+	if e != nil {
+		return "", e
+	}
+	if c.Epoch() != epoch {
+		return "", dto.Failure("staleConnection", "platform", "reload", 0)
+	}
+	if out.Endpoint == "" || len(out.Endpoint) > 4096 || strings.ContainsAny(out.Endpoint, "\r\n\x00") {
+		return "", dto.Failure("invalidResponse", "platform", "readOnly", 200)
+	}
+	u, err := url.Parse(out.Endpoint)
+	if err != nil || u.User != nil || (u.Scheme != "wss" && u.Scheme != "ws") || u.Host == "" {
+		return "", dto.Failure("invalidResponse", "platform", "readOnly", 200)
+	}
+	return out.Endpoint, nil
 }
 
 func (c *Client) WithEpoch(epoch uint64, commit func() *dto.SafeError) *dto.SafeError {
