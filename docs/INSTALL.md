@@ -1,7 +1,7 @@
 # Install OpenMPA on macOS
 
-OpenMPA v0.1.3 supports Apple Silicon Macs running macOS 13.0 or newer. The
-installer downloads the fixed v0.1.3 DMG from the public OpenMPA TOS mirror,
+OpenMPA v0.1.4 supports Apple Silicon Macs running macOS 13.0 or newer. The
+installer downloads the fixed v0.1.4 DMG from the public OpenMPA TOS mirror,
 checks its pinned SHA-256 digest and DMG container, and installs
 `OpenMPA.app` in `/Applications`.
 
@@ -42,7 +42,7 @@ must be writable by the current user and does not use `sudo`.
 
 ## Security model
 
-The v0.1.3 preview has a valid ad-hoc code signature but is not Apple-notarized.
+The v0.1.4 preview has a valid ad-hoc code signature but is not Apple-notarized.
 That means macOS cannot present a verified Developer ID publisher, and a normal
 browser or Finder download may retain a quarantine marker that blocks first
 launch.
@@ -64,13 +64,13 @@ The installer never uses global `xattr` cleanup, disables Gatekeeper, changes
 SIP/AMFI settings, or applies a local ad-hoc re-sign. It does not modify user
 data, credentials, Runtime configuration, or Application Support data.
 
-The exact v0.1.3 DMG digest is:
+The exact v0.1.4 DMG digest is:
 
 ```text
-c16fbb4e36eba977686c228f81e1f885e594c5da942e27580b163cfdd4b561b4  OpenMPA-v0.1.3-macos-arm64.dmg
+abf86f1e1f879b8768ef24405aa1387856645905bb1536a533eded16fd9b514a  OpenMPA-v0.1.4-macos-arm64.dmg
 ```
 
 You can also download the DMG, ZIP, `SHA256SUMS`, and
 `build-verification.json` directly from
-`https://openmpa-downloads.tos-cn-beijing.volces.com/releases/v0.1.3/` by
+`https://openmpa-downloads.tos-cn-beijing.volces.com/releases/v0.1.4/` by
 appending the exact object name. Directory listing is intentionally disabled.

@@ -65,11 +65,11 @@ expect_success 'installer has valid Bash syntax' /bin/bash -n "$INSTALLER"
 expect_success 'publisher has valid Bash syntax' /bin/bash -n "$PUBLISHER"
 expect_success 'test file has valid Bash syntax' /bin/bash -n "$0"
 
-assert_file_contains 'installer pins v0.1.3' "VERSION='0.1.3'" "$INSTALLER"
+assert_file_contains 'installer pins v0.1.4' "VERSION='0.1.4'" "$INSTALLER"
 assert_file_contains 'installer pins the public TOS base URL' \
   "BASE_URL='https://openmpa-downloads.tos-cn-beijing.volces.com'" "$INSTALLER"
 assert_file_contains 'installer pins the reviewed DMG digest' \
-  "DMG_SHA256='c16fbb4e36eba977686c228f81e1f885e594c5da942e27580b163cfdd4b561b4'" "$INSTALLER"
+  "DMG_SHA256='abf86f1e1f879b8768ef24405aa1387856645905bb1536a533eded16fd9b514a'" "$INSTALLER"
 assert_file_contains 'installer pins macOS 13.0 minimum' "MIN_MACOS_VERSION='13.0'" "$INSTALLER"
 
 danger_pattern='spctl.*(--global-disable|--master-disable)|csrutil[[:space:]]+disable|codesign.*(--force|--remove-signature|--sign)|xattr.*-cr[[:space:]]+/(Applications|Users)|sudo.*(bash|sh)[[:space:]]'
@@ -136,8 +136,8 @@ assert_file_contains 'non-Darwin rejection is explicit' 'this installer supports
 
 STAGING_DIR="$TMP_ROOT/staging"
 /bin/mkdir "$STAGING_DIR"
-DMG_NAME='OpenMPA-v0.1.3-macos-arm64.dmg'
-ZIP_NAME='OpenMPA-v0.1.3-macos-arm64.zip'
+DMG_NAME='OpenMPA-v0.1.4-macos-arm64.dmg'
+ZIP_NAME='OpenMPA-v0.1.4-macos-arm64.zip'
 printf 'fixture dmg\n' >"$STAGING_DIR/$DMG_NAME"
 printf 'fixture zip\n' >"$STAGING_DIR/$ZIP_NAME"
 DMG_SHA=$(/usr/bin/shasum -a 256 "$STAGING_DIR/$DMG_NAME" | /usr/bin/awk '{print $1}')
@@ -147,8 +147,8 @@ printf '%s  %s\n%s  %s\n' "$DMG_SHA" "$DMG_NAME" "$ZIP_SHA" "$ZIP_NAME" \
 cat >"$STAGING_DIR/build-verification.json" <<EOF
 {
   "schema": "openmpa-build-verification/v1",
-  "version": "0.1.3",
-  "tag": "v0.1.3",
+  "version": "0.1.4",
+  "tag": "v0.1.4",
   "commit": "f7c7f954a3b25c88fddbd7e64a58544f07481589",
   "platform": "darwin/arm64",
   "verification": {
@@ -168,11 +168,11 @@ FIXTURE_INSTALLER="$TMP_ROOT/install.sh"
 FIXTURE_INSTALLER_SHA=$(/usr/bin/shasum -a 256 "$FIXTURE_INSTALLER" | /usr/bin/awk '{print $1}')
 
 expect_success 'publisher check-only validates complete local contracts' \
-  /bin/bash "$PUBLISHER" --version 0.1.3 --staging-dir "$STAGING_DIR" \
+  /bin/bash "$PUBLISHER" --version 0.1.4 --staging-dir "$STAGING_DIR" \
     --installer "$FIXTURE_INSTALLER" --installer-sha256 "$FIXTURE_INSTALLER_SHA" --check-only
 
 : >"$TMP_ROOT/output"
-if /bin/bash "$PUBLISHER" --version 0.1.3 --staging-dir "$STAGING_DIR" \
+if /bin/bash "$PUBLISHER" --version 0.1.4 --staging-dir "$STAGING_DIR" \
   --installer "$FIXTURE_INSTALLER" --installer-sha256 "$FIXTURE_INSTALLER_SHA" \
   --dry-run >"$TMP_ROOT/output" 2>&1; then
   pass 'publisher dry-run succeeds without cloud access'
@@ -180,7 +180,7 @@ else
   fail 'publisher dry-run succeeds without cloud access'
 fi
 assert_file_contains 'publisher dry-run marks version assets immutable' \
-  "immutable: tos://openmpa-downloads/releases/v0.1.3/$DMG_NAME" "$TMP_ROOT/output"
+  "immutable: tos://openmpa-downloads/releases/v0.1.4/$DMG_NAME" "$TMP_ROOT/output"
 last_plan_line=$(/usr/bin/awk '/^  (immutable|mutable):/ { line=$0 } END { print line }' "$TMP_ROOT/output")
 if [ "$last_plan_line" = '  mutable:   tos://openmpa-downloads/install.sh (last)' ]; then
   pass 'publisher uploads install.sh last'
@@ -199,19 +199,19 @@ BROKEN_INSTALLER="$TMP_ROOT/broken-install.sh"
 printf '\nif then\n' >>"$BROKEN_INSTALLER"
 BROKEN_INSTALLER_SHA=$(/usr/bin/shasum -a 256 "$BROKEN_INSTALLER" | /usr/bin/awk '{print $1}')
 expect_failure 'publisher rejects an installer with invalid Bash syntax' \
-  /bin/bash "$PUBLISHER" --version 0.1.3 --staging-dir "$STAGING_DIR" \
+  /bin/bash "$PUBLISHER" --version 0.1.4 --staging-dir "$STAGING_DIR" \
     --installer "$BROKEN_INSTALLER" --installer-sha256 "$BROKEN_INSTALLER_SHA" --check-only
 
 UNREVIEWED_INSTALLER="$TMP_ROOT/unreviewed-install.sh"
 /bin/cp "$FIXTURE_INSTALLER" "$UNREVIEWED_INSTALLER"
 printf '\nprintf "unreviewed code\\n"\n' >>"$UNREVIEWED_INSTALLER"
 expect_failure 'publisher rejects custom installer code without a reviewed digest' \
-  /bin/bash "$PUBLISHER" --version 0.1.3 --staging-dir "$STAGING_DIR" \
+  /bin/bash "$PUBLISHER" --version 0.1.4 --staging-dir "$STAGING_DIR" \
     --installer "$UNREVIEWED_INSTALLER" --check-only
 
 /bin/mv "$STAGING_DIR/$ZIP_NAME" "$STAGING_DIR/$ZIP_NAME.missing"
 expect_failure 'publisher rejects a missing required asset' \
-  /bin/bash "$PUBLISHER" --version 0.1.3 --staging-dir "$STAGING_DIR" \
+  /bin/bash "$PUBLISHER" --version 0.1.4 --staging-dir "$STAGING_DIR" \
     --installer "$FIXTURE_INSTALLER" --installer-sha256 "$FIXTURE_INSTALLER_SHA" --check-only
 /bin/mv "$STAGING_DIR/$ZIP_NAME.missing" "$STAGING_DIR/$ZIP_NAME"
 

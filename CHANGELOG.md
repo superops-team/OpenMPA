@@ -1,5 +1,23 @@
 # Changelog
 
+## 0.1.4 — 2026-10-28
+
+### Features
+
+- Add a chat-scoped native Runtime terminal window that opens through the selected conversation and keeps temporary webshell endpoints inside the Go host.
+- Reuse the MyGo native terminal engine for Runtime webshell sessions, including terminal resize, keyboard handling, ANSI rendering and safe connection cleanup.
+
+### Fixes
+
+- Align chat toolbar actions so Terminal and Trace use the same icon-and-label button style as Settings, Rename and Delete.
+- Disable Terminal and Trace consistently when no Runtime is connected or no conversation is selected.
+- Remove duplicate Trace and Settings entry points from the native title bar and sidebar, keeping those actions in their primary locations.
+
+### Known limitations
+
+- Live Runtime terminal attach depends on the selected account's VE FaaS webshell authorization and a running or explicitly warmed Runtime instance.
+- The macOS application remains ad-hoc signed and is not Apple-notarized. The GitHub prerelease provides DMG and app ZIP packages with `SHA256SUMS` and `build-verification.json`.
+
 ## 0.1.3 — 2026-10-28
 
 ### Features

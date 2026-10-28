@@ -1,6 +1,6 @@
 {
   "name": "opendots",
-  "version": "0.1.3",
+  "version": "0.1.4",
   "description": "OpenMPA desktop client for AgentKit MPA Runtime, built with MyGo.",
   "directories": {
     "doc": "docs",

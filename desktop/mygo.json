@@ -1,7 +1,7 @@
 {
   "name": "OpenMPA",
   "identifier": "com.superops.openmpa",
-  "version": "0.1.3",
+  "version": "0.1.4",
   "icon": "branding/app-icon.png",
   "main": "./cmd/openmpa",
   "bindings": "../src/client/desktop/generated/mygo.ts",
