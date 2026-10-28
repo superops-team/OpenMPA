@@ -2,6 +2,7 @@ import { readFileSync } from 'node:fs';
 import { act, create, type ReactTestRenderer } from 'react-test-renderer';
 import { expect, it, vi } from 'vitest';
 import { DesktopApp } from '../src/client/desktop/DesktopApp';
+import { messages } from '../src/client/desktop/generated/locales';
 import { setThemePreference, themePreference } from '../src/client/theme';
 import type {
   DesktopServices,
@@ -108,7 +109,7 @@ it('projects navigation into the native shell and handles native selection and c
     navigation('selectSettingsSection', 'Assistant');
   });
   expect(JSON.stringify(renderer.toJSON())).toContain(
-    'Open assistant settings',
+    messages.settingsOpenAssistantSettings(),
   );
   expect(renderer.root.findAllByProps({ role: 'dialog' })).toHaveLength(0);
   await act(async () => renderer.unmount());
@@ -570,7 +571,7 @@ it('routes settings section clicks to React settings content', async () => {
       settingsSection: 'Theme',
     }),
   );
-  expect(JSON.stringify(renderer.toJSON())).toContain('Display theme');
+  expect(JSON.stringify(renderer.toJSON())).toContain(messages.displayTheme());
   await act(async () => navigation('selectSettingsSection', 'Language'));
   expect(setShellState).toHaveBeenLastCalledWith(
     expect.objectContaining({
@@ -578,6 +579,8 @@ it('routes settings section clicks to React settings content', async () => {
       settingsSection: 'Language',
     }),
   );
-  expect(JSON.stringify(renderer.toJSON())).toContain('Display language');
+  expect(JSON.stringify(renderer.toJSON())).toContain(
+    messages.displayLanguage(),
+  );
   await act(async () => renderer.unmount());
 });

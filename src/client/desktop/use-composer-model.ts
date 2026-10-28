@@ -1,3 +1,5 @@
+import { localized, useMessageState } from './locale';
+import type { Messages } from './generated/locales';
 import { useEffect, useRef, useState } from 'react';
 import type {
   ConnectionVM,
@@ -5,20 +7,28 @@ import type {
   ExecutionConfigVM,
   SessionVM,
 } from './models';
-import { isKnownModel } from './model-catalog';
+import { isKnownModel, type RuntimeModelCatalog } from './model-catalog';
 
 export type ModelSelectionMode = 'inherit' | 'clear' | 'replace';
 
-export function modelSelectionLabel(config?: ExecutionConfigVM) {
-  if (!config) return 'Runtime default';
-  if (config.modelMode === 'clear') return 'No model override';
-  return config.model || 'Runtime default';
+export function modelSelectionLabel(
+  config?: ExecutionConfigVM,
+  m?: Messages,
+  defaultModel = '',
+) {
+  if (config?.modelMode === 'clear')
+    return m?.desktopNoModelOverride() ?? 'No model override';
+  return (
+    config?.model ||
+    defaultModel ||
+    (m?.desktopRuntimeDefault() ?? 'Runtime default')
+  );
 }
 
 function failureMessage(failure: unknown) {
   return failure instanceof Error
     ? failure.message
-    : 'Could not update the conversation model.';
+    : localized((m) => m.desktopCouldNotUpdateTheConversationModel());
 }
 
 function isMissingConfiguration(failure: unknown) {
@@ -52,9 +62,43 @@ export function useComposerModel({
 }) {
   const [config, setConfig] = useState<ExecutionConfigVM>();
   const [busy, setBusy] = useState(false);
-  const [error, setError] = useState('');
-  const [notice, setNotice] = useState('');
+  const [error, setError] = useMessageState();
+  const [notice, setNotice] = useMessageState();
   const [needsInitialization, setNeedsInitialization] = useState(false);
+  const [catalog, setCatalog] = useState<RuntimeModelCatalog>({
+    models: [],
+    defaultModel: '',
+    supported: false,
+  });
+  const [catalogLoading, setCatalogLoading] = useState(true);
+  const [catalogError, setCatalogError] = useMessageState();
+  const [catalogRefresh, setCatalogRefresh] = useState(0);
+  const catalogGeneration = useRef(0);
+  useEffect(() => {
+    const current = ++catalogGeneration.current;
+    setCatalog({ models: [], defaultModel: '', supported: false });
+    setCatalogError('');
+    setCatalogLoading(true);
+    const request = services.sessions.models;
+    if (!request) {
+      setCatalogLoading(false);
+      return;
+    }
+    void request(connection.epoch)
+      .then((value) => {
+        if (catalogGeneration.current === current) setCatalog(value);
+      })
+      .catch(() => {
+        if (catalogGeneration.current === current)
+          setCatalogError(localized((m) => m.modelCatalogReadFailed()));
+      })
+      .finally(() => {
+        if (catalogGeneration.current === current) setCatalogLoading(false);
+      });
+    return () => {
+      catalogGeneration.current++;
+    };
+  }, [services, connection.epoch, catalogRefresh]);
   const generation = useRef(0);
   useEffect(() => {
     const current = ++generation.current;
@@ -81,10 +125,13 @@ export function useComposerModel({
     };
   }, [services, connection.epoch, session.id]);
   const apply = async (mode: ModelSelectionMode, model = '') => {
-    if (busy || locked) return false;
-    if (mode === 'replace' && !isKnownModel(model.trim())) {
+    if (busy || locked || catalogLoading || !catalog.supported || catalogError)
+      return false;
+    if (mode === 'replace' && !isKnownModel(model.trim(), catalog.models)) {
       setError(
-        `Model ${model.trim() || '(empty)'} is not in the Runtime catalog. Choose a listed model.`,
+        localized((m) =>
+          m.chatModelInvalid(model.trim() || m.chatEmptyModel()),
+        ),
       );
       return false;
     }
@@ -95,10 +142,14 @@ export function useComposerModel({
     try {
       let currentConfig = config;
       if (!currentConfig?.etag) {
-        if (!services.sessions.ensureExecutionConfig)
-          throw new Error(
-            'This Runtime cannot initialize a next-turn model configuration.',
+        if (!services.sessions.ensureExecutionConfig) {
+          setError(
+            localized((m) =>
+              m.desktopThisRuntimeCannotInitializeANextTurnModelConfiguration(),
+            ),
           );
+          return false;
+        }
         currentConfig = await services.sessions.ensureExecutionConfig(
           connection.epoch,
           session.id,
@@ -107,10 +158,14 @@ export function useComposerModel({
         setConfig(currentConfig);
         setNeedsInitialization(false);
       }
-      if (!currentConfig.etag)
-        throw new Error(
-          'The Runtime returned a next-turn configuration without a revision token.',
+      if (!currentConfig.etag) {
+        setError(
+          localized((m) =>
+            m.desktopTheRuntimeReturnedANextTurnConfigurationWithoutA(),
+          ),
         );
+        return false;
+      }
       const next = await services.sessions.updateExecutionConfig(
         connection.epoch,
         session.id,
@@ -126,14 +181,18 @@ export function useComposerModel({
       setConfig(next);
       onConfigVersion?.(next.executionConfigVersion);
       setNotice(
-        'Model applies to future turns. Existing turns keep their configuration.',
+        localized((m) =>
+          m.desktopModelAppliesToFutureTurnsExistingTurnsKeepTheir(),
+        ),
       );
       return true;
     } catch (failure: unknown) {
       if (generation.current === requestGeneration)
         setError(
           isMissingConfiguration(failure)
-            ? 'This legacy diagnostic conversation does not expose next-turn model configuration. Ordinary conversations remain model-switchable between completed turns.'
+            ? localized((m) =>
+                m.desktopThisLegacyDiagnosticConversationDoesNotExposeNextTurn(),
+              )
             : failureMessage(failure),
         );
       return false;
@@ -142,6 +201,10 @@ export function useComposerModel({
     }
   };
   return {
+    catalog,
+    catalogLoading,
+    catalogError,
+    refreshCatalog: () => setCatalogRefresh((value) => value + 1),
     config,
     busy,
     error,

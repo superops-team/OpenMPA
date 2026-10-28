@@ -827,6 +827,3086 @@ export interface Messages {
    * `这里只显示已配置的 skills。浏览 AgentKit skill space 需要当前客户端没有的目录 API。`
    */
   assistantSkillScope(): string;
+  /**
+   * `操作`
+   */
+  desktopOperation(): string;
+  /**
+   * `版本`
+   */
+  desktopVersionInline(): string;
+  /**
+   * `未固定`
+   */
+  desktopNotPinned(): string;
+  /**
+   * `无法验证原操作。`
+   */
+  desktopCouldNotVerifyTheOriginalOperation(): string;
+  /**
+   * `恢复原持久化提交`
+   */
+  desktopRecoverOriginalDurableSubmission(): string;
+  /**
+   * `继续订阅已受理的执行`
+   */
+  desktopResumeAcceptedInvocation(): string;
+  /**
+   * `无法确认原操作结果。`
+   */
+  desktopCouldNotAcknowledgeThisOriginalOperation(): string;
+  /**
+   * `核对并保存到页面`
+   */
+  desktopReviewSaveToPage(): string;
+  /**
+   * `无法保存回复。`
+   */
+  desktopCouldNotSaveReply(): string;
+  /**
+   * `Runtime 尚未确认停止，仍将这一轮标记为执行中。`
+   */
+  desktopTheRuntimeDidNotAcknowledgeAnAbortAndStill(): string;
+  /**
+   * `停止请求已确认，但服务端最终结果尚未确定。历史记录已刷新，请等待 Runtime 完成处理后重试。`
+   */
+  desktopStopWasAcknowledgedButTheAuthoritativeTerminalResultIs(): string;
+  /**
+   * `无法停止执行。`
+   */
+  desktopCouldNotStopExecution(): string;
+  /**
+   * `Runtime 以错误结束了这一轮执行，可以开始新一轮对话。`
+   */
+  desktopTheRuntimeEndedThisTurnWithAnErrorYou(): string;
+  /**
+   * `流式连接异常结束，请读取历史记录后再重试。`
+   */
+  desktopStreamEndedWithAnErrorReadHistoryBeforeRetrying(): string;
+  /**
+   * `Runtime 已发送结束事件，但服务端历史记录尚未确认。请再次验证历史记录后再提交。`
+   */
+  desktopTheRuntimeSentATerminalEventButAuthoritativeHistory(): string;
+  /**
+   * `订阅关闭时未收到匹配的结束事件，请核对服务端记录后再提交。`
+   */
+  desktopTheSubscriptionClosedWithoutAMatchingTerminalEventReview(): string;
+  /**
+   * `无法提交消息。`
+   */
+  desktopCouldNotSubmitMessage(): string;
+  /**
+   * `保存的流式游标已过期，历史记录已重建。请不带游标继续订阅原执行。`
+   */
+  desktopTheSavedStreamCursorExpiredHistoryHasBeenRebuilt(): string;
+  /**
+   * `游标已过期，且无法读取历史记录。`
+   */
+  desktopCursorExpiredAndHistoryCouldNotBeRead(): string;
+  /**
+   * `没有可用于恢复订阅的已验证执行。`
+   */
+  desktopNoVerifiedInvocationIsAvailableForSubscriptionRecovery(): string;
+  /**
+   * `Runtime 已发送结束事件，但服务端历史记录尚未确认。`
+   */
+  desktopTheRuntimeSentATerminalEventButAuthoritativeHistoryInlineHasNotSettledYet(): string;
+  /**
+   * `保存的流式游标已过期，历史记录已重建。请不带游标再次订阅原执行。`
+   */
+  desktopTheSavedStreamCursorExpiredHistoryHasBeenRebuiltInlineResumeTheSameInvocationAgainWithoutACursor(): string;
+  /**
+   * `订阅恢复失败。`
+   */
+  desktopSubscriptionRecoveryFailed(): string;
+  /**
+   * `无法加载会话。`
+   */
+  desktopCouldNotLoadConversation(): string;
+  /**
+   * `已选模型`
+   */
+  desktopSelectedModel(): string;
+  /**
+   * `不覆盖模型设置`
+   */
+  desktopNoModelOverride(): string;
+  /**
+   * `Runtime 默认模型`
+   */
+  desktopRuntimeDefault(): string;
+  /**
+   * `当前轮次仍在执行或等待结果确认，请先处理完成，再修改下一轮模型。`
+   */
+  desktopTheCurrentTurnIsStillRunningOrAwaitingOutcome(): string;
+  /**
+   * `此旧版会话尚未初始化后续轮次的模型配置。首次选择模型时会完成初始化，不会修改或重新执行已有轮次。`
+   */
+  desktopThisLegacyConversationHasNotInitializedItsNextTurn(): string;
+  /**
+   * `按名称或系列搜索`
+   */
+  desktopSearchByNameOrFamily(): string;
+  /**
+   * `筛选模型`
+   */
+  desktopFilterModels(): string;
+  /**
+   * `无法更新会话模型。`
+   */
+  desktopCouldNotUpdateTheConversationModel(): string;
+  /**
+   * `此 Runtime 不支持初始化后续轮次的模型配置。`
+   */
+  desktopThisRuntimeCannotInitializeANextTurnModelConfiguration(): string;
+  /**
+   * `Runtime 返回的后续轮次配置缺少版本标识。`
+   */
+  desktopTheRuntimeReturnedANextTurnConfigurationWithoutA(): string;
+  /**
+   * `模型对之后的对话生效，已有轮次保留原配置。`
+   */
+  desktopModelAppliesToFutureTurnsExistingTurnsKeepTheir(): string;
+  /**
+   * `此旧版诊断会话未提供后续轮次的模型配置。普通会话仍可在轮次结束后切换模型。`
+   */
+  desktopThisLegacyDiagnosticConversationDoesNotExposeNextTurn(): string;
+  /**
+   * `未连接 Runtime`
+   */
+  desktopNoRuntime(): string;
+  /**
+   * `等待已受理的轮次`
+   */
+  desktopWaitingForAnAcceptedTurn(): string;
+  /**
+   * `尚未验证追踪`
+   */
+  desktopTraceValidationIdle(): string;
+  /**
+   * `首个模型内容`
+   */
+  desktopFirstModelContent(): string;
+  /**
+   * `首个可见回复`
+   */
+  desktopFirstVisibleAnswer(): string;
+  /**
+   * `模型调用次数`
+   */
+  desktopModelCalls(): string;
+  /**
+   * `最耗时步骤`
+   */
+  desktopSlowestStep(): string;
+  /**
+   * `搜索追踪`
+   */
+  desktopSearchTrace(): string;
+  /**
+   * `成功`
+   */
+  desktopSuccess(): string;
+  /**
+   * `失败`
+   */
+  desktopFailed(): string;
+  /**
+   * `执行中`
+   */
+  desktopRunning(): string;
+  /**
+   * `超时`
+   */
+  desktopTimeout(): string;
+  /**
+   * `未观测到`
+   */
+  desktopNotObserved(): string;
+  /**
+   * `已取消`
+   */
+  desktopCancelled(): string;
+  /**
+   * `按类别筛选追踪`
+   */
+  desktopFilterTraceCategory(): string;
+  /**
+   * `状态`
+   */
+  desktopStatus(): string;
+  /**
+   * `耗时`
+   */
+  desktopDuration(): string;
+  /**
+   * `开始时间`
+   */
+  desktopStarted(): string;
+  /**
+   * `结束时间`
+   */
+  desktopEnded(): string;
+  /**
+   * `详情已隐藏`
+   */
+  desktopDetailsHidden(): string;
+  /**
+   * `推理状态`
+   */
+  desktopReasoning(): string;
+  /**
+   * `进度`
+   */
+  desktopProgress(): string;
+  /**
+   * `已完成`
+   */
+  desktopCompleted(): string;
+  /**
+   * `准备中`
+   */
+  desktopPreparing(): string;
+  /**
+   * `思考中`
+   */
+  desktopThinking(): string;
+  /**
+   * `已停止`
+   */
+  desktopStopped(): string;
+  /**
+   * `读取`
+   */
+  desktopRead(): string;
+  /**
+   * `写入`
+   */
+  desktopWrite(): string;
+  /**
+   * `编辑`
+   */
+  desktopEdit(): string;
+  /**
+   * `搜索`
+   */
+  desktopSearch(): string;
+  /**
+   * `运行命令`
+   */
+  desktopRunCommand(): string;
+  /**
+   * `工具`
+   */
+  desktopTool(): string;
+  /**
+   * `执行过程`
+   */
+  desktopExecutionProcess(): string;
+  /**
+   * `此轮次暂无追踪数据：可能未采集、已过期，或当前 Runtime 尚未支持普通会话追踪。部分 Runtime 版本仅采集 admin_debug 调试会话的追踪。`
+   */
+  desktopTraceIsUnavailableForThisTurnItMayNot(): string;
+  /**
+   * `当前 Runtime 身份无权读取此追踪。`
+   */
+  desktopTheCurrentRuntimeIdentityIsNotAllowedToRead(): string;
+  /**
+   * `无法加载追踪，请在此轮次执行受理后重试。`
+   */
+  desktopCouldNotLoadThisTraceRetryAfterTheTurn(): string;
+  /**
+   * `需要登录`
+   */
+  desktopLoginRequired(): string;
+  /**
+   * `模型`
+   */
+  desktopModel(): string;
+  /**
+   * `Worker`
+   */
+  desktopWorker(): string;
+  /**
+   * `未知`
+   */
+  desktopUnknown(): string;
+  /**
+   * `页面`
+   */
+  desktopPage(): string;
+  /**
+   * `· 基准版本`
+   */
+  desktopBaseRevision(): string;
+  /**
+   * `· 记录时间`
+   */
+  desktopCaptured(): string;
+  /**
+   * `无法导出未保存的草稿。`
+   */
+  desktopCouldNotExportUnsavedDraft(): string;
+  /**
+   * `指定的内存草稿已放弃，请再次关闭窗口以检查是否可以安全退出。`
+   */
+  desktopTheIndicatedInMemoryDraftWasAbandonedCloseThe(): string;
+  /**
+   * `无法放弃指定草稿。`
+   */
+  desktopCouldNotAbandonThisExactDraft(): string;
+  /**
+   * `重命名失败。`
+   */
+  desktopRenameFailed(): string;
+  /**
+   * `删除失败。`
+   */
+  desktopDeleteFailed(): string;
+  /**
+   * `此 Runtime 尚不支持桌面助手的创建和配置。`
+   */
+  desktopThisRuntimeDoesNotYetSupportDesktopBotCreation(): string;
+  /**
+   * `操作失败。`
+   */
+  desktopTheOperationFailed(): string;
+  /**
+   * `加载会话`
+   */
+  desktopLoadConversations(): string;
+  /**
+   * `创建桌面助手`
+   */
+  desktopCreateDesktopBot(): string;
+  /**
+   * `打开本地工作区`
+   */
+  desktopOpenLocalWorkspace(): string;
+  /**
+   * `读取连接状态`
+   */
+  desktopReadConnection(): string;
+  /**
+   * `无法保存草稿恢复文件，请继续编辑或导出副本后再关闭。`
+   */
+  desktopDraftRecoveryCouldNotBeSavedContinueEditingOr(): string;
+  /**
+   * `无法注册窗口关闭处理。`
+   */
+  desktopCouldNotRegisterTheCloseProtocol(): string;
+  /**
+   * `未命名页面`
+   */
+  desktopUntitledPage(): string;
+  /**
+   * `助手配置必须是 JSON 对象。`
+   */
+  desktopProfileMustBeAJSONObject(): string;
+  /**
+   * `模型 ID 最长为 256 个字符，且不能包含 / 或 :。`
+   */
+  desktopModelIDsMustBeAtMost256CharactersAnd(): string;
+  /**
+   * `Runtime 已变更，请重新读取并核对镜像。`
+   */
+  desktopRuntimeChangedReadAndReviewImagesAgain(): string;
+  /**
+   * `服务端未提供可验证的定时任务分页信息。`
+   */
+  desktopTheServerDidNotProvideAuthoritativeScheduledTaskPagination(): string;
+  /**
+   * `定时任务分页未向后推进。`
+   */
+  desktopScheduledTaskPaginationDidNotAdvance(): string;
+  /**
+   * `所选 Runtime 未提供模板目录，请读取已授权的助手配置以查看模板。`
+   */
+  desktopTheSelectedRuntimeDoesNotExposeATemplateCatalog(): string;
+  /**
+   * `请先读取当前助手配置，再保存。`
+   */
+  desktopReadTheCurrentProfileBeforeSaving(): string;
+  /**
+   * `请先读取并核对当前 Runtime 镜像，再应用更新。`
+   */
+  desktopReadAndReviewTheCurrentRuntimeImagesBeforeApplying(): string;
+  /**
+   * `Tool 绑定已变更，请重新读取并核对镜像。`
+   */
+  desktopTheToolBindingChangedReadAndReviewImagesAgain(): string;
+  /**
+   * `管理范围：`
+   */
+  desktopManagementScope(): string;
+  /**
+   * `· 所有者操作：`
+   */
+  desktopOwnerActions(): string;
+  /**
+   * `已具备验证身份`
+   */
+  desktopVerifiedIdentityAvailable(): string;
+  /**
+   * `需要已验证的所有者身份`
+   */
+  desktopVerifiedOwnerIdentityRequired(): string;
+  /**
+   * `· 配置版本校验：`
+   */
+  desktopConfigurationCAS(): string;
+  /**
+   * `绑定操作`
+   */
+  desktopBindingOperation(): string;
+  /**
+   * `结果待确认。请保留此 ID，并先恢复服务端绑定操作，再开始新操作。`
+   */
+  desktopNeedsVerificationPreserveThisIDAndResumeTheServer(): string;
+  /**
+   * `读取私聊用户及绑定槽位`
+   */
+  desktopReadPrivateUserAndSlot(): string;
+  /**
+   * `授权`
+   */
+  desktopAuthorization(): string;
+  /**
+   * `· 槽位版本`
+   */
+  desktopSlotVersion(): string;
+  /**
+   * `暂无槽位`
+   */
+  desktopNoSlot(): string;
+  /**
+   * `· 用户`
+   */
+  desktopUser(): string;
+  /**
+   * `重置私聊用户`
+   */
+  desktopResetPrivateUser(): string;
+  /**
+   * `绑定请求已提交，凭据输入已清空。`
+   */
+  desktopBindingSubmittedCredentialInputsCleared(): string;
+  /**
+   * `扫描二维码`
+   */
+  desktopScanQRCode(): string;
+  /**
+   * `客户端 ID`
+   */
+  desktopClientID(): string;
+  /**
+   * `机器人 ID`
+   */
+  desktopBotID(): string;
+  /**
+   * `应用 ID`
+   */
+  desktopAppID(): string;
+  /**
+   * `无法读取渠道能力。`
+   */
+  desktopChannelCapabilitiesCouldNotBeRead(): string;
+  /**
+   * `渠道操作失败。`
+   */
+  desktopChannelOperationFailed(): string;
+  /**
+   * `无法读取绑定状态。`
+   */
+  desktopBindingStatusCouldNotBeRead(): string;
+  /**
+   * `请选择渠道账号。`
+   */
+  desktopChooseAChannelAccount(): string;
+  /**
+   * `无法读取渠道列表。`
+   */
+  desktopCouldNotReadChannels(): string;
+  /**
+   * `渠道操作失败。`
+   */
+  desktopChannelActionFailed(): string;
+  /**
+   * `· 所有者`
+   */
+  desktopOwner(): string;
+  /**
+   * `请核对当前配置版本`
+   */
+  desktopReviewTheCurrentProfileVersion(): string;
+  /**
+   * `后再保存。`
+   */
+  desktopBeforeSaving(): string;
+  /**
+   * `请选择 Runtime 会话。`
+   */
+  desktopChooseARuntimeConversation(): string;
+  /**
+   * `知识库操作失败。`
+   */
+  desktopKnowledgeOperationFailed(): string;
+  /**
+   * `请选择要新增版本的知识条目。`
+   */
+  desktopChooseAnItemForTheNewVersion(): string;
+  /**
+   * `显示名称`
+   */
+  desktopDisplayName(): string;
+  /**
+   * `文本资料`
+   */
+  desktopTextMaterial(): string;
+  /**
+   * `导入文本`
+   */
+  desktopImportText(): string;
+  /**
+   * `待确认的导入键`
+   */
+  desktopPendingImportKey(): string;
+  /**
+   * `。原始`
+   */
+  desktopTheOriginal(): string;
+  /**
+   * `提交已保留，请核对知识列表和导入状态后再恢复。`
+   */
+  desktopSubmissionIsRetainedVerifyTheLibraryAndImportStatus(): string;
+  /**
+   * `导入`
+   */
+  desktopImport(): string;
+  /**
+   * `· 知识条目`
+   */
+  desktopKnowledge(): string;
+  /**
+   * `· 版本`
+   */
+  desktopVersionInlineLabel(): string;
+  /**
+   * `读取服务端导入状态`
+   */
+  desktopReadAuthoritativeImportStatus(): string;
+  /**
+   * `分块`
+   */
+  desktopChunks(): string;
+  /**
+   * `· 引用`
+   */
+  desktopCitation(): string;
+  /**
+   * `字节已显示`
+   */
+  desktopBytesVisible(): string;
+  /**
+   * `引用`
+   */
+  desktopCitationInline(): string;
+  /**
+   * `无法加载定时任务。`
+   */
+  desktopCouldNotLoadSchedules(): string;
+  /**
+   * `定时任务操作失败。`
+   */
+  desktopScheduleOperationFailed(): string;
+  /**
+   * `· 下次执行：`
+   */
+  desktopNext(): string;
+  /**
+   * `立即运行`
+   */
+  desktopRunNow(): string;
+  /**
+   * `网页`
+   */
+  desktopWeb(): string;
+  /**
+   * `飞书`
+   */
+  desktopFeishu(): string;
+  /**
+   * `读取有权限的投递目标`
+   */
+  desktopReadPermittedDeliveryTargets(): string;
+  /**
+   * `第 {number} 轮`
+   */
+  traceTurnNumber(number: string): string;
+  /**
+   * `追踪已验证 · {status}`
+   */
+  traceValidatedStatus(status: string): string;
+  /**
+   * ` · 缺少 {kinds}`
+   */
+  traceMissingKinds(kinds: string): string;
+  /**
+   * `{minutes} 分 {seconds} 秒`
+   */
+  durationMinutesSeconds(minutes: string, seconds: string): string;
+  /**
+   * `{seconds} 秒`
+   */
+  durationSeconds(seconds: string): string;
+  /**
+   * `{milliseconds} 毫秒`
+   */
+  durationMilliseconds(milliseconds: string): string;
+  /**
+   * `暂无数据`
+   */
+  valueUnavailable(): string;
+  /**
+   * `已跳过`
+   */
+  statusSkipped(): string;
+  /**
+   * `无权访问`
+   */
+  statusDenied(): string;
+  /**
+   * `是否放弃“{title}”于 {time} 记录的这份内存草稿？这不会删除已保存的恢复文件。`
+   */
+  abandonDraftConfirm(title: string, time: string): string;
+  /**
+   * `是否撤销槽位版本 {version} 的私聊用户授权？`
+   */
+  revokePrivateConfirm(version: string): string;
+  /**
+   * `是否重置槽位版本 {version} 的私聊用户绑定？`
+   */
+  resetPrivateConfirm(version: string): string;
+  /**
+   * `会话 {session} 的配置已升级。执行版本是否推进：{advanced}。请在下一轮对话前读取当前配置。`
+   */
+  profileUpgradedNotice(session: string, advanced: string): string;
+  /**
+   * `导入 {key} 的结果未知，请先验证并恢复原提交，再创建新的导入。`
+   */
+  knowledgeImportUnknown(key: string): string;
+  /**
+   * `执行 {run} 已受理，服务端状态为 {status}。请刷新历史记录以确认是否完成。`
+   */
+  runAcceptedNotice(run: string, status: string): string;
+  /**
+   * `会话 {session}`
+   */
+  runSessionLabel(session: string): string;
+  /**
+   * `执行 {invocation}`
+   */
+  runInvocationLabel(invocation: string): string;
+  /**
+   * `{field} 必须是字符串或 null。`
+   */
+  profileStringRequired(field: string): string;
+  /**
+   * `账户 {account}`
+   */
+  settingsAccountId(account: string): string;
+  /**
+   * `未知`
+   */
+  settingsUnknown(): string;
+  /**
+   * `华北2（北京）`
+   */
+  settingsRegionBeijing(): string;
+  /**
+   * `华东2（上海）`
+   */
+  settingsRegionShanghai(): string;
+  /**
+   * `已登录。凭据输入已清除。`
+   */
+  settingsSignedIn(): string;
+  /**
+   * `已使用保存的凭据登录。口令已清除。`
+   */
+  settingsVaultSignedIn(): string;
+  /**
+   * `已删除保存的凭据。`
+   */
+  settingsVaultRemoved(): string;
+  /**
+   * `凭据已加密保存。口令输入已清除。`
+   */
+  settingsVaultSaved(): string;
+  /**
+   * `两次输入的口令不一致。`
+   */
+  settingsPassphrasesMismatch(): string;
+  /**
+   * `此版本不支持加密凭据存储。`
+   */
+  settingsVaultUnavailable(): string;
+  /**
+   * `凭据只保留在内存中，除非你在登录后将其保存到本地加密凭据库。`
+   */
+  settingsCredentialsMemoryHint(): string;
+  /**
+   * `无法读取账户状态。`
+   */
+  settingsAccountStatusFailed(): string;
+  /**
+   * `无法读取已保存的更新回执。`
+   */
+  settingsImageReceiptsFailed(): string;
+  /**
+   * `无法刷新已保存的更新回执。宿主可用时，请使用“刷新已保存回执”恢复原始操作。`
+   */
+  settingsImageReceiptsRefreshFailed(): string;
+  /**
+   * `无法加载 MPA Runtime。`
+   */
+  settingsRuntimesLoadFailed(): string;
+  /**
+   * `AgentKit MPA Runtime`
+   */
+  settingsRuntimeDirectory(): string;
+  /**
+   * `请先登录，再选择 MPA Runtime。`
+   */
+  settingsRuntimeSignInFirst(): string;
+  /**
+   * `列出当前账户的 Runtime`
+   */
+  settingsListCurrentAccount(): string;
+  /**
+   * `筛选 Runtime`
+   */
+  settingsFilterRuntimes(): string;
+  /**
+   * `名称或 Runtime ID`
+   */
+  settingsRuntimeFilterPlaceholder(): string;
+  /**
+   * `正在加载 MPA Runtime…`
+   */
+  settingsRuntimesLoading(): string;
+  /**
+   * `没有匹配的 MPA Runtime。请检查地域、项目或筛选条件后刷新。`
+   */
+  settingsRuntimesNoMatches(): string;
+  /**
+   * `{runtime} · {status} · 版本 {version}`
+   */
+  settingsRuntimeVersion(runtime: string, status: string, version: string): string;
+  /**
+   * `已选择 Runtime。请核验业务身份和连接。`
+   */
+  settingsRuntimeSelected(): string;
+  /**
+   * `正在选择…`
+   */
+  settingsRuntimeSelecting(): string;
+  /**
+   * `已选择`
+   */
+  settingsRuntimeIsSelected(): string;
+  /**
+   * `使用 Runtime`
+   */
+  settingsUseRuntime(): string;
+  /**
+   * `业务连接`
+   */
+  settingsBusinessConnection(): string;
+  /**
+   * `{runtime} · {status} · 范围 {scope}`
+   */
+  settingsConnectionSummary(runtime: string, status: string, scope: string): string;
+  /**
+   * `业务身份已保存。凭据输入已清除。`
+   */
+  settingsBusinessIdentitySaved(): string;
+  /**
+   * `Legacy JWT（用于启用认证的部署）`
+   */
+  settingsLegacyJwtAuthenticated(): string;
+  /**
+   * `渠道管理员凭据`
+   */
+  settingsChannelAdministratorCredentials(): string;
+  /**
+   * `网关凭据和渠道管理凭据存放在不同的宿主凭据槽中。`
+   */
+  settingsChannelCredentialsHint(): string;
+  /**
+   * `渠道认证已保存。凭据输入已清除。`
+   */
+  settingsChannelAuthenticationSaved(): string;
+  /**
+   * `Runtime 渠道密钥`
+   */
+  settingsRuntimeChannelKey(): string;
+  /**
+   * `不使用管理员凭据`
+   */
+  settingsNoAdministratorCredential(): string;
+  /**
+   * `助手设置`
+   */
+  settingsAssistantTitle(): string;
+  /**
+   * `持久指令和所选技能应用于新一轮对话，不会改写已有会话历史。`
+   */
+  settingsAssistantPersistenceHint(): string;
+  /**
+   * `打开助手设置`
+   */
+  settingsOpenAssistantSettings(): string;
+  /**
+   * `助手会话配置已保存。`
+   */
+  settingsAssistantSaved(): string;
+  /**
+   * `请先选择 Runtime 会话，再编辑助手设置。`
+   */
+  settingsAssistantSelectConversation(): string;
+  /**
+   * `刷新已保存回执`
+   */
+  settingsRefreshSavedReceipts(): string;
+  /**
+   * `读取服务端已核验的 Tool 绑定，审核准确的资源 ID 和版本，再分别应用更新。提交状态与部署状态会分别显示。`
+   */
+  settingsImageReviewHint(): string;
+  /**
+   * `此版本不支持镜像更新。`
+   */
+  settingsImageUpdateUnavailable(): string;
+  /**
+   * `Runtime {runtime} · 版本 {version}`
+   */
+  settingsRuntimeImageVersion(runtime: string, version: string): string;
+  /**
+   * `Tool {tool} · 更新于 {version}`
+   */
+  settingsToolImageVersion(tool: string, version: string): string;
+  /**
+   * `Worker Tool 镜像`
+   */
+  settingsWorkerToolImage(): string;
+  /**
+   * `审核前必须填写 {field}。`
+   */
+  settingsReviewRequired(field: string): string;
+  /**
+   * `审核失败。`
+   */
+  settingsReviewFailed(): string;
+  /**
+   * `审核确切目标`
+   */
+  settingsReviewExactTargets(): string;
+  /**
+   * `审核更新`
+   */
+  settingsReviewUpdates(): string;
+  /**
+   * `Runtime ID：{runtime}`
+   */
+  settingsRuntimeId(runtime: string): string;
+  /**
+   * `预期版本：{version}`
+   */
+  settingsExpectedVersion(version: string): string;
+  /**
+   * `镜像：{image}`
+   */
+  settingsImageValue(image: string): string;
+  /**
+   * `应用 Runtime 镜像`
+   */
+  settingsApplyRuntimeImage(): string;
+  /**
+   * `Tool ID：{tool}`
+   */
+  settingsToolId(tool: string): string;
+  /**
+   * `Worker 配置更新于：{version}`
+   */
+  settingsWorkerConfigurationUpdated(version: string): string;
+  /**
+   * `应用 Worker 镜像`
+   */
+  settingsApplyWorkerImage(): string;
+  /**
+   * `已保存的镜像更新回执`
+   */
+  settingsSavedImageReceipts(): string;
+  /**
+   * `读取此操作的当前状态`
+   */
+  settingsReadOperationStatus(): string;
+  /**
+   * `操作 {operation} · {status}`
+   */
+  settingsOperationStatus(operation: string, status: string): string;
+  /**
+   * `已提交；尚未核验是否生效`
+   */
+  settingsImageSubmitted(): string;
+  /**
+   * `读取更新状态`
+   */
+  settingsReadUpdateStatus(): string;
+  /**
+   * `Runtime 配置`
+   */
+  settingsRuntimeConfiguration(): string;
+  /**
+   * `审核 {runtime} 的资源。应用配置将调用 AgentKit，并可能重启 Runtime 实例。`
+   */
+  settingsRuntimeConfigurationHint(runtime: string): string;
+  /**
+   * `读取 Runtime 配置`
+   */
+  settingsReadRuntimeConfiguration(): string;
+  /**
+   * `基于版本 {version}，将配置应用到 {runtime}？`
+   */
+  settingsApplyConfigurationConfirm(version: string, runtime: string): string;
+  /**
+   * `版本 {version} · {status}`
+   */
+  settingsConfigurationVersion(version: string, status: string): string;
+  /**
+   * `内存（MiB）`
+   */
+  settingsMemoryMib(): string;
+  /**
+   * `审核并应用配置`
+   */
+  settingsReviewApplyConfiguration(): string;
+  /**
+   * `镜像、Tool 绑定和秘密环境变量值需要单独处理。其他管理员修改 Runtime 后，请重新加载。`
+   */
+  settingsConfigurationSeparateHint(): string;
+  /**
+   * `配置操作 ID`
+   */
+  settingsConfigurationOperationId(): string;
+  /**
+   * `原始已保存操作 ID`
+   */
+  settingsOriginalOperationIdPlaceholder(): string;
+  /**
+   * `核验原始配置更新`
+   */
+  settingsVerifyConfigurationUpdate(): string;
+  /**
+   * `目标配置和新的 Ready 版本已可见。`
+   */
+  settingsConfigurationReady(): string;
+  /**
+   * `请回读此操作以核验结果。`
+   */
+  settingsConfigurationVerifyHint(): string;
+  /**
+   * `无法加载助手设置。`
+   */
+  settingsAssistantLoadFailed(): string;
+  /**
+   * `无法保存助手设置。`
+   */
+  settingsAssistantSaveFailed(): string;
+  /**
+   * `在本地配置此助手。新一轮对话会随请求发送已保存的 AGENTS.md 和所选技能。`
+   */
+  settingsAssistantDialogDescription(): string;
+  /**
+   * `保存助手设置`
+   */
+  settingsSaveAssistantSettings(): string;
+  /**
+   * `正在加载助手设置…`
+   */
+  settingsAssistantLoading(): string;
+  /**
+   * `助手设置分类`
+   */
+  settingsAssistantSections(): string;
+  /**
+   * `技能`
+   */
+  settingsSkills(): string;
+  /**
+   * `为此助手编写持久指令。`
+   */
+  settingsAssistantInstructionsPlaceholder(): string;
+  /**
+   * `这些持久指令会附加到之后的对话请求中，不会改变已有会话历史。`
+   */
+  settingsAssistantInstructionsHint(): string;
+  /**
+   * `已选技能`
+   */
+  settingsSelectedSkills(): string;
+  /**
+   * `尚未选择技能。`
+   */
+  settingsNoSelectedSkills(): string;
+  /**
+   * `移除 {skill}`
+   */
+  settingsRemoveSkill(skill: string): string;
+  /**
+   * `导入技能文本`
+   */
+  settingsImportSkillText(): string;
+  /**
+   * `粘贴技能名称或简短的技能指令。`
+   */
+  settingsSkillImportPlaceholder(): string;
+  /**
+   * `导入技能`
+   */
+  settingsImportSkill(): string;
+  /**
+   * `技能空间`
+   */
+  settingsSkillSpace(): string;
+  /**
+   * `搜索技能`
+   */
+  settingsSearchSkills(): string;
+  /**
+   * `按名称或描述搜索`
+   */
+  settingsSearchSkillsPlaceholder(): string;
+  /**
+   * `原操作需要审阅 · {count, plural, other {# 个操作}}`
+   */
+  chatOriginalNeedsReview(count: number): string;
+  /**
+   * `{operation} · {state} · 配置 {version}`
+   */
+  chatOperationConfiguration(operation: string, state: string, version: string): string;
+  /**
+   * `执行中 · {count, plural, other {# 个步骤}}`
+   */
+  chatProcessRunning(count: number): string;
+  /**
+   * `执行失败 · {count, plural, other {# 个步骤}}`
+   */
+  chatProcessFailed(count: number): string;
+  /**
+   * `已停止 · {count, plural, other {# 个步骤}}`
+   */
+  chatProcessStopped(count: number): string;
+  /**
+   * `已执行 · {count, plural, other {# 个步骤}}`
+   */
+  chatProcessCompleted(count: number): string;
+  /**
+   * `在完整追踪中查看{action}`
+   */
+  chatInspectTool(action: string): string;
+  /**
+   * `模型：{model}`
+   */
+  chatModelLabel(model: string): string;
+  /**
+   * `当前模型 {model} 不在 Runtime 目录中。开始下一轮前，请选择有效模型。`
+   */
+  chatCurrentModelInvalid(model: string): string;
+  /**
+   * `{family} · {size}M 上下文窗口`
+   */
+  chatModelContextWindow(family: string, size: string): string;
+  /**
+   * `当前选择：{model}。模型列表为 Runtime 目录快照。`
+   */
+  chatCurrentModelChoice(model: string): string;
+  /**
+   * `模型 {model} 不在 Runtime 目录中。请选择列表中的模型。`
+   */
+  chatModelInvalid(model: string): string;
+  /**
+   * `（空）`
+   */
+  chatEmptyModel(): string;
+  /**
+   * `轮次追踪`
+   */
+  traceTitle(): string;
+  /**
+   * `当前轮`
+   */
+  traceCurrent(): string;
+  /**
+   * `追踪完整 · {count, plural, other {# 个步骤}}`
+   */
+  traceComplete(count: number): string;
+  /**
+   * `追踪不完整 · {count, plural, other {# 个步骤}}`
+   */
+  tracePartial(count: number): string;
+  /**
+   * `排队`
+   */
+  traceQueue(): string;
+  /**
+   * `工具`
+   */
+  traceTools(): string;
+  /**
+   * `Token 数`
+   */
+  traceTokens(): string;
+  /**
+   * `重试`
+   */
+  traceRetries(): string;
+  /**
+   * `步骤`
+   */
+  traceStep(): string;
+  /**
+   * `请求`
+   */
+  traceCategoryRequest(): string;
+  /**
+   * `准备`
+   */
+  traceCategoryPreparation(): string;
+  /**
+   * `沙箱`
+   */
+  traceCategorySandbox(): string;
+  /**
+   * `文件`
+   */
+  traceCategoryFile(): string;
+  /**
+   * `计划`
+   */
+  traceCategoryPlan(): string;
+  /**
+   * `终态`
+   */
+  traceCategoryTerminal(): string;
+  /**
+   * `错误`
+   */
+  traceCategoryError(): string;
+  /**
+   * `可用`
+   */
+  pageAvailable(): string;
+  /**
+   * `已启用`
+   */
+  pageEnabled(): string;
+  /**
+   * `已停用`
+   */
+  pageDisabled(): string;
+  /**
+   * `是`
+   */
+  pageYes(): string;
+  /**
+   * `否`
+   */
+  pageNo(): string;
+  /**
+   * `待处理`
+   */
+  pagePending(): string;
+  /**
+   * `已过期`
+   */
+  pageExpired(): string;
+  /**
+   * `已完成`
+   */
+  pageCompleted(): string;
+  /**
+   * `全群共享`
+   */
+  channelScopeGroup(): string;
+  /**
+   * `按发言人隔离`
+   */
+  channelScopeSender(): string;
+  /**
+   * `按话题共享`
+   */
+  channelScopeTopic(): string;
+  /**
+   * `按话题和发言人隔离`
+   */
+  channelScopeTopicSender(): string;
+  /**
+   * `未绑定`
+   */
+  channelUnbound(): string;
+  /**
+   * `共享绑定`
+   */
+  channelSharedBinding(): string;
+  /**
+   * `私有绑定`
+   */
+  channelPrivateBinding(): string;
+  /**
+   * `已配置`
+   */
+  channelConfigured(): string;
+  /**
+   * `已断开`
+   */
+  channelDisconnected(): string;
+  /**
+   * `等待中`
+   */
+  channelWaiting(): string;
+  /**
+   * `注册中`
+   */
+  channelRegistering(): string;
+  /**
+   * `已注册`
+   */
+  channelRegistered(): string;
+  /**
+   * `已授权`
+   */
+  channelAuthorized(): string;
+  /**
+   * `已撤销`
+   */
+  channelRevoked(): string;
+  /**
+   * `未授权`
+   */
+  channelUnauthorized(): string;
+  /**
+   * `已接收`
+   */
+  knowledgeReceived(): string;
+  /**
+   * `处理中`
+   */
+  knowledgeProcessing(): string;
+  /**
+   * `已就绪`
+   */
+  knowledgeReady(): string;
+  /**
+   * `已删除`
+   */
+  knowledgeDeleted(): string;
+  /**
+   * `结果已限制`
+   */
+  knowledgeBounded(): string;
+  /**
+   * `部分结果`
+   */
+  knowledgePartial(): string;
+  /**
+   * `文本`
+   */
+  knowledgeText(): string;
+  /**
+   * `文件`
+   */
+  knowledgeFile(): string;
+  /**
+   * `尚未配置渠道账号。`
+   */
+  channelNoAccounts(): string;
+  /**
+   * `此会话尚未导入知识资料。`
+   */
+  knowledgeNoItems(): string;
+  /**
+   * `未找到匹配的知识资料。`
+   */
+  knowledgeNoMatches(): string;
+  /**
+   * `单次执行`
+   */
+  scheduleOnce(): string;
+  /**
+   * `固定间隔`
+   */
+  scheduleInterval(): string;
+  /**
+   * `每天`
+   */
+  scheduleDaily(): string;
+  /**
+   * `每周`
+   */
+  scheduleWeekly(): string;
+  /**
+   * `每月`
+   */
+  scheduleMonthly(): string;
+  /**
+   * `Cron 表达式`
+   */
+  scheduleCron(): string;
+  /**
+   * `排队中`
+   */
+  scheduleQueued(): string;
+  /**
+   * `已取消`
+   */
+  pageCancelled(): string;
+  /**
+   * `没有匹配的任务。`
+   */
+  scheduleNoMatches(): string;
+  /**
+   * `折叠{section}`
+   */
+  collapseSection(section: string): string;
+  /**
+   * `展开{section}`
+   */
+  expandSection(section: string): string;
+  /**
+   * `纯文本`
+   */
+  plainTextCode(): string;
+  /**
+   * `代码自动换行`
+   */
+  wrapCode(): string;
+  /**
+   * `代码不换行`
+   */
+  noWrapCode(): string;
+  /**
+   * `复制代码`
+   */
+  copyCode(): string;
+  /**
+   * `可滚动的 Markdown 表格`
+   */
+  scrollableMarkdownTable(): string;
+  /**
+   * `已受理`
+   */
+  deploymentAccepted(): string;
+  /**
+   * `未受理`
+   */
+  deploymentNotAccepted(): string;
+  /**
+   * `{acceptance} · {state} · Runtime 已就绪：{runtime} · 业务健康状态已验证：{health} · Worker 配置已更新：{worker} · 现有沙箱已验证：{sandbox}。{message}`
+   */
+  deploymentOperationSummary(acceptance: string, state: string, runtime: string, health: string, worker: string, sandbox: string, message: string): string;
+  /**
+   * `连接渠道账号`
+   */
+  desktopConnectAChannelAccount(): string;
+  /**
+   * `读取绑定状态`
+   */
+  desktopReadBindingStatus(): string;
+  /**
+   * `重试此绑定`
+   */
+  desktopRetryThisBinding(): string;
+  /**
+   * `操作 ID`
+   */
+  desktopOperationID(): string;
+  /**
+   * `绑定 ID`
+   */
+  desktopBindingID(): string;
+  /**
+   * `读取并恢复`
+   */
+  desktopReadAndResume(): string;
+  /**
+   * `账号权限与私聊用户`
+   */
+  desktopAccountPermissionsAndPrivateUser(): string;
+  /**
+   * `渠道账号`
+   */
+  desktopChannelAccount(): string;
+  /**
+   * `选择账号`
+   */
+  desktopChooseAnAccount(): string;
+  /**
+   * `读取飞书群权限`
+   */
+  desktopReadFeishuGroupPermissions(): string;
+  /**
+   * `群聊 ID`
+   */
+  desktopGroupChatID(): string;
+  /**
+   * `群会话策略`
+   */
+  desktopGroupSessionScope(): string;
+  /**
+   * `保存群权限`
+   */
+  desktopSaveGroupPermission(): string;
+  /**
+   * `移除群权限`
+   */
+  desktopRemoveGroupPermission(): string;
+  /**
+   * `私聊用户授权`
+   */
+  desktopPrivateUserAuthorization(): string;
+  /**
+   * `撤销授权`
+   */
+  desktopRevokeAuthorization(): string;
+  /**
+   * `用于配置升级的已有会话`
+   */
+  desktopExistingConversationForProfileUpgrade(): string;
+  /**
+   * `检查并升级账号配置`
+   */
+  desktopReviewAndUpgradeAccountProfile(): string;
+  /**
+   * `绑定方式`
+   */
+  desktopBindingMethod(): string;
+  /**
+   * `手动填写凭据`
+   */
+  desktopManualCredentials(): string;
+  /**
+   * `机器人绑定类型`
+   */
+  desktopBotBindingType(): string;
+  /**
+   * `渠道密钥`
+   */
+  desktopProviderSecret(): string;
+  /**
+   * `开始绑定`
+   */
+  desktopStartBinding(): string;
+  /**
+   * `渠道与模板`
+   */
+  desktopChannelsAndTemplates(): string;
+  /**
+   * `渠道管理使用 Runtime 管理员身份；会话访问单独授权。`
+   */
+  desktopChannelManagementUsesTheRuntimeAdministratorIdentityConversationAccess(): string;
+  /**
+   * `连接 Runtime 并配置渠道管理凭据，即可查看账号与模板。`
+   */
+  desktopConnectARuntimeWithChannelManagementCredentialsToView(): string;
+  /**
+   * `机器人配置`
+   */
+  desktopBotProfile(): string;
+  /**
+   * `更新配置`
+   */
+  desktopUpdateConfiguration(): string;
+  /**
+   * `Runtime 模板`
+   */
+  desktopRuntimeTemplates(): string;
+  /**
+   * `读取模板`
+   */
+  desktopReadTemplates(): string;
+  /**
+   * `机器人配置 JSON`
+   */
+  desktopBotProfileJSON(): string;
+  /**
+   * `保存配置`
+   */
+  desktopSaveProfile(): string;
+  /**
+   * `新渠道凭据`
+   */
+  desktopNewChannelCredential(): string;
+  /**
+   * `此更新不支持服务端版本校验。保存后请重新读取配置。`
+   */
+  desktopThisUpdateHasNoServerCASReadConfigurationAgain(): string;
+  /**
+   * `保存凭据`
+   */
+  desktopSaveCredential(): string;
+  /**
+   * `禁用账号`
+   */
+  desktopDisableAccount(): string;
+  /**
+   * `启用账号`
+   */
+  desktopEnableAccount(): string;
+  /**
+   * `会话上下文`
+   */
+  desktopConversationContext(): string;
+  /**
+   * `会话状态`
+   */
+  desktopConversationStatus(): string;
+  /**
+   * `客户端保留原始消息与幂等标识。在确认提交结果前，无法发送新请求。`
+   */
+  desktopTheHostRetainsTheOriginalMessageAndIdempotencyKey(): string;
+  /**
+   * `读取服务端历史`
+   */
+  desktopReadAuthoritativeHistory(): string;
+  /**
+   * `提交结果待确认，消息草稿已保留。发送新消息前，请读取服务端历史。`
+   */
+  desktopTheSubmissionOutcomeNeedsReviewYourMessageDraftIs(): string;
+  /**
+   * `读取历史并恢复原调用`
+   */
+  desktopReadHistoryAndResumeTheSameInvocation(): string;
+  /**
+   * `此机器人配置快照未经验证。发送前，请打开账号设置确认已授权的配置。`
+   */
+  desktopThisBotProfileSnapshotIsUnverifiedOpenAccountSettings(): string;
+  /**
+   * `模型选择`
+   */
+  desktopModelSelection(): string;
+  /**
+   * `后续消息使用的模型`
+   */
+  desktopModelForUpcomingMessages(): string;
+  /**
+   * `仅对新消息生效，已有回合保留原模型。`
+   */
+  desktopAppliesOnlyToNewMessagesEarlierTurnsKeepThe(): string;
+  /**
+   * `关闭模型选择`
+   */
+  desktopCloseModelSelector(): string;
+  /**
+   * `没有匹配的模型。`
+   */
+  desktopNoModelsMatchTheFilter(): string;
+  /**
+   * `清除此会话的模型设置`
+   */
+  desktopClearThisConversationOverride(): string;
+  /**
+   * `关闭前请处理未保存的草稿`
+   */
+  desktopPreserveYourUnsavedDraftsBeforeClosing(): string;
+  /**
+   * `可继续编辑、导出完整副本或放弃指定的内存草稿。已保存的恢复文件会保留。`
+   */
+  desktopContinueEditingExportAnExactCopyOrExplicitlyAbandon(): string;
+  /**
+   * `导出此草稿`
+   */
+  desktopExportThisDraft(): string;
+  /**
+   * `放弃此草稿`
+   */
+  desktopAbandonThisExactDraft(): string;
+  /**
+   * `继续编辑`
+   */
+  desktopContinueEditing(): string;
+  /**
+   * `会话知识`
+   */
+  desktopSESSIONKNOWLEDGE(): string;
+  /**
+   * `可追溯来源的参考资料`
+   */
+  desktopReferenceMaterialWithProvenance(): string;
+  /**
+   * `导入的知识属于所选会话，不会生成可执行的沙箱附件。`
+   */
+  desktopImportedKnowledgeBelongsToTheSelectedConversationItDoes(): string;
+  /**
+   * `连接 Runtime 后即可访问会话知识。`
+   */
+  desktopConnectARuntimeToAccessSessionKnowledge(): string;
+  /**
+   * `知识库`
+   */
+  desktopKnowledgeLibrary(): string;
+  /**
+   * `刷新知识库`
+   */
+  desktopRefreshLibrary(): string;
+  /**
+   * `导入资料`
+   */
+  desktopImportMaterial(): string;
+  /**
+   * `选择文件并导入`
+   */
+  desktopChooseFileImport(): string;
+  /**
+   * `为所选资料添加文本版本`
+   */
+  desktopAddTextVersionToSelectedItem(): string;
+  /**
+   * `选择文件以添加新版本`
+   */
+  desktopChooseFileForANewVersion(): string;
+  /**
+   * `通过系统窗口选择文件。导入受理后，请检查处理状态以确认资料已就绪。`
+   */
+  desktopFileSelectionIsProvidedByTheNativeHostAn(): string;
+  /**
+   * `恢复原导入请求`
+   */
+  desktopRecoverOriginalImport(): string;
+  /**
+   * `确认后丢弃本地恢复记录`
+   */
+  desktopDiscardLocalRecoveryAfterReview(): string;
+  /**
+   * `读取所选内容`
+   */
+  desktopReadSelectedContent(): string;
+  /**
+   * `删除知识`
+   */
+  desktopDeleteKnowledge(): string;
+  /**
+   * `读取更多内容`
+   */
+  desktopReadMoreContent(): string;
+  /**
+   * `搜索参考资料`
+   */
+  desktopSearchReferenceMaterial(): string;
+  /**
+   * `搜索词`
+   */
+  desktopSearchQuery(): string;
+  /**
+   * `来源类型（可选，用逗号分隔）`
+   */
+  desktopSourceTypesOptionalCommaSeparated(): string;
+  /**
+   * `更新时间下限（可选，RFC3339 格式）`
+   */
+  desktopUpdatedAfterOptionalRFC3339(): string;
+  /**
+   * `加载更多结果`
+   */
+  desktopLoadMoreMatches(): string;
+  /**
+   * `你的工作空间`
+   */
+  desktopYOURWORKSPACE(): string;
+  /**
+   * `让任务按时完成`
+   */
+  desktopALittleFollowThrough(): string;
+  /**
+   * `定时任务在 Runtime 上执行，关闭应用后仍会运行。`
+   */
+  desktopScheduledTasksExecuteOnTheRuntimeAndContinueWhen(): string;
+  /**
+   * `新建定时任务`
+   */
+  desktopNewScheduledTask(): string;
+  /**
+   * `连接 Runtime 并验证定时任务身份后，即可管理服务端任务。`
+   */
+  desktopConnectARuntimeWithAVerifiedScheduledTaskIdentity(): string;
+  /**
+   * `搜索任务`
+   */
+  desktopSearchTasks(): string;
+  /**
+   * `让想法定期回到眼前`
+   */
+  desktopLetAThoughtComeBackAround(): string;
+  /**
+   * `为此 Runtime 创建定时任务。`
+   */
+  desktopCreateAServerScheduleForThisRuntime(): string;
+  /**
+   * `刷新历史`
+   */
+  desktopRefreshHistory(): string;
+  /**
+   * `条执行记录`
+   */
+  desktopRunsShown(): string;
+  /**
+   * `加载更多历史`
+   */
+  desktopLoadMoreHistory(): string;
+  /**
+   * `智能体 ID（可选）`
+   */
+  desktopAgentIDOptional(): string;
+  /**
+   * `调度类型`
+   */
+  desktopScheduleType(): string;
+  /**
+   * `Cron 表达式`
+   */
+  desktopCronExpression(): string;
+  /**
+   * `执行时间（RFC3339 格式）`
+   */
+  desktopRunAtRFC3339(): string;
+  /**
+   * `间隔秒数`
+   */
+  desktopIntervalSeconds(): string;
+  /**
+   * `星期（1 为周一，7 为周日）`
+   */
+  desktopWeekdays1MondayThrough7Sunday(): string;
+  /**
+   * `每月日期（1 至 31）`
+   */
+  desktopMonthDays1Through31(): string;
+  /**
+   * `时区`
+   */
+  desktopTimeZone(): string;
+  /**
+   * `投递渠道`
+   */
+  desktopDeliveryChannel(): string;
+  /**
+   * `飞书应用 ID`
+   */
+  desktopFeishuAppID(): string;
+  /**
+   * `投递目标`
+   */
+  desktopDeliveryTarget(): string;
+  /**
+   * `选择已授权的群`
+   */
+  desktopChooseAPermittedGroup(): string;
+  /**
+   * `保存定时任务`
+   */
+  desktopSaveSchedule(): string;
+  /**
+   * `刷新追踪`
+   */
+  desktopRefreshTrace(): string;
+  /**
+   * `关闭追踪`
+   */
+  desktopCloseTrace(): string;
+  /**
+   * `追踪摘要`
+   */
+  desktopTraceSummary(): string;
+  /**
+   * `搜索步骤、错误或 ID`
+   */
+  desktopSearchStepsErrorsOrIDs(): string;
+  /**
+   * `筛选追踪状态`
+   */
+  desktopFilterTraceStatus(): string;
+  /**
+   * `全部状态`
+   */
+  desktopAllStatuses(): string;
+  /**
+   * `全部类别`
+   */
+  desktopAllCategories(): string;
+  /**
+   * `追踪视图`
+   */
+  desktopTraceView(): string;
+  /**
+   * `耗时不可用`
+   */
+  desktopTimingUnavailable(): string;
+  /**
+   * `没有符合当前筛选条件的步骤。`
+   */
+  desktopNoStepsMatchTheCurrentFilters(): string;
+  /**
+   * `追踪步骤详情`
+   */
+  desktopTraceStepDetails(): string;
+  /**
+   * `关闭步骤详情`
+   */
+  desktopCloseStepDetails(): string;
+  /**
+   * `步骤 ID`
+   */
+  desktopStepID(): string;
+  /**
+   * `来源事件`
+   */
+  desktopSourceEvent(): string;
+  /**
+   * `脱敏详情`
+   */
+  desktopSafeDetails(): string;
+  /**
+   * `OpenMPA 桌面端`
+   */
+  desktopOpenMPADesktop(): string;
+  /**
+   * `请通过 MyGo 桌面应用打开此页面，以连接平台与工作空间服务。`
+   */
+  desktopOpenThisFrontendThroughTheMyGoDesktopApplicationTo(): string;
+  /**
+   * `连接`
+   */
+  desktopCONNECTIONS(): string;
+  /**
+   * `刷新`
+   */
+  desktopRefresh(): string;
+  /**
+   * `诊断`
+   */
+  desktopDiagnostics(): string;
+  /**
+   * `移除`
+   */
+  desktopRemove(): string;
+  /**
+   * `配置 ·`
+   */
+  desktopProfile(): string;
+  /**
+   * `配置 ·`
+   */
+  desktopConfigurationInline(): string;
+  /**
+   * `渠道`
+   */
+  desktopChannel(): string;
+  /**
+   * `用户`
+   */
+  desktopUserLabel(): string;
+  /**
+   * `授权`
+   */
+  desktopAuthorize(): string;
+  /**
+   * `回合`
+   */
+  desktopTurn(): string;
+  /**
+   * `时间线`
+   */
+  desktopTimeline(): string;
+  /**
+   * `列表`
+   */
+  desktopList(): string;
+  /**
+   * `名称`
+   */
+  desktopName(): string;
+  /**
+   * `提示词`
+   */
+  desktopPrompt(): string;
+  /**
+   * `启用`
+   */
+  desktopEnable(): string;
+  /**
+   * `禁用`
+   */
+  desktopDisable(): string;
+  /**
+   * `重试`
+   */
+  desktopRetry(): string;
+  /**
+   * `已绑定`
+   */
+  desktopBound(): string;
+  /**
+   * `响应`
+   */
+  desktopResponse(): string;
+  /**
+   * `加载中…`
+   */
+  desktopLoading(): string;
+  /**
+   * `恢复`
+   */
+  desktopResume(): string;
+  /**
+   * `步骤`
+   */
+  desktopSteps(): string;
+  /**
+   * `原因`
+   */
+  desktopReason(): string;
+  /**
+   * `详情`
+   */
+  desktopDetails(): string;
+  /**
+   * `输出`
+   */
+  desktopOutput(): string;
+  /**
+   * `消息`
+   */
+  desktopMessages(): string;
+  /**
+   * `批准`
+   */
+  desktopApprove(): string;
+  /**
+   * `拒绝`
+   */
+  desktopReject(): string;
+  /**
+   * `收起步骤`
+   */
+  desktopCollapseStep(): string;
+  /**
+   * `展开步骤`
+   */
+  desktopExpandStep(): string;
+  /**
+   * `追踪校验失败`
+   */
+  desktopTraceValidationFailed(): string;
+  /**
+   * `正在校验追踪`
+   */
+  desktopValidatingTrace(): string;
+  /**
+   * `正在收集追踪 · 当前回合仍在运行`
+   */
+  desktopTraceCollectingTheCurrentTurnIsStillRunning(): string;
+  /**
+   * `正在校验当前回合的追踪…`
+   */
+  desktopValidatingTheCurrentTurnTrace(): string;
+  /**
+   * `此回合没有返回追踪步骤。`
+   */
+  desktopTraceReturnedNoStepsForThisTurn(): string;
+  /**
+   * `Runtime 返回的调用追踪为空或不可用。`
+   */
+  desktopTheRuntimeReturnedAnEmptyOrUnavailableTraceFor(): string;
+  /**
+   * `选择会话`
+   */
+  chooseConversation(): string;
+  /**
+   * `开始会话`
+   */
+  startConversation(): string;
+  /**
+   * `连接账号`
+   */
+  connectAccount(): string;
+  /**
+   * `此页面有未保存的更改。离开前请保存或导出。是否丢弃草稿并继续？`
+   */
+  unsavedPageConfirm(): string;
+  /**
+   * `删除会话 {id}？服务端保留与记忆策略仍然适用。`
+   */
+  deleteConversationConfirm(id: string): string;
+  /**
+   * `绑定 {id}`
+   */
+  channelBindingLabel(id: string): string;
+  /**
+   * `等待服务端 ID`
+   */
+  channelAwaitingId(): string;
+  /**
+   * `扫描此二维码以授权所选渠道账号`
+   */
+  channelAuthorizeQr(): string;
+  /**
+   * `到期时间：{time}`
+   */
+  channelExpires(time: string): string;
+  /**
+   * `恢复绑定`
+   */
+  channelResumeBinding(): string;
+  /**
+   * `重试此绑定前，请确认网关连接正常。是否沿用原操作 ID 与绑定 ID 重试？`
+   */
+  channelRetryConfirm(): string;
+  /**
+   * `是否恢复读取此前发起的绑定操作？`
+   */
+  channelResumeConfirm(): string;
+  /**
+   * `移除渠道账号 {id}？会话历史将保留。`
+   */
+  channelRemoveConfirm(id: string): string;
+  /**
+   * `移除群 {id} 的权限？`
+   */
+  channelRemovePermissionConfirm(id: string): string;
+  /**
+   * `将已有会话 {id} 升级为账号配置？此操作不支持服务端版本校验，也不会推进执行版本。`
+   */
+  channelUpgradeConfirm(id: string): string;
+  /**
+   * `沿用原幂等标识恢复此导入请求？如导入文件，请选择同一个原始文件。`
+   */
+  knowledgeRecoverConfirm(): string;
+  /**
+   * `清除此未确认导入的本地记录？这不会取消服务端导入。再次导入相同资料前，请确认原请求结果。`
+   */
+  knowledgeDiscardConfirm(): string;
+  /**
+   * `删除知识 {id}？`
+   */
+  knowledgeDeleteConfirm(id: string): string;
+  /**
+   * `正在搜索所选知识 {id}`
+   */
+  knowledgeSearchingItem(id: string): string;
+  /**
+   * `正在搜索此会话的知识`
+   */
+  knowledgeSearchingConversation(): string;
+  /**
+   * `查找任务…`
+   */
+  scheduleFindTask(): string;
+  /**
+   * `禁用定时任务`
+   */
+  scheduleDisable(): string;
+  /**
+   * `启用定时任务`
+   */
+  scheduleEnable(): string;
+  /**
+   * `编辑定时任务`
+   */
+  scheduleEdit(): string;
+  /**
+   * `删除定时任务 {id}？`
+   */
+  scheduleDeleteConfirm(id: string): string;
+  /**
+   * `服务端执行总数不可用。`
+   */
+  scheduleCountUnavailable(): string;
+  /**
+   * `沿用原始内容、幂等标识与执行版本恢复此请求？客户端将验证持久化幂等性与权限。`
+   */
+  chatRecoverConfirm(): string;
+  /**
+   * `检查服务端历史后，是否确认此结果未知的操作？它可能已经执行。确认后会解除恢复阻塞；再次提交原提示词可能导致重复执行。`
+   */
+  chatAcknowledgeConfirm(): string;
+  /**
+   * `确认已验证的终止操作`
+   */
+  chatResolveTerminal(): string;
+  /**
+   * `确认结果`
+   */
+  chatAcknowledgeOutcome(): string;
+  /**
+   * `暂无摘要`
+   */
+  chatNoSummary(): string;
+  /**
+   * `当前回合结束后，才能更改下一回合的模型。`
+   */
+  modelWaitForTurn(): string;
+  /**
+   * `为后续回合选择 Runtime 中的模型`
+   */
+  modelChooseCatalog(): string;
+  /**
+   * `正在加载会话模型配置。`
+   */
+  modelLoadingConfiguration(): string;
+  /**
+   * `使用助手配置的默认模型`
+   */
+  modelUseProfileDefault(): string;
+  /**
+   * `追踪已截断 · 返回 {returned} / {total} 条`
+   */
+  traceTruncated(returned: string, total: string): string;
+  /**
+   * `此回合的追踪不可用。`
+   */
+  traceUnavailable(): string;
+  /**
+   * `等待已受理的回合。`
+   */
+  traceWaiting(): string;
+  /**
+   * `请先发送消息；产生调用后将自动开始追踪校验。`
+   */
+  traceAutoValidation(): string;
+  /**
+   * `关闭{title}`
+   */
+  closeDialog(title: string): string;
+  /**
+   * `代码已复制`
+   */
+  codeCopied(): string;
+  /**
+   * `无法复制代码`
+   */
+  codeCopyFailed(): string;
+  /**
+   * `完整配置只能包含 agentsMd、model、skills 和 mcp，且四个字段均为必填。`
+   */
+  profileFieldsRequired(): string;
+  /**
+   * `{key} 必须是字符串列表或 null。`
+   */
+  profileListRequired(key: string): string;
+  /**
+   * `agentsMd 超过 32,000 个 Unicode 字符。`
+   */
+  profileInstructionsTooLong(): string;
+  /**
+   * `{key} 超过 200 项。`
+   */
+  profileListTooLong(key: string): string;
+  /**
+   * `配置不是有效的 JSON。`
+   */
+  profileInvalidJson(): string;
+  /**
+   * `定时任务提交 {token} 需要确认。开始新提交前，请保留原表单与标识。`
+   */
+  schedulePendingSubmission(token: string): string;
+  /**
+   * `提交结果未知。请核对客户端标识 {token}；原表单与标识已保留，供手动恢复。`
+   */
+  scheduleSubmissionUnknown(token: string): string;
+  /**
+   * `触发结果未知。请核对客户端标识 {token}。手动恢复时会沿用原请求。`
+   */
+  scheduleTriggerUnknown(token: string): string;
+  /**
+   * `Runtime 目录不完整。选择 Runtime 前，请先刷新。`
+   */
+  runtimeDirectoryIncomplete(): string;
+  /**
+   * `此连接不支持独立凭据槽位。Runtime 网关凭据由客户端管理。`
+   */
+  connectionSlotsUnsupported(): string;
+  /**
+   * `原提交 {id} 需要确认。开始新执行前，请重新打开并检查已保存的请求。`
+   */
+  originalSubmissionNeedsReview(id: string): string;
+  /**
+   * `提交前已取消保存。`
+   */
+  saveCancelled(): string;
+  /**
+   * `已保存的页面已被删除，审阅凭证仍可查看。`
+   */
+  savedPageDeleted(): string;
+  /**
+   * `存在未保存的恢复草稿，暂时无法关闭。`
+   */
+  unsavedDraftsPreventClose(): string;
+  /**
+   * `域名`
+   */
+  channelDomain(): string;
+  /**
+   * `时间`
+   */
+  scheduleTime(): string;
+  /**
+   * `树形`
+   */
+  traceTree(): string;
+  /**
+   * `展开`
+   */
+  traceExpand(): string;
+  /**
+   * `收起`
+   */
+  traceCollapse(): string;
+  /**
+   * `此 Runtime 要求业务用户 ID（x-user-id）。请在「设置 → 身份认证」中配置该部署要求的业务身份。`
+   */
+  businessIdentityRequired(): string;
+  /**
+   * `此 Runtime 要求业务 JWT（X-Jwt-Token）。请在「设置 → 身份认证」中配置有效的 JWT。`
+   */
+  businessJWTRequired(): string;
+  /**
+   * `资源`
+   */
+  resources(): string;
+  /**
+   * `协作`
+   */
+  collaboration(): string;
+  /**
+   * `技能、MCP 与指令`
+   */
+  skillsMcpInstructions(): string;
+  /**
+   * `A2A 协作`
+   */
+  a2aCollaboration(): string;
+  /**
+   * `页码`
+   */
+  usagePage(): string;
+  /**
+   * `总数`
+   */
+  usageTotal(): string;
+  /**
+   * `在会话中使用`
+   */
+  useInConversation(): string;
+  /**
+   * `请连接 Runtime 以管理协作。`
+   */
+  connectRuntimeCollaboration(): string;
+  /**
+   * `刷新协作`
+   */
+  refreshCollaboration(): string;
+  /**
+   * `浏览和刷新不会修改 Runtime。写入操作需要确认。`
+   */
+  collaborationReadOnly(): string;
+  /**
+   * `请先刷新协作，再提交更改。你的草稿会保留。`
+   */
+  collaborationRefreshRequired(): string;
+  /**
+   * `当前绑定`
+   */
+  currentBinding(): string;
+  /**
+   * `尚未加载当前绑定。`
+   */
+  bindingNotLoaded(): string;
+  /**
+   * `解绑空间`
+   */
+  unbindSpace(): string;
+  /**
+   * `尚未绑定 A2A 空间。`
+   */
+  noBoundA2aSpace(): string;
+  /**
+   * `A2A 空间`
+   */
+  a2aSpaces(): string;
+  /**
+   * `请刷新协作以加载空间。`
+   */
+  refreshCollaborationSpaces(): string;
+  /**
+   * `协作空间`
+   */
+  collaborationSpace(): string;
+  /**
+   * `没有可见的 A2A 空间。`
+   */
+  noVisibleA2aSpaces(): string;
+  /**
+   * `绑定所选空间`
+   */
+  bindSelectedSpace(): string;
+  /**
+   * `空间成员`
+   */
+  spaceMembers(): string;
+  /**
+   * `请选择空间以读取成员。`
+   */
+  selectSpaceMembers(): string;
+  /**
+   * `此空间中没有可见成员。`
+   */
+  noVisibleSpaceMembers(): string;
+  /**
+   * `选择成员`
+   */
+  selectMember(): string;
+  /**
+   * `上一页成员`
+   */
+  previousMembersPage(): string;
+  /**
+   * `下一页成员`
+   */
+  nextMembersPage(): string;
+  /**
+   * `上一页空间`
+   */
+  previousSpacesPage(): string;
+  /**
+   * `下一页空间`
+   */
+  nextSpacesPage(): string;
+  /**
+   * `成员详情`
+   */
+  memberDetails(): string;
+  /**
+   * `此 Runtime 不提供 Agent Card。`
+   */
+  agentCardUnavailable(): string;
+  /**
+   * `当前别名`
+   */
+  currentAlias(): string;
+  /**
+   * `成员别名`
+   */
+  memberAlias(): string;
+  /**
+   * `将别名留空即可移除。`
+   */
+  removeAliasHint(): string;
+  /**
+   * `保存成员别名`
+   */
+  saveMemberAlias(): string;
+  /**
+   * `此 Runtime 不支持别名。`
+   */
+  aliasesUnavailable(): string;
+  /**
+   * `协作任务`
+   */
+  collaborationTask(): string;
+  /**
+   * `此操作会将 @提及添加到会话草稿。请在会话中检查后发送。`
+   */
+  collaborationDraftHint(): string;
+  /**
+   * `更改 Runtime 的 A2A 空间绑定？`
+   */
+  confirmSpaceBinding(): string;
+  /**
+   * `空间绑定已保存。`
+   */
+  spaceBindingSaved(): string;
+  /**
+   * `更新所选空间中此成员的别名？`
+   */
+  confirmMemberAlias(): string;
+  /**
+   * `成员别名已保存。`
+   */
+  memberAliasSaved(): string;
+  /**
+   * `当前 Runtime 不提供此功能。`
+   */
+  capabilityUnavailable(): string;
+  /**
+   * `资源已发生变化。请重新读取并检查当前状态，再提交更改。`
+   */
+  conflict(): string;
+  /**
+   * `服务器可能已接受此操作。请先读回并核对状态，再决定是否重新提交。`
+   */
+  outcomeUnknown(): string;
+  /**
+   * `请先选择会话，再使用此资源。`
+   */
+  conversationRequired(): string;
+  /**
+   * `连接已发生变化。请重新加载此页面。`
+   */
+  staleConnection(): string;
+  /**
+   * `当前 Runtime 中已不可见此资源。请刷新资源列表。`
+   */
+  resourceNotVisible(): string;
+  /**
+   * `服务器返回了无效响应。请刷新以读取当前状态。`
+   */
+  invalidResponse(): string;
+  /**
+   * `无权执行此操作。请检查当前账户和 Runtime 的权限。`
+   */
+  denied(): string;
+  /**
+   * `服务暂时不可用。`
+   */
+  unavailable(): string;
+  /**
+   * `无法连接服务器。请检查连接后刷新。`
+   */
+  connectionFailure(): string;
+  /**
+   * `技能`
+   */
+  skills(): string;
+  /**
+   * `MCP`
+   */
+  mcp(): string;
+  /**
+   * `AGENTS.md`
+   */
+  agentsMd(): string;
+  /**
+   * `Main 配置`
+   */
+  mainProfile(): string;
+  /**
+   * `资源分类`
+   */
+  resourceSections(): string;
+  /**
+   * `资源错误`
+   */
+  resourceError(): string;
+  /**
+   * `模型`
+   */
+  model(): string;
+  /**
+   * `请连接 Runtime 以使用资源。`
+   */
+  connectRuntimeResources(): string;
+  /**
+   * `刷新技能`
+   */
+  refreshSkills(): string;
+  /**
+   * `这里展示当前 Runtime 已配置、供 Worker 使用的资源，无需先选择会话。`
+   */
+  mountedSkillSpacesOnly(): string;
+  /**
+   * `尚未加载技能空间。`
+   */
+  skillSpacesNotLoaded(): string;
+  /**
+   * `尚未挂载技能空间。`
+   */
+  noMountedSkillSpaces(): string;
+  /**
+   * `已挂载技能空间`
+   */
+  mountedSkillSpace(): string;
+  /**
+   * `技能目录不可用。请检查平台访问权限后刷新。`
+   */
+  skillDirectoryUnavailable(): string;
+  /**
+   * `所选技能会添加到当前会话草稿，不会自动发送。`
+   */
+  skillDraftHint(): string;
+  /**
+   * `此页没有可见技能。`
+   */
+  noVisibleSkills(): string;
+  /**
+   * `此技能名称无法用作 Runtime 命令。`
+   */
+  skillNameNotUsable(): string;
+  /**
+   * `上一页技能`
+   */
+  previousSkillsPage(): string;
+  /**
+   * `下一页技能`
+   */
+  nextSkillsPage(): string;
+  /**
+   * `请选择会话以查看其 MCP 服务器。`
+   */
+  selectConversationMcp(): string;
+  /**
+   * `刷新 MCP 服务器`
+   */
+  refreshMcpServers(): string;
+  /**
+   * `配置会话 MCP`
+   */
+  configureConversationMcp(): string;
+  /**
+   * `尚未加载此会话的 MCP 服务器。`
+   */
+  mcpServersNotLoaded(): string;
+  /**
+   * `此会话尚未配置 MCP 服务器。`
+   */
+  noConfiguredMcpServers(): string;
+  /**
+   * `此 Runtime 不提供工具详情。`
+   */
+  toolDetailsUnavailable(): string;
+  /**
+   * `此服务器未列出工具。`
+   */
+  noServerTools(): string;
+  /**
+   * `这里是 Studio 为当前 Runtime 配置的共享 AGENTS.md，会提供给 Worker 任务使用。编辑后需明确保存。`
+   */
+  sharedAgentsMdScope(): string;
+  /**
+   * `Main 配置仅影响 Main。保存指令会保留其模型和技能配置。`
+   */
+  mainProfileScope(): string;
+  /**
+   * `Main 配置不受支持或尚未设置。不会创建配置。`
+   */
+  mainProfileUnsupportedOrUnconfigured(): string;
+  /**
+   * `Main 配置尚未设置。不会创建配置。`
+   */
+  mainProfileUnconfigured(): string;
+  /**
+   * `此 Runtime 不支持 Main 配置。`
+   */
+  mainProfileUnsupported(): string;
+  /**
+   * `Main 配置的实例身份或配置信息不可用。`
+   */
+  mainProfileUnavailable(): string;
+  /**
+   * `重新读取指令`
+   */
+  reloadInstructions(): string;
+  /**
+   * `读取最新指令？你的草稿会保留，以供检查。`
+   */
+  confirmReloadInstructions(): string;
+  /**
+   * `放弃指令草稿`
+   */
+  discardInstructionDraft(): string;
+  /**
+   * `用上次成功读取的指令替换你的草稿？`
+   */
+  confirmDiscardInstructions(): string;
+  /**
+   * `指令已保存。`
+   */
+  instructionsSaved(): string;
+  /**
+   * `指令草稿尚未保存。`
+   */
+  unsavedInstructionDraft(): string;
+  /**
+   * `最新已保存指令`
+   */
+  latestSavedInstructions(): string;
+  /**
+   * `已读取版本`
+   */
+  loadedRevision(): string;
+  /**
+   * `请先读取最新指令，再保存。你的草稿会保留。`
+   */
+  readInstructionsBeforeSaving(): string;
+  /**
+   * `重新读取 AGENTS.md`
+   */
+  reloadAgentsMd(): string;
+  /**
+   * `重新读取 Main 配置`
+   */
+  reloadMainProfile(): string;
+  /**
+   * `AGENTS.md 指令`
+   */
+  agentsMdInstructions(): string;
+  /**
+   * `Main 配置指令`
+   */
+  mainProfileInstructions(): string;
+  /**
+   * `保存 AGENTS.md`
+   */
+  saveAgentsMd(): string;
+  /**
+   * `保存 Main 配置`
+   */
+  saveMainProfile(): string;
+  /**
+   * `请先为此协作者保存唯一的成员别名，再发起协作。`
+   */
+  collaborationAliasRequired(): string;
+  /**
+   * `无法读取当前 Runtime 的可选模型，请重试刷新。`
+   */
+  modelCatalogReadFailed(): string;
+  /**
+   * `正在读取当前 Runtime 的可选模型…`
+   */
+  modelCatalogLoading(): string;
+  /**
+   * `刷新模型列表`
+   */
+  modelCatalogRetry(): string;
+  /**
+   * `此 Runtime 未声明模型选择能力，将继续使用 Runtime 的现有配置。`
+   */
+  modelCatalogUnavailable(): string;
+  /**
+   * `搜索 Runtime 可选模型`
+   */
+  modelSearchRuntime(): string;
+  /**
+   * `Runtime 默认模型`
+   */
+  runtimeDefaultModelHint(): string;
+  /**
+   * `当前选择：{model}。列表由当前连接的 Runtime 提供。`
+   */
+  runtimeModelChoice(model: string): string;
+  /**
+   * `新消息使用的模型`
+   */
+  runtimeModelSelectionTitle(): string;
+  /**
+   * `这里展示当前 Runtime 已配置、供 Worker 使用的外部 MCP，与会话中的 MCP 选择无关。`
+   */
+  workerMcpScope(): string;
+  /**
+   * `管理 A2A 空间和成员，保存别名后可在会话中发起协作。`
+   */
+  collaborationManagementHint(): string;
+  /**
+   * `空间与成员管理`
+   */
+  a2aManageResources(): string;
+  /**
+   * `创建空间`
+   */
+  a2aCreateSpace(): string;
+  /**
+   * `注册智能体`
+   */
+  a2aRegisterAgent(): string;
+  /**
+   * `删除空空间`
+   */
+  a2aDeleteSpace(): string;
+  /**
+   * `确认删除此未绑定的空 A2A 空间？此操作无法撤销。`
+   */
+  a2aDeleteSpaceConfirm(): string;
+  /**
+   * `空间名称`
+   */
+  a2aSpaceName(): string;
+  /**
+   * `启用意图路由`
+   */
+  a2aIntentEnabled(): string;
+  /**
+   * `项目`
+   */
+  a2aProject(): string;
+  /**
+   * `注册来源`
+   */
+  a2aRegistrationSource(): string;
+  /**
+   * `Agent Card 地址`
+   */
+  a2aCardUrl(): string;
+  /**
+   * `Agent Card JSON`
+   */
+  a2aCardJson(): string;
+  /**
+   * `来源 Runtime`
+   */
+  a2aSelectRuntime(): string;
+  /**
+   * `选择 Runtime`
+   */
+  a2aRuntimePlaceholder(): string;
+  /**
+   * `加载更多 Runtime`
+   */
+  a2aMoreRuntimes(): string;
+  /**
+   * `网络类型`
+   */
+  a2aNetwork(): string;
+  /**
+   * `此 Runtime 尚无可用端点，请刷新列表后重新选择。`
+   */
+  a2aEndpointUnavailable(): string;
+  /**
+   * `提交`
+   */
+  a2aSubmit(): string;
+  /**
+   * `查看成员详情`
+   */
+  a2aViewDetails(): string;
+  /**
+   * `注销智能体`
+   */
+  a2aUnregister(): string;
+  /**
+   * `确认注销此 A2A 智能体？仅移除注册记录，不会删除其 Runtime。`
+   */
+  a2aUnregisterConfirm(): string;
+  /**
+   * `已注册：{id}`
+   */
+  a2aRegistered(id: string): string;
+  /**
+   * `资源已移除。`
+   */
+  a2aResourceDeleted(): string;
+  /**
+   * `仅展示前 100 项技能。`
+   */
+  a2aSkillsTruncated(): string;
+  /**
+   * `飞书`
+   */
+  channelProviderFeishu(): string;
+  /**
+   * `钉钉`
+   */
+  channelProviderDingtalk(): string;
+  /**
+   * `企业微信`
+   */
+  channelProviderWecom(): string;
+  /**
+   * `授权企业微信机器人`
+   */
+  channelWecomAuthorize(): string;
+  /**
+   * `企业微信授权入口暂不可用，请改用手动凭据绑定。`
+   */
+  channelWecomAuthUnavailable(): string;
+  /**
+   * `当前 Runtime 尚未就绪，无法绑定渠道，请检查 Runtime 的渠道配置。`
+   */
+  channelBindingNotReady(): string;
+  /**
+   * `上次绑定结果尚未确认，请先读取绑定状态，避免重复创建。`
+   */
+  channelBindingUncertain(): string;
+  /**
+   * `使用已连接 Runtime 的身份`
+   */
+  channelUseRuntimeIdentity(): string;
+  /**
+   * `这里展示当前 Runtime 已配置、供 Worker 使用的资源，无需先选择会话。`
+   */
+  workerResourcesScope(): string;
+  /**
+   * `已扫码`
+   */
+  channelScanned(): string;
+  /**
+   * `管理 Worker 可用的技能、工具与共享指令。`
+   */
+  resourcePageSubtitle(): string;
+  /**
+   * `搜索技能`
+   */
+  searchBoundSkills(): string;
+  /**
+   * `{count} 项技能`
+   */
+  boundSkillsCount(count: string): string;
+  /**
+   * `正在读取技能…`
+   */
+  loadingBoundSkills(): string;
+  /**
+   * `暂无技能描述。`
+   */
+  skillDescriptionEmpty(): string;
+  /**
+   * `没有匹配的技能`
+   */
+  noSkillSearchResults(): string;
+  /**
+   * `试试其他名称或关键词。`
+   */
+  tryAnotherSkillSearch(): string;
+  /**
+   * `这个空间还没有已发布技能`
+   */
+  boundSpaceEmpty(): string;
+  /**
+   * `上传技能包到此空间，发布后即可供 Worker 任务使用。`
+   */
+  boundSpaceEmptyHint(): string;
+  /**
+   * `请先在 Studio 为当前 Runtime 绑定技能空间，再刷新此页面。`
+   */
+  bindSkillSpaceHint(): string;
+  /**
+   * `此空间中的技能供当前 Runtime 的 Worker 任务使用。`
+   */
+  workerSkillSpaceScope(): string;
+  /**
+   * `上传技能`
+   */
+  uploadBoundSkill(): string;
+  /**
+   * `发布到 {space}`
+   */
+  skillUploadTarget(space: string): string;
+  /**
+   * `上传进度`
+   */
+  skillUploadProgress(): string;
+  /**
+   * `已发布到绑定空间`
+   */
+  skillPublished(): string;
+  /**
+   * `读取上传状态`
+   */
+  skillReadUploadStatus(): string;
+  /**
+   * `上传并发布`
+   */
+  skillUploadAndPublish(): string;
+  /**
+   * `正在处理并发布…`
+   */
+  skillPublishing(): string;
+  /**
+   * `选择技能包`
+   */
+  chooseSkillPackage(): string;
+  /**
+   * `ZIP 或 SKILL.md · 最大 20 MiB`
+   */
+  skillPackageFormats(): string;
+  /**
+   * `ZIP 根目录或单层目录内需包含 SKILL.md，文件的 YAML 头部需填写 name 和 description。`
+   */
+  skillPackageRequirements(): string;
+  /**
+   * `技能包不能超过 20 MiB。`
+   */
+  skillPackageTooLarge(): string;
+  /**
+   * `上传结果尚未确认，请先核对技能空间，避免重复提交。`
+   */
+  skillUploadUnknown(): string;
+  /**
+   * `技能上传失败`
+   */
+  skillUploadFailed(): string;
+  /**
+   * `删除技能“{name}”`
+   */
+  deleteBoundSkill(name: string): string;
+  /**
+   * `确定删除整个技能“{name}”吗？此操作会影响所有引用它的空间。`
+   */
+  deleteBoundSkillConfirm(name: string): string;
+  /**
+   * `删除中…`
+   */
+  deletingBoundSkill(): string;
+  /**
+   * `技能包无效，请检查 SKILL.md 的 name、description 及 ZIP 目录结构。`
+   */
+  skillArchiveInvalid(): string;
+  /**
+   * `此空间已存在同名技能，请重命名后上传。`
+   */
+  skillNameConflict(): string;
+  /**
+   * `技能包存储失败，请检查当前云账号的 TOS 权限。`
+   */
+  skillStorageFailed(): string;
+  /**
+   * `云端处理此技能版本失败，请在 Studio 中检查。`
+   */
+  skillProcessingFailed(): string;
+  /**
+   * `关闭`
+   */
+  skillUploadClose(): string;
+  /**
+   * `运行中`
+   */
+  a2aMemberRunning(): string;
+  /**
+   * `已停止`
+   */
+  a2aMemberStopped(): string;
+  /**
+   * `管理当前 Runtime 的协作空间，让团队中的智能体配合完成任务。`
+   */
+  a2aPageDescription(): string;
+  /**
+   * `已绑定此空间`
+   */
+  a2aAlreadyBound(): string;
+  /**
+   * `搜索名称或别名`
+   */
+  a2aSearchMembers(): string;
+  /**
+   * `正在加载成员…`
+   */
+  a2aLoadingMembers(): string;
+  /**
+   * `没有匹配的成员`
+   */
+  a2aNoMatchingMembers(): string;
+  /**
+   * `描述需要这位协作智能体完成的任务…`
+   */
+  a2aTaskPlaceholder(): string;
+  /**
+   * `先将此空间绑定到当前 Runtime，再使用成员协作。`
+   */
+  a2aBindBeforeMention(): string;
+  /**
+   * `选择一位协作成员`
+   */
+  a2aChooseMemberTitle(): string;
+  /**
+   * `已绑定机器人`
+   */
+  channelBoundAccountsTitle(): string;
+  /**
+   * `显示当前 Runtime 返回的全部机器人，可分别管理每个 Bot。`
+   */
+  channelBoundAccountsHint(): string;
+  /**
+   * `新增机器人`
+   */
+  channelAddAccountTitle(): string;
+  /**
+   * `正在读取已绑定机器人…`
+   */
+  channelAccountsLoading(): string;
+  /**
+   * `机器人列表尚未加载成功，请刷新重试。`
+   */
+  channelAccountsNotLoaded(): string;
+  /**
+   * `未获取到有效二维码，请读取绑定状态；不要重复创建绑定。`
+   */
+  channelQrUnavailable(): string;
+  /**
+   * `旧版记录未提供机器人 ID，暂不支持修改。`
+   */
+  channelAccountIdUnavailable(): string;
+  /**
+   * `消息渠道`
+   */
+  channelPageTitle(): string;
+  /**
+   * `将机器人接入当前 Runtime，管理绑定状态与群聊权限。`
+   */
+  channelPageDescription(): string;
+  /**
+   * `群聊权限`
+   */
+  channelGroupPermissions(): string;
+  /**
+   * `添加允许访问此智能体的群，私聊无需群权限。`
+   */
+  channelGroupHint(): string;
+  /**
+   * `尚未授权任何群。`
+   */
+  channelNoGroups(): string;
+  /**
+   * `高级设置`
+   */
+  channelAdvancedSettings(): string;
+  /**
+   * `绑定操作详情`
+   */
+  channelOperationDetails(): string;
+  /**
+   * `解除绑定`
+   */
+  channelUnbindAccount(): string;
+  /**
+   * `点击“新增机器人”，通过扫码或凭据完成绑定。`
+   */
+  channelAddHint(): string;
+  /**
+   * `消息网关`
+   */
+  channelGateway(): string;
+  /**
+   * `入站路由`
+   */
+  channelRoute(): string;
+  /**
+   * `回复投递`
+   */
+  channelDelivery(): string;
+  /**
+   * `已投递`
+   */
+  channelDelivered(): string;
+  /**
+   * `尚未观测到`
+   */
+  channelDeliveryNotObserved(): string;
+  /**
+   * `未配置`
+   */
+  channelMissingConfiguration(): string;
+  /**
+   * `可以关闭此界面或切换渠道。原绑定请求会保留，不会取消服务端的绑定操作。`
+   */
+  channelBindingRetained(): string;
 }
 
 const catalog = createCatalog<Messages>({
@@ -1043,6 +4123,776 @@ const catalog = createCatalog<Messages>({
     "selectAssistant": [],
     "assistantConfiguration": [],
     "assistantSkillScope": [],
+    "desktopOperation": [],
+    "desktopVersionInline": [],
+    "desktopNotPinned": [],
+    "desktopCouldNotVerifyTheOriginalOperation": [],
+    "desktopRecoverOriginalDurableSubmission": [],
+    "desktopResumeAcceptedInvocation": [],
+    "desktopCouldNotAcknowledgeThisOriginalOperation": [],
+    "desktopReviewSaveToPage": [],
+    "desktopCouldNotSaveReply": [],
+    "desktopTheRuntimeDidNotAcknowledgeAnAbortAndStill": [],
+    "desktopStopWasAcknowledgedButTheAuthoritativeTerminalResultIs": [],
+    "desktopCouldNotStopExecution": [],
+    "desktopTheRuntimeEndedThisTurnWithAnErrorYou": [],
+    "desktopStreamEndedWithAnErrorReadHistoryBeforeRetrying": [],
+    "desktopTheRuntimeSentATerminalEventButAuthoritativeHistory": [],
+    "desktopTheSubscriptionClosedWithoutAMatchingTerminalEventReview": [],
+    "desktopCouldNotSubmitMessage": [],
+    "desktopTheSavedStreamCursorExpiredHistoryHasBeenRebuilt": [],
+    "desktopCursorExpiredAndHistoryCouldNotBeRead": [],
+    "desktopNoVerifiedInvocationIsAvailableForSubscriptionRecovery": [],
+    "desktopTheRuntimeSentATerminalEventButAuthoritativeHistoryInlineHasNotSettledYet": [],
+    "desktopTheSavedStreamCursorExpiredHistoryHasBeenRebuiltInlineResumeTheSameInvocationAgainWithoutACursor": [],
+    "desktopSubscriptionRecoveryFailed": [],
+    "desktopCouldNotLoadConversation": [],
+    "desktopSelectedModel": [],
+    "desktopNoModelOverride": [],
+    "desktopRuntimeDefault": [],
+    "desktopTheCurrentTurnIsStillRunningOrAwaitingOutcome": [],
+    "desktopThisLegacyConversationHasNotInitializedItsNextTurn": [],
+    "desktopSearchByNameOrFamily": [],
+    "desktopFilterModels": [],
+    "desktopCouldNotUpdateTheConversationModel": [],
+    "desktopThisRuntimeCannotInitializeANextTurnModelConfiguration": [],
+    "desktopTheRuntimeReturnedANextTurnConfigurationWithoutA": [],
+    "desktopModelAppliesToFutureTurnsExistingTurnsKeepTheir": [],
+    "desktopThisLegacyDiagnosticConversationDoesNotExposeNextTurn": [],
+    "desktopNoRuntime": [],
+    "desktopWaitingForAnAcceptedTurn": [],
+    "desktopTraceValidationIdle": [],
+    "desktopFirstModelContent": [],
+    "desktopFirstVisibleAnswer": [],
+    "desktopModelCalls": [],
+    "desktopSlowestStep": [],
+    "desktopSearchTrace": [],
+    "desktopSuccess": [],
+    "desktopFailed": [],
+    "desktopRunning": [],
+    "desktopTimeout": [],
+    "desktopNotObserved": [],
+    "desktopCancelled": [],
+    "desktopFilterTraceCategory": [],
+    "desktopStatus": [],
+    "desktopDuration": [],
+    "desktopStarted": [],
+    "desktopEnded": [],
+    "desktopDetailsHidden": [],
+    "desktopReasoning": [],
+    "desktopProgress": [],
+    "desktopCompleted": [],
+    "desktopPreparing": [],
+    "desktopThinking": [],
+    "desktopStopped": [],
+    "desktopRead": [],
+    "desktopWrite": [],
+    "desktopEdit": [],
+    "desktopSearch": [],
+    "desktopRunCommand": [],
+    "desktopTool": [],
+    "desktopExecutionProcess": [],
+    "desktopTraceIsUnavailableForThisTurnItMayNot": [],
+    "desktopTheCurrentRuntimeIdentityIsNotAllowedToRead": [],
+    "desktopCouldNotLoadThisTraceRetryAfterTheTurn": [],
+    "desktopLoginRequired": [],
+    "desktopModel": [],
+    "desktopWorker": [],
+    "desktopUnknown": [],
+    "desktopPage": [],
+    "desktopBaseRevision": [],
+    "desktopCaptured": [],
+    "desktopCouldNotExportUnsavedDraft": [],
+    "desktopTheIndicatedInMemoryDraftWasAbandonedCloseThe": [],
+    "desktopCouldNotAbandonThisExactDraft": [],
+    "desktopRenameFailed": [],
+    "desktopDeleteFailed": [],
+    "desktopThisRuntimeDoesNotYetSupportDesktopBotCreation": [],
+    "desktopTheOperationFailed": [],
+    "desktopLoadConversations": [],
+    "desktopCreateDesktopBot": [],
+    "desktopOpenLocalWorkspace": [],
+    "desktopReadConnection": [],
+    "desktopDraftRecoveryCouldNotBeSavedContinueEditingOr": [],
+    "desktopCouldNotRegisterTheCloseProtocol": [],
+    "desktopUntitledPage": [],
+    "desktopProfileMustBeAJSONObject": [],
+    "desktopModelIDsMustBeAtMost256CharactersAnd": [],
+    "desktopRuntimeChangedReadAndReviewImagesAgain": [],
+    "desktopTheServerDidNotProvideAuthoritativeScheduledTaskPagination": [],
+    "desktopScheduledTaskPaginationDidNotAdvance": [],
+    "desktopTheSelectedRuntimeDoesNotExposeATemplateCatalog": [],
+    "desktopReadTheCurrentProfileBeforeSaving": [],
+    "desktopReadAndReviewTheCurrentRuntimeImagesBeforeApplying": [],
+    "desktopTheToolBindingChangedReadAndReviewImagesAgain": [],
+    "desktopManagementScope": [],
+    "desktopOwnerActions": [],
+    "desktopVerifiedIdentityAvailable": [],
+    "desktopVerifiedOwnerIdentityRequired": [],
+    "desktopConfigurationCAS": [],
+    "desktopBindingOperation": [],
+    "desktopNeedsVerificationPreserveThisIDAndResumeTheServer": [],
+    "desktopReadPrivateUserAndSlot": [],
+    "desktopAuthorization": [],
+    "desktopSlotVersion": [],
+    "desktopNoSlot": [],
+    "desktopUser": [],
+    "desktopResetPrivateUser": [],
+    "desktopBindingSubmittedCredentialInputsCleared": [],
+    "desktopScanQRCode": [],
+    "desktopClientID": [],
+    "desktopBotID": [],
+    "desktopAppID": [],
+    "desktopChannelCapabilitiesCouldNotBeRead": [],
+    "desktopChannelOperationFailed": [],
+    "desktopBindingStatusCouldNotBeRead": [],
+    "desktopChooseAChannelAccount": [],
+    "desktopCouldNotReadChannels": [],
+    "desktopChannelActionFailed": [],
+    "desktopOwner": [],
+    "desktopReviewTheCurrentProfileVersion": [],
+    "desktopBeforeSaving": [],
+    "desktopChooseARuntimeConversation": [],
+    "desktopKnowledgeOperationFailed": [],
+    "desktopChooseAnItemForTheNewVersion": [],
+    "desktopDisplayName": [],
+    "desktopTextMaterial": [],
+    "desktopImportText": [],
+    "desktopPendingImportKey": [],
+    "desktopTheOriginal": [],
+    "desktopSubmissionIsRetainedVerifyTheLibraryAndImportStatus": [],
+    "desktopImport": [],
+    "desktopKnowledge": [],
+    "desktopVersionInlineLabel": [],
+    "desktopReadAuthoritativeImportStatus": [],
+    "desktopChunks": [],
+    "desktopCitation": [],
+    "desktopBytesVisible": [],
+    "desktopCitationInline": [],
+    "desktopCouldNotLoadSchedules": [],
+    "desktopScheduleOperationFailed": [],
+    "desktopNext": [],
+    "desktopRunNow": [],
+    "desktopWeb": [],
+    "desktopFeishu": [],
+    "desktopReadPermittedDeliveryTargets": [],
+    "traceTurnNumber": ["number"],
+    "traceValidatedStatus": ["status"],
+    "traceMissingKinds": ["kinds"],
+    "durationMinutesSeconds": ["minutes", "seconds"],
+    "durationSeconds": ["seconds"],
+    "durationMilliseconds": ["milliseconds"],
+    "valueUnavailable": [],
+    "statusSkipped": [],
+    "statusDenied": [],
+    "abandonDraftConfirm": ["title", "time"],
+    "revokePrivateConfirm": ["version"],
+    "resetPrivateConfirm": ["version"],
+    "profileUpgradedNotice": ["session", "advanced"],
+    "knowledgeImportUnknown": ["key"],
+    "runAcceptedNotice": ["run", "status"],
+    "runSessionLabel": ["session"],
+    "runInvocationLabel": ["invocation"],
+    "profileStringRequired": ["field"],
+    "settingsAccountId": ["account"],
+    "settingsUnknown": [],
+    "settingsRegionBeijing": [],
+    "settingsRegionShanghai": [],
+    "settingsSignedIn": [],
+    "settingsVaultSignedIn": [],
+    "settingsVaultRemoved": [],
+    "settingsVaultSaved": [],
+    "settingsPassphrasesMismatch": [],
+    "settingsVaultUnavailable": [],
+    "settingsCredentialsMemoryHint": [],
+    "settingsAccountStatusFailed": [],
+    "settingsImageReceiptsFailed": [],
+    "settingsImageReceiptsRefreshFailed": [],
+    "settingsRuntimesLoadFailed": [],
+    "settingsRuntimeDirectory": [],
+    "settingsRuntimeSignInFirst": [],
+    "settingsListCurrentAccount": [],
+    "settingsFilterRuntimes": [],
+    "settingsRuntimeFilterPlaceholder": [],
+    "settingsRuntimesLoading": [],
+    "settingsRuntimesNoMatches": [],
+    "settingsRuntimeVersion": ["runtime", "status", "version"],
+    "settingsRuntimeSelected": [],
+    "settingsRuntimeSelecting": [],
+    "settingsRuntimeIsSelected": [],
+    "settingsUseRuntime": [],
+    "settingsBusinessConnection": [],
+    "settingsConnectionSummary": ["runtime", "status", "scope"],
+    "settingsBusinessIdentitySaved": [],
+    "settingsLegacyJwtAuthenticated": [],
+    "settingsChannelAdministratorCredentials": [],
+    "settingsChannelCredentialsHint": [],
+    "settingsChannelAuthenticationSaved": [],
+    "settingsRuntimeChannelKey": [],
+    "settingsNoAdministratorCredential": [],
+    "settingsAssistantTitle": [],
+    "settingsAssistantPersistenceHint": [],
+    "settingsOpenAssistantSettings": [],
+    "settingsAssistantSaved": [],
+    "settingsAssistantSelectConversation": [],
+    "settingsRefreshSavedReceipts": [],
+    "settingsImageReviewHint": [],
+    "settingsImageUpdateUnavailable": [],
+    "settingsRuntimeImageVersion": ["runtime", "version"],
+    "settingsToolImageVersion": ["tool", "version"],
+    "settingsWorkerToolImage": [],
+    "settingsReviewRequired": ["field"],
+    "settingsReviewFailed": [],
+    "settingsReviewExactTargets": [],
+    "settingsReviewUpdates": [],
+    "settingsRuntimeId": ["runtime"],
+    "settingsExpectedVersion": ["version"],
+    "settingsImageValue": ["image"],
+    "settingsApplyRuntimeImage": [],
+    "settingsToolId": ["tool"],
+    "settingsWorkerConfigurationUpdated": ["version"],
+    "settingsApplyWorkerImage": [],
+    "settingsSavedImageReceipts": [],
+    "settingsReadOperationStatus": [],
+    "settingsOperationStatus": ["operation", "status"],
+    "settingsImageSubmitted": [],
+    "settingsReadUpdateStatus": [],
+    "settingsRuntimeConfiguration": [],
+    "settingsRuntimeConfigurationHint": ["runtime"],
+    "settingsReadRuntimeConfiguration": [],
+    "settingsApplyConfigurationConfirm": ["version", "runtime"],
+    "settingsConfigurationVersion": ["version", "status"],
+    "settingsMemoryMib": [],
+    "settingsReviewApplyConfiguration": [],
+    "settingsConfigurationSeparateHint": [],
+    "settingsConfigurationOperationId": [],
+    "settingsOriginalOperationIdPlaceholder": [],
+    "settingsVerifyConfigurationUpdate": [],
+    "settingsConfigurationReady": [],
+    "settingsConfigurationVerifyHint": [],
+    "settingsAssistantLoadFailed": [],
+    "settingsAssistantSaveFailed": [],
+    "settingsAssistantDialogDescription": [],
+    "settingsSaveAssistantSettings": [],
+    "settingsAssistantLoading": [],
+    "settingsAssistantSections": [],
+    "settingsSkills": [],
+    "settingsAssistantInstructionsPlaceholder": [],
+    "settingsAssistantInstructionsHint": [],
+    "settingsSelectedSkills": [],
+    "settingsNoSelectedSkills": [],
+    "settingsRemoveSkill": ["skill"],
+    "settingsImportSkillText": [],
+    "settingsSkillImportPlaceholder": [],
+    "settingsImportSkill": [],
+    "settingsSkillSpace": [],
+    "settingsSearchSkills": [],
+    "settingsSearchSkillsPlaceholder": [],
+    "chatOriginalNeedsReview": ["count"],
+    "chatOperationConfiguration": ["operation", "state", "version"],
+    "chatProcessRunning": ["count"],
+    "chatProcessFailed": ["count"],
+    "chatProcessStopped": ["count"],
+    "chatProcessCompleted": ["count"],
+    "chatInspectTool": ["action"],
+    "chatModelLabel": ["model"],
+    "chatCurrentModelInvalid": ["model"],
+    "chatModelContextWindow": ["family", "size"],
+    "chatCurrentModelChoice": ["model"],
+    "chatModelInvalid": ["model"],
+    "chatEmptyModel": [],
+    "traceTitle": [],
+    "traceCurrent": [],
+    "traceComplete": ["count"],
+    "tracePartial": ["count"],
+    "traceQueue": [],
+    "traceTools": [],
+    "traceTokens": [],
+    "traceRetries": [],
+    "traceStep": [],
+    "traceCategoryRequest": [],
+    "traceCategoryPreparation": [],
+    "traceCategorySandbox": [],
+    "traceCategoryFile": [],
+    "traceCategoryPlan": [],
+    "traceCategoryTerminal": [],
+    "traceCategoryError": [],
+    "pageAvailable": [],
+    "pageEnabled": [],
+    "pageDisabled": [],
+    "pageYes": [],
+    "pageNo": [],
+    "pagePending": [],
+    "pageExpired": [],
+    "pageCompleted": [],
+    "channelScopeGroup": [],
+    "channelScopeSender": [],
+    "channelScopeTopic": [],
+    "channelScopeTopicSender": [],
+    "channelUnbound": [],
+    "channelSharedBinding": [],
+    "channelPrivateBinding": [],
+    "channelConfigured": [],
+    "channelDisconnected": [],
+    "channelWaiting": [],
+    "channelRegistering": [],
+    "channelRegistered": [],
+    "channelAuthorized": [],
+    "channelRevoked": [],
+    "channelUnauthorized": [],
+    "knowledgeReceived": [],
+    "knowledgeProcessing": [],
+    "knowledgeReady": [],
+    "knowledgeDeleted": [],
+    "knowledgeBounded": [],
+    "knowledgePartial": [],
+    "knowledgeText": [],
+    "knowledgeFile": [],
+    "channelNoAccounts": [],
+    "knowledgeNoItems": [],
+    "knowledgeNoMatches": [],
+    "scheduleOnce": [],
+    "scheduleInterval": [],
+    "scheduleDaily": [],
+    "scheduleWeekly": [],
+    "scheduleMonthly": [],
+    "scheduleCron": [],
+    "scheduleQueued": [],
+    "pageCancelled": [],
+    "scheduleNoMatches": [],
+    "collapseSection": ["section"],
+    "expandSection": ["section"],
+    "plainTextCode": [],
+    "wrapCode": [],
+    "noWrapCode": [],
+    "copyCode": [],
+    "scrollableMarkdownTable": [],
+    "deploymentAccepted": [],
+    "deploymentNotAccepted": [],
+    "deploymentOperationSummary": ["acceptance", "state", "runtime", "health", "worker", "sandbox", "message"],
+    "desktopConnectAChannelAccount": [],
+    "desktopReadBindingStatus": [],
+    "desktopRetryThisBinding": [],
+    "desktopOperationID": [],
+    "desktopBindingID": [],
+    "desktopReadAndResume": [],
+    "desktopAccountPermissionsAndPrivateUser": [],
+    "desktopChannelAccount": [],
+    "desktopChooseAnAccount": [],
+    "desktopReadFeishuGroupPermissions": [],
+    "desktopGroupChatID": [],
+    "desktopGroupSessionScope": [],
+    "desktopSaveGroupPermission": [],
+    "desktopRemoveGroupPermission": [],
+    "desktopPrivateUserAuthorization": [],
+    "desktopRevokeAuthorization": [],
+    "desktopExistingConversationForProfileUpgrade": [],
+    "desktopReviewAndUpgradeAccountProfile": [],
+    "desktopBindingMethod": [],
+    "desktopManualCredentials": [],
+    "desktopBotBindingType": [],
+    "desktopProviderSecret": [],
+    "desktopStartBinding": [],
+    "desktopChannelsAndTemplates": [],
+    "desktopChannelManagementUsesTheRuntimeAdministratorIdentityConversationAccess": [],
+    "desktopConnectARuntimeWithChannelManagementCredentialsToView": [],
+    "desktopBotProfile": [],
+    "desktopUpdateConfiguration": [],
+    "desktopRuntimeTemplates": [],
+    "desktopReadTemplates": [],
+    "desktopBotProfileJSON": [],
+    "desktopSaveProfile": [],
+    "desktopNewChannelCredential": [],
+    "desktopThisUpdateHasNoServerCASReadConfigurationAgain": [],
+    "desktopSaveCredential": [],
+    "desktopDisableAccount": [],
+    "desktopEnableAccount": [],
+    "desktopConversationContext": [],
+    "desktopConversationStatus": [],
+    "desktopTheHostRetainsTheOriginalMessageAndIdempotencyKey": [],
+    "desktopReadAuthoritativeHistory": [],
+    "desktopTheSubmissionOutcomeNeedsReviewYourMessageDraftIs": [],
+    "desktopReadHistoryAndResumeTheSameInvocation": [],
+    "desktopThisBotProfileSnapshotIsUnverifiedOpenAccountSettings": [],
+    "desktopModelSelection": [],
+    "desktopModelForUpcomingMessages": [],
+    "desktopAppliesOnlyToNewMessagesEarlierTurnsKeepThe": [],
+    "desktopCloseModelSelector": [],
+    "desktopNoModelsMatchTheFilter": [],
+    "desktopClearThisConversationOverride": [],
+    "desktopPreserveYourUnsavedDraftsBeforeClosing": [],
+    "desktopContinueEditingExportAnExactCopyOrExplicitlyAbandon": [],
+    "desktopExportThisDraft": [],
+    "desktopAbandonThisExactDraft": [],
+    "desktopContinueEditing": [],
+    "desktopSESSIONKNOWLEDGE": [],
+    "desktopReferenceMaterialWithProvenance": [],
+    "desktopImportedKnowledgeBelongsToTheSelectedConversationItDoes": [],
+    "desktopConnectARuntimeToAccessSessionKnowledge": [],
+    "desktopKnowledgeLibrary": [],
+    "desktopRefreshLibrary": [],
+    "desktopImportMaterial": [],
+    "desktopChooseFileImport": [],
+    "desktopAddTextVersionToSelectedItem": [],
+    "desktopChooseFileForANewVersion": [],
+    "desktopFileSelectionIsProvidedByTheNativeHostAn": [],
+    "desktopRecoverOriginalImport": [],
+    "desktopDiscardLocalRecoveryAfterReview": [],
+    "desktopReadSelectedContent": [],
+    "desktopDeleteKnowledge": [],
+    "desktopReadMoreContent": [],
+    "desktopSearchReferenceMaterial": [],
+    "desktopSearchQuery": [],
+    "desktopSourceTypesOptionalCommaSeparated": [],
+    "desktopUpdatedAfterOptionalRFC3339": [],
+    "desktopLoadMoreMatches": [],
+    "desktopYOURWORKSPACE": [],
+    "desktopALittleFollowThrough": [],
+    "desktopScheduledTasksExecuteOnTheRuntimeAndContinueWhen": [],
+    "desktopNewScheduledTask": [],
+    "desktopConnectARuntimeWithAVerifiedScheduledTaskIdentity": [],
+    "desktopSearchTasks": [],
+    "desktopLetAThoughtComeBackAround": [],
+    "desktopCreateAServerScheduleForThisRuntime": [],
+    "desktopRefreshHistory": [],
+    "desktopRunsShown": [],
+    "desktopLoadMoreHistory": [],
+    "desktopAgentIDOptional": [],
+    "desktopScheduleType": [],
+    "desktopCronExpression": [],
+    "desktopRunAtRFC3339": [],
+    "desktopIntervalSeconds": [],
+    "desktopWeekdays1MondayThrough7Sunday": [],
+    "desktopMonthDays1Through31": [],
+    "desktopTimeZone": [],
+    "desktopDeliveryChannel": [],
+    "desktopFeishuAppID": [],
+    "desktopDeliveryTarget": [],
+    "desktopChooseAPermittedGroup": [],
+    "desktopSaveSchedule": [],
+    "desktopRefreshTrace": [],
+    "desktopCloseTrace": [],
+    "desktopTraceSummary": [],
+    "desktopSearchStepsErrorsOrIDs": [],
+    "desktopFilterTraceStatus": [],
+    "desktopAllStatuses": [],
+    "desktopAllCategories": [],
+    "desktopTraceView": [],
+    "desktopTimingUnavailable": [],
+    "desktopNoStepsMatchTheCurrentFilters": [],
+    "desktopTraceStepDetails": [],
+    "desktopCloseStepDetails": [],
+    "desktopStepID": [],
+    "desktopSourceEvent": [],
+    "desktopSafeDetails": [],
+    "desktopOpenMPADesktop": [],
+    "desktopOpenThisFrontendThroughTheMyGoDesktopApplicationTo": [],
+    "desktopCONNECTIONS": [],
+    "desktopRefresh": [],
+    "desktopDiagnostics": [],
+    "desktopRemove": [],
+    "desktopProfile": [],
+    "desktopConfigurationInline": [],
+    "desktopChannel": [],
+    "desktopUserLabel": [],
+    "desktopAuthorize": [],
+    "desktopTurn": [],
+    "desktopTimeline": [],
+    "desktopList": [],
+    "desktopName": [],
+    "desktopPrompt": [],
+    "desktopEnable": [],
+    "desktopDisable": [],
+    "desktopRetry": [],
+    "desktopBound": [],
+    "desktopResponse": [],
+    "desktopLoading": [],
+    "desktopResume": [],
+    "desktopSteps": [],
+    "desktopReason": [],
+    "desktopDetails": [],
+    "desktopOutput": [],
+    "desktopMessages": [],
+    "desktopApprove": [],
+    "desktopReject": [],
+    "desktopCollapseStep": [],
+    "desktopExpandStep": [],
+    "desktopTraceValidationFailed": [],
+    "desktopValidatingTrace": [],
+    "desktopTraceCollectingTheCurrentTurnIsStillRunning": [],
+    "desktopValidatingTheCurrentTurnTrace": [],
+    "desktopTraceReturnedNoStepsForThisTurn": [],
+    "desktopTheRuntimeReturnedAnEmptyOrUnavailableTraceFor": [],
+    "chooseConversation": [],
+    "startConversation": [],
+    "connectAccount": [],
+    "unsavedPageConfirm": [],
+    "deleteConversationConfirm": ["id"],
+    "channelBindingLabel": ["id"],
+    "channelAwaitingId": [],
+    "channelAuthorizeQr": [],
+    "channelExpires": ["time"],
+    "channelResumeBinding": [],
+    "channelRetryConfirm": [],
+    "channelResumeConfirm": [],
+    "channelRemoveConfirm": ["id"],
+    "channelRemovePermissionConfirm": ["id"],
+    "channelUpgradeConfirm": ["id"],
+    "knowledgeRecoverConfirm": [],
+    "knowledgeDiscardConfirm": [],
+    "knowledgeDeleteConfirm": ["id"],
+    "knowledgeSearchingItem": ["id"],
+    "knowledgeSearchingConversation": [],
+    "scheduleFindTask": [],
+    "scheduleDisable": [],
+    "scheduleEnable": [],
+    "scheduleEdit": [],
+    "scheduleDeleteConfirm": ["id"],
+    "scheduleCountUnavailable": [],
+    "chatRecoverConfirm": [],
+    "chatAcknowledgeConfirm": [],
+    "chatResolveTerminal": [],
+    "chatAcknowledgeOutcome": [],
+    "chatNoSummary": [],
+    "modelWaitForTurn": [],
+    "modelChooseCatalog": [],
+    "modelLoadingConfiguration": [],
+    "modelUseProfileDefault": [],
+    "traceTruncated": ["returned", "total"],
+    "traceUnavailable": [],
+    "traceWaiting": [],
+    "traceAutoValidation": [],
+    "closeDialog": ["title"],
+    "codeCopied": [],
+    "codeCopyFailed": [],
+    "profileFieldsRequired": [],
+    "profileListRequired": ["key"],
+    "profileInstructionsTooLong": [],
+    "profileListTooLong": ["key"],
+    "profileInvalidJson": [],
+    "schedulePendingSubmission": ["token"],
+    "scheduleSubmissionUnknown": ["token"],
+    "scheduleTriggerUnknown": ["token"],
+    "runtimeDirectoryIncomplete": [],
+    "connectionSlotsUnsupported": [],
+    "originalSubmissionNeedsReview": ["id"],
+    "saveCancelled": [],
+    "savedPageDeleted": [],
+    "unsavedDraftsPreventClose": [],
+    "channelDomain": [],
+    "scheduleTime": [],
+    "traceTree": [],
+    "traceExpand": [],
+    "traceCollapse": [],
+    "businessIdentityRequired": [],
+    "businessJWTRequired": [],
+    "resources": [],
+    "collaboration": [],
+    "skillsMcpInstructions": [],
+    "a2aCollaboration": [],
+    "usagePage": [],
+    "usageTotal": [],
+    "useInConversation": [],
+    "connectRuntimeCollaboration": [],
+    "refreshCollaboration": [],
+    "collaborationReadOnly": [],
+    "collaborationRefreshRequired": [],
+    "currentBinding": [],
+    "bindingNotLoaded": [],
+    "unbindSpace": [],
+    "noBoundA2aSpace": [],
+    "a2aSpaces": [],
+    "refreshCollaborationSpaces": [],
+    "collaborationSpace": [],
+    "noVisibleA2aSpaces": [],
+    "bindSelectedSpace": [],
+    "spaceMembers": [],
+    "selectSpaceMembers": [],
+    "noVisibleSpaceMembers": [],
+    "selectMember": [],
+    "previousMembersPage": [],
+    "nextMembersPage": [],
+    "previousSpacesPage": [],
+    "nextSpacesPage": [],
+    "memberDetails": [],
+    "agentCardUnavailable": [],
+    "currentAlias": [],
+    "memberAlias": [],
+    "removeAliasHint": [],
+    "saveMemberAlias": [],
+    "aliasesUnavailable": [],
+    "collaborationTask": [],
+    "collaborationDraftHint": [],
+    "confirmSpaceBinding": [],
+    "spaceBindingSaved": [],
+    "confirmMemberAlias": [],
+    "memberAliasSaved": [],
+    "capabilityUnavailable": [],
+    "conflict": [],
+    "outcomeUnknown": [],
+    "conversationRequired": [],
+    "staleConnection": [],
+    "resourceNotVisible": [],
+    "invalidResponse": [],
+    "denied": [],
+    "unavailable": [],
+    "connectionFailure": [],
+    "skills": [],
+    "mcp": [],
+    "agentsMd": [],
+    "mainProfile": [],
+    "resourceSections": [],
+    "resourceError": [],
+    "model": [],
+    "connectRuntimeResources": [],
+    "refreshSkills": [],
+    "mountedSkillSpacesOnly": [],
+    "skillSpacesNotLoaded": [],
+    "noMountedSkillSpaces": [],
+    "mountedSkillSpace": [],
+    "skillDirectoryUnavailable": [],
+    "skillDraftHint": [],
+    "noVisibleSkills": [],
+    "skillNameNotUsable": [],
+    "previousSkillsPage": [],
+    "nextSkillsPage": [],
+    "selectConversationMcp": [],
+    "refreshMcpServers": [],
+    "configureConversationMcp": [],
+    "mcpServersNotLoaded": [],
+    "noConfiguredMcpServers": [],
+    "toolDetailsUnavailable": [],
+    "noServerTools": [],
+    "sharedAgentsMdScope": [],
+    "mainProfileScope": [],
+    "mainProfileUnsupportedOrUnconfigured": [],
+    "mainProfileUnconfigured": [],
+    "mainProfileUnsupported": [],
+    "mainProfileUnavailable": [],
+    "reloadInstructions": [],
+    "confirmReloadInstructions": [],
+    "discardInstructionDraft": [],
+    "confirmDiscardInstructions": [],
+    "instructionsSaved": [],
+    "unsavedInstructionDraft": [],
+    "latestSavedInstructions": [],
+    "loadedRevision": [],
+    "readInstructionsBeforeSaving": [],
+    "reloadAgentsMd": [],
+    "reloadMainProfile": [],
+    "agentsMdInstructions": [],
+    "mainProfileInstructions": [],
+    "saveAgentsMd": [],
+    "saveMainProfile": [],
+    "collaborationAliasRequired": [],
+    "modelCatalogReadFailed": [],
+    "modelCatalogLoading": [],
+    "modelCatalogRetry": [],
+    "modelCatalogUnavailable": [],
+    "modelSearchRuntime": [],
+    "runtimeDefaultModelHint": [],
+    "runtimeModelChoice": ["model"],
+    "runtimeModelSelectionTitle": [],
+    "workerMcpScope": [],
+    "collaborationManagementHint": [],
+    "a2aManageResources": [],
+    "a2aCreateSpace": [],
+    "a2aRegisterAgent": [],
+    "a2aDeleteSpace": [],
+    "a2aDeleteSpaceConfirm": [],
+    "a2aSpaceName": [],
+    "a2aIntentEnabled": [],
+    "a2aProject": [],
+    "a2aRegistrationSource": [],
+    "a2aCardUrl": [],
+    "a2aCardJson": [],
+    "a2aSelectRuntime": [],
+    "a2aRuntimePlaceholder": [],
+    "a2aMoreRuntimes": [],
+    "a2aNetwork": [],
+    "a2aEndpointUnavailable": [],
+    "a2aSubmit": [],
+    "a2aViewDetails": [],
+    "a2aUnregister": [],
+    "a2aUnregisterConfirm": [],
+    "a2aRegistered": ["id"],
+    "a2aResourceDeleted": [],
+    "a2aSkillsTruncated": [],
+    "channelProviderFeishu": [],
+    "channelProviderDingtalk": [],
+    "channelProviderWecom": [],
+    "channelWecomAuthorize": [],
+    "channelWecomAuthUnavailable": [],
+    "channelBindingNotReady": [],
+    "channelBindingUncertain": [],
+    "channelUseRuntimeIdentity": [],
+    "workerResourcesScope": [],
+    "channelScanned": [],
+    "resourcePageSubtitle": [],
+    "searchBoundSkills": [],
+    "boundSkillsCount": ["count"],
+    "loadingBoundSkills": [],
+    "skillDescriptionEmpty": [],
+    "noSkillSearchResults": [],
+    "tryAnotherSkillSearch": [],
+    "boundSpaceEmpty": [],
+    "boundSpaceEmptyHint": [],
+    "bindSkillSpaceHint": [],
+    "workerSkillSpaceScope": [],
+    "uploadBoundSkill": [],
+    "skillUploadTarget": ["space"],
+    "skillUploadProgress": [],
+    "skillPublished": [],
+    "skillReadUploadStatus": [],
+    "skillUploadAndPublish": [],
+    "skillPublishing": [],
+    "chooseSkillPackage": [],
+    "skillPackageFormats": [],
+    "skillPackageRequirements": [],
+    "skillPackageTooLarge": [],
+    "skillUploadUnknown": [],
+    "skillUploadFailed": [],
+    "deleteBoundSkill": ["name"],
+    "deleteBoundSkillConfirm": ["name"],
+    "deletingBoundSkill": [],
+    "skillArchiveInvalid": [],
+    "skillNameConflict": [],
+    "skillStorageFailed": [],
+    "skillProcessingFailed": [],
+    "skillUploadClose": [],
+    "a2aMemberRunning": [],
+    "a2aMemberStopped": [],
+    "a2aPageDescription": [],
+    "a2aAlreadyBound": [],
+    "a2aSearchMembers": [],
+    "a2aLoadingMembers": [],
+    "a2aNoMatchingMembers": [],
+    "a2aTaskPlaceholder": [],
+    "a2aBindBeforeMention": [],
+    "a2aChooseMemberTitle": [],
+    "channelBoundAccountsTitle": [],
+    "channelBoundAccountsHint": [],
+    "channelAddAccountTitle": [],
+    "channelAccountsLoading": [],
+    "channelAccountsNotLoaded": [],
+    "channelQrUnavailable": [],
+    "channelAccountIdUnavailable": [],
+    "channelPageTitle": [],
+    "channelPageDescription": [],
+    "channelGroupPermissions": [],
+    "channelGroupHint": [],
+    "channelNoGroups": [],
+    "channelAdvancedSettings": [],
+    "channelOperationDetails": [],
+    "channelUnbindAccount": [],
+    "channelAddHint": [],
+    "channelGateway": [],
+    "channelRoute": [],
+    "channelDelivery": [],
+    "channelDelivered": [],
+    "channelDeliveryNotObserved": [],
+    "channelMissingConfiguration": [],
+    "channelBindingRetained": [],
   },
   messages: {
     "zh-Hans": {
@@ -1252,6 +5102,776 @@ const catalog = createCatalog<Messages>({
       "selectAssistant": "选择助手",
       "assistantConfiguration": "助手配置",
       "assistantSkillScope": "这里只显示已配置的 skills。浏览 AgentKit skill space 需要当前客户端没有的目录 API。",
+      "desktopOperation": "操作",
+      "desktopVersionInline": "版本",
+      "desktopNotPinned": "未固定",
+      "desktopCouldNotVerifyTheOriginalOperation": "无法验证原操作。",
+      "desktopRecoverOriginalDurableSubmission": "恢复原持久化提交",
+      "desktopResumeAcceptedInvocation": "继续订阅已受理的执行",
+      "desktopCouldNotAcknowledgeThisOriginalOperation": "无法确认原操作结果。",
+      "desktopReviewSaveToPage": "核对并保存到页面",
+      "desktopCouldNotSaveReply": "无法保存回复。",
+      "desktopTheRuntimeDidNotAcknowledgeAnAbortAndStill": "Runtime 尚未确认停止，仍将这一轮标记为执行中。",
+      "desktopStopWasAcknowledgedButTheAuthoritativeTerminalResultIs": "停止请求已确认，但服务端最终结果尚未确定。历史记录已刷新，请等待 Runtime 完成处理后重试。",
+      "desktopCouldNotStopExecution": "无法停止执行。",
+      "desktopTheRuntimeEndedThisTurnWithAnErrorYou": "Runtime 以错误结束了这一轮执行，可以开始新一轮对话。",
+      "desktopStreamEndedWithAnErrorReadHistoryBeforeRetrying": "流式连接异常结束，请读取历史记录后再重试。",
+      "desktopTheRuntimeSentATerminalEventButAuthoritativeHistory": "Runtime 已发送结束事件，但服务端历史记录尚未确认。请再次验证历史记录后再提交。",
+      "desktopTheSubscriptionClosedWithoutAMatchingTerminalEventReview": "订阅关闭时未收到匹配的结束事件，请核对服务端记录后再提交。",
+      "desktopCouldNotSubmitMessage": "无法提交消息。",
+      "desktopTheSavedStreamCursorExpiredHistoryHasBeenRebuilt": "保存的流式游标已过期，历史记录已重建。请不带游标继续订阅原执行。",
+      "desktopCursorExpiredAndHistoryCouldNotBeRead": "游标已过期，且无法读取历史记录。",
+      "desktopNoVerifiedInvocationIsAvailableForSubscriptionRecovery": "没有可用于恢复订阅的已验证执行。",
+      "desktopTheRuntimeSentATerminalEventButAuthoritativeHistoryInlineHasNotSettledYet": "Runtime 已发送结束事件，但服务端历史记录尚未确认。",
+      "desktopTheSavedStreamCursorExpiredHistoryHasBeenRebuiltInlineResumeTheSameInvocationAgainWithoutACursor": "保存的流式游标已过期，历史记录已重建。请不带游标再次订阅原执行。",
+      "desktopSubscriptionRecoveryFailed": "订阅恢复失败。",
+      "desktopCouldNotLoadConversation": "无法加载会话。",
+      "desktopSelectedModel": "已选模型",
+      "desktopNoModelOverride": "不覆盖模型设置",
+      "desktopRuntimeDefault": "Runtime 默认模型",
+      "desktopTheCurrentTurnIsStillRunningOrAwaitingOutcome": "当前轮次仍在执行或等待结果确认，请先处理完成，再修改下一轮模型。",
+      "desktopThisLegacyConversationHasNotInitializedItsNextTurn": "此旧版会话尚未初始化后续轮次的模型配置。首次选择模型时会完成初始化，不会修改或重新执行已有轮次。",
+      "desktopSearchByNameOrFamily": "按名称或系列搜索",
+      "desktopFilterModels": "筛选模型",
+      "desktopCouldNotUpdateTheConversationModel": "无法更新会话模型。",
+      "desktopThisRuntimeCannotInitializeANextTurnModelConfiguration": "此 Runtime 不支持初始化后续轮次的模型配置。",
+      "desktopTheRuntimeReturnedANextTurnConfigurationWithoutA": "Runtime 返回的后续轮次配置缺少版本标识。",
+      "desktopModelAppliesToFutureTurnsExistingTurnsKeepTheir": "模型对之后的对话生效，已有轮次保留原配置。",
+      "desktopThisLegacyDiagnosticConversationDoesNotExposeNextTurn": "此旧版诊断会话未提供后续轮次的模型配置。普通会话仍可在轮次结束后切换模型。",
+      "desktopNoRuntime": "未连接 Runtime",
+      "desktopWaitingForAnAcceptedTurn": "等待已受理的轮次",
+      "desktopTraceValidationIdle": "尚未验证追踪",
+      "desktopFirstModelContent": "首个模型内容",
+      "desktopFirstVisibleAnswer": "首个可见回复",
+      "desktopModelCalls": "模型调用次数",
+      "desktopSlowestStep": "最耗时步骤",
+      "desktopSearchTrace": "搜索追踪",
+      "desktopSuccess": "成功",
+      "desktopFailed": "失败",
+      "desktopRunning": "执行中",
+      "desktopTimeout": "超时",
+      "desktopNotObserved": "未观测到",
+      "desktopCancelled": "已取消",
+      "desktopFilterTraceCategory": "按类别筛选追踪",
+      "desktopStatus": "状态",
+      "desktopDuration": "耗时",
+      "desktopStarted": "开始时间",
+      "desktopEnded": "结束时间",
+      "desktopDetailsHidden": "详情已隐藏",
+      "desktopReasoning": "推理状态",
+      "desktopProgress": "进度",
+      "desktopCompleted": "已完成",
+      "desktopPreparing": "准备中",
+      "desktopThinking": "思考中",
+      "desktopStopped": "已停止",
+      "desktopRead": "读取",
+      "desktopWrite": "写入",
+      "desktopEdit": "编辑",
+      "desktopSearch": "搜索",
+      "desktopRunCommand": "运行命令",
+      "desktopTool": "工具",
+      "desktopExecutionProcess": "执行过程",
+      "desktopTraceIsUnavailableForThisTurnItMayNot": "此轮次暂无追踪数据：可能未采集、已过期，或当前 Runtime 尚未支持普通会话追踪。部分 Runtime 版本仅采集 admin_debug 调试会话的追踪。",
+      "desktopTheCurrentRuntimeIdentityIsNotAllowedToRead": "当前 Runtime 身份无权读取此追踪。",
+      "desktopCouldNotLoadThisTraceRetryAfterTheTurn": "无法加载追踪，请在此轮次执行受理后重试。",
+      "desktopLoginRequired": "需要登录",
+      "desktopModel": "模型",
+      "desktopWorker": "Worker",
+      "desktopUnknown": "未知",
+      "desktopPage": "页面",
+      "desktopBaseRevision": "· 基准版本",
+      "desktopCaptured": "· 记录时间",
+      "desktopCouldNotExportUnsavedDraft": "无法导出未保存的草稿。",
+      "desktopTheIndicatedInMemoryDraftWasAbandonedCloseThe": "指定的内存草稿已放弃，请再次关闭窗口以检查是否可以安全退出。",
+      "desktopCouldNotAbandonThisExactDraft": "无法放弃指定草稿。",
+      "desktopRenameFailed": "重命名失败。",
+      "desktopDeleteFailed": "删除失败。",
+      "desktopThisRuntimeDoesNotYetSupportDesktopBotCreation": "此 Runtime 尚不支持桌面助手的创建和配置。",
+      "desktopTheOperationFailed": "操作失败。",
+      "desktopLoadConversations": "加载会话",
+      "desktopCreateDesktopBot": "创建桌面助手",
+      "desktopOpenLocalWorkspace": "打开本地工作区",
+      "desktopReadConnection": "读取连接状态",
+      "desktopDraftRecoveryCouldNotBeSavedContinueEditingOr": "无法保存草稿恢复文件，请继续编辑或导出副本后再关闭。",
+      "desktopCouldNotRegisterTheCloseProtocol": "无法注册窗口关闭处理。",
+      "desktopUntitledPage": "未命名页面",
+      "desktopProfileMustBeAJSONObject": "助手配置必须是 JSON 对象。",
+      "desktopModelIDsMustBeAtMost256CharactersAnd": "模型 ID 最长为 256 个字符，且不能包含 / 或 :。",
+      "desktopRuntimeChangedReadAndReviewImagesAgain": "Runtime 已变更，请重新读取并核对镜像。",
+      "desktopTheServerDidNotProvideAuthoritativeScheduledTaskPagination": "服务端未提供可验证的定时任务分页信息。",
+      "desktopScheduledTaskPaginationDidNotAdvance": "定时任务分页未向后推进。",
+      "desktopTheSelectedRuntimeDoesNotExposeATemplateCatalog": "所选 Runtime 未提供模板目录，请读取已授权的助手配置以查看模板。",
+      "desktopReadTheCurrentProfileBeforeSaving": "请先读取当前助手配置，再保存。",
+      "desktopReadAndReviewTheCurrentRuntimeImagesBeforeApplying": "请先读取并核对当前 Runtime 镜像，再应用更新。",
+      "desktopTheToolBindingChangedReadAndReviewImagesAgain": "Tool 绑定已变更，请重新读取并核对镜像。",
+      "desktopManagementScope": "管理范围：",
+      "desktopOwnerActions": "· 所有者操作：",
+      "desktopVerifiedIdentityAvailable": "已具备验证身份",
+      "desktopVerifiedOwnerIdentityRequired": "需要已验证的所有者身份",
+      "desktopConfigurationCAS": "· 配置版本校验：",
+      "desktopBindingOperation": "绑定操作",
+      "desktopNeedsVerificationPreserveThisIDAndResumeTheServer": "结果待确认。请保留此 ID，并先恢复服务端绑定操作，再开始新操作。",
+      "desktopReadPrivateUserAndSlot": "读取私聊用户及绑定槽位",
+      "desktopAuthorization": "授权",
+      "desktopSlotVersion": "· 槽位版本",
+      "desktopNoSlot": "暂无槽位",
+      "desktopUser": "· 用户",
+      "desktopResetPrivateUser": "重置私聊用户",
+      "desktopBindingSubmittedCredentialInputsCleared": "绑定请求已提交，凭据输入已清空。",
+      "desktopScanQRCode": "扫描二维码",
+      "desktopClientID": "客户端 ID",
+      "desktopBotID": "机器人 ID",
+      "desktopAppID": "应用 ID",
+      "desktopChannelCapabilitiesCouldNotBeRead": "无法读取渠道能力。",
+      "desktopChannelOperationFailed": "渠道操作失败。",
+      "desktopBindingStatusCouldNotBeRead": "无法读取绑定状态。",
+      "desktopChooseAChannelAccount": "请选择渠道账号。",
+      "desktopCouldNotReadChannels": "无法读取渠道列表。",
+      "desktopChannelActionFailed": "渠道操作失败。",
+      "desktopOwner": "· 所有者",
+      "desktopReviewTheCurrentProfileVersion": "请核对当前配置版本",
+      "desktopBeforeSaving": "后再保存。",
+      "desktopChooseARuntimeConversation": "请选择 Runtime 会话。",
+      "desktopKnowledgeOperationFailed": "知识库操作失败。",
+      "desktopChooseAnItemForTheNewVersion": "请选择要新增版本的知识条目。",
+      "desktopDisplayName": "显示名称",
+      "desktopTextMaterial": "文本资料",
+      "desktopImportText": "导入文本",
+      "desktopPendingImportKey": "待确认的导入键",
+      "desktopTheOriginal": "。原始",
+      "desktopSubmissionIsRetainedVerifyTheLibraryAndImportStatus": "提交已保留，请核对知识列表和导入状态后再恢复。",
+      "desktopImport": "导入",
+      "desktopKnowledge": "· 知识条目",
+      "desktopVersionInlineLabel": "· 版本",
+      "desktopReadAuthoritativeImportStatus": "读取服务端导入状态",
+      "desktopChunks": "分块",
+      "desktopCitation": "· 引用",
+      "desktopBytesVisible": "字节已显示",
+      "desktopCitationInline": "引用",
+      "desktopCouldNotLoadSchedules": "无法加载定时任务。",
+      "desktopScheduleOperationFailed": "定时任务操作失败。",
+      "desktopNext": "· 下次执行：",
+      "desktopRunNow": "立即运行",
+      "desktopWeb": "网页",
+      "desktopFeishu": "飞书",
+      "desktopReadPermittedDeliveryTargets": "读取有权限的投递目标",
+      "traceTurnNumber": "第 {number} 轮",
+      "traceValidatedStatus": "追踪已验证 · {status}",
+      "traceMissingKinds": " · 缺少 {kinds}",
+      "durationMinutesSeconds": "{minutes} 分 {seconds} 秒",
+      "durationSeconds": "{seconds} 秒",
+      "durationMilliseconds": "{milliseconds} 毫秒",
+      "valueUnavailable": "暂无数据",
+      "statusSkipped": "已跳过",
+      "statusDenied": "无权访问",
+      "abandonDraftConfirm": "是否放弃“{title}”于 {time} 记录的这份内存草稿？这不会删除已保存的恢复文件。",
+      "revokePrivateConfirm": "是否撤销槽位版本 {version} 的私聊用户授权？",
+      "resetPrivateConfirm": "是否重置槽位版本 {version} 的私聊用户绑定？",
+      "profileUpgradedNotice": "会话 {session} 的配置已升级。执行版本是否推进：{advanced}。请在下一轮对话前读取当前配置。",
+      "knowledgeImportUnknown": "导入 {key} 的结果未知，请先验证并恢复原提交，再创建新的导入。",
+      "runAcceptedNotice": "执行 {run} 已受理，服务端状态为 {status}。请刷新历史记录以确认是否完成。",
+      "runSessionLabel": "会话 {session}",
+      "runInvocationLabel": "执行 {invocation}",
+      "profileStringRequired": "{field} 必须是字符串或 null。",
+      "settingsAccountId": "账户 {account}",
+      "settingsUnknown": "未知",
+      "settingsRegionBeijing": "华北2（北京）",
+      "settingsRegionShanghai": "华东2（上海）",
+      "settingsSignedIn": "已登录。凭据输入已清除。",
+      "settingsVaultSignedIn": "已使用保存的凭据登录。口令已清除。",
+      "settingsVaultRemoved": "已删除保存的凭据。",
+      "settingsVaultSaved": "凭据已加密保存。口令输入已清除。",
+      "settingsPassphrasesMismatch": "两次输入的口令不一致。",
+      "settingsVaultUnavailable": "此版本不支持加密凭据存储。",
+      "settingsCredentialsMemoryHint": "凭据只保留在内存中，除非你在登录后将其保存到本地加密凭据库。",
+      "settingsAccountStatusFailed": "无法读取账户状态。",
+      "settingsImageReceiptsFailed": "无法读取已保存的更新回执。",
+      "settingsImageReceiptsRefreshFailed": "无法刷新已保存的更新回执。宿主可用时，请使用“刷新已保存回执”恢复原始操作。",
+      "settingsRuntimesLoadFailed": "无法加载 MPA Runtime。",
+      "settingsRuntimeDirectory": "AgentKit MPA Runtime",
+      "settingsRuntimeSignInFirst": "请先登录，再选择 MPA Runtime。",
+      "settingsListCurrentAccount": "列出当前账户的 Runtime",
+      "settingsFilterRuntimes": "筛选 Runtime",
+      "settingsRuntimeFilterPlaceholder": "名称或 Runtime ID",
+      "settingsRuntimesLoading": "正在加载 MPA Runtime…",
+      "settingsRuntimesNoMatches": "没有匹配的 MPA Runtime。请检查地域、项目或筛选条件后刷新。",
+      "settingsRuntimeVersion": "{runtime} · {status} · 版本 {version}",
+      "settingsRuntimeSelected": "已选择 Runtime。请核验业务身份和连接。",
+      "settingsRuntimeSelecting": "正在选择…",
+      "settingsRuntimeIsSelected": "已选择",
+      "settingsUseRuntime": "使用 Runtime",
+      "settingsBusinessConnection": "业务连接",
+      "settingsConnectionSummary": "{runtime} · {status} · 范围 {scope}",
+      "settingsBusinessIdentitySaved": "业务身份已保存。凭据输入已清除。",
+      "settingsLegacyJwtAuthenticated": "Legacy JWT（用于启用认证的部署）",
+      "settingsChannelAdministratorCredentials": "渠道管理员凭据",
+      "settingsChannelCredentialsHint": "网关凭据和渠道管理凭据存放在不同的宿主凭据槽中。",
+      "settingsChannelAuthenticationSaved": "渠道认证已保存。凭据输入已清除。",
+      "settingsRuntimeChannelKey": "Runtime 渠道密钥",
+      "settingsNoAdministratorCredential": "不使用管理员凭据",
+      "settingsAssistantTitle": "助手设置",
+      "settingsAssistantPersistenceHint": "持久指令和所选技能应用于新一轮对话，不会改写已有会话历史。",
+      "settingsOpenAssistantSettings": "打开助手设置",
+      "settingsAssistantSaved": "助手会话配置已保存。",
+      "settingsAssistantSelectConversation": "请先选择 Runtime 会话，再编辑助手设置。",
+      "settingsRefreshSavedReceipts": "刷新已保存回执",
+      "settingsImageReviewHint": "读取服务端已核验的 Tool 绑定，审核准确的资源 ID 和版本，再分别应用更新。提交状态与部署状态会分别显示。",
+      "settingsImageUpdateUnavailable": "此版本不支持镜像更新。",
+      "settingsRuntimeImageVersion": "Runtime {runtime} · 版本 {version}",
+      "settingsToolImageVersion": "Tool {tool} · 更新于 {version}",
+      "settingsWorkerToolImage": "Worker Tool 镜像",
+      "settingsReviewRequired": "审核前必须填写 {field}。",
+      "settingsReviewFailed": "审核失败。",
+      "settingsReviewExactTargets": "审核确切目标",
+      "settingsReviewUpdates": "审核更新",
+      "settingsRuntimeId": "Runtime ID：{runtime}",
+      "settingsExpectedVersion": "预期版本：{version}",
+      "settingsImageValue": "镜像：{image}",
+      "settingsApplyRuntimeImage": "应用 Runtime 镜像",
+      "settingsToolId": "Tool ID：{tool}",
+      "settingsWorkerConfigurationUpdated": "Worker 配置更新于：{version}",
+      "settingsApplyWorkerImage": "应用 Worker 镜像",
+      "settingsSavedImageReceipts": "已保存的镜像更新回执",
+      "settingsReadOperationStatus": "读取此操作的当前状态",
+      "settingsOperationStatus": "操作 {operation} · {status}",
+      "settingsImageSubmitted": "已提交；尚未核验是否生效",
+      "settingsReadUpdateStatus": "读取更新状态",
+      "settingsRuntimeConfiguration": "Runtime 配置",
+      "settingsRuntimeConfigurationHint": "审核 {runtime} 的资源。应用配置将调用 AgentKit，并可能重启 Runtime 实例。",
+      "settingsReadRuntimeConfiguration": "读取 Runtime 配置",
+      "settingsApplyConfigurationConfirm": "基于版本 {version}，将配置应用到 {runtime}？",
+      "settingsConfigurationVersion": "版本 {version} · {status}",
+      "settingsMemoryMib": "内存（MiB）",
+      "settingsReviewApplyConfiguration": "审核并应用配置",
+      "settingsConfigurationSeparateHint": "镜像、Tool 绑定和秘密环境变量值需要单独处理。其他管理员修改 Runtime 后，请重新加载。",
+      "settingsConfigurationOperationId": "配置操作 ID",
+      "settingsOriginalOperationIdPlaceholder": "原始已保存操作 ID",
+      "settingsVerifyConfigurationUpdate": "核验原始配置更新",
+      "settingsConfigurationReady": "目标配置和新的 Ready 版本已可见。",
+      "settingsConfigurationVerifyHint": "请回读此操作以核验结果。",
+      "settingsAssistantLoadFailed": "无法加载助手设置。",
+      "settingsAssistantSaveFailed": "无法保存助手设置。",
+      "settingsAssistantDialogDescription": "在本地配置此助手。新一轮对话会随请求发送已保存的 AGENTS.md 和所选技能。",
+      "settingsSaveAssistantSettings": "保存助手设置",
+      "settingsAssistantLoading": "正在加载助手设置…",
+      "settingsAssistantSections": "助手设置分类",
+      "settingsSkills": "技能",
+      "settingsAssistantInstructionsPlaceholder": "为此助手编写持久指令。",
+      "settingsAssistantInstructionsHint": "这些持久指令会附加到之后的对话请求中，不会改变已有会话历史。",
+      "settingsSelectedSkills": "已选技能",
+      "settingsNoSelectedSkills": "尚未选择技能。",
+      "settingsRemoveSkill": "移除 {skill}",
+      "settingsImportSkillText": "导入技能文本",
+      "settingsSkillImportPlaceholder": "粘贴技能名称或简短的技能指令。",
+      "settingsImportSkill": "导入技能",
+      "settingsSkillSpace": "技能空间",
+      "settingsSearchSkills": "搜索技能",
+      "settingsSearchSkillsPlaceholder": "按名称或描述搜索",
+      "chatOriginalNeedsReview": "原操作需要审阅 · {count, plural, other {# 个操作}}",
+      "chatOperationConfiguration": "{operation} · {state} · 配置 {version}",
+      "chatProcessRunning": "执行中 · {count, plural, other {# 个步骤}}",
+      "chatProcessFailed": "执行失败 · {count, plural, other {# 个步骤}}",
+      "chatProcessStopped": "已停止 · {count, plural, other {# 个步骤}}",
+      "chatProcessCompleted": "已执行 · {count, plural, other {# 个步骤}}",
+      "chatInspectTool": "在完整追踪中查看{action}",
+      "chatModelLabel": "模型：{model}",
+      "chatCurrentModelInvalid": "当前模型 {model} 不在 Runtime 目录中。开始下一轮前，请选择有效模型。",
+      "chatModelContextWindow": "{family} · {size}M 上下文窗口",
+      "chatCurrentModelChoice": "当前选择：{model}。模型列表为 Runtime 目录快照。",
+      "chatModelInvalid": "模型 {model} 不在 Runtime 目录中。请选择列表中的模型。",
+      "chatEmptyModel": "（空）",
+      "traceTitle": "轮次追踪",
+      "traceCurrent": "当前轮",
+      "traceComplete": "追踪完整 · {count, plural, other {# 个步骤}}",
+      "tracePartial": "追踪不完整 · {count, plural, other {# 个步骤}}",
+      "traceQueue": "排队",
+      "traceTools": "工具",
+      "traceTokens": "Token 数",
+      "traceRetries": "重试",
+      "traceStep": "步骤",
+      "traceCategoryRequest": "请求",
+      "traceCategoryPreparation": "准备",
+      "traceCategorySandbox": "沙箱",
+      "traceCategoryFile": "文件",
+      "traceCategoryPlan": "计划",
+      "traceCategoryTerminal": "终态",
+      "traceCategoryError": "错误",
+      "pageAvailable": "可用",
+      "pageEnabled": "已启用",
+      "pageDisabled": "已停用",
+      "pageYes": "是",
+      "pageNo": "否",
+      "pagePending": "待处理",
+      "pageExpired": "已过期",
+      "pageCompleted": "已完成",
+      "channelScopeGroup": "全群共享",
+      "channelScopeSender": "按发言人隔离",
+      "channelScopeTopic": "按话题共享",
+      "channelScopeTopicSender": "按话题和发言人隔离",
+      "channelUnbound": "未绑定",
+      "channelSharedBinding": "共享绑定",
+      "channelPrivateBinding": "私有绑定",
+      "channelConfigured": "已配置",
+      "channelDisconnected": "已断开",
+      "channelWaiting": "等待中",
+      "channelRegistering": "注册中",
+      "channelRegistered": "已注册",
+      "channelAuthorized": "已授权",
+      "channelRevoked": "已撤销",
+      "channelUnauthorized": "未授权",
+      "knowledgeReceived": "已接收",
+      "knowledgeProcessing": "处理中",
+      "knowledgeReady": "已就绪",
+      "knowledgeDeleted": "已删除",
+      "knowledgeBounded": "结果已限制",
+      "knowledgePartial": "部分结果",
+      "knowledgeText": "文本",
+      "knowledgeFile": "文件",
+      "channelNoAccounts": "尚未配置渠道账号。",
+      "knowledgeNoItems": "此会话尚未导入知识资料。",
+      "knowledgeNoMatches": "未找到匹配的知识资料。",
+      "scheduleOnce": "单次执行",
+      "scheduleInterval": "固定间隔",
+      "scheduleDaily": "每天",
+      "scheduleWeekly": "每周",
+      "scheduleMonthly": "每月",
+      "scheduleCron": "Cron 表达式",
+      "scheduleQueued": "排队中",
+      "pageCancelled": "已取消",
+      "scheduleNoMatches": "没有匹配的任务。",
+      "collapseSection": "折叠{section}",
+      "expandSection": "展开{section}",
+      "plainTextCode": "纯文本",
+      "wrapCode": "代码自动换行",
+      "noWrapCode": "代码不换行",
+      "copyCode": "复制代码",
+      "scrollableMarkdownTable": "可滚动的 Markdown 表格",
+      "deploymentAccepted": "已受理",
+      "deploymentNotAccepted": "未受理",
+      "deploymentOperationSummary": "{acceptance} · {state} · Runtime 已就绪：{runtime} · 业务健康状态已验证：{health} · Worker 配置已更新：{worker} · 现有沙箱已验证：{sandbox}。{message}",
+      "desktopConnectAChannelAccount": "连接渠道账号",
+      "desktopReadBindingStatus": "读取绑定状态",
+      "desktopRetryThisBinding": "重试此绑定",
+      "desktopOperationID": "操作 ID",
+      "desktopBindingID": "绑定 ID",
+      "desktopReadAndResume": "读取并恢复",
+      "desktopAccountPermissionsAndPrivateUser": "账号权限与私聊用户",
+      "desktopChannelAccount": "渠道账号",
+      "desktopChooseAnAccount": "选择账号",
+      "desktopReadFeishuGroupPermissions": "读取飞书群权限",
+      "desktopGroupChatID": "群聊 ID",
+      "desktopGroupSessionScope": "群会话策略",
+      "desktopSaveGroupPermission": "保存群权限",
+      "desktopRemoveGroupPermission": "移除群权限",
+      "desktopPrivateUserAuthorization": "私聊用户授权",
+      "desktopRevokeAuthorization": "撤销授权",
+      "desktopExistingConversationForProfileUpgrade": "用于配置升级的已有会话",
+      "desktopReviewAndUpgradeAccountProfile": "检查并升级账号配置",
+      "desktopBindingMethod": "绑定方式",
+      "desktopManualCredentials": "手动填写凭据",
+      "desktopBotBindingType": "机器人绑定类型",
+      "desktopProviderSecret": "渠道密钥",
+      "desktopStartBinding": "开始绑定",
+      "desktopChannelsAndTemplates": "渠道与模板",
+      "desktopChannelManagementUsesTheRuntimeAdministratorIdentityConversationAccess": "渠道管理使用 Runtime 管理员身份；会话访问单独授权。",
+      "desktopConnectARuntimeWithChannelManagementCredentialsToView": "连接 Runtime 并配置渠道管理凭据，即可查看账号与模板。",
+      "desktopBotProfile": "机器人配置",
+      "desktopUpdateConfiguration": "更新配置",
+      "desktopRuntimeTemplates": "Runtime 模板",
+      "desktopReadTemplates": "读取模板",
+      "desktopBotProfileJSON": "机器人配置 JSON",
+      "desktopSaveProfile": "保存配置",
+      "desktopNewChannelCredential": "新渠道凭据",
+      "desktopThisUpdateHasNoServerCASReadConfigurationAgain": "此更新不支持服务端版本校验。保存后请重新读取配置。",
+      "desktopSaveCredential": "保存凭据",
+      "desktopDisableAccount": "禁用账号",
+      "desktopEnableAccount": "启用账号",
+      "desktopConversationContext": "会话上下文",
+      "desktopConversationStatus": "会话状态",
+      "desktopTheHostRetainsTheOriginalMessageAndIdempotencyKey": "客户端保留原始消息与幂等标识。在确认提交结果前，无法发送新请求。",
+      "desktopReadAuthoritativeHistory": "读取服务端历史",
+      "desktopTheSubmissionOutcomeNeedsReviewYourMessageDraftIs": "提交结果待确认，消息草稿已保留。发送新消息前，请读取服务端历史。",
+      "desktopReadHistoryAndResumeTheSameInvocation": "读取历史并恢复原调用",
+      "desktopThisBotProfileSnapshotIsUnverifiedOpenAccountSettings": "此机器人配置快照未经验证。发送前，请打开账号设置确认已授权的配置。",
+      "desktopModelSelection": "模型选择",
+      "desktopModelForUpcomingMessages": "后续消息使用的模型",
+      "desktopAppliesOnlyToNewMessagesEarlierTurnsKeepThe": "仅对新消息生效，已有回合保留原模型。",
+      "desktopCloseModelSelector": "关闭模型选择",
+      "desktopNoModelsMatchTheFilter": "没有匹配的模型。",
+      "desktopClearThisConversationOverride": "清除此会话的模型设置",
+      "desktopPreserveYourUnsavedDraftsBeforeClosing": "关闭前请处理未保存的草稿",
+      "desktopContinueEditingExportAnExactCopyOrExplicitlyAbandon": "可继续编辑、导出完整副本或放弃指定的内存草稿。已保存的恢复文件会保留。",
+      "desktopExportThisDraft": "导出此草稿",
+      "desktopAbandonThisExactDraft": "放弃此草稿",
+      "desktopContinueEditing": "继续编辑",
+      "desktopSESSIONKNOWLEDGE": "会话知识",
+      "desktopReferenceMaterialWithProvenance": "可追溯来源的参考资料",
+      "desktopImportedKnowledgeBelongsToTheSelectedConversationItDoes": "导入的知识属于所选会话，不会生成可执行的沙箱附件。",
+      "desktopConnectARuntimeToAccessSessionKnowledge": "连接 Runtime 后即可访问会话知识。",
+      "desktopKnowledgeLibrary": "知识库",
+      "desktopRefreshLibrary": "刷新知识库",
+      "desktopImportMaterial": "导入资料",
+      "desktopChooseFileImport": "选择文件并导入",
+      "desktopAddTextVersionToSelectedItem": "为所选资料添加文本版本",
+      "desktopChooseFileForANewVersion": "选择文件以添加新版本",
+      "desktopFileSelectionIsProvidedByTheNativeHostAn": "通过系统窗口选择文件。导入受理后，请检查处理状态以确认资料已就绪。",
+      "desktopRecoverOriginalImport": "恢复原导入请求",
+      "desktopDiscardLocalRecoveryAfterReview": "确认后丢弃本地恢复记录",
+      "desktopReadSelectedContent": "读取所选内容",
+      "desktopDeleteKnowledge": "删除知识",
+      "desktopReadMoreContent": "读取更多内容",
+      "desktopSearchReferenceMaterial": "搜索参考资料",
+      "desktopSearchQuery": "搜索词",
+      "desktopSourceTypesOptionalCommaSeparated": "来源类型（可选，用逗号分隔）",
+      "desktopUpdatedAfterOptionalRFC3339": "更新时间下限（可选，RFC3339 格式）",
+      "desktopLoadMoreMatches": "加载更多结果",
+      "desktopYOURWORKSPACE": "你的工作空间",
+      "desktopALittleFollowThrough": "让任务按时完成",
+      "desktopScheduledTasksExecuteOnTheRuntimeAndContinueWhen": "定时任务在 Runtime 上执行，关闭应用后仍会运行。",
+      "desktopNewScheduledTask": "新建定时任务",
+      "desktopConnectARuntimeWithAVerifiedScheduledTaskIdentity": "连接 Runtime 并验证定时任务身份后，即可管理服务端任务。",
+      "desktopSearchTasks": "搜索任务",
+      "desktopLetAThoughtComeBackAround": "让想法定期回到眼前",
+      "desktopCreateAServerScheduleForThisRuntime": "为此 Runtime 创建定时任务。",
+      "desktopRefreshHistory": "刷新历史",
+      "desktopRunsShown": "条执行记录",
+      "desktopLoadMoreHistory": "加载更多历史",
+      "desktopAgentIDOptional": "智能体 ID（可选）",
+      "desktopScheduleType": "调度类型",
+      "desktopCronExpression": "Cron 表达式",
+      "desktopRunAtRFC3339": "执行时间（RFC3339 格式）",
+      "desktopIntervalSeconds": "间隔秒数",
+      "desktopWeekdays1MondayThrough7Sunday": "星期（1 为周一，7 为周日）",
+      "desktopMonthDays1Through31": "每月日期（1 至 31）",
+      "desktopTimeZone": "时区",
+      "desktopDeliveryChannel": "投递渠道",
+      "desktopFeishuAppID": "飞书应用 ID",
+      "desktopDeliveryTarget": "投递目标",
+      "desktopChooseAPermittedGroup": "选择已授权的群",
+      "desktopSaveSchedule": "保存定时任务",
+      "desktopRefreshTrace": "刷新追踪",
+      "desktopCloseTrace": "关闭追踪",
+      "desktopTraceSummary": "追踪摘要",
+      "desktopSearchStepsErrorsOrIDs": "搜索步骤、错误或 ID",
+      "desktopFilterTraceStatus": "筛选追踪状态",
+      "desktopAllStatuses": "全部状态",
+      "desktopAllCategories": "全部类别",
+      "desktopTraceView": "追踪视图",
+      "desktopTimingUnavailable": "耗时不可用",
+      "desktopNoStepsMatchTheCurrentFilters": "没有符合当前筛选条件的步骤。",
+      "desktopTraceStepDetails": "追踪步骤详情",
+      "desktopCloseStepDetails": "关闭步骤详情",
+      "desktopStepID": "步骤 ID",
+      "desktopSourceEvent": "来源事件",
+      "desktopSafeDetails": "脱敏详情",
+      "desktopOpenMPADesktop": "OpenMPA 桌面端",
+      "desktopOpenThisFrontendThroughTheMyGoDesktopApplicationTo": "请通过 MyGo 桌面应用打开此页面，以连接平台与工作空间服务。",
+      "desktopCONNECTIONS": "连接",
+      "desktopRefresh": "刷新",
+      "desktopDiagnostics": "诊断",
+      "desktopRemove": "移除",
+      "desktopProfile": "配置 ·",
+      "desktopConfigurationInline": "配置 ·",
+      "desktopChannel": "渠道",
+      "desktopUserLabel": "用户",
+      "desktopAuthorize": "授权",
+      "desktopTurn": "回合",
+      "desktopTimeline": "时间线",
+      "desktopList": "列表",
+      "desktopName": "名称",
+      "desktopPrompt": "提示词",
+      "desktopEnable": "启用",
+      "desktopDisable": "禁用",
+      "desktopRetry": "重试",
+      "desktopBound": "已绑定",
+      "desktopResponse": "响应",
+      "desktopLoading": "加载中…",
+      "desktopResume": "恢复",
+      "desktopSteps": "步骤",
+      "desktopReason": "原因",
+      "desktopDetails": "详情",
+      "desktopOutput": "输出",
+      "desktopMessages": "消息",
+      "desktopApprove": "批准",
+      "desktopReject": "拒绝",
+      "desktopCollapseStep": "收起步骤",
+      "desktopExpandStep": "展开步骤",
+      "desktopTraceValidationFailed": "追踪校验失败",
+      "desktopValidatingTrace": "正在校验追踪",
+      "desktopTraceCollectingTheCurrentTurnIsStillRunning": "正在收集追踪 · 当前回合仍在运行",
+      "desktopValidatingTheCurrentTurnTrace": "正在校验当前回合的追踪…",
+      "desktopTraceReturnedNoStepsForThisTurn": "此回合没有返回追踪步骤。",
+      "desktopTheRuntimeReturnedAnEmptyOrUnavailableTraceFor": "Runtime 返回的调用追踪为空或不可用。",
+      "chooseConversation": "选择会话",
+      "startConversation": "开始会话",
+      "connectAccount": "连接账号",
+      "unsavedPageConfirm": "此页面有未保存的更改。离开前请保存或导出。是否丢弃草稿并继续？",
+      "deleteConversationConfirm": "删除会话 {id}？服务端保留与记忆策略仍然适用。",
+      "channelBindingLabel": "绑定 {id}",
+      "channelAwaitingId": "等待服务端 ID",
+      "channelAuthorizeQr": "扫描此二维码以授权所选渠道账号",
+      "channelExpires": "到期时间：{time}",
+      "channelResumeBinding": "恢复绑定",
+      "channelRetryConfirm": "重试此绑定前，请确认网关连接正常。是否沿用原操作 ID 与绑定 ID 重试？",
+      "channelResumeConfirm": "是否恢复读取此前发起的绑定操作？",
+      "channelRemoveConfirm": "移除渠道账号 {id}？会话历史将保留。",
+      "channelRemovePermissionConfirm": "移除群 {id} 的权限？",
+      "channelUpgradeConfirm": "将已有会话 {id} 升级为账号配置？此操作不支持服务端版本校验，也不会推进执行版本。",
+      "knowledgeRecoverConfirm": "沿用原幂等标识恢复此导入请求？如导入文件，请选择同一个原始文件。",
+      "knowledgeDiscardConfirm": "清除此未确认导入的本地记录？这不会取消服务端导入。再次导入相同资料前，请确认原请求结果。",
+      "knowledgeDeleteConfirm": "删除知识 {id}？",
+      "knowledgeSearchingItem": "正在搜索所选知识 {id}",
+      "knowledgeSearchingConversation": "正在搜索此会话的知识",
+      "scheduleFindTask": "查找任务…",
+      "scheduleDisable": "禁用定时任务",
+      "scheduleEnable": "启用定时任务",
+      "scheduleEdit": "编辑定时任务",
+      "scheduleDeleteConfirm": "删除定时任务 {id}？",
+      "scheduleCountUnavailable": "服务端执行总数不可用。",
+      "chatRecoverConfirm": "沿用原始内容、幂等标识与执行版本恢复此请求？客户端将验证持久化幂等性与权限。",
+      "chatAcknowledgeConfirm": "检查服务端历史后，是否确认此结果未知的操作？它可能已经执行。确认后会解除恢复阻塞；再次提交原提示词可能导致重复执行。",
+      "chatResolveTerminal": "确认已验证的终止操作",
+      "chatAcknowledgeOutcome": "确认结果",
+      "chatNoSummary": "暂无摘要",
+      "modelWaitForTurn": "当前回合结束后，才能更改下一回合的模型。",
+      "modelChooseCatalog": "为后续回合选择 Runtime 中的模型",
+      "modelLoadingConfiguration": "正在加载会话模型配置。",
+      "modelUseProfileDefault": "使用助手配置的默认模型",
+      "traceTruncated": "追踪已截断 · 返回 {returned} / {total} 条",
+      "traceUnavailable": "此回合的追踪不可用。",
+      "traceWaiting": "等待已受理的回合。",
+      "traceAutoValidation": "请先发送消息；产生调用后将自动开始追踪校验。",
+      "closeDialog": "关闭{title}",
+      "codeCopied": "代码已复制",
+      "codeCopyFailed": "无法复制代码",
+      "profileFieldsRequired": "完整配置只能包含 agentsMd、model、skills 和 mcp，且四个字段均为必填。",
+      "profileListRequired": "{key} 必须是字符串列表或 null。",
+      "profileInstructionsTooLong": "agentsMd 超过 32,000 个 Unicode 字符。",
+      "profileListTooLong": "{key} 超过 200 项。",
+      "profileInvalidJson": "配置不是有效的 JSON。",
+      "schedulePendingSubmission": "定时任务提交 {token} 需要确认。开始新提交前，请保留原表单与标识。",
+      "scheduleSubmissionUnknown": "提交结果未知。请核对客户端标识 {token}；原表单与标识已保留，供手动恢复。",
+      "scheduleTriggerUnknown": "触发结果未知。请核对客户端标识 {token}。手动恢复时会沿用原请求。",
+      "runtimeDirectoryIncomplete": "Runtime 目录不完整。选择 Runtime 前，请先刷新。",
+      "connectionSlotsUnsupported": "此连接不支持独立凭据槽位。Runtime 网关凭据由客户端管理。",
+      "originalSubmissionNeedsReview": "原提交 {id} 需要确认。开始新执行前，请重新打开并检查已保存的请求。",
+      "saveCancelled": "提交前已取消保存。",
+      "savedPageDeleted": "已保存的页面已被删除，审阅凭证仍可查看。",
+      "unsavedDraftsPreventClose": "存在未保存的恢复草稿，暂时无法关闭。",
+      "channelDomain": "域名",
+      "scheduleTime": "时间",
+      "traceTree": "树形",
+      "traceExpand": "展开",
+      "traceCollapse": "收起",
+      "businessIdentityRequired": "此 Runtime 要求业务用户 ID（x-user-id）。请在「设置 → 身份认证」中配置该部署要求的业务身份。",
+      "businessJWTRequired": "此 Runtime 要求业务 JWT（X-Jwt-Token）。请在「设置 → 身份认证」中配置有效的 JWT。",
+      "resources": "资源",
+      "collaboration": "协作",
+      "skillsMcpInstructions": "技能、MCP 与指令",
+      "a2aCollaboration": "A2A 协作",
+      "usagePage": "页码",
+      "usageTotal": "总数",
+      "useInConversation": "在会话中使用",
+      "connectRuntimeCollaboration": "请连接 Runtime 以管理协作。",
+      "refreshCollaboration": "刷新协作",
+      "collaborationReadOnly": "浏览和刷新不会修改 Runtime。写入操作需要确认。",
+      "collaborationRefreshRequired": "请先刷新协作，再提交更改。你的草稿会保留。",
+      "currentBinding": "当前绑定",
+      "bindingNotLoaded": "尚未加载当前绑定。",
+      "unbindSpace": "解绑空间",
+      "noBoundA2aSpace": "尚未绑定 A2A 空间。",
+      "a2aSpaces": "A2A 空间",
+      "refreshCollaborationSpaces": "请刷新协作以加载空间。",
+      "collaborationSpace": "协作空间",
+      "noVisibleA2aSpaces": "没有可见的 A2A 空间。",
+      "bindSelectedSpace": "绑定所选空间",
+      "spaceMembers": "空间成员",
+      "selectSpaceMembers": "请选择空间以读取成员。",
+      "noVisibleSpaceMembers": "此空间中没有可见成员。",
+      "selectMember": "选择成员",
+      "previousMembersPage": "上一页成员",
+      "nextMembersPage": "下一页成员",
+      "previousSpacesPage": "上一页空间",
+      "nextSpacesPage": "下一页空间",
+      "memberDetails": "成员详情",
+      "agentCardUnavailable": "此 Runtime 不提供 Agent Card。",
+      "currentAlias": "当前别名",
+      "memberAlias": "成员别名",
+      "removeAliasHint": "将别名留空即可移除。",
+      "saveMemberAlias": "保存成员别名",
+      "aliasesUnavailable": "此 Runtime 不支持别名。",
+      "collaborationTask": "协作任务",
+      "collaborationDraftHint": "此操作会将 @提及添加到会话草稿。请在会话中检查后发送。",
+      "confirmSpaceBinding": "更改 Runtime 的 A2A 空间绑定？",
+      "spaceBindingSaved": "空间绑定已保存。",
+      "confirmMemberAlias": "更新所选空间中此成员的别名？",
+      "memberAliasSaved": "成员别名已保存。",
+      "capabilityUnavailable": "当前 Runtime 不提供此功能。",
+      "conflict": "资源已发生变化。请重新读取并检查当前状态，再提交更改。",
+      "outcomeUnknown": "服务器可能已接受此操作。请先读回并核对状态，再决定是否重新提交。",
+      "conversationRequired": "请先选择会话，再使用此资源。",
+      "staleConnection": "连接已发生变化。请重新加载此页面。",
+      "resourceNotVisible": "当前 Runtime 中已不可见此资源。请刷新资源列表。",
+      "invalidResponse": "服务器返回了无效响应。请刷新以读取当前状态。",
+      "denied": "无权执行此操作。请检查当前账户和 Runtime 的权限。",
+      "unavailable": "服务暂时不可用。",
+      "connectionFailure": "无法连接服务器。请检查连接后刷新。",
+      "skills": "技能",
+      "mcp": "MCP",
+      "agentsMd": "AGENTS.md",
+      "mainProfile": "Main 配置",
+      "resourceSections": "资源分类",
+      "resourceError": "资源错误",
+      "model": "模型",
+      "connectRuntimeResources": "请连接 Runtime 以使用资源。",
+      "refreshSkills": "刷新技能",
+      "mountedSkillSpacesOnly": "这里展示当前 Runtime 已配置、供 Worker 使用的资源，无需先选择会话。",
+      "skillSpacesNotLoaded": "尚未加载技能空间。",
+      "noMountedSkillSpaces": "尚未挂载技能空间。",
+      "mountedSkillSpace": "已挂载技能空间",
+      "skillDirectoryUnavailable": "技能目录不可用。请检查平台访问权限后刷新。",
+      "skillDraftHint": "所选技能会添加到当前会话草稿，不会自动发送。",
+      "noVisibleSkills": "此页没有可见技能。",
+      "skillNameNotUsable": "此技能名称无法用作 Runtime 命令。",
+      "previousSkillsPage": "上一页技能",
+      "nextSkillsPage": "下一页技能",
+      "selectConversationMcp": "请选择会话以查看其 MCP 服务器。",
+      "refreshMcpServers": "刷新 MCP 服务器",
+      "configureConversationMcp": "配置会话 MCP",
+      "mcpServersNotLoaded": "尚未加载此会话的 MCP 服务器。",
+      "noConfiguredMcpServers": "此会话尚未配置 MCP 服务器。",
+      "toolDetailsUnavailable": "此 Runtime 不提供工具详情。",
+      "noServerTools": "此服务器未列出工具。",
+      "sharedAgentsMdScope": "这里是 Studio 为当前 Runtime 配置的共享 AGENTS.md，会提供给 Worker 任务使用。编辑后需明确保存。",
+      "mainProfileScope": "Main 配置仅影响 Main。保存指令会保留其模型和技能配置。",
+      "mainProfileUnsupportedOrUnconfigured": "Main 配置不受支持或尚未设置。不会创建配置。",
+      "mainProfileUnconfigured": "Main 配置尚未设置。不会创建配置。",
+      "mainProfileUnsupported": "此 Runtime 不支持 Main 配置。",
+      "mainProfileUnavailable": "Main 配置的实例身份或配置信息不可用。",
+      "reloadInstructions": "重新读取指令",
+      "confirmReloadInstructions": "读取最新指令？你的草稿会保留，以供检查。",
+      "discardInstructionDraft": "放弃指令草稿",
+      "confirmDiscardInstructions": "用上次成功读取的指令替换你的草稿？",
+      "instructionsSaved": "指令已保存。",
+      "unsavedInstructionDraft": "指令草稿尚未保存。",
+      "latestSavedInstructions": "最新已保存指令",
+      "loadedRevision": "已读取版本",
+      "readInstructionsBeforeSaving": "请先读取最新指令，再保存。你的草稿会保留。",
+      "reloadAgentsMd": "重新读取 AGENTS.md",
+      "reloadMainProfile": "重新读取 Main 配置",
+      "agentsMdInstructions": "AGENTS.md 指令",
+      "mainProfileInstructions": "Main 配置指令",
+      "saveAgentsMd": "保存 AGENTS.md",
+      "saveMainProfile": "保存 Main 配置",
+      "collaborationAliasRequired": "请先为此协作者保存唯一的成员别名，再发起协作。",
+      "modelCatalogReadFailed": "无法读取当前 Runtime 的可选模型，请重试刷新。",
+      "modelCatalogLoading": "正在读取当前 Runtime 的可选模型…",
+      "modelCatalogRetry": "刷新模型列表",
+      "modelCatalogUnavailable": "此 Runtime 未声明模型选择能力，将继续使用 Runtime 的现有配置。",
+      "modelSearchRuntime": "搜索 Runtime 可选模型",
+      "runtimeDefaultModelHint": "Runtime 默认模型",
+      "runtimeModelChoice": "当前选择：{model}。列表由当前连接的 Runtime 提供。",
+      "runtimeModelSelectionTitle": "新消息使用的模型",
+      "workerMcpScope": "这里展示当前 Runtime 已配置、供 Worker 使用的外部 MCP，与会话中的 MCP 选择无关。",
+      "collaborationManagementHint": "管理 A2A 空间和成员，保存别名后可在会话中发起协作。",
+      "a2aManageResources": "空间与成员管理",
+      "a2aCreateSpace": "创建空间",
+      "a2aRegisterAgent": "注册智能体",
+      "a2aDeleteSpace": "删除空空间",
+      "a2aDeleteSpaceConfirm": "确认删除此未绑定的空 A2A 空间？此操作无法撤销。",
+      "a2aSpaceName": "空间名称",
+      "a2aIntentEnabled": "启用意图路由",
+      "a2aProject": "项目",
+      "a2aRegistrationSource": "注册来源",
+      "a2aCardUrl": "Agent Card 地址",
+      "a2aCardJson": "Agent Card JSON",
+      "a2aSelectRuntime": "来源 Runtime",
+      "a2aRuntimePlaceholder": "选择 Runtime",
+      "a2aMoreRuntimes": "加载更多 Runtime",
+      "a2aNetwork": "网络类型",
+      "a2aEndpointUnavailable": "此 Runtime 尚无可用端点，请刷新列表后重新选择。",
+      "a2aSubmit": "提交",
+      "a2aViewDetails": "查看成员详情",
+      "a2aUnregister": "注销智能体",
+      "a2aUnregisterConfirm": "确认注销此 A2A 智能体？仅移除注册记录，不会删除其 Runtime。",
+      "a2aRegistered": "已注册：{id}",
+      "a2aResourceDeleted": "资源已移除。",
+      "a2aSkillsTruncated": "仅展示前 100 项技能。",
+      "channelProviderFeishu": "飞书",
+      "channelProviderDingtalk": "钉钉",
+      "channelProviderWecom": "企业微信",
+      "channelWecomAuthorize": "授权企业微信机器人",
+      "channelWecomAuthUnavailable": "企业微信授权入口暂不可用，请改用手动凭据绑定。",
+      "channelBindingNotReady": "当前 Runtime 尚未就绪，无法绑定渠道，请检查 Runtime 的渠道配置。",
+      "channelBindingUncertain": "上次绑定结果尚未确认，请先读取绑定状态，避免重复创建。",
+      "channelUseRuntimeIdentity": "使用已连接 Runtime 的身份",
+      "workerResourcesScope": "这里展示当前 Runtime 已配置、供 Worker 使用的资源，无需先选择会话。",
+      "channelScanned": "已扫码",
+      "resourcePageSubtitle": "管理 Worker 可用的技能、工具与共享指令。",
+      "searchBoundSkills": "搜索技能",
+      "boundSkillsCount": "{count} 项技能",
+      "loadingBoundSkills": "正在读取技能…",
+      "skillDescriptionEmpty": "暂无技能描述。",
+      "noSkillSearchResults": "没有匹配的技能",
+      "tryAnotherSkillSearch": "试试其他名称或关键词。",
+      "boundSpaceEmpty": "这个空间还没有已发布技能",
+      "boundSpaceEmptyHint": "上传技能包到此空间，发布后即可供 Worker 任务使用。",
+      "bindSkillSpaceHint": "请先在 Studio 为当前 Runtime 绑定技能空间，再刷新此页面。",
+      "workerSkillSpaceScope": "此空间中的技能供当前 Runtime 的 Worker 任务使用。",
+      "uploadBoundSkill": "上传技能",
+      "skillUploadTarget": "发布到 {space}",
+      "skillUploadProgress": "上传进度",
+      "skillPublished": "已发布到绑定空间",
+      "skillReadUploadStatus": "读取上传状态",
+      "skillUploadAndPublish": "上传并发布",
+      "skillPublishing": "正在处理并发布…",
+      "chooseSkillPackage": "选择技能包",
+      "skillPackageFormats": "ZIP 或 SKILL.md · 最大 20 MiB",
+      "skillPackageRequirements": "ZIP 根目录或单层目录内需包含 SKILL.md，文件的 YAML 头部需填写 name 和 description。",
+      "skillPackageTooLarge": "技能包不能超过 20 MiB。",
+      "skillUploadUnknown": "上传结果尚未确认，请先核对技能空间，避免重复提交。",
+      "skillUploadFailed": "技能上传失败",
+      "deleteBoundSkill": "删除技能“{name}”",
+      "deleteBoundSkillConfirm": "确定删除整个技能“{name}”吗？此操作会影响所有引用它的空间。",
+      "deletingBoundSkill": "删除中…",
+      "skillArchiveInvalid": "技能包无效，请检查 SKILL.md 的 name、description 及 ZIP 目录结构。",
+      "skillNameConflict": "此空间已存在同名技能，请重命名后上传。",
+      "skillStorageFailed": "技能包存储失败，请检查当前云账号的 TOS 权限。",
+      "skillProcessingFailed": "云端处理此技能版本失败，请在 Studio 中检查。",
+      "skillUploadClose": "关闭",
+      "a2aMemberRunning": "运行中",
+      "a2aMemberStopped": "已停止",
+      "a2aPageDescription": "管理当前 Runtime 的协作空间，让团队中的智能体配合完成任务。",
+      "a2aAlreadyBound": "已绑定此空间",
+      "a2aSearchMembers": "搜索名称或别名",
+      "a2aLoadingMembers": "正在加载成员…",
+      "a2aNoMatchingMembers": "没有匹配的成员",
+      "a2aTaskPlaceholder": "描述需要这位协作智能体完成的任务…",
+      "a2aBindBeforeMention": "先将此空间绑定到当前 Runtime，再使用成员协作。",
+      "a2aChooseMemberTitle": "选择一位协作成员",
+      "channelBoundAccountsTitle": "已绑定机器人",
+      "channelBoundAccountsHint": "显示当前 Runtime 返回的全部机器人，可分别管理每个 Bot。",
+      "channelAddAccountTitle": "新增机器人",
+      "channelAccountsLoading": "正在读取已绑定机器人…",
+      "channelAccountsNotLoaded": "机器人列表尚未加载成功，请刷新重试。",
+      "channelQrUnavailable": "未获取到有效二维码，请读取绑定状态；不要重复创建绑定。",
+      "channelAccountIdUnavailable": "旧版记录未提供机器人 ID，暂不支持修改。",
+      "channelPageTitle": "消息渠道",
+      "channelPageDescription": "将机器人接入当前 Runtime，管理绑定状态与群聊权限。",
+      "channelGroupPermissions": "群聊权限",
+      "channelGroupHint": "添加允许访问此智能体的群，私聊无需群权限。",
+      "channelNoGroups": "尚未授权任何群。",
+      "channelAdvancedSettings": "高级设置",
+      "channelOperationDetails": "绑定操作详情",
+      "channelUnbindAccount": "解除绑定",
+      "channelAddHint": "点击“新增机器人”，通过扫码或凭据完成绑定。",
+      "channelGateway": "消息网关",
+      "channelRoute": "入站路由",
+      "channelDelivery": "回复投递",
+      "channelDelivered": "已投递",
+      "channelDeliveryNotObserved": "尚未观测到",
+      "channelMissingConfiguration": "未配置",
+      "channelBindingRetained": "可以关闭此界面或切换渠道。原绑定请求会保留，不会取消服务端的绑定操作。",
     },
     "en": {
       "settings": "Settings",
@@ -1460,6 +6080,776 @@ const catalog = createCatalog<Messages>({
       "selectAssistant": "Select an assistant",
       "assistantConfiguration": "Assistant configuration",
       "assistantSkillScope": "Configured skills only. Browsing the AgentKit skill space needs a catalog API this client does not have.",
+      "desktopOperation": "Operation",
+      "desktopVersionInline": "Version",
+      "desktopNotPinned": "not pinned",
+      "desktopCouldNotVerifyTheOriginalOperation": "Could not verify the original operation.",
+      "desktopRecoverOriginalDurableSubmission": "Recover original durable submission",
+      "desktopResumeAcceptedInvocation": "Resume accepted invocation",
+      "desktopCouldNotAcknowledgeThisOriginalOperation": "Could not acknowledge this original operation.",
+      "desktopReviewSaveToPage": "Review & save to page",
+      "desktopCouldNotSaveReply": "Could not save reply.",
+      "desktopTheRuntimeDidNotAcknowledgeAnAbortAndStill": "The Runtime did not acknowledge an abort and still reports this turn as active.",
+      "desktopStopWasAcknowledgedButTheAuthoritativeTerminalResultIs": "Stop was acknowledged, but the authoritative terminal result is still pending. History was refreshed; retry after the Runtime settles.",
+      "desktopCouldNotStopExecution": "Could not stop execution.",
+      "desktopTheRuntimeEndedThisTurnWithAnErrorYou": "The Runtime ended this turn with an error. You can start another turn.",
+      "desktopStreamEndedWithAnErrorReadHistoryBeforeRetrying": "Stream ended with an error. Read history before retrying.",
+      "desktopTheRuntimeSentATerminalEventButAuthoritativeHistory": "The Runtime sent a terminal event, but authoritative history has not settled yet. Retry history verification before another submission.",
+      "desktopTheSubscriptionClosedWithoutAMatchingTerminalEventReview": "The subscription closed without a matching terminal event. Review authoritative history before another submission.",
+      "desktopCouldNotSubmitMessage": "Could not submit message.",
+      "desktopTheSavedStreamCursorExpiredHistoryHasBeenRebuilt": "The saved stream cursor expired. History has been rebuilt. Resume this same invocation without a cursor.",
+      "desktopCursorExpiredAndHistoryCouldNotBeRead": "Cursor expired and history could not be read.",
+      "desktopNoVerifiedInvocationIsAvailableForSubscriptionRecovery": "No verified invocation is available for subscription recovery.",
+      "desktopTheRuntimeSentATerminalEventButAuthoritativeHistoryInlineHasNotSettledYet": "The Runtime sent a terminal event, but authoritative history has not settled yet.",
+      "desktopTheSavedStreamCursorExpiredHistoryHasBeenRebuiltInlineResumeTheSameInvocationAgainWithoutACursor": "The saved stream cursor expired. History has been rebuilt. Resume the same invocation again without a cursor.",
+      "desktopSubscriptionRecoveryFailed": "Subscription recovery failed.",
+      "desktopCouldNotLoadConversation": "Could not load conversation.",
+      "desktopSelectedModel": "Selected model",
+      "desktopNoModelOverride": "No model override",
+      "desktopRuntimeDefault": "Runtime default",
+      "desktopTheCurrentTurnIsStillRunningOrAwaitingOutcome": "The current turn is still running or awaiting outcome verification. Finish it before changing the model for the next turn.",
+      "desktopThisLegacyConversationHasNotInitializedItsNextTurn": "This legacy conversation has not initialized its next-turn model configuration yet. Your first selection will initialize it; no existing turn is changed or replayed.",
+      "desktopSearchByNameOrFamily": "Search by name or family",
+      "desktopFilterModels": "Filter models",
+      "desktopCouldNotUpdateTheConversationModel": "Could not update the conversation model.",
+      "desktopThisRuntimeCannotInitializeANextTurnModelConfiguration": "This Runtime cannot initialize a next-turn model configuration.",
+      "desktopTheRuntimeReturnedANextTurnConfigurationWithoutA": "The Runtime returned a next-turn configuration without a revision token.",
+      "desktopModelAppliesToFutureTurnsExistingTurnsKeepTheir": "Model applies to future turns. Existing turns keep their configuration.",
+      "desktopThisLegacyDiagnosticConversationDoesNotExposeNextTurn": "This legacy diagnostic conversation does not expose next-turn model configuration. Ordinary conversations remain model-switchable between completed turns.",
+      "desktopNoRuntime": "No Runtime",
+      "desktopWaitingForAnAcceptedTurn": "Waiting for an accepted turn",
+      "desktopTraceValidationIdle": "Trace validation idle",
+      "desktopFirstModelContent": "First model content",
+      "desktopFirstVisibleAnswer": "First visible answer",
+      "desktopModelCalls": "Model calls",
+      "desktopSlowestStep": "Slowest step",
+      "desktopSearchTrace": "Search trace",
+      "desktopSuccess": "Success",
+      "desktopFailed": "Failed",
+      "desktopRunning": "Running",
+      "desktopTimeout": "Timeout",
+      "desktopNotObserved": "Not observed",
+      "desktopCancelled": "Cancelled",
+      "desktopFilterTraceCategory": "Filter trace category",
+      "desktopStatus": "Status",
+      "desktopDuration": "Duration",
+      "desktopStarted": "Started",
+      "desktopEnded": "Ended",
+      "desktopDetailsHidden": "Details hidden",
+      "desktopReasoning": "Reasoning",
+      "desktopProgress": "Progress",
+      "desktopCompleted": "Completed",
+      "desktopPreparing": "Preparing",
+      "desktopThinking": "Thinking",
+      "desktopStopped": "Stopped",
+      "desktopRead": "Read",
+      "desktopWrite": "Write",
+      "desktopEdit": "Edit",
+      "desktopSearch": "Search",
+      "desktopRunCommand": "Run command",
+      "desktopTool": "Tool",
+      "desktopExecutionProcess": "execution process",
+      "desktopTraceIsUnavailableForThisTurnItMayNot": "Trace is unavailable for this turn. It may not have been collected, may have expired, or may require a Runtime with ordinary-session tracing enabled. Some Runtime versions only collect admin_debug traces.",
+      "desktopTheCurrentRuntimeIdentityIsNotAllowedToRead": "The current Runtime identity is not allowed to read this trace.",
+      "desktopCouldNotLoadThisTraceRetryAfterTheTurn": "Could not load this trace. Retry after the turn is accepted.",
+      "desktopLoginRequired": "Login required",
+      "desktopModel": "Model",
+      "desktopWorker": "Worker",
+      "desktopUnknown": "Unknown",
+      "desktopPage": "Page",
+      "desktopBaseRevision": "· Base revision",
+      "desktopCaptured": "· Captured",
+      "desktopCouldNotExportUnsavedDraft": "Could not export unsaved draft.",
+      "desktopTheIndicatedInMemoryDraftWasAbandonedCloseThe": "The indicated in-memory draft was abandoned. Close the window again to recheck safe closing.",
+      "desktopCouldNotAbandonThisExactDraft": "Could not abandon this exact draft.",
+      "desktopRenameFailed": "Rename failed.",
+      "desktopDeleteFailed": "Delete failed.",
+      "desktopThisRuntimeDoesNotYetSupportDesktopBotCreation": "This Runtime does not yet support desktop Bot creation and configuration.",
+      "desktopTheOperationFailed": "The operation failed.",
+      "desktopLoadConversations": "Load conversations",
+      "desktopCreateDesktopBot": "Create desktop Bot",
+      "desktopOpenLocalWorkspace": "Open local workspace",
+      "desktopReadConnection": "Read connection",
+      "desktopDraftRecoveryCouldNotBeSavedContinueEditingOr": "Draft recovery could not be saved. Continue editing or export a copy before closing.",
+      "desktopCouldNotRegisterTheCloseProtocol": "Could not register the close protocol.",
+      "desktopUntitledPage": "Untitled page",
+      "desktopProfileMustBeAJSONObject": "Profile must be a JSON object.",
+      "desktopModelIDsMustBeAtMost256CharactersAnd": "Model IDs must be at most 256 characters and cannot contain / or :.",
+      "desktopRuntimeChangedReadAndReviewImagesAgain": "Runtime changed. Read and review images again.",
+      "desktopTheServerDidNotProvideAuthoritativeScheduledTaskPagination": "The server did not provide authoritative scheduled-task pagination.",
+      "desktopScheduledTaskPaginationDidNotAdvance": "Scheduled-task pagination did not advance.",
+      "desktopTheSelectedRuntimeDoesNotExposeATemplateCatalog": "The selected Runtime does not expose a template catalog. Read an authorized Bot profile to review its template.",
+      "desktopReadTheCurrentProfileBeforeSaving": "Read the current profile before saving.",
+      "desktopReadAndReviewTheCurrentRuntimeImagesBeforeApplying": "Read and review the current Runtime images before applying.",
+      "desktopTheToolBindingChangedReadAndReviewImagesAgain": "The Tool binding changed. Read and review images again.",
+      "desktopManagementScope": "Management scope:",
+      "desktopOwnerActions": "· Owner actions:",
+      "desktopVerifiedIdentityAvailable": "verified identity available",
+      "desktopVerifiedOwnerIdentityRequired": "verified owner identity required",
+      "desktopConfigurationCAS": "· Configuration CAS:",
+      "desktopBindingOperation": "Binding operation",
+      "desktopNeedsVerificationPreserveThisIDAndResumeTheServer": "needs verification. Preserve this ID and resume the server binding before starting another operation.",
+      "desktopReadPrivateUserAndSlot": "Read private user and slot",
+      "desktopAuthorization": "Authorization",
+      "desktopSlotVersion": "· Slot version",
+      "desktopNoSlot": "No slot",
+      "desktopUser": "· User",
+      "desktopResetPrivateUser": "Reset private user",
+      "desktopBindingSubmittedCredentialInputsCleared": "Binding submitted. Credential inputs cleared.",
+      "desktopScanQRCode": "Scan QR code",
+      "desktopClientID": "Client ID",
+      "desktopBotID": "Bot ID",
+      "desktopAppID": "App ID",
+      "desktopChannelCapabilitiesCouldNotBeRead": "Channel capabilities could not be read.",
+      "desktopChannelOperationFailed": "Channel operation failed.",
+      "desktopBindingStatusCouldNotBeRead": "Binding status could not be read.",
+      "desktopChooseAChannelAccount": "Choose a channel account.",
+      "desktopCouldNotReadChannels": "Could not read channels.",
+      "desktopChannelActionFailed": "Channel action failed.",
+      "desktopOwner": "· Owner",
+      "desktopReviewTheCurrentProfileVersion": "Review the current profile version",
+      "desktopBeforeSaving": "before saving.",
+      "desktopChooseARuntimeConversation": "Choose a Runtime conversation.",
+      "desktopKnowledgeOperationFailed": "Knowledge operation failed.",
+      "desktopChooseAnItemForTheNewVersion": "Choose an item for the new version.",
+      "desktopDisplayName": "Display name",
+      "desktopTextMaterial": "Text material",
+      "desktopImportText": "Import text",
+      "desktopPendingImportKey": "Pending import key",
+      "desktopTheOriginal": ". The original",
+      "desktopSubmissionIsRetainedVerifyTheLibraryAndImportStatus": "submission is retained. Verify the library and import status before recovery.",
+      "desktopImport": "Import",
+      "desktopKnowledge": "· Knowledge",
+      "desktopVersionInlineLabel": "· Version",
+      "desktopReadAuthoritativeImportStatus": "Read authoritative import status",
+      "desktopChunks": "chunks",
+      "desktopCitation": "· Citation",
+      "desktopBytesVisible": "bytes visible",
+      "desktopCitationInline": "Citation",
+      "desktopCouldNotLoadSchedules": "Could not load schedules.",
+      "desktopScheduleOperationFailed": "Schedule operation failed.",
+      "desktopNext": "· Next:",
+      "desktopRunNow": "Run now",
+      "desktopWeb": "Web",
+      "desktopFeishu": "Feishu",
+      "desktopReadPermittedDeliveryTargets": "Read permitted delivery targets",
+      "traceTurnNumber": "Turn {number}",
+      "traceValidatedStatus": "Trace validated · {status}",
+      "traceMissingKinds": " · missing {kinds}",
+      "durationMinutesSeconds": "{minutes}m {seconds}s",
+      "durationSeconds": "{seconds}s",
+      "durationMilliseconds": "{milliseconds}ms",
+      "valueUnavailable": "Unavailable",
+      "statusSkipped": "Skipped",
+      "statusDenied": "Denied",
+      "abandonDraftConfirm": "Abandon exactly the in-memory draft for {title}, captured {time}? This does not delete the saved recovery file.",
+      "revokePrivateConfirm": "Revoke private user authorization at slot version {version}?",
+      "resetPrivateConfirm": "Reset the private user binding at slot version {version}?",
+      "profileUpgradedNotice": "Profile upgraded for {session}. Execution-version advance: {advanced}. Read its current configuration before the next turn.",
+      "knowledgeImportUnknown": "Import {key} has an unknown outcome. Verify and recover that exact submission before creating a new import.",
+      "runAcceptedNotice": "Run {run} accepted with server status {status}. Refresh history to verify completion.",
+      "runSessionLabel": "Session {session}",
+      "runInvocationLabel": "Invocation {invocation}",
+      "profileStringRequired": "{field} must be a string or null.",
+      "settingsAccountId": "Account {account}",
+      "settingsUnknown": "unknown",
+      "settingsRegionBeijing": "North China 2 (Beijing)",
+      "settingsRegionShanghai": "East China 2 (Shanghai)",
+      "settingsSignedIn": "Signed in. Credential inputs cleared.",
+      "settingsVaultSignedIn": "Signed in with saved credentials. Passphrase cleared.",
+      "settingsVaultRemoved": "Saved credentials removed.",
+      "settingsVaultSaved": "Saved credentials encrypted. Passphrase inputs cleared.",
+      "settingsPassphrasesMismatch": "Passphrases do not match.",
+      "settingsVaultUnavailable": "Encrypted credential storage is unavailable in this build.",
+      "settingsCredentialsMemoryHint": "Credentials stay in memory unless you save them to the encrypted local vault after sign-in.",
+      "settingsAccountStatusFailed": "Could not read account status.",
+      "settingsImageReceiptsFailed": "Could not read saved update receipts.",
+      "settingsImageReceiptsRefreshFailed": "Saved update receipts could not be refreshed. Use Refresh saved receipts to recover the original operation when the host is available.",
+      "settingsRuntimesLoadFailed": "Could not load MPA Runtimes.",
+      "settingsRuntimeDirectory": "AgentKit MPA Runtimes",
+      "settingsRuntimeSignInFirst": "Sign in to choose an MPA Runtime.",
+      "settingsListCurrentAccount": "List current account",
+      "settingsFilterRuntimes": "Filter Runtimes",
+      "settingsRuntimeFilterPlaceholder": "Name or Runtime ID",
+      "settingsRuntimesLoading": "Loading MPA Runtimes…",
+      "settingsRuntimesNoMatches": "No matching MPA Runtimes. Check the region, project or filter, then refresh.",
+      "settingsRuntimeVersion": "{runtime} · {status} · version {version}",
+      "settingsRuntimeSelected": "Runtime selected. Verify business identity and connection.",
+      "settingsRuntimeSelecting": "Selecting…",
+      "settingsRuntimeIsSelected": "Selected",
+      "settingsUseRuntime": "Use Runtime",
+      "settingsBusinessConnection": "Business connection",
+      "settingsConnectionSummary": "{runtime} · {status} · scope {scope}",
+      "settingsBusinessIdentitySaved": "Business identity saved. Credential inputs cleared.",
+      "settingsLegacyJwtAuthenticated": "Legacy JWT (for authenticated deployments)",
+      "settingsChannelAdministratorCredentials": "Channel administrator credentials",
+      "settingsChannelCredentialsHint": "Gateway credentials and channel management credentials occupy separate host slots.",
+      "settingsChannelAuthenticationSaved": "Channel authentication saved. Credential input cleared.",
+      "settingsRuntimeChannelKey": "Runtime channel key",
+      "settingsNoAdministratorCredential": "No administrator credential",
+      "settingsAssistantTitle": "Assistant settings",
+      "settingsAssistantPersistenceHint": "Persistent instructions and selected skills apply to new turns. They do not rewrite conversation history.",
+      "settingsOpenAssistantSettings": "Open assistant settings",
+      "settingsAssistantSaved": "Assistant conversation configuration saved.",
+      "settingsAssistantSelectConversation": "Select a Runtime conversation before editing assistant settings.",
+      "settingsRefreshSavedReceipts": "Refresh saved receipts",
+      "settingsImageReviewHint": "Read the server-verified Tool binding, review exact resource IDs and versions, then apply each update. Submission and deployment status appear separately.",
+      "settingsImageUpdateUnavailable": "Image update capability is unavailable in this build.",
+      "settingsRuntimeImageVersion": "Runtime {runtime} · version {version}",
+      "settingsToolImageVersion": "Tool {tool} · updated at {version}",
+      "settingsWorkerToolImage": "Worker Tool image",
+      "settingsReviewRequired": "{field} is required before review.",
+      "settingsReviewFailed": "Review failed.",
+      "settingsReviewExactTargets": "Review exact targets",
+      "settingsReviewUpdates": "Review updates",
+      "settingsRuntimeId": "Runtime ID: {runtime}",
+      "settingsExpectedVersion": "Expected version: {version}",
+      "settingsImageValue": "Image: {image}",
+      "settingsApplyRuntimeImage": "Apply Runtime image",
+      "settingsToolId": "Tool ID: {tool}",
+      "settingsWorkerConfigurationUpdated": "Worker configuration updated at: {version}",
+      "settingsApplyWorkerImage": "Apply Worker image",
+      "settingsSavedImageReceipts": "Saved image update receipts",
+      "settingsReadOperationStatus": "Read current status of this operation",
+      "settingsOperationStatus": "Operation {operation} · {status}",
+      "settingsImageSubmitted": "Submitted; effectiveness not yet verified",
+      "settingsReadUpdateStatus": "Read update status",
+      "settingsRuntimeConfiguration": "Runtime configuration",
+      "settingsRuntimeConfigurationHint": "Review resources for {runtime}. Applying configuration uses AgentKit and may restart Runtime instances.",
+      "settingsReadRuntimeConfiguration": "Read Runtime configuration",
+      "settingsApplyConfigurationConfirm": "Apply configuration to {runtime}, based on version {version}?",
+      "settingsConfigurationVersion": "Version {version} · {status}",
+      "settingsMemoryMib": "Memory (MiB)",
+      "settingsReviewApplyConfiguration": "Review and apply configuration",
+      "settingsConfigurationSeparateHint": "Image, Tool binding and secret environment values are handled separately. Reload if another administrator changes the Runtime.",
+      "settingsConfigurationOperationId": "Configuration operation ID",
+      "settingsOriginalOperationIdPlaceholder": "Original saved operation ID",
+      "settingsVerifyConfigurationUpdate": "Verify original configuration update",
+      "settingsConfigurationReady": "Target configuration and a new Ready version are visible.",
+      "settingsConfigurationVerifyHint": "Read back this operation to verify the outcome.",
+      "settingsAssistantLoadFailed": "Could not load assistant settings.",
+      "settingsAssistantSaveFailed": "Could not save assistant settings.",
+      "settingsAssistantDialogDescription": "Configure this assistant locally. New turns send the saved AGENTS.md and selected skills with the request.",
+      "settingsSaveAssistantSettings": "Save assistant settings",
+      "settingsAssistantLoading": "Loading assistant settings…",
+      "settingsAssistantSections": "Assistant settings sections",
+      "settingsSkills": "Skills",
+      "settingsAssistantInstructionsPlaceholder": "Write persistent instructions for this assistant.",
+      "settingsAssistantInstructionsHint": "These persistent instructions are attached to future turns. Existing conversation history is unchanged.",
+      "settingsSelectedSkills": "Selected skills",
+      "settingsNoSelectedSkills": "No skills selected.",
+      "settingsRemoveSkill": "Remove {skill}",
+      "settingsImportSkillText": "Import skill text",
+      "settingsSkillImportPlaceholder": "Paste a skill name or short skill instruction.",
+      "settingsImportSkill": "Import skill",
+      "settingsSkillSpace": "Skill space",
+      "settingsSearchSkills": "Search skills",
+      "settingsSearchSkillsPlaceholder": "Search by name or description",
+      "chatOriginalNeedsReview": "Original operation needs review · {count, plural, one {# operation} other {# operations}}",
+      "chatOperationConfiguration": "{operation} · {state} · configuration {version}",
+      "chatProcessRunning": "Working · {count, plural, one {# step} other {# steps}}",
+      "chatProcessFailed": "Execution failed · {count, plural, one {# step} other {# steps}}",
+      "chatProcessStopped": "Stopped · {count, plural, one {# step} other {# steps}}",
+      "chatProcessCompleted": "Worked · {count, plural, one {# step} other {# steps}}",
+      "chatInspectTool": "Inspect {action} in full trace",
+      "chatModelLabel": "Model: {model}",
+      "chatCurrentModelInvalid": "Current model {model} is not in the Runtime catalog. Choose a valid model before the next turn.",
+      "chatModelContextWindow": "{family} · {size}M context window",
+      "chatCurrentModelChoice": "Current choice: {model}. The model list is a Runtime catalog snapshot.",
+      "chatModelInvalid": "Model {model} is not in the Runtime catalog. Choose a listed model.",
+      "chatEmptyModel": "(empty)",
+      "traceTitle": "Turn trace",
+      "traceCurrent": "Current",
+      "traceComplete": "Trace complete · {count, plural, one {# step} other {# steps}}",
+      "tracePartial": "Trace partial · {count, plural, one {# step} other {# steps}}",
+      "traceQueue": "Queue",
+      "traceTools": "Tools",
+      "traceTokens": "Tokens",
+      "traceRetries": "Retries",
+      "traceStep": "Step",
+      "traceCategoryRequest": "Request",
+      "traceCategoryPreparation": "Preparation",
+      "traceCategorySandbox": "Sandbox",
+      "traceCategoryFile": "File",
+      "traceCategoryPlan": "Plan",
+      "traceCategoryTerminal": "Terminal",
+      "traceCategoryError": "Error",
+      "pageAvailable": "Available",
+      "pageEnabled": "Enabled",
+      "pageDisabled": "Disabled",
+      "pageYes": "Yes",
+      "pageNo": "No",
+      "pagePending": "Pending",
+      "pageExpired": "Expired",
+      "pageCompleted": "Completed",
+      "channelScopeGroup": "Shared by group",
+      "channelScopeSender": "Separate by sender",
+      "channelScopeTopic": "Shared by topic",
+      "channelScopeTopicSender": "Separate by topic and sender",
+      "channelUnbound": "Unbound",
+      "channelSharedBinding": "Shared",
+      "channelPrivateBinding": "Private",
+      "channelConfigured": "Configured",
+      "channelDisconnected": "Disconnected",
+      "channelWaiting": "Waiting",
+      "channelRegistering": "Registering",
+      "channelRegistered": "Registered",
+      "channelAuthorized": "Authorized",
+      "channelRevoked": "Revoked",
+      "channelUnauthorized": "Unauthorized",
+      "knowledgeReceived": "Received",
+      "knowledgeProcessing": "Processing",
+      "knowledgeReady": "Ready",
+      "knowledgeDeleted": "Deleted",
+      "knowledgeBounded": "Bounded",
+      "knowledgePartial": "Partial",
+      "knowledgeText": "text",
+      "knowledgeFile": "file",
+      "channelNoAccounts": "No channel accounts are configured.",
+      "knowledgeNoItems": "No knowledge has been imported into this conversation.",
+      "knowledgeNoMatches": "No knowledge matches this search.",
+      "scheduleOnce": "Once",
+      "scheduleInterval": "Interval",
+      "scheduleDaily": "Daily",
+      "scheduleWeekly": "Weekly",
+      "scheduleMonthly": "Monthly",
+      "scheduleCron": "Cron",
+      "scheduleQueued": "Queued",
+      "pageCancelled": "Cancelled",
+      "scheduleNoMatches": "No tasks match the search.",
+      "collapseSection": "Collapse {section}",
+      "expandSection": "Expand {section}",
+      "plainTextCode": "Plain text",
+      "wrapCode": "Wrap code lines",
+      "noWrapCode": "Do not wrap code lines",
+      "copyCode": "Copy code",
+      "scrollableMarkdownTable": "Scrollable Markdown table",
+      "deploymentAccepted": "Accepted",
+      "deploymentNotAccepted": "Not accepted",
+      "deploymentOperationSummary": "{acceptance} · {state} · Runtime ready: {runtime} · Business health verified: {health} · Worker config updated: {worker} · Existing sandboxes verified: {sandbox}. {message}",
+      "desktopConnectAChannelAccount": "Connect a channel account",
+      "desktopReadBindingStatus": "Read binding status",
+      "desktopRetryThisBinding": "Retry this binding",
+      "desktopOperationID": "Operation ID",
+      "desktopBindingID": "Binding ID",
+      "desktopReadAndResume": "Read and resume",
+      "desktopAccountPermissionsAndPrivateUser": "Account permissions and private user",
+      "desktopChannelAccount": "Channel account",
+      "desktopChooseAnAccount": "Choose an account",
+      "desktopReadFeishuGroupPermissions": "Read Feishu group permissions",
+      "desktopGroupChatID": "Group chat ID",
+      "desktopGroupSessionScope": "Group conversation scope",
+      "desktopSaveGroupPermission": "Save group permission",
+      "desktopRemoveGroupPermission": "Remove group permission",
+      "desktopPrivateUserAuthorization": "Private user authorization",
+      "desktopRevokeAuthorization": "Revoke authorization",
+      "desktopExistingConversationForProfileUpgrade": "Existing conversation for profile upgrade",
+      "desktopReviewAndUpgradeAccountProfile": "Review and upgrade account profile",
+      "desktopBindingMethod": "Binding method",
+      "desktopManualCredentials": "Manual credentials",
+      "desktopBotBindingType": "Bot binding type",
+      "desktopProviderSecret": "Provider secret",
+      "desktopStartBinding": "Start binding",
+      "desktopChannelsAndTemplates": "Channels and templates.",
+      "desktopChannelManagementUsesTheRuntimeAdministratorIdentityConversationAccess": "Channel management uses the Runtime administrator identity; conversation access remains independently authorized.",
+      "desktopConnectARuntimeWithChannelManagementCredentialsToView": "Connect a Runtime with channel-management credentials to view accounts and templates.",
+      "desktopBotProfile": "Bot profile",
+      "desktopUpdateConfiguration": "Update configuration",
+      "desktopRuntimeTemplates": "Runtime templates",
+      "desktopReadTemplates": "Read templates",
+      "desktopBotProfileJSON": "Bot profile JSON",
+      "desktopSaveProfile": "Save profile",
+      "desktopNewChannelCredential": "New channel credential",
+      "desktopThisUpdateHasNoServerCASReadConfigurationAgain": "This update has no server CAS. Read configuration again after saving.",
+      "desktopSaveCredential": "Save credential",
+      "desktopDisableAccount": "Disable account",
+      "desktopEnableAccount": "Enable account",
+      "desktopConversationContext": "Conversation context",
+      "desktopConversationStatus": "Conversation status",
+      "desktopTheHostRetainsTheOriginalMessageAndIdempotencyKey": "The host retains the original message and idempotency key. A new request remains blocked while its outcome is unresolved.",
+      "desktopReadAuthoritativeHistory": "Read authoritative history",
+      "desktopTheSubmissionOutcomeNeedsReviewYourMessageDraftIs": "The submission outcome needs review. Your message draft is retained. Read authoritative history before starting another message.",
+      "desktopReadHistoryAndResumeTheSameInvocation": "Read history and resume the same invocation",
+      "desktopThisBotProfileSnapshotIsUnverifiedOpenAccountSettings": "This Bot profile snapshot is unverified. Open account settings to establish its authorized configuration before sending.",
+      "desktopModelSelection": "Model selection",
+      "desktopModelForUpcomingMessages": "Model for upcoming messages",
+      "desktopAppliesOnlyToNewMessagesEarlierTurnsKeepThe": "Applies only to new messages. Earlier turns keep the model they already used.",
+      "desktopCloseModelSelector": "Close model selector",
+      "desktopNoModelsMatchTheFilter": "No models match the filter.",
+      "desktopClearThisConversationOverride": "Clear this conversation override",
+      "desktopPreserveYourUnsavedDraftsBeforeClosing": "Preserve your unsaved drafts before closing",
+      "desktopContinueEditingExportAnExactCopyOrExplicitlyAbandon": "Continue editing, export an exact copy, or explicitly abandon the indicated in-memory draft. Saved recovery files remain protected.",
+      "desktopExportThisDraft": "Export this draft",
+      "desktopAbandonThisExactDraft": "Abandon this exact draft",
+      "desktopContinueEditing": "Continue editing",
+      "desktopSESSIONKNOWLEDGE": "SESSION KNOWLEDGE",
+      "desktopReferenceMaterialWithProvenance": "Reference material, with provenance.",
+      "desktopImportedKnowledgeBelongsToTheSelectedConversationItDoes": "Imported knowledge belongs to the selected conversation. It does not create executable sandbox attachments.",
+      "desktopConnectARuntimeToAccessSessionKnowledge": "Connect a Runtime to access session knowledge.",
+      "desktopKnowledgeLibrary": "Knowledge library",
+      "desktopRefreshLibrary": "Refresh library",
+      "desktopImportMaterial": "Import material",
+      "desktopChooseFileImport": "Choose file & import",
+      "desktopAddTextVersionToSelectedItem": "Add text version to selected item",
+      "desktopChooseFileForANewVersion": "Choose file for a new version",
+      "desktopFileSelectionIsProvidedByTheNativeHostAn": "File selection is provided by the native host. An accepted import must be checked before treating it as ready.",
+      "desktopRecoverOriginalImport": "Recover original import",
+      "desktopDiscardLocalRecoveryAfterReview": "Discard local recovery after review",
+      "desktopReadSelectedContent": "Read selected content",
+      "desktopDeleteKnowledge": "Delete knowledge",
+      "desktopReadMoreContent": "Read more content",
+      "desktopSearchReferenceMaterial": "Search reference material",
+      "desktopSearchQuery": "Search query",
+      "desktopSourceTypesOptionalCommaSeparated": "Source types (optional, comma separated)",
+      "desktopUpdatedAfterOptionalRFC3339": "Updated after (optional RFC3339)",
+      "desktopLoadMoreMatches": "Load more matches",
+      "desktopYOURWORKSPACE": "YOUR WORKSPACE",
+      "desktopALittleFollowThrough": "A little follow-through.",
+      "desktopScheduledTasksExecuteOnTheRuntimeAndContinueWhen": "Scheduled tasks execute on the Runtime and continue when this app is closed.",
+      "desktopNewScheduledTask": "New scheduled task",
+      "desktopConnectARuntimeWithAVerifiedScheduledTaskIdentity": "Connect a Runtime with a verified scheduled-task identity to manage server schedules.",
+      "desktopSearchTasks": "Search tasks",
+      "desktopLetAThoughtComeBackAround": "Let a thought come back around.",
+      "desktopCreateAServerScheduleForThisRuntime": "Create a server schedule for this Runtime.",
+      "desktopRefreshHistory": "Refresh history",
+      "desktopRunsShown": "runs shown",
+      "desktopLoadMoreHistory": "Load more history",
+      "desktopAgentIDOptional": "Agent ID (optional)",
+      "desktopScheduleType": "Schedule type",
+      "desktopCronExpression": "Cron expression",
+      "desktopRunAtRFC3339": "Run at (RFC3339)",
+      "desktopIntervalSeconds": "Interval seconds",
+      "desktopWeekdays1MondayThrough7Sunday": "Weekdays (1 Monday through 7 Sunday)",
+      "desktopMonthDays1Through31": "Month days (1 through 31)",
+      "desktopTimeZone": "Time zone",
+      "desktopDeliveryChannel": "Delivery channel",
+      "desktopFeishuAppID": "Feishu app ID",
+      "desktopDeliveryTarget": "Delivery target",
+      "desktopChooseAPermittedGroup": "Choose a permitted group",
+      "desktopSaveSchedule": "Save schedule",
+      "desktopRefreshTrace": "Refresh trace",
+      "desktopCloseTrace": "Close trace",
+      "desktopTraceSummary": "Trace summary",
+      "desktopSearchStepsErrorsOrIDs": "Search steps, errors or IDs",
+      "desktopFilterTraceStatus": "Filter trace status",
+      "desktopAllStatuses": "All statuses",
+      "desktopAllCategories": "All categories",
+      "desktopTraceView": "Trace view",
+      "desktopTimingUnavailable": "Timing unavailable",
+      "desktopNoStepsMatchTheCurrentFilters": "No steps match the current filters.",
+      "desktopTraceStepDetails": "Trace step details",
+      "desktopCloseStepDetails": "Close step details",
+      "desktopStepID": "Step ID",
+      "desktopSourceEvent": "Source event",
+      "desktopSafeDetails": "Safe details",
+      "desktopOpenMPADesktop": "OpenMPA Desktop",
+      "desktopOpenThisFrontendThroughTheMyGoDesktopApplicationTo": "Open this frontend through the MyGo desktop application to connect real platform and workspace services.",
+      "desktopCONNECTIONS": "CONNECTIONS",
+      "desktopRefresh": "Refresh",
+      "desktopDiagnostics": "Diagnostics",
+      "desktopRemove": "Remove",
+      "desktopProfile": "Profile ·",
+      "desktopConfigurationInline": "Configuration ·",
+      "desktopChannel": "Channel",
+      "desktopUserLabel": "User",
+      "desktopAuthorize": "Authorize",
+      "desktopTurn": "Turn",
+      "desktopTimeline": "Timeline",
+      "desktopList": "List",
+      "desktopName": "Name",
+      "desktopPrompt": "Prompt",
+      "desktopEnable": "Enable",
+      "desktopDisable": "Disable",
+      "desktopRetry": "Retry",
+      "desktopBound": "Bound",
+      "desktopResponse": "Response",
+      "desktopLoading": "Loading…",
+      "desktopResume": "Resume",
+      "desktopSteps": "Steps",
+      "desktopReason": "Reason",
+      "desktopDetails": "Details",
+      "desktopOutput": "Output",
+      "desktopMessages": "Messages",
+      "desktopApprove": "Approve",
+      "desktopReject": "Reject",
+      "desktopCollapseStep": "Collapse step",
+      "desktopExpandStep": "Expand step",
+      "desktopTraceValidationFailed": "Trace validation failed",
+      "desktopValidatingTrace": "Validating trace",
+      "desktopTraceCollectingTheCurrentTurnIsStillRunning": "Trace collecting · the current turn is still running",
+      "desktopValidatingTheCurrentTurnTrace": "Validating the current turn trace…",
+      "desktopTraceReturnedNoStepsForThisTurn": "Trace returned no steps for this turn.",
+      "desktopTheRuntimeReturnedAnEmptyOrUnavailableTraceFor": "The Runtime returned an empty or unavailable trace for this invocation.",
+      "chooseConversation": "Choose a conversation",
+      "startConversation": "Start a conversation",
+      "connectAccount": "Connect your account",
+      "unsavedPageConfirm": "This page has unsaved changes. Save or export before leaving. Discard this draft and continue?",
+      "deleteConversationConfirm": "Delete conversation {id}? Server retention and memory policy apply.",
+      "channelBindingLabel": "Binding {id}",
+      "channelAwaitingId": "awaiting server ID",
+      "channelAuthorizeQr": "Scan this code to authorize the selected channel account",
+      "channelExpires": "Expires {time}",
+      "channelResumeBinding": "Resume a binding",
+      "channelRetryConfirm": "Verify the gateway connection before explicitly retrying this same binding. Retry with the same operation and binding IDs?",
+      "channelResumeConfirm": "Resume reading this previously initiated binding operation?",
+      "channelRemoveConfirm": "Remove channel account {id}? Conversation history is retained.",
+      "channelRemovePermissionConfirm": "Remove group permission for {id}?",
+      "channelUpgradeConfirm": "Upgrade the existing conversation {id} to the account profile? This operation has no server CAS and does not advance its execution version.",
+      "knowledgeRecoverConfirm": "Recover this exact import using its original idempotency key? For files, select the same original file.",
+      "knowledgeDiscardConfirm": "Forget this unresolved import locally? This does not cancel a server import. Verify its outcome before importing the same material again.",
+      "knowledgeDeleteConfirm": "Delete knowledge {id}?",
+      "knowledgeSearchingItem": "Searching selected knowledge {id}",
+      "knowledgeSearchingConversation": "Searching this conversation knowledge",
+      "scheduleFindTask": "Find a task…",
+      "scheduleDisable": "Disable schedule",
+      "scheduleEnable": "Enable schedule",
+      "scheduleEdit": "Edit scheduled task",
+      "scheduleDeleteConfirm": "Delete scheduled task {id}?",
+      "scheduleCountUnavailable": "Authoritative run count unavailable.",
+      "chatRecoverConfirm": "Recover this original request using its original content, key and execution version? The host verifies durable idempotency and permissions.",
+      "chatAcknowledgeConfirm": "After reviewing authoritative history, acknowledge this unknown operation? It may already have executed. This removes the recovery block; submitting the original prompt again can produce duplicate work.",
+      "chatResolveTerminal": "Resolve verified terminal operation",
+      "chatAcknowledgeOutcome": "Acknowledge outcome",
+      "chatNoSummary": "No summary",
+      "modelWaitForTurn": "Wait for the current turn to finish before changing the next turn model.",
+      "modelChooseCatalog": "Choose a Runtime catalog model for future turns",
+      "modelLoadingConfiguration": "Loading the conversation model configuration.",
+      "modelUseProfileDefault": "Use the assistant profile default",
+      "traceTruncated": "Trace truncated · returned {returned} of {total}",
+      "traceUnavailable": "Trace is not available for this turn.",
+      "traceWaiting": "Waiting for an accepted turn.",
+      "traceAutoValidation": "Send a message first; trace validation starts automatically when an invocation exists.",
+      "closeDialog": "Close {title}",
+      "codeCopied": "Code copied",
+      "codeCopyFailed": "Unable to copy code",
+      "profileFieldsRequired": "A complete profile requires agentsMd, model, skills and mcp only.",
+      "profileListRequired": "{key} must be a list of strings or null.",
+      "profileInstructionsTooLong": "agentsMd exceeds 32,000 Unicode characters.",
+      "profileListTooLong": "{key} exceeds 200 entries.",
+      "profileInvalidJson": "Profile is not valid JSON.",
+      "schedulePendingSubmission": "Scheduled-task submission {token} needs verification. Preserve its original form and token before starting another submission.",
+      "scheduleSubmissionUnknown": "Submission outcome unknown. Verify client token {token}; this exact form and token are retained for an explicit recovery.",
+      "scheduleTriggerUnknown": "Trigger outcome unknown. Verify client token {token}. An explicit recovery reuses the same request.",
+      "runtimeDirectoryIncomplete": "The Runtime directory is incomplete. Refresh before choosing a Runtime.",
+      "connectionSlotsUnsupported": "Separate credential slots are not supported by this connection. Runtime gateway credentials are held by the host.",
+      "originalSubmissionNeedsReview": "Original submission {id} requires verification. Reopen and review its saved request before starting another run.",
+      "saveCancelled": "Save cancelled before submission.",
+      "savedPageDeleted": "The saved page was deleted. The review receipt remains available.",
+      "unsavedDraftsPreventClose": "Unsaved recovery drafts prevent closing.",
+      "channelDomain": "Domain",
+      "scheduleTime": "Time",
+      "traceTree": "Tree",
+      "traceExpand": "Expand",
+      "traceCollapse": "Collapse",
+      "businessIdentityRequired": "This Runtime requires an explicit business user ID (x-user-id). Configure the identity required by this deployment in Settings > Authentication.",
+      "businessJWTRequired": "This Runtime requires a business JWT (X-Jwt-Token). Configure a valid JWT in Settings > Authentication.",
+      "resources": "Resources",
+      "collaboration": "Collaboration",
+      "skillsMcpInstructions": "Skills, MCP & instructions",
+      "a2aCollaboration": "A2A collaboration",
+      "usagePage": "Page",
+      "usageTotal": "Total",
+      "useInConversation": "Use in conversation",
+      "connectRuntimeCollaboration": "Connect a Runtime to manage collaboration.",
+      "refreshCollaboration": "Refresh collaboration",
+      "collaborationReadOnly": "Browsing and refreshing do not change the Runtime. Writes require confirmation.",
+      "collaborationRefreshRequired": "Refresh collaboration before submitting changes. Your drafts are retained.",
+      "currentBinding": "Current binding",
+      "bindingNotLoaded": "The current binding has not been loaded.",
+      "unbindSpace": "Unbind space",
+      "noBoundA2aSpace": "No A2A space is bound.",
+      "a2aSpaces": "A2A spaces",
+      "refreshCollaborationSpaces": "Refresh collaboration to load spaces.",
+      "collaborationSpace": "Collaboration space",
+      "noVisibleA2aSpaces": "No A2A spaces are visible.",
+      "bindSelectedSpace": "Bind selected space",
+      "spaceMembers": "Space members",
+      "selectSpaceMembers": "Select a space to read its members.",
+      "noVisibleSpaceMembers": "No members are visible in this space.",
+      "selectMember": "Select member",
+      "previousMembersPage": "Previous members page",
+      "nextMembersPage": "Next members page",
+      "previousSpacesPage": "Previous spaces page",
+      "nextSpacesPage": "Next spaces page",
+      "memberDetails": "Member details",
+      "agentCardUnavailable": "Agent Card unavailable in this Runtime.",
+      "currentAlias": "Current alias",
+      "memberAlias": "Member alias",
+      "removeAliasHint": "Leave the alias empty to remove it.",
+      "saveMemberAlias": "Save member alias",
+      "aliasesUnavailable": "Aliases are unavailable in this Runtime.",
+      "collaborationTask": "Collaboration task",
+      "collaborationDraftHint": "This adds an @mention to the conversation draft. Review and send it in the conversation.",
+      "confirmSpaceBinding": "Change the Runtime's A2A space binding?",
+      "spaceBindingSaved": "Space binding saved.",
+      "confirmMemberAlias": "Update this member's alias in the selected space?",
+      "memberAliasSaved": "Member alias saved.",
+      "capabilityUnavailable": "This capability is unavailable in the current Runtime.",
+      "conflict": "The resource changed. Reload and review the current state before submitting again.",
+      "outcomeUnknown": "The server may have accepted this operation. Read back and verify its state before submitting again.",
+      "conversationRequired": "Select a conversation before using this resource.",
+      "staleConnection": "The connection changed. Reload this view.",
+      "resourceNotVisible": "This resource is no longer visible in the current Runtime. Refresh the resource list.",
+      "invalidResponse": "The server returned an invalid response. Refresh to read the current state.",
+      "denied": "This action is not permitted. Check the permissions for the current account and Runtime.",
+      "unavailable": "The service is currently unavailable.",
+      "connectionFailure": "Could not reach the server. Check the connection and refresh.",
+      "skills": "Skills",
+      "mcp": "MCP",
+      "agentsMd": "AGENTS.md",
+      "mainProfile": "Main Profile",
+      "resourceSections": "Resource sections",
+      "resourceError": "Resource error",
+      "model": "Model",
+      "connectRuntimeResources": "Connect a Runtime to use resources.",
+      "refreshSkills": "Refresh skills",
+      "mountedSkillSpacesOnly": "Configured Worker resources from this Runtime; no conversation is required.",
+      "skillSpacesNotLoaded": "Skill Spaces have not been loaded.",
+      "noMountedSkillSpaces": "No Skill Spaces are mounted.",
+      "mountedSkillSpace": "Mounted Skill Space",
+      "skillDirectoryUnavailable": "The skill directory is unavailable. Check platform access and refresh.",
+      "skillDraftHint": "A skill choice is added to the current conversation draft. It is not sent automatically.",
+      "noVisibleSkills": "No skills are visible on this page.",
+      "skillNameNotUsable": "This skill name cannot be used as a Runtime command.",
+      "previousSkillsPage": "Previous skills page",
+      "nextSkillsPage": "Next skills page",
+      "selectConversationMcp": "Select a conversation to view its MCP servers.",
+      "refreshMcpServers": "Refresh MCP servers",
+      "configureConversationMcp": "Configure conversation MCP",
+      "mcpServersNotLoaded": "MCP servers have not been loaded for this conversation.",
+      "noConfiguredMcpServers": "No MCP servers are configured for this conversation.",
+      "toolDetailsUnavailable": "Tool details are unavailable in this Runtime.",
+      "noServerTools": "No tools are listed for this server.",
+      "sharedAgentsMdScope": "Shared AGENTS.md configured in Studio for this Runtime. It is supplied to Worker tasks; save changes explicitly.",
+      "mainProfileScope": "Main Profile affects only Main. Saving instructions preserves its model and skills.",
+      "mainProfileUnsupportedOrUnconfigured": "Main Profile is unsupported or not configured. No profile will be created.",
+      "mainProfileUnconfigured": "Main Profile is not configured. No profile will be created.",
+      "mainProfileUnsupported": "Main Profile is not supported by this Runtime.",
+      "mainProfileUnavailable": "Main Profile identity or configuration is unavailable.",
+      "reloadInstructions": "Reload instructions",
+      "confirmReloadInstructions": "Read the latest instructions? Your draft will be kept for review.",
+      "discardInstructionDraft": "Discard instruction draft",
+      "confirmDiscardInstructions": "Replace your draft with the last successfully read instructions?",
+      "instructionsSaved": "Instructions saved.",
+      "unsavedInstructionDraft": "Unsaved instruction draft.",
+      "latestSavedInstructions": "Latest saved instructions",
+      "loadedRevision": "Loaded revision",
+      "readInstructionsBeforeSaving": "Read the latest instructions before saving. Your draft is retained.",
+      "reloadAgentsMd": "Reload AGENTS.md",
+      "reloadMainProfile": "Reload Main Profile",
+      "agentsMdInstructions": "AGENTS.md instructions",
+      "mainProfileInstructions": "Main Profile instructions",
+      "saveAgentsMd": "Save AGENTS.md",
+      "saveMainProfile": "Save Main Profile",
+      "collaborationAliasRequired": "Save a unique member alias before using this collaborator.",
+      "modelCatalogReadFailed": "Could not read this Runtime’s model choices. Retry to refresh them.",
+      "modelCatalogLoading": "Loading models from the current Runtime…",
+      "modelCatalogRetry": "Refresh models",
+      "modelCatalogUnavailable": "This Runtime does not advertise model selection. The Runtime’s existing configuration will be used.",
+      "modelSearchRuntime": "Search Runtime models",
+      "runtimeDefaultModelHint": "Runtime default model",
+      "runtimeModelChoice": "Current choice: {model}. Models are advertised by the connected Runtime.",
+      "runtimeModelSelectionTitle": "Model for new messages",
+      "workerMcpScope": "Worker external MCP servers deployed in this Runtime. These are independent of conversation selections.",
+      "collaborationManagementHint": "Manage A2A spaces and members, then use a saved alias to collaborate in a conversation.",
+      "a2aManageResources": "Spaces and member management",
+      "a2aCreateSpace": "Create space",
+      "a2aRegisterAgent": "Register agent",
+      "a2aDeleteSpace": "Delete empty space",
+      "a2aDeleteSpaceConfirm": "Delete this empty, unbound A2A space? This cannot be undone.",
+      "a2aSpaceName": "Space name",
+      "a2aIntentEnabled": "Enable intent routing",
+      "a2aProject": "Project",
+      "a2aRegistrationSource": "Registration source",
+      "a2aCardUrl": "Agent Card URL",
+      "a2aCardJson": "Agent Card JSON",
+      "a2aSelectRuntime": "Source Runtime",
+      "a2aRuntimePlaceholder": "Choose a Runtime",
+      "a2aMoreRuntimes": "Load more Runtimes",
+      "a2aNetwork": "Network",
+      "a2aEndpointUnavailable": "No usable endpoint is available for this Runtime. Refresh the list and select it again.",
+      "a2aSubmit": "Submit",
+      "a2aViewDetails": "View member details",
+      "a2aUnregister": "Unregister agent",
+      "a2aUnregisterConfirm": "Unregister this A2A agent? This removes its registry entry and does not delete its Runtime.",
+      "a2aRegistered": "Registered: {id}",
+      "a2aResourceDeleted": "Resource removed.",
+      "a2aSkillsTruncated": "Only the first 100 skills are shown.",
+      "channelProviderFeishu": "Feishu",
+      "channelProviderDingtalk": "DingTalk",
+      "channelProviderWecom": "WeCom",
+      "channelWecomAuthorize": "Authorize WeCom bot",
+      "channelWecomAuthUnavailable": "WeCom authorization is unavailable. Use manual credentials instead.",
+      "channelBindingNotReady": "This Runtime is not ready for channel binding. Check its channel configuration.",
+      "channelBindingUncertain": "The previous binding outcome needs verification. Read its status before starting another binding.",
+      "channelUseRuntimeIdentity": "Use the connected Runtime identity",
+      "workerResourcesScope": "Configured Worker resources from this Runtime; no conversation is required.",
+      "channelScanned": "Scanned",
+      "resourcePageSubtitle": "Manage the skills, tools and shared instructions available to your Worker.",
+      "searchBoundSkills": "Search skills",
+      "boundSkillsCount": "{count} skills",
+      "loadingBoundSkills": "Loading skills…",
+      "skillDescriptionEmpty": "No description provided.",
+      "noSkillSearchResults": "No matching skills",
+      "tryAnotherSkillSearch": "Try another name or keyword.",
+      "boundSpaceEmpty": "No published skills yet",
+      "boundSpaceEmptyHint": "Upload a skill package to this space. It becomes available to Worker tasks once published.",
+      "bindSkillSpaceHint": "Bind a Skill Space to this Runtime in Studio, then refresh this page.",
+      "workerSkillSpaceScope": "Skills in this space are shared by Worker tasks using this Runtime.",
+      "uploadBoundSkill": "Upload skill",
+      "skillUploadTarget": "Publish to {space}",
+      "skillUploadProgress": "Upload progress",
+      "skillPublished": "Published to the bound space",
+      "skillReadUploadStatus": "Check upload status",
+      "skillUploadAndPublish": "Upload and publish",
+      "skillPublishing": "Processing and publishing…",
+      "chooseSkillPackage": "Choose a skill package",
+      "skillPackageFormats": "ZIP or SKILL.md · up to 20 MiB",
+      "skillPackageRequirements": "A ZIP must contain SKILL.md at its root or inside one folder. Its YAML frontmatter must include name and description.",
+      "skillPackageTooLarge": "The skill package exceeds 20 MiB.",
+      "skillUploadUnknown": "Upload outcome needs verification. Check the space before retrying.",
+      "skillUploadFailed": "Skill upload failed",
+      "deleteBoundSkill": "Delete skill “{name}”",
+      "deleteBoundSkillConfirm": "Delete the entire skill “{name}”? This affects every space that references it.",
+      "deletingBoundSkill": "Deleting…",
+      "skillArchiveInvalid": "Invalid skill package. Check SKILL.md, its name and description, and the ZIP folder structure.",
+      "skillNameConflict": "This space already contains a skill with the same name. Rename it before uploading.",
+      "skillStorageFailed": "Could not store the package. Check TOS permissions for the current cloud account.",
+      "skillProcessingFailed": "The cloud could not process this skill version. Check it in Studio.",
+      "skillUploadClose": "Close",
+      "a2aMemberRunning": "Running",
+      "a2aMemberStopped": "Stopped",
+      "a2aPageDescription": "Manage this Runtime’s collaboration space and work with its agents.",
+      "a2aAlreadyBound": "Space connected",
+      "a2aSearchMembers": "Search name or alias",
+      "a2aLoadingMembers": "Loading members…",
+      "a2aNoMatchingMembers": "No matching members",
+      "a2aTaskPlaceholder": "Describe the task for this agent…",
+      "a2aBindBeforeMention": "Connect this space to the current Runtime before using its members.",
+      "a2aChooseMemberTitle": "Choose a collaborator",
+      "channelBoundAccountsTitle": "Connected bots",
+      "channelBoundAccountsHint": "All bots returned by the current Runtime. Each bot has its own settings.",
+      "channelAddAccountTitle": "Add a bot",
+      "channelAccountsLoading": "Loading connected bots…",
+      "channelAccountsNotLoaded": "The bot list could not be loaded. Refresh to try again.",
+      "channelQrUnavailable": "No valid QR code was returned. Read this binding’s status before creating another binding.",
+      "channelAccountIdUnavailable": "This legacy record has no bot ID and cannot be edited.",
+      "channelPageTitle": "Message channels",
+      "channelPageDescription": "Connect bots to this Runtime and manage their access.",
+      "channelGroupPermissions": "Group access",
+      "channelGroupHint": "Allow groups to access this agent. Direct messages do not require group access.",
+      "channelNoGroups": "No groups have access yet.",
+      "channelAdvancedSettings": "Advanced settings",
+      "channelOperationDetails": "Binding operation details",
+      "channelUnbindAccount": "Disconnect bot",
+      "channelAddHint": "Choose Add a bot to connect using a QR code or credentials.",
+      "channelGateway": "Message gateway",
+      "channelRoute": "Inbound route",
+      "channelDelivery": "Reply delivery",
+      "channelDelivered": "Delivered",
+      "channelDeliveryNotObserved": "Not observed yet",
+      "channelMissingConfiguration": "Not configured",
+      "channelBindingRetained": "You can close this view or switch channels. This keeps the original binding request; it does not cancel it on the server.",
     },
   },
 });

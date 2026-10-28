@@ -19,6 +19,7 @@ export function ModalDialog({
   children,
   footer,
   size = 'wide',
+  closeLabel,
 }: {
   title: string;
   description?: string;
@@ -26,6 +27,7 @@ export function ModalDialog({
   children: ReactNode;
   footer?: ReactNode;
   size?: 'default' | 'wide';
+  closeLabel?: string;
 }) {
   const card = useRef<HTMLElement>(null);
   const titleId = useId();
@@ -93,7 +95,7 @@ export function ModalDialog({
               {description && <p id={descriptionId}>{description}</p>}
             </div>
             <IconButton
-              label={`Close ${title.toLowerCase()}`}
+              label={closeLabel ?? `Close ${title.toLowerCase()}`}
               variant="ghost"
               onClick={onClose}
             >

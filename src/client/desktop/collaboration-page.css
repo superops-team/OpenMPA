@@ -1,0 +1,465 @@
+.template-app.desktop-app .collaboration-page {
+  display: block;
+  width: min(100%, 1120px);
+  margin-inline: auto;
+  padding: var(--space-6) var(--space-5);
+}
+.collaboration-page .page-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: start;
+  gap: var(--space-4);
+  margin-bottom: var(--space-5);
+}
+.collaboration-page .page-heading h1 {
+  font-size: var(--text-ui-xl);
+}
+.collaboration-page .page-heading p,
+.collaboration-footer,
+.collaboration-hint {
+  font-size: var(--text-ui-sm);
+  color: var(--color-foreground-subtle);
+  line-height: var(--line-body);
+}
+.collaboration-binding {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: var(--space-5);
+  align-items: center;
+  border: 1px solid var(--color-card-border);
+  border-radius: var(--radius-xl);
+  background: var(--color-card);
+  padding: var(--space-4);
+}
+.collaboration-binding-current {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+.collaboration-binding-current > div {
+  display: grid;
+  gap: var(--space-1);
+  min-width: 0;
+}
+.collaboration-label {
+  font-size: var(--text-ui-caption);
+  color: var(--color-foreground-subtle);
+}
+.collaboration-binding-current strong {
+  font-size: var(--text-ui-sm);
+  overflow-wrap: anywhere;
+}
+.collaboration-binding-current > button {
+  margin-inline-start: auto;
+}
+.collaboration-binding code,
+.collaboration-member-header code {
+  font-size: var(--text-ui-caption);
+  color: var(--color-foreground-subtle);
+  overflow-wrap: anywhere;
+}
+.collaboration-binding-icon,
+.collaboration-avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  background: var(--color-surface);
+  color: var(--color-focus);
+  border-radius: var(--radius-lg);
+  width: 38px;
+  height: 38px;
+}
+.collaboration-avatar.is-large {
+  width: 48px;
+  height: 48px;
+}
+.collaboration-space-picker {
+  display: flex;
+  align-items: end;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  border-inline-start: 1px solid var(--color-border);
+  padding-inline-start: var(--space-5);
+}
+.collaboration-space-picker > label {
+  display: grid;
+  flex: 1;
+  min-width: 180px;
+  gap: var(--space-2);
+  font-size: var(--text-ui-caption);
+  color: var(--color-foreground-subtle);
+}
+.template-app.desktop-app .collaboration-page :is(input, select, textarea),
+.template-app.desktop-app
+  .collaboration-dialog-form
+  :is(input:not([type='checkbox']), select, textarea) {
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--color-input-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-input);
+  color: var(--color-foreground);
+  font: inherit;
+  font-size: var(--text-ui-sm);
+}
+.template-app.desktop-app .collaboration-page :is(input, select) {
+  height: var(--control-input);
+}
+.template-app.desktop-app .collaboration-page textarea {
+  min-height: 112px;
+  resize: vertical;
+  line-height: var(--line-body);
+}
+.template-app.desktop-app .collaboration-button,
+.template-app.desktop-app .collaboration-management button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  gap: var(--space-2);
+  width: auto;
+  height: var(--control-input);
+  border: 1px solid var(--color-input-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-card);
+  color: var(--color-foreground);
+  padding: var(--space-2) var(--space-3);
+  font-size: var(--text-ui-sm);
+  line-height: var(--line-compact);
+  cursor: pointer;
+}
+.template-app.desktop-app .collaboration-button.is-primary {
+  background: var(--color-primary);
+  color: var(--color-primary-foreground);
+  border-color: var(--color-primary);
+  font-weight: 600;
+}
+.template-app.desktop-app .collaboration-button.is-quiet {
+  border-color: transparent;
+  color: var(--color-foreground-subtle);
+}
+.template-app.desktop-app .collaboration-page button:hover:not(:disabled) {
+  background: var(--color-surface-hover);
+}
+.template-app.desktop-app .collaboration-page .is-primary:hover:not(:disabled) {
+  background: var(--color-primary);
+  filter: brightness(0.96);
+}
+.template-app.desktop-app .collaboration-page button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+.collaboration-management {
+  padding-block: var(--space-3);
+}
+.collaboration-management .studio-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+.collaboration-management.is-toolbar .studio-actions > button:last-child {
+  margin-inline-start: auto;
+}
+.collaboration-workspace {
+  display: grid;
+  grid-template-columns: minmax(230px, 30%) minmax(0, 1fr);
+  border: 1px solid var(--color-card-border);
+  border-radius: var(--radius-xl);
+  background: var(--color-card);
+  overflow: hidden;
+  min-height: 360px;
+}
+.collaboration-members {
+  border-inline-end: 1px solid var(--color-border);
+  padding: var(--space-4) 0;
+  min-width: 0;
+}
+.collaboration-section-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  padding-inline: var(--space-4);
+}
+.template-app.desktop-app .collaboration-section-heading h2 {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin: 0;
+  font-size: var(--text-ui-sm);
+}
+.collaboration-count {
+  padding: var(--space-1) var(--space-2);
+  background: var(--color-surface);
+  border-radius: var(--radius-md);
+  font-size: var(--text-ui-caption);
+  color: var(--color-foreground-subtle);
+}
+.collaboration-search {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin: var(--space-4);
+  padding-inline: var(--space-3);
+  border: 1px solid var(--color-input-border);
+  border-radius: var(--radius-lg);
+  height: var(--control-input);
+  color: var(--color-foreground-subtle);
+}
+.template-app.desktop-app .collaboration-page .collaboration-search input {
+  width: 0;
+  flex: 1;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  padding: 0;
+  box-shadow: none;
+}
+.template-app.desktop-app .collaboration-page .collaboration-search input:focus,
+.template-app.desktop-app
+  .collaboration-page
+  .collaboration-search
+  input:focus-visible {
+  outline: none;
+  box-shadow: none;
+}
+.collaboration-search:focus-within {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 2px;
+}
+.collaboration-member-list {
+  padding-inline: var(--space-2);
+}
+.template-app.desktop-app .collaboration-member {
+  justify-content: flex-start;
+  display: flex;
+  align-items: start;
+  gap: var(--space-3);
+  width: 100%;
+  min-width: 0;
+  padding: var(--space-3);
+  margin-block: var(--space-1);
+  border: 1px solid transparent;
+  border-radius: var(--radius-lg);
+  background: transparent;
+  text-align: start;
+  color: var(--color-foreground);
+  cursor: pointer;
+}
+.template-app.desktop-app .collaboration-member.is-selected {
+  background: var(--color-surface);
+  border-color: var(--color-border);
+  box-shadow: inset 3px 0 var(--color-focus);
+}
+.collaboration-member-copy {
+  display: grid;
+  gap: var(--space-1);
+  min-width: 0;
+}
+.collaboration-member-copy > strong {
+  font-size: var(--text-ui-sm);
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+.collaboration-member-copy > span {
+  font-size: var(--text-ui-caption);
+  color: var(--color-foreground-subtle);
+  overflow-wrap: anywhere;
+}
+.collaboration-status {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  font-size: var(--text-ui-caption);
+  color: var(--color-foreground-subtle);
+  white-space: nowrap;
+}
+.collaboration-status::before {
+  content: '';
+  width: 6px;
+  height: 6px;
+  border-radius: var(--radius-full);
+  background: currentColor;
+}
+.collaboration-status.is-running {
+  color: var(--color-focus);
+}
+.collaboration-details {
+  padding: var(--space-5);
+  min-width: 0;
+}
+.collaboration-member-header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+.collaboration-member-header > div {
+  min-width: 0;
+}
+.collaboration-member-header > .collaboration-status {
+  margin-inline-start: auto;
+}
+.template-app.desktop-app .collaboration-member-header h2 {
+  margin: 0 0 var(--space-1);
+  font-size: var(--text-ui-lg);
+  overflow-wrap: anywhere;
+}
+.collaboration-description,
+.collaboration-card-info {
+  margin-block: var(--space-4);
+  font-size: var(--text-ui-sm);
+  color: var(--color-foreground-subtle);
+  line-height: var(--line-body);
+  overflow-wrap: anywhere;
+}
+.collaboration-card-info {
+  display: grid;
+  gap: var(--space-2);
+  padding: var(--space-3);
+  background: var(--color-surface);
+  border-radius: var(--radius-lg);
+}
+.collaboration-alias-form {
+  display: grid;
+  gap: var(--space-3);
+  border-top: 1px solid var(--color-border);
+  padding-top: var(--space-4);
+  margin-top: var(--space-4);
+}
+.template-app.desktop-app .collaboration-alias-form h3 {
+  margin: 0;
+  font-size: var(--text-ui-sm);
+  font-weight: 600;
+}
+.template-app.desktop-app .collaboration-alias-form p {
+  margin: 0;
+  font-size: var(--text-ui-caption);
+  color: var(--color-foreground-subtle);
+  line-height: var(--line-body);
+}
+.collaboration-inline-field {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.collaboration-pagination {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-top: var(--space-3);
+  padding-inline: var(--space-3);
+  font-size: var(--text-ui-caption);
+  color: var(--color-foreground-subtle);
+}
+.collaboration-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-3);
+  padding: var(--space-5) var(--space-3);
+  text-align: center;
+  color: var(--color-foreground-subtle);
+  font-size: var(--text-ui-sm);
+  line-height: var(--line-body);
+}
+.collaboration-empty.is-detail {
+  min-height: 300px;
+}
+.template-app.desktop-app .collaboration-empty h2 {
+  margin: 0;
+  font-size: var(--text-ui-base);
+  color: var(--color-foreground);
+}
+.collaboration-notice {
+  padding: var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  font-size: var(--text-ui-sm);
+  line-height: var(--line-body);
+  overflow-wrap: anywhere;
+}
+.collaboration-footer {
+  margin-top: var(--space-4);
+}
+.collaboration-dialog-form {
+  align-content: start;
+  gap: var(--space-4);
+}
+.collaboration-dialog-form .studio-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  justify-content: end;
+}
+.collaboration-dialog-form label:not(.studio-checkbox) {
+  display: grid;
+  gap: var(--space-2);
+  font-size: var(--text-ui-sm);
+}
+.collaboration-dialog-form textarea {
+  min-height: 180px;
+}
+.collaboration-dialog-form .studio-checkbox {
+  display: flex;
+  gap: var(--space-2);
+  align-items: center;
+}
+@keyframes collaboration-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+.collaboration-spinning {
+  animation: collaboration-spin 1s linear infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .collaboration-spinning {
+    animation: none;
+  }
+}
+@media (max-width: 760px) {
+  .template-app.desktop-app .collaboration-page {
+    padding: var(--space-4);
+  }
+  .collaboration-binding {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .collaboration-space-picker {
+    border-inline-start: 0;
+    padding-inline-start: 0;
+    border-top: 1px solid var(--color-border);
+    padding-top: var(--space-4);
+  }
+  .collaboration-workspace {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .collaboration-members {
+    border-inline-end: 0;
+    border-bottom: 1px solid var(--color-border);
+  }
+  .collaboration-member-list {
+    max-height: 260px;
+    overflow-y: auto;
+  }
+  .collaboration-details {
+    padding: var(--space-4);
+  }
+  .collaboration-inline-field,
+  .collaboration-binding-current {
+    flex-wrap: wrap;
+  }
+  .collaboration-member-header {
+    flex-wrap: wrap;
+  }
+  .collaboration-page .page-heading {
+    flex-wrap: wrap;
+  }
+}

@@ -1,6 +1,7 @@
 import { act, create, type ReactTestRenderer } from 'react-test-renderer';
 import { expect, it, vi } from 'vitest';
 import { ConversationFixture } from '../src/client/desktop/ConversationFixture';
+import { messages } from '../src/client/desktop/generated/locales';
 
 it('renders running and completed turn-process states without private reasoning', async () => {
   vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true);
@@ -9,8 +10,8 @@ it('renders running and completed turn-process states without private reasoning'
     renderer = create(<ConversationFixture />);
   });
   const output = JSON.stringify(renderer.toJSON());
-  expect(output).toContain('Working · 4 steps');
-  expect(output).toContain('Worked · 1 step');
+  expect(output).toContain(messages.chatProcessRunning(4));
+  expect(output).toContain(messages.chatProcessCompleted(1));
   expect(output).toContain('Conversation rendering review');
   expect(output).not.toContain('hidden reasoning');
   await act(async () => renderer.unmount());

@@ -2,7 +2,10 @@ import { act, create, type ReactTestRenderer } from 'react-test-renderer';
 import { expect, it, vi } from 'vitest';
 import { DesktopSettings } from '../src/client/desktop/Settings';
 import { LocaleProvider } from '../src/client/desktop/locale';
+import { messages, messagesIn } from '../src/client/desktop/generated/locales';
 import type { DesktopServices, RuntimeVM } from '../src/client/desktop/models';
+
+const m = messages;
 
 it('loads the signed-in account directory and rejects old region results before binding', async () => {
   vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true);
@@ -64,7 +67,7 @@ it('loads the signed-in account directory and rejects old region results before 
   await act(async () => {
     renderer.root
       .findAllByType('button')
-      .find((button) => button.children.includes('Use Runtime'))!
+      .find((button) => button.children.includes(m.settingsUseRuntime()))!
       .props.onClick();
   });
   expect(bind).toHaveBeenCalledWith('cn-shanghai', 'default', 'r-new');
@@ -107,7 +110,8 @@ it('force refreshes the Runtime directory only from the explicit refresh button'
       .find((button) =>
         button.children.some(
           (child) =>
-            typeof child === 'string' && child.includes('List current account'),
+            typeof child === 'string' &&
+            child.includes(m.settingsListCurrentAccount()),
         ),
       )!
       .props.onClick(),
@@ -169,10 +173,12 @@ it('shows the Runtime being selected until the authoritative binding returns', a
   await act(async () => {
     renderer.root
       .findAllByType('button')
-      .find((button) => button.children.includes('Use Runtime'))!
+      .find((button) => button.children.includes(m.settingsUseRuntime()))!
       .props.onClick();
   });
-  expect(JSON.stringify(renderer.toJSON())).toContain('Selecting…');
+  expect(JSON.stringify(renderer.toJSON())).toContain(
+    m.settingsRuntimeSelecting(),
+  );
   expect(renderer.root.findByProps({ 'aria-busy': true }).props.disabled).toBe(
     true,
   );
@@ -234,6 +240,22 @@ it('saves and unlocks encrypted cloud credentials from the React account setting
     .findAllByType('input')
     .filter((input) => input.props.type === 'password');
   await act(async () => {
+    passwordInputs[0].props.onChange({ target: { value: 'first passphrase' } });
+    passwordInputs[1].props.onChange({
+      target: { value: 'different passphrase' },
+    });
+  });
+  await act(async () =>
+    renderer.root
+      .findAllByType('button')
+      .find((button) => button.children.includes(m.saveCredentials()))!
+      .props.onClick(),
+  );
+  expect(saveVault).not.toHaveBeenCalled();
+  expect(JSON.stringify(renderer.toJSON())).toContain(
+    m.settingsPassphrasesMismatch(),
+  );
+  await act(async () => {
     passwordInputs[0].props.onChange({
       target: { value: 'correct horse battery' },
     });
@@ -244,12 +266,12 @@ it('saves and unlocks encrypted cloud credentials from the React account setting
   await act(async () =>
     renderer.root
       .findAllByType('button')
-      .find((button) => button.children.includes('Save credentials'))!
+      .find((button) => button.children.includes(m.saveCredentials()))!
       .props.onClick(),
   );
   expect(saveVault).toHaveBeenCalledWith('correct horse battery');
   expect(JSON.stringify(renderer.toJSON())).toContain(
-    'Account 1234567890 · cn-beijing',
+    m.vaultAccount('1234567890', 'cn-beijing'),
   );
 
   await act(async () => {
@@ -278,16 +300,14 @@ it('saves and unlocks encrypted cloud credentials from the React account setting
     );
   });
   await act(async () => {});
-  expect(JSON.stringify(renderer.toJSON())).toContain(
-    'Enter the passphrase to unlock the saved AK/SK.',
-  );
+  expect(JSON.stringify(renderer.toJSON())).toContain(m.vaultUnlockHint());
   const unlockInput = renderer.root
     .findAllByType('input')
     .find((input) => input.props.autoComplete === 'current-password')!;
   const unlockButton = () =>
     renderer.root
       .findAllByType('button')
-      .find((button) => button.children.includes('Unlock and sign in'))!;
+      .find((button) => button.children.includes(m.unlockAndSignIn()))!;
   expect(unlockButton().props.disabled).toBe(true);
   await act(async () =>
     unlockInput.props.onChange({ target: { value: 'correct horse battery' } }),
@@ -311,10 +331,11 @@ it('saves and unlocks encrypted cloud credentials from the React account setting
 it('renders saved credential unlock copy in Chinese without crowding labels', async () => {
   vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true);
   let changed: ((payload: { locale: string; dir: string }) => void) | undefined;
+  let locale = 'zh-Hans';
   const previousMyGo = (globalThis as { mygo?: unknown }).mygo;
   (globalThis as { mygo?: unknown }).mygo = {
     get locale() {
-      return 'zh-Hans';
+      return locale;
     },
     on: (_name: string, listener: typeof changed) => {
       changed = listener;
@@ -323,16 +344,17 @@ it('renders saved credential unlock copy in Chinese without crowding labels', as
   };
   const services = {
     platform: {
-      status: async () => ({
+      status: vi.fn(async () => ({
         signedIn: false,
         accountId: '',
         region: 'cn-beijing',
-      }),
-      vaultStatus: async () => ({
+      })),
+      vaultStatus: vi.fn(async () => ({
         exists: true,
         accountId: '2112682748',
         region: 'cn-beijing',
-      }),
+      })),
+      list: vi.fn(async () => []),
       unlockVault: vi.fn(async () => ({
         signedIn: true,
         accountId: '2112682748',
@@ -359,7 +381,50 @@ it('renders saved credential unlock copy in Chinese without crowding labels', as
   expect(rendered).toContain('口令');
   expect(rendered).toContain('解锁并登录');
   expect(rendered).toContain('账号 2112682748 · cn-beijing');
+  await act(async () =>
+    renderer.root
+      .findByProps({ autoComplete: 'current-password' })
+      .props.onChange({
+        target: { value: 'unsaved passphrase' },
+      }),
+  );
+  const en = messagesIn('en');
+  await act(async () => {
+    locale = 'en';
+    changed!({ locale, dir: 'ltr' });
+  });
+  expect(JSON.stringify(renderer.toJSON())).toContain(
+    en.settingsRegionBeijing(),
+  );
+  expect(
+    renderer.root.findByProps({ autoComplete: 'current-password' }).props.value,
+  ).toBe('unsaved passphrase');
+  expect(services.platform.status).toHaveBeenCalledTimes(1);
+  expect(services.platform.vaultStatus).toHaveBeenCalledTimes(1);
+  expect(services.platform.unlockVault).not.toHaveBeenCalled();
+  await act(async () =>
+    renderer.root
+      .findAllByType('button')
+      .find((button) => button.children.includes(en.unlockAndSignIn()))!
+      .props.onClick(),
+  );
+  expect(JSON.stringify(renderer.toJSON())).toContain(
+    en.settingsVaultSignedIn(),
+  );
+  await act(async () => {
+    locale = 'zh-Hans';
+    changed!({ locale, dir: 'ltr' });
+  });
+  expect(JSON.stringify(renderer.toJSON())).toContain(
+    m.settingsVaultSignedIn(),
+  );
+  expect(JSON.stringify(renderer.toJSON())).not.toContain(
+    en.settingsVaultSignedIn(),
+  );
+  expect(services.platform.status).toHaveBeenCalledTimes(1);
+  expect(services.platform.vaultStatus).toHaveBeenCalledTimes(2);
+  expect(services.platform.unlockVault).toHaveBeenCalledTimes(1);
+  expect(services.platform.list).toHaveBeenCalledTimes(1);
   await act(async () => renderer.unmount());
   (globalThis as { mygo?: unknown }).mygo = previousMyGo;
-  void changed;
 });

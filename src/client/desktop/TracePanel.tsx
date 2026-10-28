@@ -1,3 +1,4 @@
+import { useMessages } from './locale';
 import {
   AlertTriangle,
   BarChart3,
@@ -20,6 +21,7 @@ import {
   flattenTraceTree,
   formatTraceCount,
   formatTraceDuration,
+  traceCategoryLabel,
   traceStepForTool,
   traceStatusLabel,
   traceStepCategory,
@@ -63,6 +65,7 @@ export function TracePanel({
   focus?: { invocationId: string; toolId?: string };
   onClose: () => void;
 }) {
+  const m = useMessages();
   const [selected, setSelected] = useState(
     focus?.invocationId || currentInvocationId || invocationIds.at(-1) || '',
   );
@@ -200,7 +203,7 @@ export function TracePanel({
     <dialog
       ref={dialog}
       className="trace-panel"
-      aria-label="Turn trace"
+      aria-label={m.traceTitle()}
       onCancel={(event) => {
         event.preventDefault();
         onClose();
@@ -210,17 +213,17 @@ export function TracePanel({
         <div className="trace-panel__title">
           <BarChart3 size={18} />
           <div>
-            <strong>Turn trace</strong>
+            <strong>{m.traceTitle()}</strong>
             <span>
-              {session?.title || 'Conversation'} ·{' '}
-              {connection?.runtimeId || 'No Runtime'}
+              {session?.title || m.conversation()} ·{' '}
+              {connection?.runtimeId || m.desktopNoRuntime()}
             </span>
           </div>
         </div>
         <div className="trace-panel__actions">
           <IconButton
             className="trace-icon-button"
-            label="Refresh trace"
+            label={m.desktopRefreshTrace()}
             onClick={reload}
             disabled={!selected || loading}
           >
@@ -228,7 +231,7 @@ export function TracePanel({
           </IconButton>
           <IconButton
             className="trace-icon-button"
-            label="Close trace"
+            label={m.desktopCloseTrace()}
             onClick={onClose}
           >
             <X size={16} />
@@ -238,7 +241,7 @@ export function TracePanel({
 
       <div className="trace-panel__controls">
         <label className="trace-turn">
-          <span>Turn</span>
+          <span>{m.desktopTurn()}</span>
           <select
             value={selected}
             onChange={(event) => setSelected(event.target.value)}
@@ -247,12 +250,14 @@ export function TracePanel({
             {invocationIds.length ? (
               invocationIds.map((id, index) => (
                 <option key={id} value={id}>
-                  {id === currentInvocationId ? 'Current' : `Turn ${index + 1}`}{' '}
+                  {id === currentInvocationId
+                    ? m.traceCurrent()
+                    : m.traceTurnNumber(String(index + 1))}{' '}
                   · {shortId(id)}
                 </option>
               ))
             ) : (
-              <option value="">Waiting for an accepted turn</option>
+              <option value="">{m.desktopWaitingForAnAcceptedTurn()}</option>
             )}
           </select>
         </label>
@@ -272,12 +277,14 @@ export function TracePanel({
           )}
           <span>
             {error
-              ? 'Trace validation failed'
+              ? m.desktopTraceValidationFailed()
               : loading
-                ? 'Validating trace'
+                ? m.desktopValidatingTrace()
                 : model
-                  ? `Trace validated · ${model.summary.status}`
-                  : 'Trace validation idle'}
+                  ? m.traceValidatedStatus(
+                      traceStatusLabel(model.summary.status, m),
+                    )
+                  : m.desktopTraceValidationIdle()}
           </span>
         </div>
       </div>
@@ -303,14 +310,17 @@ export function TracePanel({
           )}
           <span>
             {model.coverage.truncated
-              ? `Trace truncated · returned ${model.coverage.returnedCount} of ${model.coverage.recordCount}`
+              ? m.traceTruncated(
+                  String(model.coverage.returnedCount),
+                  String(model.coverage.recordCount),
+                )
               : model.coverage.active
-                ? 'Trace collecting · the current turn is still running'
+                ? m.desktopTraceCollectingTheCurrentTurnIsStillRunning()
                 : model.coverage.complete
-                  ? `Trace complete · ${model.coverage.recordCount} steps`
-                  : `Trace partial · ${model.coverage.recordCount} steps`}
+                  ? m.traceComplete(model.coverage.recordCount)
+                  : m.tracePartial(model.coverage.recordCount)}
             {model.coverage.missingKinds.length
-              ? ` · missing ${model.coverage.missingKinds.join(', ')}`
+              ? m.traceMissingKinds(model.coverage.missingKinds.join(', '))
               : ''}
             {` · ${model.trace.traceVersion}`}
           </span>
@@ -319,25 +329,31 @@ export function TracePanel({
 
       {!error && model && model.steps.length > 0 && (
         <>
-          <div className="trace-summary" aria-label="Trace summary">
+          <div className="trace-summary" aria-label={m.desktopTraceSummary()}>
             {[
-              ['Duration', formatTraceDuration(model.summary.wallDurationMs)],
-              ['Queue', formatTraceDuration(model.summary.queueDurationMs)],
               [
-                'First model content',
-                formatTraceDuration(model.summary.firstModelContentMs),
+                m.desktopDuration(),
+                formatTraceDuration(model.summary.wallDurationMs, m),
               ],
               [
-                'First visible answer',
-                formatTraceDuration(model.summary.firstVisibleAnswerMs),
+                m.traceQueue(),
+                formatTraceDuration(model.summary.queueDurationMs, m),
               ],
               [
-                'Model calls',
-                formatTraceCount(model.summary.modelRequestCount),
+                m.desktopFirstModelContent(),
+                formatTraceDuration(model.summary.firstModelContentMs, m),
               ],
-              ['Tools', formatTraceCount(model.summary.toolCount)],
-              ['Tokens', formatTraceCount(model.summary.totalTokens)],
-              ['Retries', formatTraceCount(model.summary.retryCount)],
+              [
+                m.desktopFirstVisibleAnswer(),
+                formatTraceDuration(model.summary.firstVisibleAnswerMs, m),
+              ],
+              [
+                m.desktopModelCalls(),
+                formatTraceCount(model.summary.modelRequestCount, m),
+              ],
+              [m.traceTools(), formatTraceCount(model.summary.toolCount, m)],
+              [m.traceTokens(), formatTraceCount(model.summary.totalTokens, m)],
+              [m.traceRetries(), formatTraceCount(model.summary.retryCount, m)],
             ].map(([label, value]) => (
               <div key={label} className="trace-summary__item">
                 <span>{label}</span>
@@ -347,10 +363,26 @@ export function TracePanel({
           </div>
           {model.summary.slowestStep && (
             <div className="trace-slowest">
-              <span>Slowest step</span>
-              <strong>{model.summary.slowestStep.title}</strong>
+              <span>{m.desktopSlowestStep()}</span>
+              <strong>
+                {model.run.slowestStep &&
+                typeof model.run.slowestStep === 'object' &&
+                'stepId' in model.run.slowestStep &&
+                model.run.slowestStep.stepId ===
+                  model.summary.slowestStep.stepId &&
+                'durationMs' in model.run.slowestStep &&
+                typeof model.run.slowestStep.durationMs === 'number' &&
+                Number.isFinite(model.run.slowestStep.durationMs) &&
+                model.run.slowestStep.durationMs >= 0 &&
+                !(
+                  'title' in model.run.slowestStep &&
+                  model.run.slowestStep.title
+                )
+                  ? m.traceStep()
+                  : model.summary.slowestStep.title}
+              </strong>
               <em>
-                {formatTraceDuration(model.summary.slowestStep.durationMs)}
+                {formatTraceDuration(model.summary.slowestStep.durationMs, m)}
               </em>
             </div>
           )}
@@ -360,62 +392,62 @@ export function TracePanel({
               <input
                 value={query}
                 onChange={(event) => setQuery(event.target.value)}
-                placeholder="Search steps, errors or IDs"
-                aria-label="Search trace"
+                placeholder={m.desktopSearchStepsErrorsOrIDs()}
+                aria-label={m.desktopSearchTrace()}
               />
             </label>
             <select
               value={status}
               onChange={(event) => setStatus(event.target.value)}
-              aria-label="Filter trace status"
+              aria-label={m.desktopFilterTraceStatus()}
             >
-              <option value="">All statuses</option>
-              <option value="success">Success</option>
-              <option value="failed">Failed</option>
-              <option value="running">Running</option>
-              <option value="timeout">Timeout</option>
-              <option value="not_observed">Not observed</option>
-              <option value="cancelled">Cancelled</option>
+              <option value="">{m.desktopAllStatuses()}</option>
+              <option value="success">{m.desktopSuccess()}</option>
+              <option value="failed">{m.desktopFailed()}</option>
+              <option value="running">{m.desktopRunning()}</option>
+              <option value="timeout">{m.desktopTimeout()}</option>
+              <option value="not_observed">{m.desktopNotObserved()}</option>
+              <option value="cancelled">{m.pageCancelled()}</option>
             </select>
             <select
               value={category}
               onChange={(event) => setCategory(event.target.value)}
-              aria-label="Filter trace category"
+              aria-label={m.desktopFilterTraceCategory()}
             >
-              <option value="">All categories</option>
+              <option value="">{m.desktopAllCategories()}</option>
               {categories.map((item) => (
                 <option key={item} value={item}>
-                  {item}
+                  {traceCategoryLabel(item, m)}
                 </option>
               ))}
             </select>
             <div
               className="trace-view-toggle"
               role="group"
-              aria-label="Trace view"
+              aria-label={m.desktopTraceView()}
             >
               <button
                 type="button"
                 className={mode === 'timeline' ? 'active' : ''}
                 onClick={() => setMode('timeline')}
               >
-                Timeline
+                {m.desktopTimeline()}
               </button>
               <button
                 type="button"
                 className={mode === 'tree' ? 'active' : ''}
                 onClick={() => setMode('tree')}
               >
-                Tree
+                {m.traceTree()}
               </button>
             </div>
             {mode === 'tree' && (
               <div className="trace-view-toggle">
                 <button type="button" onClick={allExpanded}>
-                  Expand
+                  {m.traceExpand()}
                 </button>
                 <button type="button" onClick={allCollapsed}>
-                  Collapse
+                  {m.traceCollapse()}
                 </button>
               </div>
             )}
@@ -428,7 +460,7 @@ export function TracePanel({
                   timelineLanes.map(([lane, rows]) => (
                     <section key={lane} className="trace-lane">
                       <header>
-                        <strong>{lane}</strong>
+                        <strong>{traceCategoryLabel(lane, m)}</strong>
                         <span>{rows.length}</span>
                       </header>
                       {rows.map((step) => (
@@ -461,14 +493,14 @@ export function TracePanel({
                                 }}
                               />
                             ) : (
-                              <em>Timing unavailable</em>
+                              <em>{m.desktopTimingUnavailable()}</em>
                             )}
                           </span>
                           <span className={`trace-status ${step.status}`}>
-                            {traceStatusLabel(step.status)}
+                            {traceStatusLabel(step.status, m)}
                           </span>
                           <span className="trace-row__duration">
-                            {formatTraceDuration(step.duration)}
+                            {formatTraceDuration(step.duration, m)}
                           </span>
                         </button>
                       ))}
@@ -476,7 +508,7 @@ export function TracePanel({
                   ))
                 ) : (
                   <div className="trace-empty">
-                    No steps match the current filters.
+                    {m.desktopNoStepsMatchTheCurrentFilters()}
                   </div>
                 )
               ) : visible.length ? (
@@ -494,8 +526,8 @@ export function TracePanel({
                         className="trace-fold"
                         aria-label={
                           expanded.has(step.stepId)
-                            ? 'Collapse step'
-                            : 'Expand step'
+                            ? m.desktopCollapseStep()
+                            : m.desktopExpandStep()
                         }
                         aria-expanded={expanded.has(step.stepId)}
                         onClick={(event) => {
@@ -527,17 +559,17 @@ export function TracePanel({
                         <small>{step.kind}</small>
                       </span>
                       <span className={`trace-status ${step.status}`}>
-                        {traceStatusLabel(step.status)}
+                        {traceStatusLabel(step.status, m)}
                       </span>
                       <span className="trace-row__duration">
-                        {formatTraceDuration(step.duration)}
+                        {formatTraceDuration(step.duration, m)}
                       </span>
                     </button>
                   </div>
                 ))
               ) : (
                 <div className="trace-empty">
-                  No steps match the current filters.
+                  {m.desktopNoStepsMatchTheCurrentFilters()}
                 </div>
               )}
             </div>
@@ -556,17 +588,17 @@ export function TracePanel({
           <List size={22} />
           <strong>
             {loading
-              ? 'Validating the current turn trace…'
+              ? m.desktopValidatingTheCurrentTurnTrace()
               : selected
                 ? model
-                  ? 'Trace returned no steps for this turn.'
-                  : 'Trace is not available for this turn.'
-                : 'Waiting for an accepted turn.'}
+                  ? m.desktopTraceReturnedNoStepsForThisTurn()
+                  : m.traceUnavailable()
+                : m.traceWaiting()}
           </strong>
           <span>
             {selected
-              ? 'The Runtime returned an empty or unavailable trace for this invocation.'
-              : 'Send a message first; trace validation starts automatically when an invocation exists.'}
+              ? m.desktopTheRuntimeReturnedAnEmptyOrUnavailableTraceFor()
+              : m.traceAutoValidation()}
           </span>
         </div>
       )}

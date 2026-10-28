@@ -7,6 +7,9 @@ const api = vi.hoisted(() => ({
 }));
 vi.mock('../src/client/desktop/generated/mygo', () => ({ RuntimeConfig: api }));
 import { RuntimeConfiguration } from '../src/client/desktop/RuntimeConfiguration';
+import { messages } from '../src/client/desktop/generated/locales';
+
+const m = messages;
 
 it('reads the selected Runtime and submits reviewed resource settings with one original operation', async () => {
   vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true);
@@ -56,7 +59,9 @@ it('reads the selected Runtime and submits reviewed resource settings with one o
   await act(async () => {
     renderer.root
       .findAllByType('button')
-      .find((button) => button.children.includes('Read Runtime configuration'))!
+      .find((button) =>
+        button.children.includes(m.settingsReadRuntimeConfiguration()),
+      )!
       .props.onClick();
   });
   expect(api.read).toHaveBeenCalledWith({ connectionEpoch: 3 });
@@ -68,6 +73,9 @@ it('reads the selected Runtime and submits reviewed resource settings with one o
   await act(async () => {
     renderer.root.findByType('form').props.onSubmit({ preventDefault() {} });
   });
+  expect(window.confirm).toHaveBeenCalledWith(
+    m.settingsApplyConfigurationConfirm('29', 'r'),
+  );
   const request = api.update.mock.calls[0][0];
   expect(request).toEqual({
     connectionEpoch: 3,
@@ -81,7 +89,7 @@ it('reads the selected Runtime and submits reviewed resource settings with one o
     renderer.root
       .findAllByType('button')
       .find((button) =>
-        button.children.includes('Verify original configuration update'),
+        button.children.includes(m.settingsVerifyConfigurationUpdate()),
       )!
       .props.onClick();
   });
@@ -90,7 +98,9 @@ it('reads the selected Runtime and submits reviewed resource settings with one o
     operationId: request.operationId,
   });
   expect(api.update).toHaveBeenCalledTimes(1);
-  expect(JSON.stringify(renderer.toJSON())).toContain('new Ready version');
+  expect(JSON.stringify(renderer.toJSON())).toContain(
+    m.settingsConfigurationReady(),
+  );
   await act(async () => renderer.unmount());
 });
 
@@ -111,7 +121,9 @@ it('cancelling review does not submit a Runtime update', async () => {
   await act(async () => {
     renderer.root
       .findAllByType('button')
-      .find((button) => button.children.includes('Read Runtime configuration'))!
+      .find((button) =>
+        button.children.includes(m.settingsReadRuntimeConfiguration()),
+      )!
       .props.onClick();
   });
   await act(async () => {

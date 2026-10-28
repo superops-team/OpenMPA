@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 
 	"github.com/egoist/mygo/ui"
+	"github.com/superops-team/OpenMPA/desktop/internal/localization"
 	"math"
 	"strings"
 	"testing"
@@ -93,6 +94,11 @@ func TestNativeRailActions(t *testing.T) {
 	if len(actions) != 5 {
 		t.Fatalf("duplicate actions %v", actions)
 	}
+	for _, view := range []string{"resources", "collaboration"} {
+		if !New().SetShellState(ShellState{View: view}).OK {
+			t.Fatalf("usage navigation rejected: %s", view)
+		}
+	}
 	if New().SetShellState(ShellState{View: "arbitrary"}).OK {
 		t.Fatal("unknown navigation accepted")
 	}
@@ -137,6 +143,24 @@ func TestNativeSidebarSettingsSections(t *testing.T) {
 	}
 	if action != "selectSettingsSection" || id != "Theme" {
 		t.Fatalf("settings action %s %s", action, id)
+	}
+}
+
+func TestUsageNavigationFollowsDesktopLanguage(t *testing.T) {
+	localization.SetCurrentLocale(localization.Chinese)
+	t.Cleanup(func() { localization.SetCurrentLocale(localization.English) })
+	var action string
+	rail := &nativeRail{state: ShellState{View: "resources"}, request: func(a, _ string) { action = a }}
+	tt := ui.NewTester(rail.sidebar, 240, 850)
+	for _, item := range []struct{ label, action string }{
+		{"技能、MCP 与指令", "resources"}, {"A2A 协作", "collaboration"},
+	} {
+		if err := tt.Click(item.label); err != nil {
+			t.Fatalf("localized navigation missing: %s: %v", item.label, err)
+		}
+		if action != item.action {
+			t.Fatalf("localized navigation dispatched %s instead of %s", action, item.action)
+		}
 	}
 }
 

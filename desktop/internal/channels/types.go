@@ -93,6 +93,7 @@ type Capabilities struct {
 	FeishuDomains             []string `json:"feishuDomains"`
 	BotBindingTypes           []string `json:"botBindingTypes"`
 	ServerSideBinding         bool     `json:"serverSideBinding"`
+	BindingReady              bool     `json:"bindingReady"`
 	GroupPermissions          bool     `json:"groupPermissions"`
 	Diagnostics               bool     `json:"diagnostics"`
 	BotProfiles               bool     `json:"botProfiles"`

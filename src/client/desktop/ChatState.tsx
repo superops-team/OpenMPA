@@ -1,3 +1,9 @@
+import {
+  errorMessage,
+  localized,
+  useMessageState,
+  type MessageText,
+} from './locale';
 import { useRef, useState } from 'react';
 
 import {
@@ -18,6 +24,7 @@ import {
   waitForSubscriptionBoundary,
 } from './chat-subscription';
 import { useChatBootstrap, useChatTranscript } from './chat-lifecycle';
+import type { ComposerDraft } from './studio-models';
 export function useDesktopChatState({
   services,
   connection,
@@ -25,6 +32,7 @@ export function useDesktopChatState({
   material,
   onSchedule,
   onSaveReply,
+  composerDraft,
 }: {
   services: DesktopServices;
   connection: ConnectionVM;
@@ -32,6 +40,7 @@ export function useDesktopChatState({
   material?: () => Promise<string>;
   onSchedule: () => void;
   onSaveReply?: (message: DisplayMessage) => Promise<void>;
+  composerDraft?: ComposerDraft;
 }) {
   const [projection, setProjection] = useState(() =>
     emptyProjection({
@@ -40,13 +49,15 @@ export function useDesktopChatState({
       sessionId: session.id,
     }),
   );
-  const [draft, setDraft] = useState('');
+  const [localDraft, setLocalDraft] = useState<string>();
+  const draft = (composerDraft ? composerDraft.value : localDraft) ?? '';
+  const setDraft = composerDraft?.setValue ?? setLocalDraft;
   const [submitting, setSubmitting] = useState(false);
   const [historyLoaded, setHistoryLoaded] = useState(false);
   const [historyScope, setHistoryScope] = useState('');
   const [execution, setExecution] = useState('idle');
   const [configVersion, setConfigVersion] = useState(session.configVersion);
-  const [error, setError] = useState('');
+  const [error, setError] = useMessageState();
   const [pending, setPending] = useState<PendingRunVM[]>([]);
   const [completedInvocationIds, setCompletedInvocationIds] = useState<
     string[]
@@ -96,11 +107,14 @@ export function useDesktopChatState({
     const current = generation.current;
     resumeGeneration.current++;
     const prompt = draft.trim();
+    const submittedDraft = draft;
+    const draftSnapshot = composerDraft?.snapshot();
+    const acceptDraft = composerDraft?.accept;
     const optimisticId = crypto.randomUUID();
     const optimisticInvocation = `optimistic:${optimisticId}`;
     setSubmitting(true);
     setError('');
-    setDraft('');
+    if (!composerDraft) setLocalDraft('');
     setExecution('submitting');
     setProjection((previous) => ({
       ...previous,
@@ -127,9 +141,12 @@ export function useDesktopChatState({
         configVersion,
         session.mpaInstanceId || connection.runtimeId,
       );
+      receiptAccepted = true;
+      if (draftSnapshot && acceptDraft) acceptDraft(draftSnapshot);
+      else if (generation.current === current)
+        setDraft((previous) => (previous === submittedDraft ? '' : previous));
       if (generation.current !== current) return;
       const subscriptionEpoch = ++subscriptionGeneration.current;
-      receiptAccepted = true;
       setExecution(receipt.status);
       activeInvocation.current = receipt.invocationId;
       setResumeInvocation(receipt.invocationId);
@@ -182,12 +199,17 @@ export function useDesktopChatState({
           if (failed)
             setError(
               text ||
-                'The Runtime ended this turn with an error. You can start another turn.',
+                localized((m) =>
+                  m.desktopTheRuntimeEndedThisTurnWithAnErrorYou(),
+                ),
             );
         },
         onError: (text) =>
           setError(
-            text || 'Stream ended with an error. Read history before retrying.',
+            text ||
+              localized((m) =>
+                m.desktopStreamEndedWithAnErrorReadHistoryBeforeRetrying(),
+              ),
           ),
       });
       const boundary = await waitForSubscriptionBoundary(consume, subscription);
@@ -245,15 +267,22 @@ export function useDesktopChatState({
           if (!settled)
             setError(
               terminal.observed
-                ? 'The Runtime sent a terminal event, but authoritative history has not settled yet. Retry history verification before another submission.'
-                : 'The subscription closed without a matching terminal event. Review authoritative history before another submission.',
+                ? localized((m) =>
+                    m.desktopTheRuntimeSentATerminalEventButAuthoritativeHistory(),
+                  )
+                : localized((m) =>
+                    m.desktopTheSubscriptionClosedWithoutAMatchingTerminalEventReview(),
+                  ),
             );
         }
       }
     } catch (error) {
       if (generation.current === current) {
         setError(
-          error instanceof Error ? error.message : 'Could not submit message.',
+          errorMessage(
+            error,
+            localized((m) => m.desktopCouldNotSubmitMessage()),
+          ),
         );
         setExecution('unknown');
         if (
@@ -273,7 +302,9 @@ export function useDesktopChatState({
                 }));
                 setCompletedInvocationIds(history.completedInvocations || []);
                 setError(
-                  'The saved stream cursor expired. History has been rebuilt. Resume this same invocation without a cursor.',
+                  localized((m) =>
+                    m.desktopTheSavedStreamCursorExpiredHistoryHasBeenRebuilt(),
+                  ),
                 );
               }
             })
@@ -282,7 +313,9 @@ export function useDesktopChatState({
                 setError(
                   readError instanceof Error
                     ? readError.message
-                    : 'Cursor expired and history could not be read.',
+                    : localized((m) =>
+                        m.desktopCursorExpiredAndHistoryCouldNotBeRead(),
+                      ),
                 );
             });
         }
@@ -298,7 +331,11 @@ export function useDesktopChatState({
                     (message) => message.id !== optimisticId,
                   ),
                 }));
-                setDraft((currentDraft) => currentDraft || prompt);
+                setDraft((currentDraft) =>
+                  composerDraft
+                    ? (currentDraft ?? prompt)
+                    : currentDraft || prompt,
+                );
                 setExecution('idle');
               }
             }
@@ -321,6 +358,7 @@ export function useDesktopChatState({
     const attempt = ++resumeGeneration.current;
     setSubmitting(true);
     setError('');
+    let clientFailure: MessageText | undefined;
     try {
       const history = await services.sessions.read(
         connection.epoch,
@@ -350,10 +388,14 @@ export function useDesktopChatState({
         );
         invocation = receipt.invocationId;
       }
-      if (!invocation)
+      if (!invocation) {
+        clientFailure = localized((m) =>
+          m.desktopNoVerifiedInvocationIsAvailableForSubscriptionRecovery(),
+        );
         throw new Error(
           'No verified invocation is available for subscription recovery.',
         );
+      }
       if (history.completedInvocations?.includes(invocation)) {
         const saved = await services.sessions.pending(
           connection.epoch,
@@ -437,7 +479,9 @@ export function useDesktopChatState({
           if (failed)
             setError(
               text ||
-                'The Runtime ended this turn with an error. You can start another turn.',
+                localized((m) =>
+                  m.desktopTheRuntimeEndedThisTurnWithAnErrorYou(),
+                ),
             );
         },
       });
@@ -491,7 +535,9 @@ export function useDesktopChatState({
           throw boundary.error;
         } else if (terminal.observed) {
           setError(
-            'The Runtime sent a terminal event, but authoritative history has not settled yet.',
+            localized((m) =>
+              m.desktopTheRuntimeSentATerminalEventButAuthoritativeHistoryInlineHasNotSettledYet(),
+            ),
           );
         }
       }
@@ -523,7 +569,9 @@ export function useDesktopChatState({
               }));
               setCompletedInvocationIds(latest.completedInvocations || []);
               setError(
-                'The saved stream cursor expired. History has been rebuilt. Resume the same invocation again without a cursor.',
+                localized((m) =>
+                  m.desktopTheSavedStreamCursorExpiredHistoryHasBeenRebuiltInlineResumeTheSameInvocationAgainWithoutACursor(),
+                ),
               );
             }
           } catch (readError) {
@@ -534,14 +582,17 @@ export function useDesktopChatState({
               setError(
                 readError instanceof Error
                   ? readError.message
-                  : 'Cursor expired and history could not be read.',
+                  : localized((m) =>
+                      m.desktopCursorExpiredAndHistoryCouldNotBeRead(),
+                    ),
               );
           }
         } else
           setError(
-            error instanceof Error
-              ? error.message
-              : 'Subscription recovery failed.',
+            clientFailure ??
+              (error instanceof Error
+                ? error.message
+                : localized((m) => m.desktopSubscriptionRecoveryFailed())),
           );
       }
       if (propagateFailure) throw error;

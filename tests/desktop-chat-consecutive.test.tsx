@@ -1,5 +1,7 @@
 import { act, create, type ReactTestRenderer } from 'react-test-renderer';
 import { expect, it, vi } from 'vitest';
+import { messages } from '../src/client/desktop/generated/locales';
+const m = messages;
 const fixture = vi.hoisted(() => ({
   runs: 0,
   operations: [] as Array<{
@@ -148,11 +150,11 @@ it('sends two consecutive turns through the actual adapter while resolving only 
   for (const content of ['First', 'Second']) {
     await act(async () =>
       renderer.root
-        .findByProps({ 'aria-label': 'Message' })
+        .findByProps({ 'aria-label': m.message() })
         .props.onChange({ target: { value: content } }),
     );
     expect(
-      renderer.root.findByProps({ 'aria-label': 'Send message' }).props
+      renderer.root.findByProps({ 'aria-label': m.sendMessage() }).props
         .disabled,
     ).toBe(false);
     await act(async () =>

@@ -1,8 +1,14 @@
+import { runtimeModels } from './fixtures/runtime-models';
 import { act, create, type ReactTestRenderer } from 'react-test-renderer';
 import { readFileSync } from 'node:fs';
-import { expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import { DesktopChat } from '../src/client/desktop/Chat';
 import type { DesktopServices, TraceVM } from '../src/client/desktop/models';
+import { messages } from '../src/client/desktop/generated/locales';
+
+const m = messages;
+beforeEach(() => vi.stubGlobal('mygo', { locale: 'zh-Hans' }));
+afterEach(() => vi.unstubAllGlobals());
 
 const connection = {
   epoch: 2,
@@ -31,6 +37,7 @@ function chatService(
 ) {
   return {
     sessions: {
+      models: async () => runtimeModels,
       pending: async () => [],
       read: vi.fn(async () => ({
         session: { id: 's', title: 'Research assistant' },
@@ -144,14 +151,14 @@ it('shows the current model and patches only the model while preserving MCP sett
   await act(async () => {});
 
   const trigger = renderer.root.findByProps({
-    'aria-label': 'Model: deepseek-v4-pro',
+    'aria-label': m.chatModelLabel('deepseek-v4-pro'),
   });
   expect(trigger.props.disabled).toBe(false);
   await act(async () => trigger.props.onClick());
   expect(byClass(renderer, 'composer-model-menu').length).toBe(1);
 
   const filter = renderer.root.findByProps({
-    placeholder: 'Search by name or family',
+    placeholder: m.modelSearchRuntime(),
   });
   await act(async () =>
     filter.props.onChange({ target: { value: 'doubao-seed-2-1' } }),
@@ -177,12 +184,12 @@ it('shows the current model and patches only the model while preserving MCP sett
   });
   expect(
     renderer.root.findByProps({
-      'aria-label': 'Model: doubao-seed-2-1-pro',
+      'aria-label': m.chatModelLabel('doubao-seed-2-1-pro'),
     }),
   ).toBeTruthy();
   await act(async () =>
     renderer.root
-      .findByProps({ 'aria-label': 'Model: doubao-seed-2-1-pro' })
+      .findByProps({ 'aria-label': m.chatModelLabel('doubao-seed-2-1-pro') })
       .props.onClick(),
   );
   const runtimeDefault = renderer.root
@@ -190,18 +197,18 @@ it('shows the current model and patches only the model while preserving MCP sett
     .find((button) =>
       button
         .findAllByType('strong')
-        .some((strong) => strong.children.includes('Runtime default')),
+        .some((strong) => strong.children.includes(runtimeModels.defaultModel)),
     )!;
   await act(async () => runtimeDefault.props.onClick());
   expect(update).toHaveBeenLastCalledWith(2, 's', {
     etag: '"rev-8"',
-    modelMode: 'inherit',
-    model: '',
+    modelMode: 'replace',
+    model: runtimeModels.defaultModel,
     mcpMode: 'inherit',
     mcpServers: [],
   });
 
-  const textarea = renderer.root.findByProps({ 'aria-label': 'Message' });
+  const textarea = renderer.root.findByProps({ 'aria-label': m.message() });
   await act(async () =>
     textarea.props.onChange({ target: { value: 'next turn' } }),
   );
@@ -261,14 +268,16 @@ it('initializes a legacy next-turn configuration on the first explicit model sel
   await act(async () => {});
 
   const trigger = renderer.root.findByProps({
-    'aria-label': 'Model: Runtime default',
+    'aria-label': m.chatModelLabel(runtimeModels.defaultModel),
   });
   expect(trigger.props.disabled).toBe(false);
   await act(async () => trigger.props.onClick());
-  expect(JSON.stringify(renderer.toJSON())).toContain('first selection');
+  expect(JSON.stringify(renderer.toJSON())).toContain(
+    m.desktopThisLegacyConversationHasNotInitializedItsNextTurn(),
+  );
   expect(
     renderer.root.findByProps({
-      placeholder: 'Search by name or family',
+      placeholder: m.modelSearchRuntime(),
     }).props.disabled,
   ).toBe(false);
   const option = renderer.root
@@ -321,15 +330,15 @@ it('locks next-turn model changes only while the current turn remains active', a
   });
   await act(async () => {});
   const trigger = renderer.root.findByProps({
-    'aria-label': 'Model: deepseek-v4-pro',
+    'aria-label': m.chatModelLabel('deepseek-v4-pro'),
   });
   await act(async () => trigger.props.onClick());
   expect(JSON.stringify(renderer.toJSON())).toContain(
-    'current turn is still running',
+    m.desktopTheCurrentTurnIsStillRunningOrAwaitingOutcome(),
   );
   expect(
     renderer.root.findByProps({
-      placeholder: 'Search by name or family',
+      placeholder: m.modelSearchRuntime(),
     }).props.disabled,
   ).toBe(true);
   await act(async () => renderer.unmount());
@@ -382,11 +391,11 @@ it('warns when the current model is not in the Runtime catalog', async () => {
   await act(async () => {});
   await act(async () =>
     renderer.root
-      .findByProps({ 'aria-label': 'Model: gpt-5.6-luna' })
+      .findByProps({ 'aria-label': m.chatModelLabel('gpt-5.6-luna') })
       .props.onClick(),
   );
   expect(JSON.stringify(renderer.toJSON())).toContain(
-    'is not in the Runtime catalog',
+    m.chatCurrentModelInvalid('gpt-5.6-luna'),
   );
   await act(async () => renderer.unmount());
 });

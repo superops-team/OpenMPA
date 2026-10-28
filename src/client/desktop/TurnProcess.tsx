@@ -1,3 +1,5 @@
+import { useMessages } from './locale';
+import type { Messages } from './generated/locales';
 import {
   BarChart3,
   Brain,
@@ -17,32 +19,32 @@ import type {
   ToolStatus,
 } from './turn-model';
 
-function processTitle(turn: ConversationTurn, stepCount: number) {
-  const steps = `${stepCount} ${stepCount === 1 ? 'step' : 'steps'}`;
-  if (turn.status === 'running') return `Working · ${steps}`;
-  if (turn.status === 'failed') return `Execution failed · ${steps}`;
-  if (turn.status === 'stopped') return `Stopped · ${steps}`;
-  return `Worked · ${steps}`;
+function processTitle(turn: ConversationTurn, stepCount: number, m: Messages) {
+  if (turn.status === 'running') return m.chatProcessRunning(stepCount);
+  if (turn.status === 'failed') return m.chatProcessFailed(stepCount);
+  if (turn.status === 'stopped') return m.chatProcessStopped(stepCount);
+  return m.chatProcessCompleted(stepCount);
 }
 
-function toolAction(name: string) {
+function toolAction(name: string, m: Messages) {
   const normalized = name.toLowerCase();
-  if (['read', 'read_file'].includes(normalized)) return 'Read';
-  if (['write', 'write_file'].includes(normalized)) return 'Write';
-  if (['edit', 'edit_file'].includes(normalized)) return 'Edit';
-  if (['search', 'grep', 'find'].includes(normalized)) return 'Search';
+  if (!name || normalized === 'tool') return m.desktopTool();
+  if (['read', 'read_file'].includes(normalized)) return m.desktopRead();
+  if (['write', 'write_file'].includes(normalized)) return m.desktopWrite();
+  if (['edit', 'edit_file'].includes(normalized)) return m.desktopEdit();
+  if (['search', 'grep', 'find'].includes(normalized)) return m.desktopSearch();
   if (['bash', 'shell', 'run', 'run_command'].includes(normalized))
-    return 'Run command';
-  return name || 'Tool';
+    return m.desktopRunCommand();
+  return name || m.desktopTool();
 }
 
-function toolStatusLabel(status: ToolStatus) {
+function toolStatusLabel(status: ToolStatus, m: Messages) {
   return {
-    preparing: 'Preparing',
-    running: 'Running',
-    success: 'Completed',
-    failed: 'Failed',
-    stopped: 'Stopped',
+    preparing: m.desktopPreparing(),
+    running: m.desktopRunning(),
+    success: m.desktopCompleted(),
+    failed: m.desktopFailed(),
+    stopped: m.desktopStopped(),
   }[status];
 }
 
@@ -67,19 +69,20 @@ function ReasoningRow({
 }: {
   segment: Extract<ConversationSegment, { type: 'reasoning' }>;
 }) {
+  const m = useMessages();
   const summary =
     segment.visibility === 'hidden'
-      ? 'Details hidden'
+      ? m.desktopDetailsHidden()
       : segment.content
           .split(/\r?\n/u)
           .find((line) => line.trim())
-          ?.trim() || 'No summary';
+          ?.trim() || m.chatNoSummary();
   return (
     <StatusRow
       icon={<Brain aria-hidden="true" />}
-      title="Reasoning"
+      title={m.desktopReasoning()}
       description={summary}
-      status={segment.partial ? 'Thinking' : 'Completed'}
+      status={segment.partial ? m.desktopThinking() : m.desktopCompleted()}
       tone={segment.partial ? 'progress' : 'neutral'}
     />
   );
@@ -92,13 +95,14 @@ function ToolRow({
   segment: Extract<ConversationSegment, { type: 'tool' }>;
   onInspect?: (toolId: string) => void;
 }) {
-  const action = toolAction(segment.name);
+  const m = useMessages();
+  const action = toolAction(segment.name, m);
   return (
     <StatusRow
       icon={<ToolStatusIcon status={segment.status} />}
       title={action}
       description={segment.subject}
-      status={toolStatusLabel(segment.status)}
+      status={toolStatusLabel(segment.status, m)}
       tone={
         segment.status === 'success'
           ? 'success'
@@ -112,7 +116,7 @@ function ToolRow({
         onInspect ? (
           <IconButton
             className="turn-process-inspect"
-            label={`Inspect ${action} in full trace`}
+            label={m.chatInspectTool(action)}
             size="icon-sm"
             variant="ghost"
             onClick={() => onInspect(segment.toolId)}
@@ -130,12 +134,13 @@ function NarrationRow({
 }: {
   segment: Extract<ConversationSegment, { type: 'text' }>;
 }) {
+  const m = useMessages();
   return (
     <StatusRow
       icon={<MessageCircle aria-hidden="true" />}
-      title="Progress"
+      title={m.desktopProgress()}
       description={segment.content}
-      status="Completed"
+      status={m.desktopCompleted()}
     />
   );
 }
@@ -147,6 +152,7 @@ export function TurnProcess({
   turn: ConversationTurn;
   onInspectTool?: (toolId: string) => void;
 }) {
+  const m = useMessages();
   const segments = useMemo(() => processSegments(turn), [turn]);
   const userChanged = useRef(false);
   const [open, setOpen] = useState(turn.status === 'running');
@@ -154,7 +160,7 @@ export function TurnProcess({
     if (!userChanged.current) setOpen(turn.status === 'running');
   }, [turn.status]);
   if (segments.length === 0) return null;
-  const title = processTitle(turn, segments.length);
+  const title = processTitle(turn, segments.length, m);
   return (
     <div className="turn-process" data-state={turn.status}>
       <span className="sr-only" role="status" aria-live="polite">
@@ -163,7 +169,12 @@ export function TurnProcess({
       <Disclosure
         open={open}
         label={title}
-        ariaLabel="execution process"
+        ariaLabel={m.desktopExecutionProcess()}
+        toggleLabel={
+          open
+            ? m.collapseSection(m.desktopExecutionProcess())
+            : m.expandSection(m.desktopExecutionProcess())
+        }
         className="turn-process-disclosure"
         onToggle={() => {
           userChanged.current = true;

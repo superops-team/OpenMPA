@@ -1,4 +1,12 @@
 import {
+  errorMessage,
+  localized,
+  LocalizedError,
+  renderMessage,
+  useMessages,
+  useMessageState,
+} from './locale';
+import {
   useCallback,
   useEffect,
   useEffectEvent,
@@ -14,24 +22,40 @@ import type {
   RecoveryDraftVM,
   RuntimeVM,
   SessionVM,
+  PlatformVM,
 } from './models';
+import { ComposerDraftStore } from './composer-drafts';
+import type { ComposerDraft, ConversationTarget } from './studio-models';
 import {
   setThemePreference,
   themePreference,
   type ThemePreference,
 } from '../theme';
-type View = 'chat' | 'tasks' | 'channels' | 'settings' | 'knowledge';
+type View =
+  | 'chat'
+  | 'tasks'
+  | 'channels'
+  | 'settings'
+  | 'knowledge'
+  | 'resources'
+  | 'collaboration';
 export function useDesktopAppState({
   services,
 }: {
   services: DesktopServices;
 }) {
+  const m = useMessages();
   const [view, setView] = useState<View>('chat');
   const [connection, setConnection] = useState<ConnectionVM>();
   const [runtimeOptions, setRuntimeOptions] = useState<RuntimeVM[]>([]);
   const [sessions, setSessions] = useState<SessionVM[]>([]);
   const [sessionEpoch, setSessionEpoch] = useState(0);
-  const [selected, setSelected] = useState<string>();
+  const [selected, selectSession] = useState<string>();
+  const selectedRef = useRef<string | undefined>(undefined);
+  const setSelected = useCallback((value: string | undefined) => {
+    selectedRef.current = value;
+    selectSession(value);
+  }, []);
   const [collapsed, setCollapsed] = useState(false);
   const [traceOpen, setTraceOpen] = useState(false);
   const [settingsSection, setSettingsSection] =
@@ -39,7 +63,8 @@ export function useDesktopAppState({
   const [theme, setTheme] = useState<ThemePreference>(themePreference());
   const platformRegion = useRef('cn-beijing');
   const platformSignedIn = useRef(false);
-  const [error, setError] = useState('');
+  const [platform, setPlatform] = useState<PlatformVM>();
+  const [error, setError] = useMessageState();
   const [closeDrafts, setCloseDrafts] = useState<RecoveryDraftVM[]>([]);
   const errorSource = useRef('');
   const reportFailure = useCallback((failure: unknown, source: string) => {
@@ -48,20 +73,34 @@ export function useDesktopAppState({
       failure && typeof failure === 'object' && 'httpStatus' in failure
         ? failure.httpStatus
         : undefined;
-    const message =
-      status === 404 && source === 'bots'
-        ? 'This Runtime does not yet support desktop Bot creation and configuration.'
+    const remoteMessage =
+      failure instanceof LocalizedError
+        ? failure.text
         : failure instanceof Error
           ? failure.message
-          : 'The operation failed.';
-    const labels: Record<string, string> = {
-      sessions: 'Load conversations',
-      bots: 'Create desktop Bot',
-      workspace: 'Open local workspace',
-      connection: 'Read connection',
-    };
+          : failure &&
+              typeof failure === 'object' &&
+              'message' in failure &&
+              typeof failure.message === 'string'
+            ? failure.message
+            : undefined;
     setError(
-      `${labels[source] || source}${status ? ` (HTTP ${status})` : ''}: ${message}`,
+      localized((m) => {
+        const message =
+          (remoteMessage === undefined
+            ? undefined
+            : renderMessage(remoteMessage, m)) ??
+          (status === 404 && source === 'bots'
+            ? m.desktopThisRuntimeDoesNotYetSupportDesktopBotCreation()
+            : m.desktopTheOperationFailed());
+        const labels: Record<string, string> = {
+          sessions: m.desktopLoadConversations(),
+          bots: m.desktopCreateDesktopBot(),
+          workspace: m.desktopOpenLocalWorkspace(),
+          connection: m.desktopReadConnection(),
+        };
+        return `${labels[source] || source}${status ? ` (HTTP ${status})` : ''}: ${message}`;
+      }),
     );
   }, []);
   const dirty = useRef(false);
@@ -69,6 +108,15 @@ export function useDesktopAppState({
   epoch.current = connection?.epoch;
   const connectionScope = useRef(connection?.scope);
   connectionScope.current = connection?.scope;
+  const draftStore = useRef(new ComposerDraftStore());
+  draftStore.current.reset(connection?.epoch, connection?.scope);
+  const [, draftChanged] = useState(0);
+  const notifyDraft = useCallback(
+    () => draftChanged((revision) => revision + 1),
+    [],
+  );
+  const sessionsRef = useRef(sessions);
+  sessionsRef.current = sessions;
   const lifecycle = useRef(0);
   useEffect(() => {
     if (!services.host) return;
@@ -90,9 +138,12 @@ export function useDesktopAppState({
               setCloseDrafts(state.unsavedDrafts);
           }
           setError(
-            error instanceof Error
-              ? error.message
-              : 'Draft recovery could not be saved. Continue editing or export a copy before closing.',
+            errorMessage(
+              error,
+              localized((m) =>
+                m.desktopDraftRecoveryCouldNotBeSavedContinueEditingOr(),
+              ),
+            ),
           );
           await services.host!.resolveClose(requestId, false);
         }
@@ -107,9 +158,10 @@ export function useDesktopAppState({
       .catch((error: unknown) => {
         if (active)
           setError(
-            error instanceof Error
-              ? error.message
-              : 'Could not register the close protocol.',
+            errorMessage(
+              error,
+              localized((m) => m.desktopCouldNotRegisterTheCloseProtocol()),
+            ),
           );
       });
     return () => {
@@ -149,6 +201,7 @@ export function useDesktopAppState({
         if (!active) return;
         platformSignedIn.current = platform.signedIn;
         platformRegion.current = platform.region || 'cn-beijing';
+        setPlatform(platform);
         if (!platform.signedIn) {
           setRuntimeOptions([]);
           return;
@@ -170,8 +223,9 @@ export function useDesktopAppState({
     async (forceRefresh = false) => {
       if (!connection) return;
       const current = connection.epoch;
+      const scope = connection.scope;
       const list = await services.sessions.list(current, forceRefresh);
-      if (epoch.current === current) {
+      if (epoch.current === current && connectionScope.current === scope) {
         setSessions(list);
         setSessionEpoch(current);
         if (errorSource.current === 'sessions') setError('');
@@ -191,9 +245,7 @@ export function useDesktopAppState({
     if (
       dirty.current &&
       next !== view &&
-      !window.confirm(
-        'This page has unsaved changes. Save or export before leaving. Discard this draft and continue?',
-      )
+      !window.confirm(m.unsavedPageConfirm())
     )
       return false;
     setView(next);
@@ -203,6 +255,11 @@ export function useDesktopAppState({
     dirty.current = value;
   }, []);
   const connect = useCallback((next: ConnectionVM | undefined) => {
+    lifecycle.current++;
+    epoch.current = next?.epoch;
+    connectionScope.current = next?.scope;
+    draftStore.current.reset(next?.epoch, next?.scope);
+    sessionsRef.current = [];
     setConnection(next);
     setSessions([]);
     setSessionEpoch(0);
@@ -216,8 +273,9 @@ export function useDesktopAppState({
       return;
     }
     const current = connection.epoch;
+    const scope = connection.scope;
     try {
-      const name = window.prompt('Conversation title', 'New conversation');
+      const name = window.prompt(m.conversationTitle(), m.newConversation());
       if (!name?.trim()) return;
       const next = await services.sessions.create(
         current,
@@ -225,7 +283,7 @@ export function useDesktopAppState({
         session?.mpaInstanceId ||
           sessions.find((item) => item.mpaInstanceId)?.mpaInstanceId,
       );
-      if (epoch.current === current) {
+      if (epoch.current === current && connectionScope.current === scope) {
         setSessions((previous) => [next, ...previous]);
         setSessionEpoch(current);
         setSelected(next.id);
@@ -236,6 +294,60 @@ export function useDesktopAppState({
     }
   };
   const session = sessions.find((session) => session.id === selected);
+  const conversationTarget: ConversationTarget | undefined =
+    connection && session && sessionEpoch === connection.epoch
+      ? {
+          connectionEpoch: connection.epoch,
+          scope: connection.scope,
+          sessionId: session.id,
+        }
+      : undefined;
+  const composerController = useMemo(() => {
+    if (!connection || !session || sessionEpoch !== connection.epoch)
+      return undefined;
+    const target = {
+      connectionEpoch: connection.epoch,
+      scope: connection.scope,
+      sessionId: session.id,
+    };
+    return {
+      setValue: (update: Parameters<ComposerDraft['setValue']>[0]) => {
+        draftStore.current.set(target, update);
+        notifyDraft();
+      },
+      snapshot: () => draftStore.current.snapshot(target),
+      accept: (snapshot: ReturnType<ComposerDraft['snapshot']>) => {
+        draftStore.current.accept(snapshot);
+        notifyDraft();
+      },
+    };
+  }, [
+    connection?.epoch,
+    connection?.scope,
+    session?.id,
+    sessionEpoch,
+    notifyDraft,
+  ]);
+  const composerDraft: ComposerDraft | undefined =
+    composerController && conversationTarget
+      ? {
+          ...composerController,
+          value: draftStore.current.value(conversationTarget),
+        }
+      : undefined;
+  const useInConversation = (target: ConversationTarget, text: string) => {
+    if (
+      target.connectionEpoch !== epoch.current ||
+      target.scope !== connectionScope.current ||
+      target.sessionId !== selectedRef.current ||
+      !sessionsRef.current.some((item) => item.id === target.sessionId)
+    )
+      return false;
+    if (!navigate('chat')) return false;
+    const inserted = draftStore.current.insert(target, text);
+    if (inserted) notifyDraft();
+    return inserted;
+  };
   const shellAssistants = useMemo(() => {
     const items = runtimeOptions.map((runtime) => ({
       id: runtime.id,
@@ -253,12 +365,17 @@ export function useDesktopAppState({
   }, [runtimeOptions, connection?.runtimeId, connection?.runtimeName]);
   const shellRevision = useRef(Date.now() * 1000);
   const onNativeNavigation = useEffectEvent((action: string, id?: string) => {
-    if (action === 'connectionChanged')
+    if (action === 'connectionChanged') {
+      const request = ++lifecycle.current;
       void services.connection
         .status()
-        .then(connect)
-        .catch((error: unknown) => reportFailure(error, 'connection'));
-    else if (
+        .then((value) => {
+          if (lifecycle.current === request) connect(value);
+        })
+        .catch((error: unknown) => {
+          if (lifecycle.current === request) reportFailure(error, 'connection');
+        });
+    } else if (
       (action === 'sessionCreated' ||
         action === 'sessionChanged' ||
         action === 'sessionDeleted') &&
@@ -266,13 +383,16 @@ export function useDesktopAppState({
       connection
     ) {
       const current = connection.epoch;
+      const scope = connection.scope;
       void services.sessions
         .list(current, true)
         .then((list) => {
-          if (epoch.current !== current) return;
+          if (epoch.current !== current || connectionScope.current !== scope)
+            return;
           setSessions(list);
           setSessionEpoch(current);
           if (action === 'sessionDeleted') {
+            draftStore.current.remove(id);
             if (selected === id) setSelected(undefined);
           } else if (list.some((item) => item.id === id)) {
             setSelected(id);
@@ -288,8 +408,7 @@ export function useDesktopAppState({
       setCollapsed((previous) => !previous);
     else if (action === 'trace') {
       if (connection && selected) setTraceOpen((previous) => !previous);
-    }
-    else if (
+    } else if (
       action === 'selectSettingsSection' &&
       [
         'Account',
@@ -335,7 +454,9 @@ export function useDesktopAppState({
       action === 'tasks' ||
       action === 'settings' ||
       action === 'channels' ||
-      action === 'knowledge'
+      action === 'knowledge' ||
+      action === 'resources' ||
+      action === 'collaboration'
     )
       navigate(action);
   });
@@ -350,8 +471,21 @@ export function useDesktopAppState({
         view,
         collapsed,
         traceOpen,
-        location: connection?.runtimeId ?? 'Your workspace',
-        pageTitle: view,
+        location: connection?.runtimeId ?? m.yourWorkspace(),
+        pageTitle:
+          view === 'resources'
+            ? m.resources()
+            : view === 'collaboration'
+              ? m.collaboration()
+              : view === 'settings'
+                ? m.settings()
+                : view === 'channels'
+                  ? m.channels()
+                  : view === 'knowledge'
+                    ? m.knowledge()
+                    : view === 'tasks'
+                      ? m.scheduledTasks()
+                      : m.conversations(),
         selectedSession: selected ?? '',
         selectedSpace: '',
         selectedAssistant: connection?.runtimeId ?? '',
@@ -369,6 +503,7 @@ export function useDesktopAppState({
       .catch(() => {});
   }, [
     services,
+    m,
     view,
     collapsed,
     traceOpen,
@@ -395,6 +530,10 @@ export function useDesktopAppState({
     theme,
     setTheme,
     connection,
+    platform,
+    conversationTarget,
+    composerDraft,
+    useInConversation,
     sessions,
     setDirty,
     navigate,

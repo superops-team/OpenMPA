@@ -6,6 +6,7 @@ export function Disclosure({
   onToggle,
   label,
   ariaLabel = label,
+  toggleLabel,
   meta,
   children,
   className = '',
@@ -14,6 +15,7 @@ export function Disclosure({
   onToggle: () => void;
   label: string;
   ariaLabel?: string;
+  toggleLabel?: string;
   meta?: ReactNode;
   children: ReactNode;
   className?: string;
@@ -24,7 +26,10 @@ export function Disclosure({
         type="button"
         className="ui-disclosure-trigger"
         aria-expanded={open}
-        aria-label={`${open ? 'Collapse' : 'Expand'} ${ariaLabel.toLowerCase()}`}
+        aria-label={
+          toggleLabel ??
+          `${open ? 'Collapse' : 'Expand'} ${ariaLabel.toLowerCase()}`
+        }
         onClick={onToggle}
       >
         <span>{label}</span>

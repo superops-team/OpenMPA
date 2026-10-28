@@ -16,6 +16,13 @@ import type {
   VaultStatusVM,
 } from './models';
 import { reviewImages } from './image-review';
+import {
+  errorMessage,
+  localized,
+  useMessages,
+  useMessageState,
+  type MessageText,
+} from './locale';
 
 export function useDesktopSettingsState({
   services,
@@ -26,6 +33,7 @@ export function useDesktopSettingsState({
   connection?: ConnectionVM;
   onConnection: (connection: ConnectionVM | undefined) => void;
 }) {
+  const m = useMessages();
   const [platform, setPlatform] = useState<PlatformVM>();
   const [credentials, setCredentials] = useState({
     accessKey: '',
@@ -41,18 +49,19 @@ export function useDesktopSettingsState({
   const [vaultUnlockPassphrase, setVaultUnlockPassphrase] = useState('');
   const [showVaultPassphrase, setShowVaultPassphrase] = useState(false);
   const [region, setRegion] = useState('cn-beijing');
-  const [regions, setRegions] = useState<RegionVM[]>([
+  const [regionCatalog, setRegions] = useState<RegionVM[]>();
+  const regions = regionCatalog || [
     {
       id: 'cn-beijing',
-      name: '华北2（北京）',
+      name: m.settingsRegionBeijing(),
       endpointHost: 'agentkit.cn-beijing.volcengineapi.com',
     },
     {
       id: 'cn-shanghai',
-      name: '华东2（上海）',
+      name: m.settingsRegionShanghai(),
       endpointHost: 'agentkit.cn-shanghai.volcengineapi.com',
     },
-  ]);
+  ];
   const [project, setProject] = useState('default');
   const [runtimes, setRuntimes] = useState<RuntimeVM[]>([]);
   const [directoryScope, setDirectoryScope] = useState('');
@@ -65,20 +74,20 @@ export function useDesktopSettingsState({
     testDeployment: false,
   });
   const [channelAuth, setChannelAuth] = useState({
-    mode: 'runtimeKey',
+    mode: 'none',
     secret: '',
   });
   const [images, setImages] = useState<ImagesVM>();
   const [review, setReview] = useState<ReturnType<typeof reviewImages>>();
   const [update, setUpdate] = useState<{
     operationId: string;
-    status: string;
+    status?: MessageText;
   }>();
   const [updates, setUpdates] = useState<
-    Array<{ operationId: string; status: string }>
+    Array<{ operationId: string; status: MessageText }>
   >([]);
-  const [error, setError] = useState('');
-  const [notice, setNotice] = useState('');
+  const [error, setError] = useMessageState();
+  const [notice, setNotice] = useMessageState();
   const [busy, setBusy] = useState(false);
   const generation = useRef(0);
   useEffect(() => {
@@ -94,9 +103,10 @@ export function useDesktopSettingsState({
       .catch((error: unknown) => {
         if (generation.current === current)
           setError(
-            error instanceof Error
-              ? error.message
-              : 'Could not read account status.',
+            errorMessage(
+              error,
+              localized((m) => m.settingsAccountStatusFailed()),
+            ),
           );
       });
     if (services.platform.regions) {
@@ -145,9 +155,10 @@ export function useDesktopSettingsState({
         .catch((error: unknown) => {
           if (active)
             setError(
-              error instanceof Error
-                ? error.message
-                : 'Could not read saved update receipts.',
+              errorMessage(
+                error,
+                localized((m) => m.settingsImageReceiptsFailed()),
+              ),
             );
         });
       return () => {
@@ -165,7 +176,10 @@ export function useDesktopSettingsState({
     } catch (error) {
       if (generation.current === current)
         setError(
-          error instanceof Error ? error.message : 'Settings action failed.',
+          errorMessage(
+            error,
+            localized((m) => m.settingsActionFailed()),
+          ),
         );
     } finally {
       if (generation.current === current) {
@@ -178,7 +192,7 @@ export function useDesktopSettingsState({
           } catch {
             if (generation.current === current)
               setNotice(
-                'Saved update receipts could not be refreshed. Use Refresh saved receipts to recover the original operation when the host is available.',
+                localized((m) => m.settingsImageReceiptsRefreshFailed()),
               );
           }
         }
@@ -206,9 +220,10 @@ export function useDesktopSettingsState({
         if (directoryRequest.current === current) {
           setRuntimes([]);
           setError(
-            error instanceof Error
-              ? error.message
-              : 'Could not load MPA Runtimes.',
+            errorMessage(
+              error,
+              localized((m) => m.settingsRuntimesLoadFailed()),
+            ),
           );
         }
       } finally {

@@ -622,3 +622,74 @@
     padding-inline: var(--space-1);
   }
 }
+
+/* The search wrapper owns the only focus ring; the inner input stays borderless. */
+.template-app.desktop-app .composer-model-menu {
+  width: min(360px, calc(100vw - 48px));
+  max-width: calc(100vw - 48px);
+  max-height: min(520px, 75dvh);
+  display: flex;
+  flex-direction: column;
+}
+.template-app.desktop-app .composer-model-search {
+  flex: none;
+  min-width: 0;
+  height: var(--control-input);
+  box-sizing: border-box;
+}
+.template-app.desktop-app .composer-model-search input,
+.template-app.desktop-app .composer-model-search input:focus,
+.template-app.desktop-app .composer-model-search input:focus-visible {
+  flex: 1 1 0%;
+  width: 0;
+  min-width: 0;
+  min-height: 0;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  outline: none;
+  outline-offset: 0;
+  box-shadow: none;
+  background: transparent;
+  box-sizing: border-box;
+}
+.template-app.desktop-app .composer-model-list {
+  min-height: 0;
+  max-height: min(280px, 38dvh);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.desktop-app .studio-actions,
+.desktop-app .studio-channel-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  align-items: center;
+}
+.desktop-app .studio-channel-tabs [aria-selected='true'] {
+  color: var(--color-foreground);
+  background: var(--color-surface-hover);
+  box-shadow: inset 0 -2px var(--color-focus);
+}
+.desktop-app .studio-resource-address,
+.desktop-app .studio-member-detail {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.desktop-app .studio-checkbox {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: var(--space-2);
+}
+.template-app.desktop-app .studio-checkbox input[type='checkbox'] {
+  width: auto;
+  min-height: 0;
+}
+.desktop-app .studio-channel-recovery summary {
+  cursor: pointer;
+  padding-block: var(--space-2);
+}

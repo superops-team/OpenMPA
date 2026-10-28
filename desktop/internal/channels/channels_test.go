@@ -412,3 +412,40 @@ func TestConcurrentBindingReadsDoNotAdvanceRegistrationTwice(t *testing.T) {
 		t.Fatalf("concurrent state advancing requests first=%+v second=%+v calls=%d", first, second, calls)
 	}
 }
+
+func TestFeishuLauncherQRIsGeneratedLocally(t *testing.T) {
+	for _, host := range []string{"open.feishu.cn", "open.larksuite.com"} {
+		t.Run(host, func(t *testing.T) {
+			svc, epoch := harness(t, func(w http.ResponseWriter, r *http.Request) {
+				reply(w, `{"id":"launcher-qr","status":"PENDING","loginUrl":"https://`+host+`/page/launcher?user_code=TEST-AUTH-CODE","qrCodeImage":"https://api.qrserver.com/?data=TEST-AUTH-CODE"}`)
+			})
+			out := svc.CreateBinding(BindingCreateRequest{ConnectionEpoch: epoch, OperationID: "launcher", Channel: "feishu", Mode: "qr"})
+			if !out.OK || out.Value.QRCodeImage == "" || out.Value.ErrorCode != "" {
+				t.Fatalf("launcher QR unavailable: %+v", out)
+			}
+			raw, _ := json.Marshal(out)
+			if strings.Contains(string(raw), "TEST-AUTH-CODE") || strings.Contains(string(raw), "qrserver.com") {
+				t.Fatal("authorization URL leaked")
+			}
+		})
+	}
+}
+func TestMultiBotDirectorySurvivesLegacyOtherProvider(t *testing.T) {
+	svc, epoch := harness(t, func(w http.ResponseWriter, r *http.Request) {
+		reply(w, `{"channels":[{"channel":"dingtalk","appId":null,"enabled":true,"config":{"clientId":"ding-old","clientSecret":"NEVER-IPC"}},`+record+`,{"channel":"feishu","appId":"app-2","enabled":true,"config":{"domain":"feishu"}}]}`)
+	})
+	out := svc.List(ScopeRequest{epoch})
+	if !out.OK || len(out.Value.Channels) != 3 || out.Value.Channels[0].AppID != "ding-old" || out.Value.Channels[1].AppID != "app-1" || out.Value.Channels[2].AppID != "app-2" {
+		t.Fatalf("multi bot directory: %+v", out)
+	}
+	raw, _ := json.Marshal(out)
+	if strings.Contains(string(raw), "NEVER-IPC") {
+		t.Fatal("secret exposed")
+	}
+}
+func TestMissingAccountDirectoryIsNotAnEmptySuccess(t *testing.T) {
+	svc, epoch := harness(t, func(w http.ResponseWriter, r *http.Request) { reply(w, `{}`) })
+	if svc.List(ScopeRequest{epoch}).OK {
+		t.Fatal("missing directory became empty success")
+	}
+}

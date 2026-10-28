@@ -1,7 +1,9 @@
 import type { useDesktopSettingsState } from './SettingsState';
+import { localized, useMessages } from './locale';
 export function SettingsAccountForm(
   props: ReturnType<typeof useDesktopSettingsState>,
 ) {
+  const m = useMessages();
   const {
     act,
     generation,
@@ -33,12 +35,12 @@ export function SettingsAccountForm(
           });
           setRegion(credentials.region);
           await loadVaultStatus();
-          setNotice('Signed in. Credential inputs cleared.');
+          setNotice(localized((m) => m.settingsSignedIn()));
         });
       }}
     >
       <label>
-        Access Key
+        {m.accessKey()}
         <input
           autoComplete="off"
           type="password"
@@ -53,7 +55,7 @@ export function SettingsAccountForm(
         />
       </label>
       <label>
-        Secret Key
+        {m.secretKey()}
         <input
           autoComplete="off"
           type="password"
@@ -68,7 +70,7 @@ export function SettingsAccountForm(
         />
       </label>
       <label>
-        Security token (optional)
+        {m.securityTokenOptional()}
         <input
           autoComplete="off"
           type="password"
@@ -82,7 +84,7 @@ export function SettingsAccountForm(
         />
       </label>
       <label>
-        Region
+        {m.region()}
         <select
           required
           value={credentials.region}
@@ -92,17 +94,19 @@ export function SettingsAccountForm(
         >
           {regions.map((item) => (
             <option key={item.id} value={item.id}>
-              {item.name} ({item.id})
+              {item.id === 'cn-beijing'
+                ? m.settingsRegionBeijing()
+                : item.id === 'cn-shanghai'
+                  ? m.settingsRegionShanghai()
+                  : item.name}{' '}
+              ({item.id})
             </option>
           ))}
         </select>
       </label>
-      <p>
-        Credentials stay in memory unless you save them to the encrypted local
-        vault after sign-in.
-      </p>
+      <p>{m.settingsCredentialsMemoryHint()}</p>
       <button className="primary" disabled={busy}>
-        Sign in
+        {m.signIn()}
       </button>
     </form>
   );

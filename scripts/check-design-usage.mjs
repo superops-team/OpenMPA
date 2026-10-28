@@ -14,6 +14,9 @@ const files = [
   'src/client/desktop/conversation-fixture.css',
   'src/client/desktop/trace.css',
   'src/client/desktop/style.css',
+  'src/client/desktop/resource-page.css',
+  'src/client/desktop/collaboration-page.css',
+  'src/client/desktop/channel-page.css',
 ];
 const failures = [];
 const declared = declaredDesignTokens(

@@ -1,5 +1,6 @@
 import { act, create, type ReactTestRenderer } from 'react-test-renderer';
 import { expect, it, vi } from 'vitest';
+import { messages } from '../src/client/desktop/generated/locales';
 const knowledge = vi.hoisted(() => ({
   list: vi.fn(),
   importText: vi.fn(),
@@ -57,10 +58,10 @@ it('shows accepted imports separately and only exposes READY after authoritative
       .findAllByType('label')
       .find((label) => label.children.includes(name))!;
   await act(async () => {
-    label('Display name')
+    label(messages.desktopDisplayName())
       .findByType('input')
       .props.onChange({ target: { value: 'Doc' } });
-    label('Text material')
+    label(messages.desktopTextMaterial())
       .findByType('textarea')
       .props.onChange({ target: { value: 'Reference' } });
   });
@@ -72,13 +73,21 @@ it('shows accepted imports separately and only exposes READY after authoritative
           (child) => typeof child === 'string' && child.trim() === text,
         ),
       )!;
-  await act(async () => button('Import text').props.onClick());
-  expect(JSON.stringify(renderer.toJSON())).toContain('RECEIVED');
-  expect(JSON.stringify(renderer.toJSON())).not.toContain('READY');
+  await act(async () => button(messages.desktopImportText()).props.onClick());
+  const receipt = renderer.root.findByProps({ role: 'status' }).findByType('p');
+  expect(receipt.children).toContain(messages.knowledgeReceived());
+  expect(receipt.children).not.toContain(messages.knowledgeReady());
   await act(async () =>
-    button('Read authoritative import status').props.onClick(),
+    button(messages.desktopReadAuthoritativeImportStatus()).props.onClick(),
   );
-  expect(JSON.stringify(renderer.toJSON())).toContain('READY');
+  expect(JSON.stringify(renderer.toJSON())).toContain(
+    messages.knowledgeReady(),
+  );
+  await expect(
+    knowledge.importStatus.mock.results.at(-1)?.value,
+  ).resolves.toMatchObject({
+    value: { status: 'READY', displayName: 'Doc' },
+  });
   expect(knowledge.importStatus).toHaveBeenCalledWith({
     connectionEpoch: 9,
     sessionId: 's',
@@ -122,10 +131,10 @@ it('releases the rejected import while keeping text available after an explicit 
       .findAllByType('label')
       .find((label) => label.children.includes(name))!;
   await act(async () => {
-    label('Display name')
+    label(messages.desktopDisplayName())
       .findByType('input')
       .props.onChange({ target: { value: 'Doc' } });
-    label('Text material')
+    label(messages.desktopTextMaterial())
       .findByType('textarea')
       .props.onChange({ target: { value: 'Retained text' } });
   });
@@ -135,13 +144,14 @@ it('releases the rejected import while keeping text available after an explicit 
       .find((button) =>
         button.children.some(
           (child) =>
-            typeof child === 'string' && child.trim() === 'Import text',
+            typeof child === 'string' &&
+            child.trim() === messages.desktopImportText(),
         ),
       )!;
   await act(async () => button().props.onClick());
   expect(button().props.disabled).toBe(false);
-  expect(label('Text material').findByType('textarea').props.value).toBe(
-    'Retained text',
-  );
+  expect(
+    label(messages.desktopTextMaterial()).findByType('textarea').props.value,
+  ).toBe('Retained text');
   await act(async () => renderer.unmount());
 });

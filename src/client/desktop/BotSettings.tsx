@@ -1,3 +1,9 @@
+import {
+  errorMessage,
+  localized,
+  useMessages,
+  useMessageState,
+} from './locale';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { FileText, Plus, Puzzle, Trash2, Upload } from 'lucide-react';
 import { Button, IconButton, ModalDialog, TabPanel, Tabs } from '../ui';
@@ -38,12 +44,13 @@ export function DesktopBotSettings({
   onSaved: (session: SessionVM) => void;
   onClose: () => void;
 }) {
+  const m = useMessages();
   const [config, setConfig] = useState<AssistantConfigVM>();
   const [catalog, setCatalog] = useState<AssistantSkillVM[]>([]);
   const [query, setQuery] = useState('');
   const [skillDraft, setSkillDraft] = useState('');
   const [busy, setBusy] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useMessageState();
   const [activeTab, setActiveTab] = useState<'instructions' | 'skills'>(
     'instructions',
   );
@@ -71,9 +78,10 @@ export function DesktopBotSettings({
       .catch((failure: unknown) => {
         if (generation.current === current)
           setError(
-            failure instanceof Error
-              ? failure.message
-              : 'Could not load assistant settings.',
+            errorMessage(
+              failure,
+              localized((m) => m.settingsAssistantLoadFailed()),
+            ),
           );
       });
     return () => {
@@ -122,13 +130,14 @@ export function DesktopBotSettings({
 
   return (
     <ModalDialog
-      title="Assistant settings"
-      description="Configure this assistant locally. New turns send the saved AGENTS.md and selected skills with the request."
+      closeLabel={m.closeDialog(m.settingsAssistantTitle())}
+      title={m.settingsAssistantTitle()}
+      description={m.settingsAssistantDialogDescription()}
       onClose={onClose}
       footer={
         <>
           <Button type="button" variant="ghost" onClick={onClose}>
-            Cancel
+            {m.cancel()}
           </Button>
           <Button
             type="submit"
@@ -136,7 +145,7 @@ export function DesktopBotSettings({
             variant="primary"
             disabled={busy || !config}
           >
-            Save assistant settings
+            {m.settingsSaveAssistantSettings()}
           </Button>
         </>
       }
@@ -144,7 +153,7 @@ export function DesktopBotSettings({
       <div className="desktop-form assistant-settings">
         {error && <p role="alert">{error}</p>}
         {!config ? (
-          <p role="status">Loading assistant settings…</p>
+          <p role="status">{m.settingsAssistantLoading()}</p>
         ) : (
           <form
             id="assistant-settings-form"
@@ -174,9 +183,10 @@ export function DesktopBotSettings({
                 .catch((failure: unknown) => {
                   if (generation.current === current)
                     setError(
-                      failure instanceof Error
-                        ? failure.message
-                        : 'Could not save assistant settings.',
+                      errorMessage(
+                        failure,
+                        localized((m) => m.settingsAssistantSaveFailed()),
+                      ),
                     );
                 })
                 .finally(() => {
@@ -186,7 +196,7 @@ export function DesktopBotSettings({
           >
             <Tabs
               group="assistant-settings"
-              label="Assistant settings sections"
+              label={m.settingsAssistantSections()}
               value={activeTab}
               onChange={setActiveTab}
               options={[
@@ -197,7 +207,7 @@ export function DesktopBotSettings({
                 },
                 {
                   id: 'skills',
-                  label: 'Skills',
+                  label: m.settingsSkills(),
                   icon: <Puzzle aria-hidden="true" />,
                 },
               ]}
@@ -215,16 +225,13 @@ export function DesktopBotSettings({
                     className="assistant-agents-editor"
                     value={config.agentsMd}
                     maxLength={32000}
-                    placeholder="Write persistent instructions for this assistant."
+                    placeholder={m.settingsAssistantInstructionsPlaceholder()}
                     onChange={(event) =>
                       setConfig({ ...config, agentsMd: event.target.value })
                     }
                   />
                 </label>
-                <p>
-                  These persistent instructions are attached to future turns.
-                  Existing conversation history is unchanged.
-                </p>
+                <p>{m.settingsAssistantInstructionsHint()}</p>
               </div>
             </TabPanel>
             <TabPanel
@@ -234,9 +241,9 @@ export function DesktopBotSettings({
             >
               <div className="assistant-settings-grid">
                 <section>
-                  <h3>Selected skills</h3>
+                  <h3>{m.settingsSelectedSkills()}</h3>
                   {config.skills.length === 0 ? (
-                    <p>No skills selected.</p>
+                    <p>{m.settingsNoSelectedSkills()}</p>
                   ) : (
                     <div className="assistant-skill-list">
                       {config.skills.map((skill) => (
@@ -246,7 +253,7 @@ export function DesktopBotSettings({
                             <p>{skill.description || skill.id}</p>
                           </div>
                           <IconButton
-                            label={`Remove ${skillLabel(skill)}`}
+                            label={m.settingsRemoveSkill(skillLabel(skill))}
                             variant="ghost"
                             size="icon-sm"
                             onClick={() => removeSkill(skill.id)}
@@ -258,10 +265,10 @@ export function DesktopBotSettings({
                     </div>
                   )}
                   <label>
-                    Import skill text
+                    {m.settingsImportSkillText()}
                     <textarea
                       value={skillDraft}
-                      placeholder="Paste a skill name or short skill instruction."
+                      placeholder={m.settingsSkillImportPlaceholder()}
                       onChange={(event) => setSkillDraft(event.target.value)}
                     />
                   </label>
@@ -273,16 +280,16 @@ export function DesktopBotSettings({
                     disabled={!skillDraft.trim()}
                     onClick={importSkillText}
                   >
-                    Import skill
+                    {m.settingsImportSkill()}
                   </Button>
                 </section>
                 <section>
-                  <h3>Skill space</h3>
+                  <h3>{m.settingsSkillSpace()}</h3>
                   <label>
-                    Search skills
+                    {m.settingsSearchSkills()}
                     <input
                       value={query}
-                      placeholder="Search by name or description"
+                      placeholder={m.settingsSearchSkillsPlaceholder()}
                       onChange={(event) => setQuery(event.target.value)}
                     />
                   </label>

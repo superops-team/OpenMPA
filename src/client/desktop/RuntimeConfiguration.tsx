@@ -1,3 +1,4 @@
+import { useMessages } from './locale';
 import { useEffect, useRef, useState } from 'react';
 import { RuntimeConfig } from './generated/mygo';
 import { unwrap } from './result';
@@ -18,6 +19,7 @@ export function RuntimeConfiguration({
   busy: boolean;
   run: (action: () => Promise<void>) => Promise<void>;
 }) {
+  const m = useMessages();
   const [snapshot, setSnapshot] = useState<Snapshot>();
   const [draft, setDraft] = useState<Snapshot['values']>();
   const [operationId, setOperationId] = useState('');
@@ -47,13 +49,10 @@ export function RuntimeConfiguration({
   };
   return (
     <section className="task-detail-card desktop-form">
-      <h2>Runtime configuration</h2>
-      <p>
-        Review resources for {connection.runtimeId}. Applying configuration uses
-        AgentKit and may restart Runtime instances.
-      </p>
+      <h2>{m.settingsRuntimeConfiguration()}</h2>
+      <p>{m.settingsRuntimeConfigurationHint(connection.runtimeId)}</p>
       <button disabled={busy} onClick={() => void run(read)}>
-        Read Runtime configuration
+        {m.settingsReadRuntimeConfiguration()}
       </button>
       {snapshot && draft && (
         <form
@@ -63,7 +62,10 @@ export function RuntimeConfiguration({
             if (
               busy ||
               !window.confirm(
-                `Apply configuration to ${connection.runtimeId}, based on version ${snapshot.version}?`,
+                m.settingsApplyConfigurationConfirm(
+                  String(snapshot.version),
+                  connection.runtimeId,
+                ),
               )
             )
               return;
@@ -90,10 +92,13 @@ export function RuntimeConfiguration({
           }}
         >
           <p>
-            Version {snapshot.version} · {snapshot.status}
+            {m.settingsConfigurationVersion(
+              String(snapshot.version),
+              snapshot.status,
+            )}
           </p>
           <label>
-            Description
+            {m.description()}
             <textarea
               value={draft.description}
               maxLength={4096}
@@ -104,11 +109,11 @@ export function RuntimeConfiguration({
           </label>
           {(
             [
-              ['cpuMilli', 'CPU (millicores)', 100, 64000],
-              ['memoryMb', 'Memory (MiB)', 128, 262144],
-              ['minInstance', 'Minimum instances', 0, 1000],
-              ['maxInstance', 'Maximum instances', 1, 1000],
-              ['maxConcurrency', 'Maximum concurrency', 1, 100000],
+              ['cpuMilli', m.cpuMilli(), 100, 64000],
+              ['memoryMb', m.settingsMemoryMib(), 128, 262144],
+              ['minInstance', m.minimumInstances(), 0, 1000],
+              ['maxInstance', m.maximumInstances(), 1, 1000],
+              ['maxConcurrency', m.maximumConcurrency(), 1, 100000],
             ] as const
           ).map(([name, label, min, max]) => (
             <label key={name}>
@@ -127,20 +132,17 @@ export function RuntimeConfiguration({
             </label>
           ))}
           <button className="primary" disabled={busy}>
-            Review and apply configuration
+            {m.settingsReviewApplyConfiguration()}
           </button>
-          <p>
-            Image, Tool binding and secret environment values are handled
-            separately. Reload if another administrator changes the Runtime.
-          </p>
+          <p>{m.settingsConfigurationSeparateHint()}</p>
         </form>
       )}
       <label>
-        Configuration operation ID
+        {m.settingsConfigurationOperationId()}
         <input
           value={operationId}
           onChange={(event) => setOperationId(event.target.value)}
-          placeholder="Original saved operation ID"
+          placeholder={m.settingsOriginalOperationIdPlaceholder()}
         />
       </label>
       <button
@@ -158,14 +160,14 @@ export function RuntimeConfiguration({
           })
         }
       >
-        Verify original configuration update
+        {m.settingsVerifyConfigurationUpdate()}
       </button>
       {operation && (
         <p role="status">
           {operation.operationId} · {operation.state}
           {operation.state === 'ready'
-            ? ' · Target configuration and a new Ready version are visible.'
-            : ' · Read back this operation to verify the outcome.'}
+            ? ` · ${m.settingsConfigurationReady()}`
+            : ` · ${m.settingsConfigurationVerifyHint()}`}
         </p>
       )}
     </section>

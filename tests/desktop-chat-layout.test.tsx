@@ -1,8 +1,13 @@
 import { act, create, type ReactTestRenderer } from 'react-test-renderer';
 import { readFileSync } from 'node:fs';
-import { expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import { DesktopChat } from '../src/client/desktop/Chat';
 import type { DesktopServices } from '../src/client/desktop/models';
+import { messages } from '../src/client/desktop/generated/locales';
+
+const m = messages;
+beforeEach(() => vi.stubGlobal('mygo', { locale: 'zh-Hans' }));
+afterEach(() => vi.unstubAllGlobals());
 
 const connection = {
   epoch: 2,
@@ -105,11 +110,11 @@ it('keeps one composer field, one status block and the send action in the bottom
   expect(
     bar.findAll(
       (node) =>
-        node.type === 'button' && node.props['aria-label'] === 'Send message',
+        node.type === 'button' && node.props['aria-label'] === m.sendMessage(),
     ).length,
   ).toBeGreaterThan(0);
   expect(
-    renderer.root.findByProps({ 'aria-label': 'Message' }).props.rows,
+    renderer.root.findByProps({ 'aria-label': m.message() }).props.rows,
   ).toBe(1);
 
   await act(async () => renderer.unmount());
@@ -151,13 +156,13 @@ it('puts the stop action in the same composer slot while the run is active', asy
     bar.findAll(
       (node) =>
         node.type === 'button' &&
-        node.props['aria-label'] === 'Stop current session',
+        node.props['aria-label'] === m.stopCurrentSession(),
     ).length,
   ).toBe(1);
   expect(
     renderer.root.findAll(
       (node) =>
-        node.type === 'button' && node.props['aria-label'] === 'Send message',
+        node.type === 'button' && node.props['aria-label'] === m.sendMessage(),
     ),
   ).toHaveLength(0);
 
@@ -211,7 +216,7 @@ it('renders tool events inside the turn process instead of assistant bubbles', a
   expect(byClass(renderer, 'chat-tool')).toHaveLength(0);
   expect(byClass(renderer, 'turn-process')).toHaveLength(1);
   expect(byClass(renderer, 'assistant')).toHaveLength(1);
-  expect(JSON.stringify(renderer.toJSON())).toContain('Working · 1 step');
+  expect(JSON.stringify(renderer.toJSON())).toContain(m.chatProcessRunning(1));
   expect(JSON.stringify(renderer.toJSON())).toContain(
     'src/client/desktop/Chat.tsx',
   );

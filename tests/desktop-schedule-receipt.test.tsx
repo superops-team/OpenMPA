@@ -1,3 +1,4 @@
+import { messages } from '../src/client/desktop/generated/locales';
 import { act, create, type ReactTestRenderer } from 'react-test-renderer';
 import { expect, it, vi } from 'vitest';
 import { DesktopSchedules } from '../src/client/desktop/Schedules';
@@ -42,12 +43,18 @@ it('shows the accepted server run immediately while historical indexing is still
   );
   const button = renderer.root
     .findAllByType('button')
-    .find((button) => button.children.includes(' Run now'))!;
+    .find((button) =>
+      button.children.some(
+        (child) =>
+          typeof child === 'string' &&
+          child.trim() === messages.desktopRunNow(),
+      ),
+    )!;
   await act(async () => button.props.onClick());
   expect(
     renderer.root.findByProps({ className: 'task-event' }).findByType('strong')
       .children,
-  ).toEqual(['Queued']);
+  ).toEqual([messages.scheduleQueued()]);
   expect(JSON.stringify(renderer.toJSON())).toContain('server-run');
   expect(trigger).toHaveBeenCalledWith(4, task);
   await act(async () => renderer.unmount());

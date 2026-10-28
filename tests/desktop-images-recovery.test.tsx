@@ -2,6 +2,9 @@ import { act, create, type ReactTestRenderer } from 'react-test-renderer';
 import { expect, it, vi } from 'vitest';
 import { DesktopSettings } from '../src/client/desktop/Settings';
 import type { DesktopServices } from '../src/client/desktop/models';
+import { messages } from '../src/client/desktop/generated/locales';
+
+const m = messages;
 it('discovers the original image operation on the same page after an unknown update and reads it without updating again', async () => {
   vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true);
   let submitted = false;
@@ -60,17 +63,17 @@ it('discovers the original image operation on the same page after an unknown upd
     renderer.root
       .findAllByType('button')
       .find((button) => button.children.includes(text))!;
-  await act(async () => button('Read current images').props.onClick());
-  await act(async () => button('Review exact targets').props.onClick());
-  await act(async () => button('Apply Runtime image').props.onClick());
+  await act(async () => button(m.readCurrentImages()).props.onClick());
+  await act(async () => button(m.settingsReviewExactTargets()).props.onClick());
+  await act(async () => button(m.settingsApplyRuntimeImage()).props.onClick());
   expect(JSON.stringify(renderer.toJSON())).toContain(
     'original-image-operation',
   );
   await act(async () =>
-    button('Read current status of this operation').props.onClick(),
+    button(m.settingsReadOperationStatus()).props.onClick(),
   );
   expect(read).toHaveBeenCalledWith('r', 'original-image-operation');
   expect(runtime).toHaveBeenCalledOnce();
-  expect(button('Refresh saved receipts')).toBeDefined();
+  expect(button(m.settingsRefreshSavedReceipts())).toBeDefined();
   await act(async () => renderer.unmount());
 });

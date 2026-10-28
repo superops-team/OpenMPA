@@ -1,3 +1,4 @@
+import type { Messages } from './generated/locales';
 import type { TraceStepVM, TraceVM } from './models';
 
 export interface TraceStep extends TraceStepVM {
@@ -65,39 +66,66 @@ function objectValue(value: unknown): Record<string, unknown> {
     : {};
 }
 
-export function formatTraceDuration(value?: number | null) {
+export function formatTraceDuration(value?: number | null, m?: Messages) {
   if (value === undefined || value === null || !Number.isFinite(value))
-    return 'Unavailable';
-  if (value < 1000) return `${Math.max(0, Math.round(value))}ms`;
-  if (value < 60_000) return `${(value / 1000).toFixed(1)}s`;
+    return m?.valueUnavailable() ?? 'Unavailable';
+  if (value < 1000) {
+    const milliseconds = String(Math.max(0, Math.round(value)));
+    return m?.durationMilliseconds(milliseconds) ?? `${milliseconds}ms`;
+  }
+  if (value < 60_000) {
+    const seconds = (value / 1000).toFixed(1);
+    return m?.durationSeconds(seconds) ?? `${seconds}s`;
+  }
   const roundedSeconds = Math.round(value / 1000);
   const minutes = Math.floor(roundedSeconds / 60);
   const seconds = roundedSeconds % 60;
-  return `${minutes}m ${seconds}s`;
+  return (
+    m?.durationMinutesSeconds(String(minutes), String(seconds)) ??
+    `${minutes}m ${seconds}s`
+  );
 }
 
-export function formatTraceCount(value?: number | null) {
+export function formatTraceCount(value?: number | null, m?: Messages) {
   return value === undefined || value === null || !Number.isFinite(value)
-    ? 'Unavailable'
+    ? (m?.valueUnavailable() ?? 'Unavailable')
     : String(value);
 }
 
-export function traceStatusLabel(status: string) {
+export function traceStatusLabel(status: string, m?: Messages) {
+  const labels: Record<string, string> = {
+    running: m?.desktopRunning() ?? 'Running',
+    success: m?.desktopSuccess() ?? 'Success',
+    failed: m?.desktopFailed() ?? 'Failed',
+    cancelled: m?.desktopCancelled() ?? 'Cancelled',
+    timeout: m?.desktopTimeout() ?? 'Timeout',
+    skipped: m?.statusSkipped() ?? 'Skipped',
+    not_observed: m?.desktopNotObserved() ?? 'Not observed',
+    login_required: m?.desktopLoginRequired() ?? 'Login required',
+    denied: m?.statusDenied() ?? 'Denied',
+  };
   return (
-    {
-      running: 'Running',
-      success: 'Success',
-      failed: 'Failed',
-      cancelled: 'Cancelled',
-      timeout: 'Timeout',
-      skipped: 'Skipped',
-      not_observed: 'Not observed',
-      login_required: 'Login required',
-      denied: 'Denied',
-    }[status] ||
-    status ||
-    'Unknown'
+    (Object.hasOwn(labels, status) ? labels[status] : status) ||
+    (m?.desktopUnknown() ?? 'Unknown')
   );
+}
+
+export function traceCategoryLabel(category: string, m?: Messages) {
+  if (!m) return category;
+  const labels: Record<string, string> = {
+    request: m.traceCategoryRequest(),
+    preparation: m.traceCategoryPreparation(),
+    model: m.desktopModel(),
+    tool: m.desktopTool(),
+    sandbox: m.traceCategorySandbox(),
+    worker: m.desktopWorker(),
+    file: m.traceCategoryFile(),
+    plan: m.traceCategoryPlan(),
+    terminal: m.traceCategoryTerminal(),
+    error: m.traceCategoryError(),
+    runtime: m.runtime(),
+  };
+  return Object.hasOwn(labels, category) ? labels[category] : category;
 }
 
 export function traceStepCategory(step: TraceStepVM) {
