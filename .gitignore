@@ -11,6 +11,11 @@ docs/superpowers/
 RESEARCH.md
 .DS_Store
 
+# Local product/spec notes. These can contain machine paths, live Runtime IDs,
+# account-bound evidence, or unreleased security decisions.
+prd-spec/
+openspec/
+
 data/
 *.sqlite
 *.sqlite-shm

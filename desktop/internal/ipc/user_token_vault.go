@@ -81,6 +81,18 @@ func (p *Platform) UnlockUserTokenVault(ctx context.Context, r dto.UserTokenVaul
 			return dto.UserTokenVaultStatusResult{Error: dto.Failure("vaultUnavailable", "desktop", "readOnly", 0)}
 		}
 	}
+	if r.ConnectionEpoch != 0 {
+		state := p.Connection.State()
+		if !state.Connected || state.ConnectionEpoch != r.ConnectionEpoch {
+			return dto.UserTokenVaultStatusResult{Error: dto.Failure("staleConnection", "transport", "reload", 0)}
+		}
+		if state.RuntimeID != token.RuntimeID {
+			return dto.UserTokenVaultStatusResult{Error: dto.Failure("invalidInput", "desktop", "never", 0)}
+		}
+		if err := p.Connection.SetBusinessAuth(dto.IdentityRequest{ConnectionEpoch: r.ConnectionEpoch, AuthMode: "legacyJwt", LegacyJWT: token.IDToken}); err != nil {
+			return dto.UserTokenVaultStatusResult{Error: err}
+		}
+	}
 	return p.UserTokenVaultStatus(dto.UserTokenVaultRequest{RuntimeID: token.RuntimeID})
 }
 

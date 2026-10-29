@@ -3,10 +3,14 @@ package ipc
 import (
 	"context"
 	"encoding/json"
+	"io"
+	"net/http"
+	"net/http/httptest"
 	"os"
 	"strings"
 	"testing"
 
+	"github.com/superops-team/OpenMPA/desktop/internal/connection"
 	"github.com/superops-team/OpenMPA/desktop/internal/dto"
 )
 
@@ -82,5 +86,39 @@ func TestUserTokenVaultStatusProjectsNoSecrets(t *testing.T) {
 		if strings.Contains(string(encoded), secret) {
 			t.Fatalf("status leaked %q", secret)
 		}
+	}
+}
+
+func TestUserTokenVaultUnlockCanRestoreConnectionJWT(t *testing.T) {
+	p, _, _, _ := vaultPlatform(t)
+	ctx := context.Background()
+	request := testUserTokenVaultSaveRequest()
+	if result := p.SaveUserTokenVault(ctx, request); !result.OK {
+		t.Fatal(result.Error)
+	}
+	runtime := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Header.Get("Authorization") != "Bearer runtime-key" {
+			t.Fatalf("missing runtime key: %q", r.Header.Get("Authorization"))
+		}
+		if r.Header.Get("X-Jwt-Token") != request.IDToken || r.Header.Get("X-User-Id") != "" {
+			t.Fatalf("wrong business identity headers: jwt=%q user=%q", r.Header.Get("X-Jwt-Token"), r.Header.Get("X-User-Id"))
+		}
+		io.WriteString(w, `{}`)
+	}))
+	defer runtime.Close()
+	epoch, err := p.Connection.Bind(connection.Binding{Endpoint: runtime.URL, RuntimeID: request.RuntimeID, RuntimeKey: "runtime-key"}, true)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if result := p.UnlockUserTokenVault(ctx, dto.UserTokenVaultUnlockRequest{RuntimeID: request.RuntimeID, Passphrase: request.Passphrase, ConnectionEpoch: epoch}); !result.OK || result.Value == nil || !result.Value.Exists {
+		t.Fatalf("unlock failed: %+v", result)
+	}
+	state := p.Connection.State()
+	resp, failure := p.Connection.Request(ctx, state.ConnectionEpoch, http.MethodGet, "/api/v1/sessions", nil, nil)
+	if resp != nil {
+		resp.Body.Close()
+	}
+	if failure != nil {
+		t.Fatal(failure)
 	}
 }

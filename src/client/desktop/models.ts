@@ -280,6 +280,7 @@ export interface DesktopServices {
     unlockUserTokenVault?(
       runtimeId: string,
       passphrase: string,
+      connectionEpoch?: number,
     ): Promise<UserTokenVaultStatusVM>;
     forgetUserTokenVault?(runtimeId: string): Promise<void>;
     signIn(input: {

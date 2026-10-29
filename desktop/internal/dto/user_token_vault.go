@@ -17,8 +17,9 @@ type UserTokenVaultRequest struct {
 }
 
 type UserTokenVaultUnlockRequest struct {
-	RuntimeID  string `json:"runtimeId"`
-	Passphrase string `json:"passphrase"`
+	RuntimeID       string `json:"runtimeId"`
+	Passphrase      string `json:"passphrase"`
+	ConnectionEpoch uint64 `json:"connectionEpoch,omitempty"`
 }
 
 type UserTokenVaultSaveRequest struct {

@@ -2609,6 +2609,7 @@ export interface UserTokenVaultStatusResult {
 export interface UserTokenVaultUnlockRequest {
   runtimeId: string;
   passphrase: string;
+  connectionEpoch?: number;
 }
 
 export interface Values {

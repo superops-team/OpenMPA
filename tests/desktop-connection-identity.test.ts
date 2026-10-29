@@ -195,6 +195,7 @@ it('exposes Runtime user token vault APIs without projecting token material', as
     services.platform.unlockUserTokenVault!(
       'runtime-1',
       'correct horse battery',
+      7,
     ),
   ).resolves.toEqual(
     expect.not.objectContaining({
@@ -206,8 +207,14 @@ it('exposes Runtime user token vault APIs without projecting token material', as
     services.platform.unlockUserTokenVault!(
       'runtime-1',
       'id-token-secret-refresh-token-secret',
+      7,
     ),
   ).rejects.not.toThrow(/id-token-secret|refresh-token-secret/);
+  expect(platform.unlockUserTokenVault).toHaveBeenCalledWith({
+    runtimeId: 'runtime-1',
+    passphrase: 'correct horse battery',
+    connectionEpoch: 7,
+  });
   await expect(
     services.platform.forgetUserTokenVault!('runtime-1'),
   ).resolves.toBeUndefined();

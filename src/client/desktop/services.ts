@@ -116,9 +116,13 @@ export function createDesktopServices(): DesktopServices {
         unwrap(await Platform.userTokenVaultStatus({ runtimeId })),
       saveUserTokenVault: async (input) =>
         unwrap(await Platform.saveUserTokenVault(input)),
-      unlockUserTokenVault: async (runtimeId, passphrase) =>
+      unlockUserTokenVault: async (runtimeId, passphrase, connectionEpoch) =>
         unwrap(
-          await Platform.unlockUserTokenVault({ runtimeId, passphrase }),
+          await Platform.unlockUserTokenVault({
+            runtimeId,
+            passphrase,
+            connectionEpoch,
+          }),
         ),
       forgetUserTokenVault: async (runtimeId) => {
         unwrap(await Platform.forgetUserTokenVault({ runtimeId }));
