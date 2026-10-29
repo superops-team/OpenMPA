@@ -29,6 +29,7 @@ import { createStudioServices } from './studio-services';
 import { createLifecycleServices } from './lifecycle-services';
 import { connectionVM } from './connection-view-model';
 import { platformVM } from './platform-view-model';
+import { createPlatformIdentityServices } from './platform-identity-services';
 export { displayEvent } from './service-events';
 
 const pageVM = (page: NativePage): Page => ({ ...page, sourceThreadId: null });
@@ -101,25 +102,7 @@ export function createDesktopServices(): DesktopServices {
       forgetVault: async () => {
         unwrap(await Platform.forgetVault());
       },
-      agentIdentityConfig: async () =>
-        unwrap(await Platform.agentIdentityConfig()),
-      saveAgentIdentityConfig: async (userPoolId) =>
-        unwrap(await Platform.saveAgentIdentityConfig({ userPoolId })),
-      userTokenVaultStatus: async (runtimeId) =>
-        unwrap(await Platform.userTokenVaultStatus({ runtimeId })),
-      saveUserTokenVault: async (input) =>
-        unwrap(await Platform.saveUserTokenVault(input)),
-      unlockUserTokenVault: async (runtimeId, passphrase, connectionEpoch) =>
-        unwrap(
-          await Platform.unlockUserTokenVault({
-            runtimeId,
-            passphrase,
-            connectionEpoch,
-          }),
-        ),
-      forgetUserTokenVault: async (runtimeId) => {
-        unwrap(await Platform.forgetUserTokenVault({ runtimeId }));
-      },
+      ...createPlatformIdentityServices(),
       signIn: async (input) => {
         const state = unwrap(await Platform.signIn(input));
         return platformVM(state);

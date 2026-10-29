@@ -562,6 +562,56 @@ func (msgs Messages) BusinessIdentity() string {
 	return Catalog.Format(msgs.locale, "businessIdentity", nil)
 }
 
+// AgentIdentityUserPoolId says "Agent Identity 用户池 ID"
+// in the language the app shows.
+func AgentIdentityUserPoolId() string { return In(i18n.Locale()).AgentIdentityUserPoolId() }
+
+// AgentIdentityUserPoolId says "Agent Identity 用户池 ID"
+// in the language of msgs.
+func (msgs Messages) AgentIdentityUserPoolId() string {
+	return Catalog.Format(msgs.locale, "agentIdentityUserPoolId", nil)
+}
+
+// SaveAgentIdentityUserPool says "保存用户池"
+// in the language the app shows.
+func SaveAgentIdentityUserPool() string { return In(i18n.Locale()).SaveAgentIdentityUserPool() }
+
+// SaveAgentIdentityUserPool says "保存用户池"
+// in the language of msgs.
+func (msgs Messages) SaveAgentIdentityUserPool() string {
+	return Catalog.Format(msgs.locale, "saveAgentIdentityUserPool", nil)
+}
+
+// LoginWithAgentIdentity says "使用 Agent Identity 登录"
+// in the language the app shows.
+func LoginWithAgentIdentity() string { return In(i18n.Locale()).LoginWithAgentIdentity() }
+
+// LoginWithAgentIdentity says "使用 Agent Identity 登录"
+// in the language of msgs.
+func (msgs Messages) LoginWithAgentIdentity() string {
+	return Catalog.Format(msgs.locale, "loginWithAgentIdentity", nil)
+}
+
+// UnlockSavedAgentIdentity says "解锁已保存身份"
+// in the language the app shows.
+func UnlockSavedAgentIdentity() string { return In(i18n.Locale()).UnlockSavedAgentIdentity() }
+
+// UnlockSavedAgentIdentity says "解锁已保存身份"
+// in the language of msgs.
+func (msgs Messages) UnlockSavedAgentIdentity() string {
+	return Catalog.Format(msgs.locale, "unlockSavedAgentIdentity", nil)
+}
+
+// AgentIdentityPassphrase says "Agent Identity 口令"
+// in the language the app shows.
+func AgentIdentityPassphrase() string { return In(i18n.Locale()).AgentIdentityPassphrase() }
+
+// AgentIdentityPassphrase says "Agent Identity 口令"
+// in the language of msgs.
+func (msgs Messages) AgentIdentityPassphrase() string {
+	return Catalog.Format(msgs.locale, "agentIdentityPassphrase", nil)
+}
+
 // BusinessUserId says "业务用户 ID"
 // in the language the app shows.
 func BusinessUserId() string { return In(i18n.Locale()).BusinessUserId() }
@@ -4266,16 +4316,28 @@ func (msgs Messages) SettingsBusinessIdentitySaved() string {
 	return Catalog.Format(msgs.locale, "settingsBusinessIdentitySaved", nil)
 }
 
-// SettingsLegacyJwtAuthenticated says "Legacy JWT（用于启用认证的部署）"
+// SettingsLegacyJwtAuthenticated says "Agent Identity 用户"
 // in the language the app shows.
 func SettingsLegacyJwtAuthenticated() string {
 	return In(i18n.Locale()).SettingsLegacyJwtAuthenticated()
 }
 
-// SettingsLegacyJwtAuthenticated says "Legacy JWT（用于启用认证的部署）"
+// SettingsLegacyJwtAuthenticated says "Agent Identity 用户"
 // in the language of msgs.
 func (msgs Messages) SettingsLegacyJwtAuthenticated() string {
 	return Catalog.Format(msgs.locale, "settingsLegacyJwtAuthenticated", nil)
+}
+
+// SettingsAgentIdentityAuthenticated says "Agent Identity 用户"
+// in the language the app shows.
+func SettingsAgentIdentityAuthenticated() string {
+	return In(i18n.Locale()).SettingsAgentIdentityAuthenticated()
+}
+
+// SettingsAgentIdentityAuthenticated says "Agent Identity 用户"
+// in the language of msgs.
+func (msgs Messages) SettingsAgentIdentityAuthenticated() string {
+	return Catalog.Format(msgs.locale, "settingsAgentIdentityAuthenticated", nil)
 }
 
 // SettingsChannelAdministratorCredentials says "渠道管理员凭据"
@@ -8040,11 +8102,11 @@ func (msgs Messages) BusinessIdentityRequired() string {
 	return Catalog.Format(msgs.locale, "businessIdentityRequired", nil)
 }
 
-// BusinessJWTRequired says "此 Runtime 要求业务 JWT（X-Jwt-Token）。请在「设置 → 身份认证」中配置有效的 JWT。"
+// BusinessJWTRequired says "此 Runtime 要求 Agent Identity 用户池登录。请在「设置 → 身份认证」中登录。"
 // in the language the app shows.
 func BusinessJWTRequired() string { return In(i18n.Locale()).BusinessJWTRequired() }
 
-// BusinessJWTRequired says "此 Runtime 要求业务 JWT（X-Jwt-Token）。请在「设置 → 身份认证」中配置有效的 JWT。"
+// BusinessJWTRequired says "此 Runtime 要求 Agent Identity 用户池登录。请在「设置 → 身份认证」中登录。"
 // in the language of msgs.
 func (msgs Messages) BusinessJWTRequired() string {
 	return Catalog.Format(msgs.locale, "businessJWTRequired", nil)

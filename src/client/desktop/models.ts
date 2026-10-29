@@ -281,6 +281,12 @@ export interface DesktopServices {
     saveAgentIdentityConfig?(
       userPoolId: string,
     ): Promise<AgentIdentityConfigVM>;
+    loginAgentIdentity?(
+      runtimeId: string,
+      userPoolId: string,
+      passphrase: string,
+      connectionEpoch: number,
+    ): Promise<UserTokenVaultStatusVM>;
     userTokenVaultStatus?(
       runtimeId: string,
     ): Promise<UserTokenVaultStatusVM>;

@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"github.com/egoist/mygo"
 	"github.com/superops-team/OpenMPA/desktop/internal/cloud"
 	"github.com/superops-team/OpenMPA/desktop/internal/configstore"
 	"github.com/superops-team/OpenMPA/desktop/internal/connection"
@@ -18,20 +19,34 @@ import (
 )
 
 type Platform struct {
-	Cloud           *cloud.Client
-	Connection      *connection.Client
-	Vault           *vault.Service
-	Settings        *configstore.Store
-	mu              sync.RWMutex
-	target          dto.RuntimeRequest
-	toolID          string
-	boundScope      string
-	boundCloudEpoch uint64
-	operationMu     sync.Mutex
+	Cloud                   *cloud.Client
+	Connection              *connection.Client
+	Vault                   *vault.Service
+	Settings                *configstore.Store
+	mu                      sync.RWMutex
+	target                  dto.RuntimeRequest
+	toolID                  string
+	boundScope              string
+	boundCloudEpoch         uint64
+	operationMu             sync.Mutex
+	openExternal            func(string) error
+	identityHTTPClient      *http.Client
+	identityOpenAPIEndpoint string
+	identityCallbackAddr    string
 }
 
 func NewPlatform(c *cloud.Client, conn *connection.Client) *Platform {
-	return &Platform{Cloud: c, Connection: conn}
+	return &Platform{
+		Cloud:        c,
+		Connection:   conn,
+		openExternal: mygo.Shell.OpenExternal,
+		identityHTTPClient: &http.Client{
+			Timeout:       30 * time.Second,
+			CheckRedirect: func(*http.Request, []*http.Request) error { return http.ErrUseLastResponse },
+		},
+		identityOpenAPIEndpoint: "https://open.volcengineapi.com",
+		identityCallbackAddr:    "127.0.0.1:8766",
+	}
 }
 
 func NewPlatformWithVault(c *cloud.Client, conn *connection.Client, v *vault.Service) *Platform {

@@ -7,6 +7,7 @@ const connection = vi.hoisted(() => ({
 const platform = vi.hoisted(() => ({
   agentIdentityConfig: vi.fn(),
   forgetUserTokenVault: vi.fn(),
+  loginAgentIdentity: vi.fn(),
   saveAgentIdentityConfig: vi.fn(),
   saveUserTokenVault: vi.fn(),
   unlockUserTokenVault: vi.fn(),
@@ -150,6 +151,15 @@ it('exposes Runtime user token vault APIs without projecting token material', as
       suggestedUserPoolId: '3ea6c536-152c-435d-8040-9fcb3597476a',
     },
   });
+  platform.loginAgentIdentity.mockResolvedValueOnce({
+    ok: true,
+    value: {
+      exists: true,
+      runtimeId: 'runtime-1',
+      userPoolId: '3ea6c536-152c-435d-8040-9fcb3597476a',
+      subject: 'user-1',
+    },
+  });
   platform.userTokenVaultStatus.mockResolvedValueOnce({
     ok: true,
     value: {
@@ -217,6 +227,25 @@ it('exposes Runtime user token vault APIs without projecting token material', as
   );
   expect(platform.saveAgentIdentityConfig).toHaveBeenCalledWith({
     userPoolId: '3ea6c536-152c-435d-8040-9fcb3597476a',
+  });
+  await expect(
+    services.platform.loginAgentIdentity!(
+      'runtime-1',
+      '3ea6c536-152c-435d-8040-9fcb3597476a',
+      'correct horse battery',
+      7,
+    ),
+  ).resolves.toEqual(
+    expect.not.objectContaining({
+      idToken: expect.anything(),
+      refreshToken: expect.anything(),
+    }),
+  );
+  expect(platform.loginAgentIdentity).toHaveBeenCalledWith({
+    runtimeId: 'runtime-1',
+    userPoolId: '3ea6c536-152c-435d-8040-9fcb3597476a',
+    passphrase: 'correct horse battery',
+    connectionEpoch: 7,
   });
   await expect(
     services.platform.userTokenVaultStatus!('runtime-1'),

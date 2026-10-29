@@ -34,6 +34,9 @@ export function SettingsAuthentication({
     userTokenVaultPassphrase,
     userTokenVaultStatus,
   } = state;
+  const canLoginWithAgentIdentity = Boolean(
+    services.platform?.loginAgentIdentity,
+  );
   return (
     <>
       <section className="task-detail-card">
@@ -61,7 +64,7 @@ export function SettingsAuthentication({
             <h3>{m.businessIdentity()}</h3>
             {services.platform.saveAgentIdentityConfig && (
               <label>
-                {m.businessIdentity()} UserPool ID
+                {m.agentIdentityUserPoolId()}
                 <input
                   value={agentIdentityUserPoolId}
                   onChange={(event) =>
@@ -86,39 +89,73 @@ export function SettingsAuthentication({
                   })
                 }
               >
-                {m.saveBusinessIdentity()}
+                {m.saveAgentIdentityUserPool()}
               </Button>
             )}
             <p>
               {userTokenVaultStatus.exists
                 ? m.settingsConnectionSummary(
                     `${userTokenVaultStatus.subject || connection.runtimeId} · ${userTokenVaultStatus.userPoolId || m.settingsUnknown()}`,
-                    m.settingsLegacyJwtAuthenticated(),
+                    m.settingsAgentIdentityAuthenticated(),
                     userTokenVaultStatus.expiresAt || m.settingsUnknown(),
                   )
                 : m.businessJWTRequired()}
             </p>
-            {userTokenVaultStatus.exists &&
-              services.platform?.unlockUserTokenVault && (
-                <label>
-                  {m.vaultUnlockHint()}
-                  <input
-                    aria-label={m.vaultUnlockHint()}
-                    type="password"
-                    autoComplete="current-password"
-                    value={userTokenVaultPassphrase}
-                    onChange={(event) =>
-                      setUserTokenVaultPassphrase(event.target.value)
-                    }
-                  />
-                </label>
-              )}
-            {userTokenVaultStatus.exists && (
+            {(canLoginWithAgentIdentity || userTokenVaultStatus.exists) && (
+              <label>
+                {m.passphrase()}
+                <input
+                  aria-label={m.agentIdentityPassphrase()}
+                  type="password"
+                  autoComplete="current-password"
+                  value={userTokenVaultPassphrase}
+                  onChange={(event) =>
+                    setUserTokenVaultPassphrase(event.target.value)
+                  }
+                />
+              </label>
+            )}
+            {(canLoginWithAgentIdentity || userTokenVaultStatus.exists) && (
               <div className="desktop-inline">
-                {services.platform?.unlockUserTokenVault && (
+                {canLoginWithAgentIdentity && (
                   <Button
                     variant="primary"
-                    disabled={busy || !userTokenVaultPassphrase.trim()}
+                    disabled={
+                      busy ||
+                      !agentIdentityUserPoolId.trim() ||
+                      !userTokenVaultPassphrase.trim()
+                    }
+                    onClick={() =>
+                      void act(async () => {
+                        const current = generation.current;
+                        await services.platform.loginAgentIdentity!(
+                          connection.runtimeId,
+                          agentIdentityUserPoolId,
+                          userTokenVaultPassphrase,
+                          connection.epoch,
+                        );
+                        setUserTokenVaultPassphrase('');
+                        const next = await services.connection.status();
+                        if (generation.current !== current) return;
+                        if (next) onConnection(next);
+                        await loadUserTokenVaultStatus(connection.runtimeId);
+                        setNotice(
+                          localized((m) => m.settingsBusinessIdentitySaved()),
+                        );
+                      })
+                    }
+                  >
+                    {m.loginWithAgentIdentity()}
+                  </Button>
+                )}
+                {services.platform?.unlockUserTokenVault && (
+                  <Button
+                    variant={canLoginWithAgentIdentity ? 'outline' : 'primary'}
+                    disabled={
+                      busy ||
+                      !userTokenVaultStatus.exists ||
+                      !userTokenVaultPassphrase.trim()
+                    }
                     onClick={() =>
                       void act(async () => {
                         const current = generation.current;
@@ -138,7 +175,7 @@ export function SettingsAuthentication({
                       })
                     }
                   >
-                    {m.unlockAndSignIn()}
+                    {m.unlockSavedAgentIdentity()}
                   </Button>
                 )}
                 {services.platform?.forgetUserTokenVault && (
@@ -163,69 +200,46 @@ export function SettingsAuthentication({
             )}
           </div>
         )}
-        <form
-          className="desktop-form"
-          onSubmit={(event) => {
-            event.preventDefault();
-            void act(async () => {
-              const currentEpoch = connection.epoch;
-              const current = generation.current;
-              const next = await services.connection.identity(
-                currentEpoch,
-                identity.userId,
-                '',
-                identity.applicationToken,
-                '',
-                '',
-                identity.testDeployment,
-              );
-              if (generation.current !== current) return;
-              onConnection(next);
-              setIdentity({ ...identity, applicationToken: '' });
-              setNotice(localized((m) => m.settingsBusinessIdentitySaved()));
-            });
-          }}
-        >
-          <label>
-            {m.businessUserId()}
-            <input
-              required
-              value={identity.userId}
-              onChange={(event) =>
-                setIdentity({ ...identity, userId: event.target.value })
-              }
-            />
-          </label>
-          <label className="desktop-check">
-            <input
-              type="checkbox"
-              checked={identity.testDeployment}
-              onChange={(event) =>
-                setIdentity({
-                  ...identity,
-                  testDeployment: event.target.checked,
-                })
-              }
-            />{' '}
-            {m.verifiedTest()}
-          </label>
-          {(['applicationToken'] as const).map((slot) => (
-            <label key={slot}>
-              {m.settingsLegacyJwtAuthenticated()}
+        <details className="desktop-form">
+          <summary>{m.verifiedTest()}</summary>
+          <form
+            className="desktop-form"
+            onSubmit={(event) => {
+              event.preventDefault();
+              void act(async () => {
+                const currentEpoch = connection.epoch;
+                const current = generation.current;
+                const next = await services.connection.identity(
+                  currentEpoch,
+                  identity.userId,
+                  '',
+                  '',
+                  '',
+                  '',
+                  true,
+                );
+                if (generation.current !== current) return;
+                onConnection(next);
+                setIdentity({ ...identity, applicationToken: '' });
+                setNotice(localized((m) => m.settingsBusinessIdentitySaved()));
+              });
+            }}
+          >
+            <label>
+              {m.businessUserId()}
               <input
-                type="password"
-                autoComplete="off"
-                value={identity[slot]}
+                required
+                value={identity.userId}
                 onChange={(event) =>
-                  setIdentity({ ...identity, [slot]: event.target.value })
+                  setIdentity({ ...identity, userId: event.target.value })
                 }
               />
             </label>
-          ))}
-          <button className="primary" disabled={busy}>
-            {m.saveBusinessIdentity()}
-          </button>
-        </form>
+            <button className="primary" disabled={busy}>
+              {m.saveBusinessIdentity()}
+            </button>
+          </form>
+        </details>
       </section>
       <section className="task-detail-card">
         <h2>{m.settingsChannelAdministratorCredentials()}</h2>

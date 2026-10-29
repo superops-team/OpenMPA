@@ -104,6 +104,14 @@
     {
       "pattern": "**/go.sum",
       "reason": "dependency lock file"
+    },
+    {
+      "pattern": "desktop/locales/en.json",
+      "reason": "reviewed MyGo locale catalog source consumed as one language file"
+    },
+    {
+      "pattern": "desktop/locales/zh-Hans.json",
+      "reason": "reviewed MyGo locale catalog source consumed as one language file"
     }
   ],
   "max_bytes": 20000,

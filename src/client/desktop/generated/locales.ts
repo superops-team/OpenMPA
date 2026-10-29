@@ -212,6 +212,26 @@ export interface Messages {
    */
   businessIdentity(): string;
   /**
+   * `Agent Identity 用户池 ID`
+   */
+  agentIdentityUserPoolId(): string;
+  /**
+   * `保存用户池`
+   */
+  saveAgentIdentityUserPool(): string;
+  /**
+   * `使用 Agent Identity 登录`
+   */
+  loginWithAgentIdentity(): string;
+  /**
+   * `解锁已保存身份`
+   */
+  unlockSavedAgentIdentity(): string;
+  /**
+   * `Agent Identity 口令`
+   */
+  agentIdentityPassphrase(): string;
+  /**
    * `业务用户 ID`
    */
   businessUserId(): string;
@@ -1632,9 +1652,13 @@ export interface Messages {
    */
   settingsBusinessIdentitySaved(): string;
   /**
-   * `Legacy JWT（用于启用认证的部署）`
+   * `Agent Identity 用户`
    */
   settingsLegacyJwtAuthenticated(): string;
+  /**
+   * `Agent Identity 用户`
+   */
+  settingsAgentIdentityAuthenticated(): string;
   /**
    * `渠道管理员凭据`
    */
@@ -3076,7 +3100,7 @@ export interface Messages {
    */
   businessIdentityRequired(): string;
   /**
-   * `此 Runtime 要求业务 JWT（X-Jwt-Token）。请在「设置 → 身份认证」中配置有效的 JWT。`
+   * `此 Runtime 要求 Agent Identity 用户池登录。请在「设置 → 身份认证」中登录。`
    */
   businessJWTRequired(): string;
   /**
@@ -5065,6 +5089,11 @@ const catalog = createCatalog<Messages>({
     "runtimeKeyIdentity": [],
     "explicitIdentity": [],
     "businessIdentity": [],
+    "agentIdentityUserPoolId": [],
+    "saveAgentIdentityUserPool": [],
+    "loginWithAgentIdentity": [],
+    "unlockSavedAgentIdentity": [],
+    "agentIdentityPassphrase": [],
     "businessUserId": [],
     "legacyJwt": [],
     "verifiedTest": [],
@@ -5421,6 +5450,7 @@ const catalog = createCatalog<Messages>({
     "settingsConnectionSummary": ["runtime", "status", "scope"],
     "settingsBusinessIdentitySaved": [],
     "settingsLegacyJwtAuthenticated": [],
+    "settingsAgentIdentityAuthenticated": [],
     "settingsChannelAdministratorCredentials": [],
     "settingsChannelCredentialsHint": [],
     "settingsChannelAuthenticationSaved": [],
@@ -6318,6 +6348,11 @@ const catalog = createCatalog<Messages>({
       "runtimeKeyIdentity": "Session 身份：Runtime Key 默认主体 · 可在身份认证中覆盖",
       "explicitIdentity": "Session 身份：显式业务身份",
       "businessIdentity": "业务身份",
+      "agentIdentityUserPoolId": "Agent Identity 用户池 ID",
+      "saveAgentIdentityUserPool": "保存用户池",
+      "loginWithAgentIdentity": "使用 Agent Identity 登录",
+      "unlockSavedAgentIdentity": "解锁已保存身份",
+      "agentIdentityPassphrase": "Agent Identity 口令",
       "businessUserId": "业务用户 ID",
       "legacyJwt": "Legacy JWT",
       "verifiedTest": "已确认测试部署已关闭 JWT",
@@ -6673,7 +6708,8 @@ const catalog = createCatalog<Messages>({
       "settingsBusinessConnection": "业务连接",
       "settingsConnectionSummary": "{runtime} · {status} · 范围 {scope}",
       "settingsBusinessIdentitySaved": "业务身份已保存。凭据输入已清除。",
-      "settingsLegacyJwtAuthenticated": "Legacy JWT（用于启用认证的部署）",
+      "settingsLegacyJwtAuthenticated": "Agent Identity 用户",
+      "settingsAgentIdentityAuthenticated": "Agent Identity 用户",
       "settingsChannelAdministratorCredentials": "渠道管理员凭据",
       "settingsChannelCredentialsHint": "网关凭据和渠道管理凭据存放在不同的宿主凭据槽中。",
       "settingsChannelAuthenticationSaved": "渠道认证已保存。凭据输入已清除。",
@@ -7034,7 +7070,7 @@ const catalog = createCatalog<Messages>({
       "traceExpand": "展开",
       "traceCollapse": "收起",
       "businessIdentityRequired": "此 Runtime 要求业务用户 ID（x-user-id）。请在「设置 → 身份认证」中配置该部署要求的业务身份。",
-      "businessJWTRequired": "此 Runtime 要求业务 JWT（X-Jwt-Token）。请在「设置 → 身份认证」中配置有效的 JWT。",
+      "businessJWTRequired": "此 Runtime 要求 Agent Identity 用户池登录。请在「设置 → 身份认证」中登录。",
       "resources": "资源",
       "collaboration": "协作",
       "skillsMcpInstructions": "技能、MCP 与指令",
@@ -7570,6 +7606,11 @@ const catalog = createCatalog<Messages>({
       "runtimeKeyIdentity": "Session identity: Runtime key default · optional override in Authentication",
       "explicitIdentity": "Session identity: explicit business identity",
       "businessIdentity": "Business identity",
+      "agentIdentityUserPoolId": "Agent Identity UserPool ID",
+      "saveAgentIdentityUserPool": "Save UserPool",
+      "loginWithAgentIdentity": "Log in with Agent Identity",
+      "unlockSavedAgentIdentity": "Unlock saved identity",
+      "agentIdentityPassphrase": "Agent Identity passphrase",
       "businessUserId": "Business user ID",
       "legacyJwt": "Legacy JWT",
       "verifiedTest": "Verified test deployment with JWT disabled",
@@ -7925,7 +7966,8 @@ const catalog = createCatalog<Messages>({
       "settingsBusinessConnection": "Business connection",
       "settingsConnectionSummary": "{runtime} · {status} · scope {scope}",
       "settingsBusinessIdentitySaved": "Business identity saved. Credential inputs cleared.",
-      "settingsLegacyJwtAuthenticated": "Legacy JWT (for authenticated deployments)",
+      "settingsLegacyJwtAuthenticated": "Agent Identity user",
+      "settingsAgentIdentityAuthenticated": "Agent Identity user",
       "settingsChannelAdministratorCredentials": "Channel administrator credentials",
       "settingsChannelCredentialsHint": "Gateway credentials and channel management credentials occupy separate host slots.",
       "settingsChannelAuthenticationSaved": "Channel authentication saved. Credential input cleared.",
@@ -8286,7 +8328,7 @@ const catalog = createCatalog<Messages>({
       "traceExpand": "Expand",
       "traceCollapse": "Collapse",
       "businessIdentityRequired": "This Runtime requires an explicit business user ID (x-user-id). Configure the identity required by this deployment in Settings > Authentication.",
-      "businessJWTRequired": "This Runtime requires a business JWT (X-Jwt-Token). Configure a valid JWT in Settings > Authentication.",
+      "businessJWTRequired": "This Runtime requires Agent Identity UserPool login. Sign in from Settings > Authentication.",
       "resources": "Resources",
       "collaboration": "Collaboration",
       "skillsMcpInstructions": "Skills, MCP & instructions",

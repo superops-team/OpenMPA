@@ -64,7 +64,7 @@ func SafeMessage(code string) string {
 	case "businessIdentityRequired":
 		return "This Runtime requires an explicit business user ID (x-user-id). Configure the identity required by this deployment in Settings > Authentication."
 	case "businessJWTRequired":
-		return "This Runtime requires a business JWT (X-Jwt-Token). Configure a valid JWT in Settings > Authentication."
+		return "This Runtime requires Agent Identity UserPool login. Sign in from Settings > Authentication."
 	case "capabilityUnavailable", "agentProfileUnavailable":
 		return "This Runtime does not provide this capability."
 	case "collaborationAliasRequired":

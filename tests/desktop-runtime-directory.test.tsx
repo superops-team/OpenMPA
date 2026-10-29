@@ -344,7 +344,7 @@ it('saves and unlocks encrypted cloud credentials from the React account setting
   await act(async () => renderer.unmount());
 });
 
-it('unlocks saved Agent Identity for the current Runtime connection', async () => {
+it('logs in with Agent Identity for the current Runtime connection', async () => {
   vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true);
   const userTokenVaultStatus = vi.fn(async () => ({
     exists: true,
@@ -358,6 +358,12 @@ it('unlocks saved Agent Identity for the current Runtime connection', async () =
     suggestedUserPoolId: '3ea6c536-152c-435d-8040-9fcb3597476a',
   }));
   const unlockUserTokenVault = vi.fn(async () => ({
+    exists: true,
+    runtimeId: 'runtime-1',
+    userPoolId: '3ea6c536-152c-435d-8040-9fcb3597476a',
+    subject: 'user-1',
+  }));
+  const loginAgentIdentity = vi.fn(async () => ({
     exists: true,
     runtimeId: 'runtime-1',
     userPoolId: '3ea6c536-152c-435d-8040-9fcb3597476a',
@@ -382,6 +388,7 @@ it('unlocks saved Agent Identity for the current Runtime connection', async () =
         suggestedUserPoolId: '3ea6c536-152c-435d-8040-9fcb3597476a',
       }),
       saveAgentIdentityConfig,
+      loginAgentIdentity,
       userTokenVaultStatus,
       unlockUserTokenVault,
       forgetUserTokenVault: vi.fn(async () => {}),
@@ -417,7 +424,7 @@ it('unlocks saved Agent Identity for the current Runtime connection', async () =
   expect(JSON.stringify(renderer.toJSON())).toContain(
     m.settingsConnectionSummary(
       'user-1 · 3ea6c536-152c-435d-8040-9fcb3597476a',
-      m.settingsLegacyJwtAuthenticated(),
+      m.settingsAgentIdentityAuthenticated(),
       '2026-10-29T12:00:00Z',
     ),
   );
@@ -434,30 +441,38 @@ it('unlocks saved Agent Identity for the current Runtime connection', async () =
   await act(async () =>
     renderer.root
       .findAllByType('button')
-      .find((button) => button.children.includes(m.saveBusinessIdentity()))!
+      .find((button) => button.children.includes(m.saveAgentIdentityUserPool()))!
       .props.onClick(),
   );
   expect(saveAgentIdentityConfig).toHaveBeenCalledWith(
     '3ea6c536-152c-435d-8040-9fcb3597476a',
   );
   const input = renderer.root.findByProps({
-    'aria-label': m.vaultUnlockHint(),
+    'aria-label': m.agentIdentityPassphrase(),
   });
+  const loginButton = () =>
+    renderer.root
+      .findAllByType('button')
+      .find((button) => button.children.includes(m.loginWithAgentIdentity()))!;
   const unlockButton = () =>
     renderer.root
       .findAllByType('button')
-      .find((button) => button.children.includes(m.unlockAndSignIn()))!;
+      .find((button) => button.children.includes(m.unlockSavedAgentIdentity()))!;
+  expect(loginButton().props.disabled).toBe(true);
   expect(unlockButton().props.disabled).toBe(true);
   await act(async () =>
     input.props.onChange({ target: { value: 'correct horse battery' } }),
   );
+  expect(loginButton().props.disabled).toBe(false);
   expect(unlockButton().props.disabled).toBe(false);
-  await act(async () => unlockButton().props.onClick());
-  expect(unlockUserTokenVault).toHaveBeenCalledWith(
+  await act(async () => loginButton().props.onClick());
+  expect(loginAgentIdentity).toHaveBeenCalledWith(
     'runtime-1',
+    '3ea6c536-152c-435d-8040-9fcb3597476a',
     'correct horse battery',
     7,
   );
+  expect(unlockUserTokenVault).not.toHaveBeenCalled();
   expect(status).toHaveBeenCalledTimes(1);
   expect(onConnection).toHaveBeenCalledWith(
     expect.objectContaining({

@@ -85,6 +85,13 @@ export interface AgentIdentityConfigResult {
   error?: SafeError;
 }
 
+export interface AgentIdentityLoginRequest {
+  runtimeId: string;
+  userPoolId?: string;
+  passphrase: string;
+  connectionEpoch: number;
+}
+
 export interface AgentListRequest {
   connectionEpoch: number;
   agentId: string;
@@ -2696,6 +2703,9 @@ export const Platform = {
   },
   listRuntimes(r: RuntimeListRequest): Promise<RuntimeListResult> {
     return call("Platform.ListRuntimes", r);
+  },
+  loginAgentIdentity(r: AgentIdentityLoginRequest): Promise<UserTokenVaultStatusResult> {
+    return call("Platform.LoginAgentIdentity", r);
   },
   regions(): Promise<RegionListResult> {
     return call("Platform.Regions");

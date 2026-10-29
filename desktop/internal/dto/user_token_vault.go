@@ -23,6 +23,13 @@ type UserTokenVaultUnlockRequest struct {
 	ConnectionEpoch uint64 `json:"connectionEpoch,omitempty"`
 }
 
+type AgentIdentityLoginRequest struct {
+	RuntimeID       string `json:"runtimeId"`
+	UserPoolID      string `json:"userPoolId,omitempty"`
+	Passphrase      string `json:"passphrase"`
+	ConnectionEpoch uint64 `json:"connectionEpoch"`
+}
+
 type UserTokenVaultSaveRequest struct {
 	Passphrase   string `json:"passphrase"`
 	RuntimeID    string `json:"runtimeId"`
