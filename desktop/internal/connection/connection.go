@@ -164,7 +164,7 @@ func (c *Client) Request(ctx context.Context, epoch uint64, method, path string,
 		req.Header.Set("X-User-Id", owner)
 		req.Header.Del("X-Jwt-Token")
 	}
-	for _, k := range []string{"Idempotency-Key", "If-Match", "X-MPA-Channel-Key", "X-Jwt-Token", "Content-Type"} {
+	for _, k := range []string{"Idempotency-Key", "If-Match", "If-None-Match", "X-MPA-Channel-Key", "X-Jwt-Token", "Content-Type"} {
 		if v := headers.Get(k); v != "" {
 			req.Header.Set(k, v)
 		}

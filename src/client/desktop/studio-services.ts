@@ -138,6 +138,18 @@ export function createStudioServices(bridge?: typeof Usage): {
         profile(
           await native().readMainProfile({ connectionEpoch, mpaInstanceId }),
         ),
+      createMainProfile: async (connectionEpoch, value) =>
+        profile(
+          await native().createMainProfile({ connectionEpoch, profile: value }),
+        ),
+      saveMainProfile: async (connectionEpoch, snapshotId, value) =>
+        profile(
+          await native().saveMainProfile({
+            connectionEpoch,
+            snapshotId,
+            profile: value,
+          }),
+        ),
       saveMainProfileInstructions: async (
         connectionEpoch,
         snapshotId,
