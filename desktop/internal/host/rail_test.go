@@ -220,3 +220,29 @@ func TestSidebarPreviewImages(t *testing.T) {
 		t.Logf("%s %d bytes", path, info.Size())
 	}
 }
+
+func TestRuntimeManagerIsBesideNativeChooser(t *testing.T) {
+	localization.SetCurrentLocale("en")
+	defer localization.SetCurrentLocale("")
+	var action string
+	rail := &nativeRail{state: ShellState{View: "runtimes", Assistants: []NavigationItem{{ID: "r-one", Title: "One"}}}, request: func(a, id string) { action = a }}
+	tt := ui.NewTester(rail.sidebar, 240, 700)
+	tt.Frame()
+	chooser, found := tt.Find("Runtime")
+	if !found {
+		t.Fatal("Runtime chooser missing")
+	}
+	manager, found := tt.Find("Manage Runtimes")
+	if !found || manager.Y < chooser.Y+chooser.H {
+		t.Fatalf("management entry is not below chooser: %v %v", chooser, manager)
+	}
+	if err := tt.Click("Manage Runtimes"); err != nil {
+		t.Fatal(err)
+	}
+	if action != "runtimes" {
+		t.Fatalf("unexpected navigation %s", action)
+	}
+	if !validShellState(ShellState{View: "runtimes"}) {
+		t.Fatal("management view rejected")
+	}
+}

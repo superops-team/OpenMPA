@@ -3907,6 +3907,422 @@ export interface Messages {
    * `可以关闭此界面或切换渠道。原绑定请求会保留，不会取消服务端的绑定操作。`
    */
   channelBindingRetained(): string;
+  /**
+   * `管理 Runtime`
+   */
+  manageRuntimes(): string;
+  /**
+   * `创建、连接和删除 MPA Runtime，并查看操作进度。`
+   */
+  mpaManagerHint(): string;
+  /**
+   * `创建 MPA`
+   */
+  mpaCreate(): string;
+  /**
+   * `准备基础信息、PostgreSQL 和 OpenViking，最后确认创建。`
+   */
+  mpaCreateHint(): string;
+  /**
+   * `基础信息`
+   */
+  mpaBasicStep(): string;
+  /**
+   * `PostgreSQL`
+   */
+  mpaPgStep(): string;
+  /**
+   * `OpenViking 与存储`
+   */
+  mpaOvStep(): string;
+  /**
+   * `4–64 个英文字母、数字、下划线或连字符。`
+   */
+  mpaNameHint(): string;
+  /**
+   * `自动创建或复用 PostgreSQL Workspace，为此 MPA 准备独立业务空间及 aidb 数据库。`
+   */
+  mpaAutoPgHint(): string;
+  /**
+   * `使用已配置的 PostgreSQL 连接；留空沿用引擎配置。`
+   */
+  mpaManualPgHint(): string;
+  /**
+   * `PostgreSQL 主机`
+   */
+  mpaPgHost(): string;
+  /**
+   * `PostgreSQL 端口`
+   */
+  mpaPgPort(): string;
+  /**
+   * `自动准备 OpenViking`
+   */
+  mpaAutoOv(): string;
+  /**
+   * `自动准备独立的 OpenViking 库。创建涉及付费云资源，费用按云平台规则收取。`
+   */
+  mpaAutoOvHint(): string;
+  /**
+   * `使用已有 OpenViking（可选）`
+   */
+  mpaManualOv(): string;
+  /**
+   * `连接地址、资源 ID 和 API Key 须全部填写或全部留空。API Key 只用于本次提交，不保存到草稿。`
+   */
+  mpaManualOvHint(): string;
+  /**
+   * `OpenViking 地址`
+   */
+  mpaOvUrl(): string;
+  /**
+   * `OpenViking 资源 ID`
+   */
+  mpaOvResource(): string;
+  /**
+   * `OpenViking API Key`
+   */
+  mpaOvKey(): string;
+  /**
+   * `TOS 存储桶`
+   */
+  mpaTosBucket(): string;
+  /**
+   * `从当前账号和地域选择 agentkit-platform- 前缀的桶，用于存储输出文件；可不配置。`
+   */
+  mpaTosHint(): string;
+  /**
+   * `下一步`
+   */
+  mpaNext(): string;
+  /**
+   * `上一步`
+   */
+  mpaBack(): string;
+  /**
+   * `确认创建`
+   */
+  mpaSubmit(): string;
+  /**
+   * `关闭`
+   */
+  mpaClose(): string;
+  /**
+   * `取消创建任务`
+   */
+  mpaCancelCreation(): string;
+  /**
+   * `取消会停止后续步骤，已创建的云资源会保留。`
+   */
+  mpaCancelHint(): string;
+  /**
+   * `以原请求重试`
+   */
+  mpaRetryCreation(): string;
+  /**
+   * `新建另一个 MPA`
+   */
+  mpaNewCreation(): string;
+  /**
+   * `核对状态`
+   */
+  mpaReadStatus(): string;
+  /**
+   * `查看进度`
+   */
+  mpaOpenTask(): string;
+  /**
+   * `创建结果尚未确认。请先核对状态，保留原请求身份。`
+   */
+  mpaCreateUnknown(): string;
+  /**
+   * `原请求使用了手动 OpenViking，请重新输入 API Key 后重试。`
+   */
+  mpaPendingSecret(): string;
+  /**
+   * `关闭窗口后任务继续执行，可在操作记录中查看。`
+   */
+  mpaBackgroundHint(): string;
+  /**
+   * `创建引擎不可用，请检查应用安装并重试。`
+   */
+  mpaEngineUnavailable(): string;
+  /**
+   * `重新加载`
+   */
+  mpaRetryLoad(): string;
+  /**
+   * `操作记录`
+   */
+  mpaOperationHistory(): string;
+  /**
+   * `当前地域还没有操作记录。`
+   */
+  mpaNoOperations(): string;
+  /**
+   * `删除 MPA`
+   */
+  mpaDelete(): string;
+  /**
+   * `确认前检查会话及资源归属。删除无法撤销。`
+   */
+  mpaDeleteHint(): string;
+  /**
+   * `正在检查会话和清理范围…`
+   */
+  mpaDeleteChecking(): string;
+  /**
+   * `共 {total} 个会话：{active} 个活动，{idle} 个空闲。`
+   */
+  mpaDeleteSessions(total: string, active: string, idle: string): string;
+  /**
+   * `清理计划`
+   */
+  mpaDeletePlan(): string;
+  /**
+   * `保留的资源`
+   */
+  mpaDeleteRetained(): string;
+  /**
+   * `共享数据库、Workspace、网络、APIG 和其他共享资源会保留。`
+   */
+  mpaDeleteSharedHint(): string;
+  /**
+   * `仍有活动会话，请结束这些会话后重新检查。`
+   */
+  mpaDeleteActive(): string;
+  /**
+   * `存在活动生命周期操作，或 Runtime 尚未就绪。请稍后重新检查。`
+   */
+  mpaDeleteBusy(): string;
+  /**
+   * `Runtime 或会话已变化，请重新检查删除范围。`
+   */
+  mpaDeleteChanged(): string;
+  /**
+   * `删除结果尚未确认。核对状态不会重复执行删除；请稍后重新检查。`
+   */
+  mpaDeleteUnknown(): string;
+  /**
+   * `确认删除`
+   */
+  mpaDeleteConfirm(): string;
+  /**
+   * `重新检查删除范围`
+   */
+  mpaDeleteRecheck(): string;
+  /**
+   * `连接此 Runtime`
+   */
+  mpaConnectCreated(): string;
+  /**
+   * `清理空闲会话`
+   */
+  mpaStageSessions(): string;
+  /**
+   * `清理专属受管资源`
+   */
+  mpaStageResources(): string;
+  /**
+   * `删除 Runtime`
+   */
+  mpaStageRuntime(): string;
+  /**
+   * `清理专属 Worker`
+   */
+  mpaStageWorker(): string;
+  /**
+   * `清理专属技能空间`
+   */
+  mpaStageSkills(): string;
+  /**
+   * `准备云资源`
+   */
+  mpaStagePreparing(): string;
+  /**
+   * `检查配置和归属`
+   */
+  mpaStageChecking(): string;
+  /**
+   * `完成`
+   */
+  mpaStageComplete(): string;
+  /**
+   * `执行中`
+   */
+  mpaRunning(): string;
+  /**
+   * `正在取消`
+   */
+  mpaCancelling(): string;
+  /**
+   * `已完成`
+   */
+  mpaSucceeded(): string;
+  /**
+   * `失败`
+   */
+  mpaFailed(): string;
+  /**
+   * `已取消`
+   */
+  mpaCancelled(): string;
+  /**
+   * `结果待确认`
+   */
+  mpaUnknown(): string;
+  /**
+   * `请求 ID`
+   */
+  mpaRequestId(): string;
+  /**
+   * `诊断`
+   */
+  mpaSafeDiagnostic(): string;
+  /**
+   * `历史诊断`
+   */
+  mpaHistoricalDiagnostic(): string;
+  /**
+   * `以下为创建过程中的历史记录。创建已完成，这些记录不代表当前状态。`
+   */
+  mpaHistoricalDiagnosticHint(): string;
+  /**
+   * `请登录云账号后管理 Runtime。`
+   */
+  mpaReauthenticate(): string;
+  /**
+   * `失败或取消不会回滚已创建的资源。重试会沿用原请求身份。`
+   */
+  mpaResourcesMayRemain(): string;
+  /**
+   * `请检查名称、描述、实例上限及资源字段。`
+   */
+  mpaInvalidForm(): string;
+  /**
+   * `请求未被接受。请检查配置或权限后重试。`
+   */
+  mpaRequestRejected(): string;
+  /**
+   * `已恢复之前的创建请求；请先核对状态。`
+   */
+  mpaCreateRecovery(): string;
+  /**
+   * `使用 Studio 默认 Runtime 和 Worker 镜像，创建时固定实际版本。`
+   */
+  mpaDefaultImages(): string;
+  /**
+   * `准备运行角色`
+   */
+  mpaStageIam(): string;
+  /**
+   * `准备管理 Workspace`
+   */
+  mpaStageAdminWorkspace(): string;
+  /**
+   * `准备业务 Workspace`
+   */
+  mpaStageBusinessWorkspace(): string;
+  /**
+   * `准备数据库`
+   */
+  mpaStageDatabase(): string;
+  /**
+   * `准备网络`
+   */
+  mpaStageNetwork(): string;
+  /**
+   * `准备 APIG`
+   */
+  mpaStageGateway(): string;
+  /**
+   * `准备 Worker`
+   */
+  mpaStageCreateWorker(): string;
+  /**
+   * `准备技能空间`
+   */
+  mpaStageCreateSkills(): string;
+  /**
+   * `准备 OpenViking`
+   */
+  mpaStageOpenViking(): string;
+  /**
+   * `部署 Runtime`
+   */
+  mpaStageDeploying(): string;
+  /**
+   * `验证就绪状态`
+   */
+  mpaStageVerifying(): string;
+  /**
+   * `此名称已被占用，请修改名称。`
+   */
+  mpaNameTaken(): string;
+  /**
+   * `正在加载管理组件和操作记录，首次使用可能需要几分钟…`
+   */
+  mpaLoadingManagement(): string;
+  /**
+   * `当前地域未提供 MPA 创建配置，请选择其他地域或检查部署配置。`
+   */
+  mpaCreateUnconfigured(): string;
+  /**
+   * `正在读取 TOS 桶…`
+   */
+  mpaTosLoading(): string;
+  /**
+   * `刷新桶列表`
+   */
+  mpaTosRefresh(): string;
+  /**
+   * `搜索桶名`
+   */
+  mpaTosSearch(): string;
+  /**
+   * `不配置输出桶`
+   */
+  mpaTosNone(): string;
+  /**
+   * `当前地域没有可选的 agentkit-platform- 前缀桶。`
+   */
+  mpaTosEmpty(): string;
+  /**
+   * `没有匹配的桶。`
+   */
+  mpaTosNoMatches(): string;
+  /**
+   * `已保存的选择（未在当前列表中找到）`
+   */
+  mpaTosSaved(): string;
+  /**
+   * `请选择 agentkit-platform- 前缀的有效桶。`
+   */
+  mpaTosInvalid(): string;
+  /**
+   * `会话输出存储`
+   */
+  mpaTosTitle(): string;
+  /**
+   * `可选。选择存储桶，持久保存每个会话的输出目录，使用沙箱 IAM Role 鉴权。未选桶时文件保存在沙箱本地目录。`
+   */
+  mpaTosDescription(): string;
+  /**
+   * `请选择已有资源`
+   */
+  mpaTosSelectExisting(): string;
+  /**
+   * `实际服务区域：{region} · 已加载 {loaded}/{total}`
+   */
+  mpaTosLoaded(region: string, loaded: string, total: string): string;
+  /**
+   * `创建时为共享角色追加所选桶的会话输出访问权限，使用该角色的其他运行时和沙箱也将获得相同权限。`
+   */
+  mpaTosPermissions(): string;
+  /**
+   * `清除桶选择`
+   */
+  mpaTosClear(): string;
 }
 
 const catalog = createCatalog<Messages>({
@@ -4893,6 +5309,110 @@ const catalog = createCatalog<Messages>({
     "channelDeliveryNotObserved": [],
     "channelMissingConfiguration": [],
     "channelBindingRetained": [],
+    "manageRuntimes": [],
+    "mpaManagerHint": [],
+    "mpaCreate": [],
+    "mpaCreateHint": [],
+    "mpaBasicStep": [],
+    "mpaPgStep": [],
+    "mpaOvStep": [],
+    "mpaNameHint": [],
+    "mpaAutoPgHint": [],
+    "mpaManualPgHint": [],
+    "mpaPgHost": [],
+    "mpaPgPort": [],
+    "mpaAutoOv": [],
+    "mpaAutoOvHint": [],
+    "mpaManualOv": [],
+    "mpaManualOvHint": [],
+    "mpaOvUrl": [],
+    "mpaOvResource": [],
+    "mpaOvKey": [],
+    "mpaTosBucket": [],
+    "mpaTosHint": [],
+    "mpaNext": [],
+    "mpaBack": [],
+    "mpaSubmit": [],
+    "mpaClose": [],
+    "mpaCancelCreation": [],
+    "mpaCancelHint": [],
+    "mpaRetryCreation": [],
+    "mpaNewCreation": [],
+    "mpaReadStatus": [],
+    "mpaOpenTask": [],
+    "mpaCreateUnknown": [],
+    "mpaPendingSecret": [],
+    "mpaBackgroundHint": [],
+    "mpaEngineUnavailable": [],
+    "mpaRetryLoad": [],
+    "mpaOperationHistory": [],
+    "mpaNoOperations": [],
+    "mpaDelete": [],
+    "mpaDeleteHint": [],
+    "mpaDeleteChecking": [],
+    "mpaDeleteSessions": ["total", "active", "idle"],
+    "mpaDeletePlan": [],
+    "mpaDeleteRetained": [],
+    "mpaDeleteSharedHint": [],
+    "mpaDeleteActive": [],
+    "mpaDeleteBusy": [],
+    "mpaDeleteChanged": [],
+    "mpaDeleteUnknown": [],
+    "mpaDeleteConfirm": [],
+    "mpaDeleteRecheck": [],
+    "mpaConnectCreated": [],
+    "mpaStageSessions": [],
+    "mpaStageResources": [],
+    "mpaStageRuntime": [],
+    "mpaStageWorker": [],
+    "mpaStageSkills": [],
+    "mpaStagePreparing": [],
+    "mpaStageChecking": [],
+    "mpaStageComplete": [],
+    "mpaRunning": [],
+    "mpaCancelling": [],
+    "mpaSucceeded": [],
+    "mpaFailed": [],
+    "mpaCancelled": [],
+    "mpaUnknown": [],
+    "mpaRequestId": [],
+    "mpaSafeDiagnostic": [],
+    "mpaHistoricalDiagnostic": [],
+    "mpaHistoricalDiagnosticHint": [],
+    "mpaReauthenticate": [],
+    "mpaResourcesMayRemain": [],
+    "mpaInvalidForm": [],
+    "mpaRequestRejected": [],
+    "mpaCreateRecovery": [],
+    "mpaDefaultImages": [],
+    "mpaStageIam": [],
+    "mpaStageAdminWorkspace": [],
+    "mpaStageBusinessWorkspace": [],
+    "mpaStageDatabase": [],
+    "mpaStageNetwork": [],
+    "mpaStageGateway": [],
+    "mpaStageCreateWorker": [],
+    "mpaStageCreateSkills": [],
+    "mpaStageOpenViking": [],
+    "mpaStageDeploying": [],
+    "mpaStageVerifying": [],
+    "mpaNameTaken": [],
+    "mpaLoadingManagement": [],
+    "mpaCreateUnconfigured": [],
+    "mpaTosLoading": [],
+    "mpaTosRefresh": [],
+    "mpaTosSearch": [],
+    "mpaTosNone": [],
+    "mpaTosEmpty": [],
+    "mpaTosNoMatches": [],
+    "mpaTosSaved": [],
+    "mpaTosInvalid": [],
+    "mpaTosTitle": [],
+    "mpaTosDescription": [],
+    "mpaTosSelectExisting": [],
+    "mpaTosLoaded": ["region", "loaded", "total"],
+    "mpaTosPermissions": [],
+    "mpaTosClear": [],
   },
   messages: {
     "zh-Hans": {
@@ -5872,6 +6392,110 @@ const catalog = createCatalog<Messages>({
       "channelDeliveryNotObserved": "尚未观测到",
       "channelMissingConfiguration": "未配置",
       "channelBindingRetained": "可以关闭此界面或切换渠道。原绑定请求会保留，不会取消服务端的绑定操作。",
+      "manageRuntimes": "管理 Runtime",
+      "mpaManagerHint": "创建、连接和删除 MPA Runtime，并查看操作进度。",
+      "mpaCreate": "创建 MPA",
+      "mpaCreateHint": "准备基础信息、PostgreSQL 和 OpenViking，最后确认创建。",
+      "mpaBasicStep": "基础信息",
+      "mpaPgStep": "PostgreSQL",
+      "mpaOvStep": "OpenViking 与存储",
+      "mpaNameHint": "4–64 个英文字母、数字、下划线或连字符。",
+      "mpaAutoPgHint": "自动创建或复用 PostgreSQL Workspace，为此 MPA 准备独立业务空间及 aidb 数据库。",
+      "mpaManualPgHint": "使用已配置的 PostgreSQL 连接；留空沿用引擎配置。",
+      "mpaPgHost": "PostgreSQL 主机",
+      "mpaPgPort": "PostgreSQL 端口",
+      "mpaAutoOv": "自动准备 OpenViking",
+      "mpaAutoOvHint": "自动准备独立的 OpenViking 库。创建涉及付费云资源，费用按云平台规则收取。",
+      "mpaManualOv": "使用已有 OpenViking（可选）",
+      "mpaManualOvHint": "连接地址、资源 ID 和 API Key 须全部填写或全部留空。API Key 只用于本次提交，不保存到草稿。",
+      "mpaOvUrl": "OpenViking 地址",
+      "mpaOvResource": "OpenViking 资源 ID",
+      "mpaOvKey": "OpenViking API Key",
+      "mpaTosBucket": "TOS 存储桶",
+      "mpaTosHint": "从当前账号和地域选择 agentkit-platform- 前缀的桶，用于存储输出文件；可不配置。",
+      "mpaNext": "下一步",
+      "mpaBack": "上一步",
+      "mpaSubmit": "确认创建",
+      "mpaClose": "关闭",
+      "mpaCancelCreation": "取消创建任务",
+      "mpaCancelHint": "取消会停止后续步骤，已创建的云资源会保留。",
+      "mpaRetryCreation": "以原请求重试",
+      "mpaNewCreation": "新建另一个 MPA",
+      "mpaReadStatus": "核对状态",
+      "mpaOpenTask": "查看进度",
+      "mpaCreateUnknown": "创建结果尚未确认。请先核对状态，保留原请求身份。",
+      "mpaPendingSecret": "原请求使用了手动 OpenViking，请重新输入 API Key 后重试。",
+      "mpaBackgroundHint": "关闭窗口后任务继续执行，可在操作记录中查看。",
+      "mpaEngineUnavailable": "创建引擎不可用，请检查应用安装并重试。",
+      "mpaRetryLoad": "重新加载",
+      "mpaOperationHistory": "操作记录",
+      "mpaNoOperations": "当前地域还没有操作记录。",
+      "mpaDelete": "删除 MPA",
+      "mpaDeleteHint": "确认前检查会话及资源归属。删除无法撤销。",
+      "mpaDeleteChecking": "正在检查会话和清理范围…",
+      "mpaDeleteSessions": "共 {total} 个会话：{active} 个活动，{idle} 个空闲。",
+      "mpaDeletePlan": "清理计划",
+      "mpaDeleteRetained": "保留的资源",
+      "mpaDeleteSharedHint": "共享数据库、Workspace、网络、APIG 和其他共享资源会保留。",
+      "mpaDeleteActive": "仍有活动会话，请结束这些会话后重新检查。",
+      "mpaDeleteBusy": "存在活动生命周期操作，或 Runtime 尚未就绪。请稍后重新检查。",
+      "mpaDeleteChanged": "Runtime 或会话已变化，请重新检查删除范围。",
+      "mpaDeleteUnknown": "删除结果尚未确认。核对状态不会重复执行删除；请稍后重新检查。",
+      "mpaDeleteConfirm": "确认删除",
+      "mpaDeleteRecheck": "重新检查删除范围",
+      "mpaConnectCreated": "连接此 Runtime",
+      "mpaStageSessions": "清理空闲会话",
+      "mpaStageResources": "清理专属受管资源",
+      "mpaStageRuntime": "删除 Runtime",
+      "mpaStageWorker": "清理专属 Worker",
+      "mpaStageSkills": "清理专属技能空间",
+      "mpaStagePreparing": "准备云资源",
+      "mpaStageChecking": "检查配置和归属",
+      "mpaStageComplete": "完成",
+      "mpaRunning": "执行中",
+      "mpaCancelling": "正在取消",
+      "mpaSucceeded": "已完成",
+      "mpaFailed": "失败",
+      "mpaCancelled": "已取消",
+      "mpaUnknown": "结果待确认",
+      "mpaRequestId": "请求 ID",
+      "mpaSafeDiagnostic": "诊断",
+      "mpaHistoricalDiagnostic": "历史诊断",
+      "mpaHistoricalDiagnosticHint": "以下为创建过程中的历史记录。创建已完成，这些记录不代表当前状态。",
+      "mpaReauthenticate": "请登录云账号后管理 Runtime。",
+      "mpaResourcesMayRemain": "失败或取消不会回滚已创建的资源。重试会沿用原请求身份。",
+      "mpaInvalidForm": "请检查名称、描述、实例上限及资源字段。",
+      "mpaRequestRejected": "请求未被接受。请检查配置或权限后重试。",
+      "mpaCreateRecovery": "已恢复之前的创建请求；请先核对状态。",
+      "mpaDefaultImages": "使用 Studio 默认 Runtime 和 Worker 镜像，创建时固定实际版本。",
+      "mpaStageIam": "准备运行角色",
+      "mpaStageAdminWorkspace": "准备管理 Workspace",
+      "mpaStageBusinessWorkspace": "准备业务 Workspace",
+      "mpaStageDatabase": "准备数据库",
+      "mpaStageNetwork": "准备网络",
+      "mpaStageGateway": "准备 APIG",
+      "mpaStageCreateWorker": "准备 Worker",
+      "mpaStageCreateSkills": "准备技能空间",
+      "mpaStageOpenViking": "准备 OpenViking",
+      "mpaStageDeploying": "部署 Runtime",
+      "mpaStageVerifying": "验证就绪状态",
+      "mpaNameTaken": "此名称已被占用，请修改名称。",
+      "mpaLoadingManagement": "正在加载管理组件和操作记录，首次使用可能需要几分钟…",
+      "mpaCreateUnconfigured": "当前地域未提供 MPA 创建配置，请选择其他地域或检查部署配置。",
+      "mpaTosLoading": "正在读取 TOS 桶…",
+      "mpaTosRefresh": "刷新桶列表",
+      "mpaTosSearch": "搜索桶名",
+      "mpaTosNone": "不配置输出桶",
+      "mpaTosEmpty": "当前地域没有可选的 agentkit-platform- 前缀桶。",
+      "mpaTosNoMatches": "没有匹配的桶。",
+      "mpaTosSaved": "已保存的选择（未在当前列表中找到）",
+      "mpaTosInvalid": "请选择 agentkit-platform- 前缀的有效桶。",
+      "mpaTosTitle": "会话输出存储",
+      "mpaTosDescription": "可选。选择存储桶，持久保存每个会话的输出目录，使用沙箱 IAM Role 鉴权。未选桶时文件保存在沙箱本地目录。",
+      "mpaTosSelectExisting": "请选择已有资源",
+      "mpaTosLoaded": "实际服务区域：{region} · 已加载 {loaded}/{total}",
+      "mpaTosPermissions": "创建时为共享角色追加所选桶的会话输出访问权限，使用该角色的其他运行时和沙箱也将获得相同权限。",
+      "mpaTosClear": "清除桶选择",
     },
     "en": {
       "settings": "Settings",
@@ -6850,6 +7474,110 @@ const catalog = createCatalog<Messages>({
       "channelDeliveryNotObserved": "Not observed yet",
       "channelMissingConfiguration": "Not configured",
       "channelBindingRetained": "You can close this view or switch channels. This keeps the original binding request; it does not cancel it on the server.",
+      "manageRuntimes": "Manage Runtimes",
+      "mpaManagerHint": "Create, connect and delete MPA Runtimes, and follow operation progress.",
+      "mpaCreate": "Create MPA",
+      "mpaCreateHint": "Configure the basics, PostgreSQL and OpenViking, then confirm creation.",
+      "mpaBasicStep": "Basics",
+      "mpaPgStep": "PostgreSQL",
+      "mpaOvStep": "OpenViking & storage",
+      "mpaNameHint": "4–64 ASCII letters, digits, underscores or hyphens.",
+      "mpaAutoPgHint": "Automatically create or reuse PostgreSQL Workspaces, with a dedicated business workspace and aidb database for this MPA.",
+      "mpaManualPgHint": "Use the configured PostgreSQL connection; leave blank to use the engine configuration.",
+      "mpaPgHost": "PostgreSQL host",
+      "mpaPgPort": "PostgreSQL port",
+      "mpaAutoOv": "Prepare OpenViking automatically",
+      "mpaAutoOvHint": "Prepare a dedicated OpenViking database. Creation provisions paid cloud resources billed by the cloud provider.",
+      "mpaManualOv": "Use existing OpenViking (optional)",
+      "mpaManualOvHint": "Provide the URL, resource ID and API key together, or leave all blank. The API key is used for this submission and is never saved in drafts.",
+      "mpaOvUrl": "OpenViking URL",
+      "mpaOvResource": "OpenViking resource ID",
+      "mpaOvKey": "OpenViking API key",
+      "mpaTosBucket": "TOS bucket",
+      "mpaTosHint": "Choose an agentkit-platform- bucket in the current account and region for output files, or leave it unconfigured.",
+      "mpaNext": "Next",
+      "mpaBack": "Back",
+      "mpaSubmit": "Confirm creation",
+      "mpaClose": "Close",
+      "mpaCancelCreation": "Cancel creation task",
+      "mpaCancelHint": "Cancellation stops subsequent steps. Cloud resources already created are retained.",
+      "mpaRetryCreation": "Retry original request",
+      "mpaNewCreation": "Create another MPA",
+      "mpaReadStatus": "Check status",
+      "mpaOpenTask": "View progress",
+      "mpaCreateUnknown": "The creation outcome is unconfirmed. Check status and keep the original request identity.",
+      "mpaPendingSecret": "The original request used manual OpenViking. Enter its API key again before retrying.",
+      "mpaBackgroundHint": "The task continues after closing this dialog. Reopen it from operation history.",
+      "mpaEngineUnavailable": "The lifecycle engine is unavailable. Check your app installation and retry.",
+      "mpaRetryLoad": "Reload",
+      "mpaOperationHistory": "Operation history",
+      "mpaNoOperations": "No operations in this region yet.",
+      "mpaDelete": "Delete MPA",
+      "mpaDeleteHint": "Review sessions and resource ownership before confirming. Deletion cannot be undone.",
+      "mpaDeleteChecking": "Checking sessions and cleanup scope…",
+      "mpaDeleteSessions": "{total} sessions: {active} active, {idle} idle.",
+      "mpaDeletePlan": "Cleanup plan",
+      "mpaDeleteRetained": "Retained resources",
+      "mpaDeleteSharedHint": "Shared databases, Workspaces, networks, APIG and other shared resources are retained.",
+      "mpaDeleteActive": "Active sessions remain. Finish them and check again.",
+      "mpaDeleteBusy": "A lifecycle operation is active, or the Runtime is not ready. Check again later.",
+      "mpaDeleteChanged": "The Runtime or its sessions changed. Review the cleanup scope again.",
+      "mpaDeleteUnknown": "The deletion outcome is unconfirmed. Checking status does not repeat deletion; check again later.",
+      "mpaDeleteConfirm": "Confirm deletion",
+      "mpaDeleteRecheck": "Review cleanup scope again",
+      "mpaConnectCreated": "Connect to this Runtime",
+      "mpaStageSessions": "Delete idle sessions",
+      "mpaStageResources": "Delete owned managed resources",
+      "mpaStageRuntime": "Delete Runtime",
+      "mpaStageWorker": "Delete owned Worker",
+      "mpaStageSkills": "Delete owned skill space",
+      "mpaStagePreparing": "Prepare cloud resources",
+      "mpaStageChecking": "Check configuration and ownership",
+      "mpaStageComplete": "Complete",
+      "mpaRunning": "Running",
+      "mpaCancelling": "Cancelling",
+      "mpaSucceeded": "Succeeded",
+      "mpaFailed": "Failed",
+      "mpaCancelled": "Cancelled",
+      "mpaUnknown": "Outcome unconfirmed",
+      "mpaRequestId": "Request ID",
+      "mpaSafeDiagnostic": "Diagnostic",
+      "mpaHistoricalDiagnostic": "Diagnostic history",
+      "mpaHistoricalDiagnosticHint": "These records are from the creation process. Creation is complete; they do not describe the current state.",
+      "mpaReauthenticate": "Sign in to your cloud account to manage Runtimes.",
+      "mpaResourcesMayRemain": "Failure or cancellation does not roll back created resources. Retries reuse the original request identity.",
+      "mpaInvalidForm": "Check the name, description, instance limit and resource fields.",
+      "mpaRequestRejected": "The request was not accepted. Check configuration or permissions before retrying.",
+      "mpaCreateRecovery": "Restored the previous creation request. Check its status first.",
+      "mpaDefaultImages": "Use the Studio default Runtime and Worker images, with their actual versions pinned during creation.",
+      "mpaStageIam": "Prepare Runtime role",
+      "mpaStageAdminWorkspace": "Prepare management Workspace",
+      "mpaStageBusinessWorkspace": "Prepare business Workspace",
+      "mpaStageDatabase": "Prepare databases",
+      "mpaStageNetwork": "Prepare network",
+      "mpaStageGateway": "Prepare APIG",
+      "mpaStageCreateWorker": "Prepare Worker",
+      "mpaStageCreateSkills": "Prepare skill space",
+      "mpaStageOpenViking": "Prepare OpenViking",
+      "mpaStageDeploying": "Deploy Runtime",
+      "mpaStageVerifying": "Verify readiness",
+      "mpaNameTaken": "This name is already in use. Choose another name.",
+      "mpaLoadingManagement": "Loading management components and history. First use may take a few minutes…",
+      "mpaCreateUnconfigured": "MPA creation is not configured for this region. Choose another region or check the deployment configuration.",
+      "mpaTosLoading": "Loading TOS buckets…",
+      "mpaTosRefresh": "Refresh buckets",
+      "mpaTosSearch": "Search buckets",
+      "mpaTosNone": "No output bucket",
+      "mpaTosEmpty": "No eligible agentkit-platform- buckets in this region.",
+      "mpaTosNoMatches": "No matching buckets.",
+      "mpaTosSaved": "Saved selection (not found in the current list)",
+      "mpaTosInvalid": "Choose a valid bucket with the agentkit-platform- prefix.",
+      "mpaTosTitle": "Session output storage",
+      "mpaTosDescription": "Optional. Choose a bucket to persist each session’s output directory using the sandbox IAM role. Without a bucket, files remain in the sandbox’s local directory.",
+      "mpaTosSelectExisting": "Select an existing resource",
+      "mpaTosLoaded": "Service region: {region} · Loaded {loaded}/{total}",
+      "mpaTosPermissions": "Creation adds session-output access to the selected bucket for the shared role. Other runtimes and sandboxes using that role receive the same permissions.",
+      "mpaTosClear": "Clear bucket selection",
     },
   },
 });

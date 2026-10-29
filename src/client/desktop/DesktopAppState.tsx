@@ -38,7 +38,8 @@ type View =
   | 'settings'
   | 'knowledge'
   | 'resources'
-  | 'collaboration';
+  | 'collaboration'
+  | 'runtimes';
 export function useDesktopAppState({
   services,
 }: {
@@ -219,6 +220,22 @@ export function useDesktopAppState({
       active = false;
     };
   }, [services, connection?.epoch]);
+  const refreshRuntimes = useCallback(async () => {
+    const current = await services.platform.status();
+    setPlatform(current);
+    if (!current.signedIn) {
+      setRuntimeOptions([]);
+      return;
+    }
+    const list = await services.platform.list(
+      current.region || 'cn-beijing',
+      'default',
+      true,
+    );
+    const latest = await services.platform.status();
+    if (latest.epoch === current.epoch && latest.signedIn)
+      setRuntimeOptions(list);
+  }, [services]);
   const refresh = useCallback(
     async (forceRefresh = false) => {
       if (!connection) return;
@@ -456,7 +473,8 @@ export function useDesktopAppState({
       action === 'channels' ||
       action === 'knowledge' ||
       action === 'resources' ||
-      action === 'collaboration'
+      action === 'collaboration' ||
+      action === 'runtimes'
     )
       navigate(action);
   });
@@ -473,19 +491,21 @@ export function useDesktopAppState({
         traceOpen,
         location: connection?.runtimeId ?? m.yourWorkspace(),
         pageTitle:
-          view === 'resources'
-            ? m.resources()
-            : view === 'collaboration'
-              ? m.collaboration()
-              : view === 'settings'
-                ? m.settings()
-                : view === 'channels'
-                  ? m.channels()
-                  : view === 'knowledge'
-                    ? m.knowledge()
-                    : view === 'tasks'
-                      ? m.scheduledTasks()
-                      : m.conversations(),
+          view === 'runtimes'
+            ? m.manageRuntimes()
+            : view === 'resources'
+              ? m.resources()
+              : view === 'collaboration'
+                ? m.collaboration()
+                : view === 'settings'
+                  ? m.settings()
+                  : view === 'channels'
+                    ? m.channels()
+                    : view === 'knowledge'
+                      ? m.knowledge()
+                      : view === 'tasks'
+                        ? m.scheduledTasks()
+                        : m.conversations(),
         selectedSession: selected ?? '',
         selectedSpace: '',
         selectedAssistant: connection?.runtimeId ?? '',
@@ -544,5 +564,6 @@ export function useDesktopAppState({
     refresh,
     createSession,
     connect,
+    refreshRuntimes,
   };
 }

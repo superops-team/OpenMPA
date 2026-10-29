@@ -9,6 +9,7 @@
   "devUrl": "http://127.0.0.1:5173",
   "devCommand": "npm --prefix .. run dev:desktop:frontend",
   "buildCommand": "npm --prefix .. run build:desktop:frontend",
+  "resources": ["build/mpa-engine.tar.gz"],
   "i18n": {
     "dir": "locales",
     "source": "zh-Hans"

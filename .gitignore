@@ -23,6 +23,8 @@ data/
 .openmpa/
 desktop/build/
 desktop/.mygo/
+desktop/mpa-engine/.venv/
+desktop/mpa-engine/.pytest_cache/
 desktop/verify-live
 desktop/go.work
 desktop/go.work.sum

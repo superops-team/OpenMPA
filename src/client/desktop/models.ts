@@ -98,6 +98,7 @@ export interface AssistantConfigVM {
   updatedAt?: string;
 }
 export interface PlatformVM {
+  scope?: string;
   signedIn: boolean;
   accountId: string;
   region: string;
@@ -220,6 +221,7 @@ export type DesktopSettingsSection =
   | 'Theme'
   | 'Language';
 export interface DesktopServices {
+  lifecycle?: import('./lifecycle-models').MpaLifecycleServices;
   resources?: ResourcesServices;
   collaboration?: CollaborationServices;
   host?: {

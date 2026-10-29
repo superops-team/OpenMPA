@@ -392,3 +392,30 @@ func (c *Connection) ConfigureChannelAuth(ctx context.Context, r dto.ChannelAuth
 	out := c.Client.State()
 	return dto.ConnectionStateResult{OK: e == nil, Value: only(&out, e), Error: e}
 }
+
+// ClearDeletedRuntime invalidates only the verified target of a completed
+// deletion. It cannot disconnect a newer account, region or Runtime selection.
+// This is a Go-only hook; it is not part of the WebView binding.
+func ClearDeletedRuntime(p *Platform, epoch uint64, region, runtimeID string) bool {
+	p.operationMu.Lock()
+	defer p.operationMu.Unlock()
+	cleared := false
+	_ = p.Cloud.WithEpoch(epoch, func() *dto.SafeError {
+		p.mu.RLock()
+		matches := p.boundCloudEpoch == epoch && p.target.Region == region && p.target.RuntimeID == runtimeID
+		p.mu.RUnlock()
+		if !matches {
+			return nil
+		}
+		p.Connection.Disconnect()
+		clearTarget(p)
+		if p.Settings != nil {
+			ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+			defer cancel()
+			_ = p.Settings.ClearRuntime(ctx)
+		}
+		cleared = true
+		return nil
+	})
+	return cleared
+}

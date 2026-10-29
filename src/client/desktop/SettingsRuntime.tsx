@@ -7,6 +7,7 @@ import { localized, useMessages } from './locale';
 type RuntimeSettingsState = ReturnType<typeof useDesktopSettingsState>;
 
 export function SettingsRuntime({
+  onManage,
   state,
   services,
   connection,
@@ -14,6 +15,7 @@ export function SettingsRuntime({
   selectingRuntimeId,
   setSelectingRuntimeId,
 }: {
+  onManage?: () => void;
   state: RuntimeSettingsState;
   services: DesktopServices;
   connection?: ConnectionVM;
@@ -48,6 +50,11 @@ export function SettingsRuntime({
   return (
     <section className="task-detail-card desktop-form">
       <h2>{m.settingsRuntimeDirectory()}</h2>
+      {onManage && (
+        <Button variant="outline" onClick={onManage}>
+          {m.manageRuntimes()}
+        </Button>
+      )}
       <p>
         {platform?.signedIn
           ? m.runtimeAccountContext(platform.accountId, region, project)

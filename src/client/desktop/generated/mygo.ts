@@ -495,20 +495,19 @@ export interface CollaborationSpaceRequest {
   spaceId: string;
 }
 
-/**
- * Config is a discriminated schedule. Only fields belonging to Type may be set.
- * The server, rather than a desktop timer, interprets and executes this schedule.
- */
 export interface Config {
-  type: string;
-  timezone?: string;
-  runAt?: string;
-  intervalSeconds?: number;
-  anchorAt?: string;
-  time?: string;
-  weekdays?: number[];
-  monthDays?: number[];
-  cronExpression?: string;
+  configured: boolean;
+  region: string;
+  postgresMode?: string;
+  pgHost?: string;
+  pgPort?: string;
+  businessWorkspaceMode?: string;
+  businessDatabaseName?: string;
+  openvikingMode?: string;
+  postgresMigrationRequired?: boolean;
+  runtimeImage?: string;
+  workerImage?: string;
+  error?: string;
 }
 
 export interface ConfigRequest {
@@ -521,6 +520,12 @@ export interface ConfigRequest {
   domain?: string;
   bindingType?: string;
   groupSessionScope?: string;
+}
+
+export interface ConfigResult {
+  ok: boolean;
+  value?: Config;
+  error?: SafeError;
 }
 
 export interface ConnectionState {
@@ -595,9 +600,8 @@ export interface CreatePageRequest {
 }
 
 export interface CreateRequest {
-  connectionEpoch: number;
-  sessionId?: string;
-  mpaInstanceId?: string;
+  platformEpoch: number;
+  input: CreationInput;
 }
 
 export interface CreateResult {
@@ -619,6 +623,61 @@ export interface CreatedResourceResult {
   ok: boolean;
   value?: CreatedResource;
   error?: SafeError;
+}
+
+export interface CreationInput {
+  requestId: string;
+  name: string;
+  description: string;
+  maxInstance: number;
+  region: string;
+  pgHost?: string;
+  pgPort?: string;
+  openvikingMode?: string;
+  openvikingUrl?: string;
+  openvikingResourceId?: string;
+  openvikingApiKey?: string;
+  businessWorkspaceMode?: string;
+  businessDatabaseName?: string;
+  tosBucket?: string;
+}
+
+export interface CreationList {
+  tasks: CreationTask[];
+}
+
+export interface CreationListResult {
+  ok: boolean;
+  value?: CreationList;
+  error?: SafeError;
+}
+
+export interface CreationResult {
+  ok: boolean;
+  value?: CreationTask;
+  error?: SafeError;
+}
+
+export interface CreationTask {
+  taskId: string;
+  requestId: string;
+  region: string;
+  name: string;
+  description: string;
+  maxInstance: number;
+  state: string;
+  stage: string;
+  error?: string;
+  pgHost?: string;
+  pgPort?: string;
+  openvikingMode?: string;
+  openvikingUrl?: string;
+  openvikingResourceId?: string;
+  businessWorkspaceMode?: string;
+  businessDatabaseName?: string;
+  tosBucket?: string;
+  latestDiagnostic?: Diagnostic;
+  result?: { runtime_id: string; skill_space_id: string; gateway_id: string };
 }
 
 export interface CurrentState {
@@ -644,6 +703,19 @@ export interface DeletePageRequest {
   expectedRevision: number;
 }
 
+export interface DeletePreview {
+  runtimeId: string;
+  region: string;
+  agentId: string;
+  name: string;
+  fingerprint: string;
+  canDelete: boolean;
+  blockers: string[];
+  sessionCounts: { total: number; active: number; idle: number };
+  cleanupPlan: PlanStage[];
+  retainedResources: PlanStage[];
+}
+
 export interface DeleteReceipt {
   sessionId: string;
   status: string;
@@ -655,6 +727,15 @@ export interface DeleteReceiptResult {
   ok: boolean;
   value?: DeleteReceipt;
   error?: SafeError;
+}
+
+export interface DeleteRequest {
+  platformEpoch: number;
+  region: string;
+  runtimeId: string;
+  operationId: string;
+  fingerprint: string;
+  confirm: boolean;
 }
 
 export interface DeleteResult {
@@ -687,6 +768,39 @@ export interface DeletedResourceResult {
   ok: boolean;
   value?: DeletedResource;
   error?: SafeError;
+}
+
+export interface DeletionList {
+  tasks: DeletionTask[];
+}
+
+export interface DeletionListResult {
+  ok: boolean;
+  value?: DeletionList;
+  error?: SafeError;
+}
+
+export interface DeletionRequest {
+  platformEpoch: number;
+  region: string;
+  operationId: string;
+}
+
+export interface DeletionResult {
+  ok: boolean;
+  value?: DeletionTask;
+  error?: SafeError;
+}
+
+export interface DeletionTask {
+  operationId: string;
+  runtimeId: string;
+  region: string;
+  name: string;
+  state: string;
+  stage: string;
+  error?: string;
+  updatedAt: number;
 }
 
 export interface Delivery {
@@ -726,6 +840,17 @@ export interface DeliveryTargetsResult {
 
 export interface DeploymentScopeRequest {
   connectionEpoch: number;
+}
+
+export interface Diagnostic {
+  stage: string;
+  operation: string;
+  category: string;
+  attempt: number;
+  outcome: string;
+  errorCode?: string;
+  requestId?: string;
+  httpStatus?: number;
 }
 
 export interface Diagnostics {
@@ -791,6 +916,12 @@ export interface DraftResult {
   ok: boolean;
   value: RecoverableDraft | null;
   error: ServiceError | null;
+}
+
+export interface DtoCreateRequest {
+  connectionEpoch: number;
+  sessionId?: string;
+  mpaInstanceId?: string;
 }
 
 export interface Empty {}
@@ -1083,6 +1214,11 @@ export interface MCPTool {
   description: string;
 }
 
+export interface MPATOSBucket {
+  name: string;
+  region: string;
+}
+
 /** MainProfile affects only Main. Shared AGENTS.md can also affect Worker. */
 export interface MainProfile {
   agentsMd: string;
@@ -1185,6 +1321,19 @@ export interface MutationReceipt {
 export interface MutationResult {
   ok: boolean;
   value?: MutationReceipt;
+  error?: SafeError;
+}
+
+export interface NameRequest {
+  platformEpoch: number;
+  region: string;
+  requestId: string;
+  name: string;
+}
+
+export interface NameResult {
+  ok: boolean;
+  value?: { available: boolean };
   error?: SafeError;
 }
 
@@ -1371,6 +1520,13 @@ export interface PermissionsResult {
   error?: SafeError;
 }
 
+export interface PlanStage {
+  stage: string;
+  resourceId?: string;
+  count: number;
+  reason?: string;
+}
+
 export interface PlatformState {
   signedIn: boolean;
   hasCredential: boolean;
@@ -1383,6 +1539,18 @@ export interface PlatformState {
 export interface PlatformStateResult {
   ok: boolean;
   value?: PlatformState;
+  error?: SafeError;
+}
+
+export interface PreviewRequest {
+  platformEpoch: number;
+  region: string;
+  runtimeId: string;
+}
+
+export interface PreviewResult {
+  ok: boolean;
+  value?: DeletePreview;
   error?: SafeError;
 }
 
@@ -1767,6 +1935,22 @@ export interface SaveReviewedResultRequest {
   content: string;
 }
 
+/**
+ * Config is a discriminated schedule. Only fields belonging to Type may be set.
+ * The server, rather than a desktop timer, interprets and executes this schedule.
+ */
+export interface ScheduleConfig {
+  type: string;
+  timezone?: string;
+  runAt?: string;
+  intervalSeconds?: number;
+  anchorAt?: string;
+  time?: string;
+  weekdays?: number[];
+  monthDays?: number[];
+  cronExpression?: string;
+}
+
 export interface ScheduleCreateRequest {
   connectionEpoch: number;
   clientToken: string;
@@ -1774,7 +1958,7 @@ export interface ScheduleCreateRequest {
   agentId?: string;
   prompt: string;
   enabled?: boolean;
-  schedule: Config;
+  schedule: ScheduleConfig;
   delivery?: Delivery;
   jitterSeconds?: number;
   timeoutSeconds?: number;
@@ -1790,6 +1974,16 @@ export interface ScheduleListResult {
   ok: boolean;
   value?: TaskPage;
   error?: SafeError;
+}
+
+export interface ScheduleTaskRequest {
+  connectionEpoch: number;
+  taskId: string;
+}
+
+export interface Scope {
+  platformEpoch: number;
+  region: string;
 }
 
 export interface ScopeRequest {
@@ -2129,13 +2323,25 @@ export interface SubscribeRequest {
   lastEventId?: string;
 }
 
+export interface TOSBucketList {
+  platformEpoch: number;
+  region: string;
+  buckets: MPATOSBucket[];
+}
+
+export interface TOSBucketListResult {
+  ok: boolean;
+  value?: TOSBucketList;
+  error?: SafeError;
+}
+
 export interface Task {
   id: string;
   name: string;
   agentId: string;
   prompt: string;
   enabled: boolean;
-  schedule: Config;
+  schedule: ScheduleConfig;
   delivery: Delivery;
   jitterSeconds: number;
   timeoutSeconds: number;
@@ -2162,7 +2368,8 @@ export interface TaskPage {
 }
 
 export interface TaskRequest {
-  connectionEpoch: number;
+  platformEpoch: number;
+  region: string;
   taskId: string;
 }
 
@@ -2239,7 +2446,7 @@ export interface UpdateRequest {
   agentId?: string;
   prompt?: string;
   enabled?: boolean;
-  schedule?: Config;
+  schedule?: ScheduleConfig;
   delivery?: Delivery;
   jitterSeconds?: number;
   timeoutSeconds?: number;
@@ -2366,6 +2573,43 @@ export const Platform = {
   },
 } as const;
 
+export const MPALifecycle = {
+  cancelCreation(r: TaskRequest): Promise<CreationResult> {
+    return call("MPALifecycle.CancelCreation", r);
+  },
+  checkName(r: NameRequest): Promise<NameResult> {
+    return call("MPALifecycle.CheckName", r);
+  },
+  config(r: Scope): Promise<ConfigResult> {
+    return call("MPALifecycle.Config", r);
+  },
+  create(r: CreateRequest): Promise<CreationResult> {
+    return call("MPALifecycle.Create", r);
+  },
+  delete(r: DeleteRequest): Promise<DeletionResult> {
+    return call("MPALifecycle.Delete", r);
+  },
+  listCreations(r: Scope): Promise<CreationListResult> {
+    return call("MPALifecycle.ListCreations", r);
+  },
+  listDeletions(r: Scope): Promise<DeletionListResult> {
+    return call("MPALifecycle.ListDeletions", r);
+  },
+  /** ListTOSBuckets is a read-only native SDK call and does not start the Python engine. */
+  listTOSBuckets(r: Scope): Promise<TOSBucketListResult> {
+    return call("MPALifecycle.ListTOSBuckets", r);
+  },
+  previewDelete(r: PreviewRequest): Promise<PreviewResult> {
+    return call("MPALifecycle.PreviewDelete", r);
+  },
+  readCreation(r: TaskRequest): Promise<CreationResult> {
+    return call("MPALifecycle.ReadCreation", r);
+  },
+  readDeletion(r: DeletionRequest): Promise<DeletionResult> {
+    return call("MPALifecycle.ReadDeletion", r);
+  },
+} as const;
+
 export const Connection = {
   configureChannelAuth(r: ChannelAuthRequest): Promise<ConnectionStateResult> {
     return call("Connection.ConfigureChannelAuth", r);
@@ -2477,14 +2721,14 @@ export const Session = {
   assistantConfig(r: AssistantConfigRequest): Promise<AssistantConfigResult> {
     return call("Session.AssistantConfig", r);
   },
-  create(r: CreateRequest): Promise<SessionSummaryResult> {
+  create(r: DtoCreateRequest): Promise<SessionSummaryResult> {
     return call("Session.Create", r);
   },
   /**
    * CreateTraceSession is an explicit diagnostics operation. Product
    * conversations use Create so their next-Turn model remains configurable.
    */
-  createTraceSession(r: CreateRequest): Promise<SessionSummaryResult> {
+  createTraceSession(r: DtoCreateRequest): Promise<SessionSummaryResult> {
     return call("Session.CreateTraceSession", r);
   },
   delete(r: SessionRequest): Promise<DeleteReceiptResult> {
@@ -2755,7 +2999,7 @@ export const Schedule = {
    * Deleting a definition removes future dispatches. This receipt makes no claim
    * about the state of executions that were already accepted by the server.
    */
-  delete(r: TaskRequest): Promise<ScheduleDeleteResult> {
+  delete(r: ScheduleTaskRequest): Promise<ScheduleDeleteResult> {
     return call("Schedule.Delete", r);
   },
   deliveryTargets(r: DeliveryTargetsRequest): Promise<DeliveryTargetsResult> {
@@ -2776,7 +3020,7 @@ export const Schedule = {
    * Read uses the authoritative collection route; the deployed API has no GET /id.
    * Pagination is bounded by a shared timeout and requires an advancing server cursor.
    */
-  read(r: TaskRequest): Promise<TaskResult> {
+  read(r: ScheduleTaskRequest): Promise<TaskResult> {
     return call("Schedule.Read", r);
   },
   run(r: RunRequest): Promise<RunResult> {

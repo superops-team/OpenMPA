@@ -1,0 +1,15 @@
+[project]
+name = "openmpa-lifecycle-engine"
+version = "0.1.0"
+requires-python = ">=3.12,<3.13"
+dependencies = [
+  "veadk-python==1.1.19",
+  "fastapi==0.141.1",
+  "httpx==0.28.1",
+]
+
+[dependency-groups]
+dev = ["pytest>=8,<9", "pytest-asyncio>=0.24,<2"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"

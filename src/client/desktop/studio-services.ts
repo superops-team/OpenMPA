@@ -13,6 +13,16 @@ export function studioFailure(error: unknown): MessageText {
     error && typeof error === 'object' && 'code' in error ? error.code : '';
   return localized((m) => {
     switch (code) {
+      case 'runtimeNameTaken':
+        return m.mpaNameTaken();
+      case 'lifecycleUnavailable':
+        return m.mpaEngineUnavailable();
+      case 'creationRequestFailed':
+        return m.mpaRequestRejected();
+      case 'operationBusy':
+        return m.mpaDeleteBusy();
+      case 'staleDeletePreview':
+        return m.mpaDeleteChanged();
       case 'authRequired':
         return m.authRequired();
       case 'businessIdentityRequired':

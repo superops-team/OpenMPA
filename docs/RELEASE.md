@@ -2,10 +2,11 @@
 
 Version 0.1.4 is a preview for macOS on Apple Silicon. Install it from the public TOS mirror using the [documented installer](INSTALL.md), or download the DMG or app ZIP from the GitHub release and compare its SHA-256 digest with `SHA256SUMS`. Credentials and Runtime selection are configured in the native Settings page.
 
-Source and binary versions are both 0.1.4. The release tag must point to the reviewed commit used to build the app. Build the frontend and bindings from that commit using Node 24+, Go 1.27.3 and MyGo 0.6.4:
+Source and binary versions are both 0.1.4. The release tag must point to the reviewed commit used to build the app. Build the frontend and bindings from that commit using Node 24+, Go 1.27.3 MyGo 0.6.4 and `uv` (for the locked CPython lifecycle engine):
 
 ```sh
 npm ci
+npm run desktop:engine
 cd desktop
 GOWORK=off GOTOOLCHAIN=go1.27.3 CGO_ENABLED=0 go run github.com/egoist/mygo/cmd/mygo build -platform darwin/arm64 .
 ```

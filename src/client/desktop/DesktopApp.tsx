@@ -16,6 +16,7 @@ import { DesktopResources } from './Resources';
 import { DesktopCollaboration } from './Collaboration';
 import { DesktopSchedules } from './Schedules';
 import { DesktopSettings } from './Settings';
+import { RuntimeManager } from './RuntimeManager';
 import type { DesktopServices } from './models';
 import { useDesktopAppState } from './DesktopAppState';
 import { LocaleProvider, localized, useMessages } from './locale';
@@ -198,11 +199,21 @@ function DesktopAppContent({ services }: { services: DesktopServices }) {
           />
         )}
         {view === 'resources' || view === 'collaboration' ? null : view ===
-          'settings' ? (
+          'runtimes' ? (
+          <RuntimeManager
+            key={`runtimes:${state.platform?.scope}:${state.platform?.epoch}`}
+            services={services}
+            platform={state.platform}
+            connection={connection}
+            onConnection={connect}
+            onDirectoryChanged={state.refreshRuntimes}
+          />
+        ) : view === 'settings' ? (
           <DesktopSettings
             services={services}
             connection={connection}
             onConnection={connect}
+            onManageRuntimes={() => navigate('runtimes')}
             section={settingsSection}
             onSectionChange={setSettingsSection}
             session={session}

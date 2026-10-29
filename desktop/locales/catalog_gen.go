@@ -10123,3 +10123,1047 @@ func ChannelBindingRetained() string { return In(i18n.Locale()).ChannelBindingRe
 func (msgs Messages) ChannelBindingRetained() string {
 	return Catalog.Format(msgs.locale, "channelBindingRetained", nil)
 }
+
+// ManageRuntimes says "管理 Runtime"
+// in the language the app shows.
+func ManageRuntimes() string { return In(i18n.Locale()).ManageRuntimes() }
+
+// ManageRuntimes says "管理 Runtime"
+// in the language of msgs.
+func (msgs Messages) ManageRuntimes() string {
+	return Catalog.Format(msgs.locale, "manageRuntimes", nil)
+}
+
+// MpaManagerHint says "创建、连接和删除 MPA Runtime，并查看操作进度。"
+// in the language the app shows.
+func MpaManagerHint() string { return In(i18n.Locale()).MpaManagerHint() }
+
+// MpaManagerHint says "创建、连接和删除 MPA Runtime，并查看操作进度。"
+// in the language of msgs.
+func (msgs Messages) MpaManagerHint() string {
+	return Catalog.Format(msgs.locale, "mpaManagerHint", nil)
+}
+
+// MpaCreate says "创建 MPA"
+// in the language the app shows.
+func MpaCreate() string { return In(i18n.Locale()).MpaCreate() }
+
+// MpaCreate says "创建 MPA"
+// in the language of msgs.
+func (msgs Messages) MpaCreate() string {
+	return Catalog.Format(msgs.locale, "mpaCreate", nil)
+}
+
+// MpaCreateHint says "准备基础信息、PostgreSQL 和 OpenViking，最后确认创建。"
+// in the language the app shows.
+func MpaCreateHint() string { return In(i18n.Locale()).MpaCreateHint() }
+
+// MpaCreateHint says "准备基础信息、PostgreSQL 和 OpenViking，最后确认创建。"
+// in the language of msgs.
+func (msgs Messages) MpaCreateHint() string {
+	return Catalog.Format(msgs.locale, "mpaCreateHint", nil)
+}
+
+// MpaBasicStep says "基础信息"
+// in the language the app shows.
+func MpaBasicStep() string { return In(i18n.Locale()).MpaBasicStep() }
+
+// MpaBasicStep says "基础信息"
+// in the language of msgs.
+func (msgs Messages) MpaBasicStep() string {
+	return Catalog.Format(msgs.locale, "mpaBasicStep", nil)
+}
+
+// MpaPgStep says "PostgreSQL"
+// in the language the app shows.
+func MpaPgStep() string { return In(i18n.Locale()).MpaPgStep() }
+
+// MpaPgStep says "PostgreSQL"
+// in the language of msgs.
+func (msgs Messages) MpaPgStep() string {
+	return Catalog.Format(msgs.locale, "mpaPgStep", nil)
+}
+
+// MpaOvStep says "OpenViking 与存储"
+// in the language the app shows.
+func MpaOvStep() string { return In(i18n.Locale()).MpaOvStep() }
+
+// MpaOvStep says "OpenViking 与存储"
+// in the language of msgs.
+func (msgs Messages) MpaOvStep() string {
+	return Catalog.Format(msgs.locale, "mpaOvStep", nil)
+}
+
+// MpaNameHint says "4–64 个英文字母、数字、下划线或连字符。"
+// in the language the app shows.
+func MpaNameHint() string { return In(i18n.Locale()).MpaNameHint() }
+
+// MpaNameHint says "4–64 个英文字母、数字、下划线或连字符。"
+// in the language of msgs.
+func (msgs Messages) MpaNameHint() string {
+	return Catalog.Format(msgs.locale, "mpaNameHint", nil)
+}
+
+// MpaAutoPgHint says "自动创建或复用 PostgreSQL Workspace，为此 MPA 准备独立业务空间及 aidb 数据库。"
+// in the language the app shows.
+func MpaAutoPgHint() string { return In(i18n.Locale()).MpaAutoPgHint() }
+
+// MpaAutoPgHint says "自动创建或复用 PostgreSQL Workspace，为此 MPA 准备独立业务空间及 aidb 数据库。"
+// in the language of msgs.
+func (msgs Messages) MpaAutoPgHint() string {
+	return Catalog.Format(msgs.locale, "mpaAutoPgHint", nil)
+}
+
+// MpaManualPgHint says "使用已配置的 PostgreSQL 连接；留空沿用引擎配置。"
+// in the language the app shows.
+func MpaManualPgHint() string { return In(i18n.Locale()).MpaManualPgHint() }
+
+// MpaManualPgHint says "使用已配置的 PostgreSQL 连接；留空沿用引擎配置。"
+// in the language of msgs.
+func (msgs Messages) MpaManualPgHint() string {
+	return Catalog.Format(msgs.locale, "mpaManualPgHint", nil)
+}
+
+// MpaPgHost says "PostgreSQL 主机"
+// in the language the app shows.
+func MpaPgHost() string { return In(i18n.Locale()).MpaPgHost() }
+
+// MpaPgHost says "PostgreSQL 主机"
+// in the language of msgs.
+func (msgs Messages) MpaPgHost() string {
+	return Catalog.Format(msgs.locale, "mpaPgHost", nil)
+}
+
+// MpaPgPort says "PostgreSQL 端口"
+// in the language the app shows.
+func MpaPgPort() string { return In(i18n.Locale()).MpaPgPort() }
+
+// MpaPgPort says "PostgreSQL 端口"
+// in the language of msgs.
+func (msgs Messages) MpaPgPort() string {
+	return Catalog.Format(msgs.locale, "mpaPgPort", nil)
+}
+
+// MpaAutoOv says "自动准备 OpenViking"
+// in the language the app shows.
+func MpaAutoOv() string { return In(i18n.Locale()).MpaAutoOv() }
+
+// MpaAutoOv says "自动准备 OpenViking"
+// in the language of msgs.
+func (msgs Messages) MpaAutoOv() string {
+	return Catalog.Format(msgs.locale, "mpaAutoOv", nil)
+}
+
+// MpaAutoOvHint says "自动准备独立的 OpenViking 库。创建涉及付费云资源，费用按云平台规则收取。"
+// in the language the app shows.
+func MpaAutoOvHint() string { return In(i18n.Locale()).MpaAutoOvHint() }
+
+// MpaAutoOvHint says "自动准备独立的 OpenViking 库。创建涉及付费云资源，费用按云平台规则收取。"
+// in the language of msgs.
+func (msgs Messages) MpaAutoOvHint() string {
+	return Catalog.Format(msgs.locale, "mpaAutoOvHint", nil)
+}
+
+// MpaManualOv says "使用已有 OpenViking（可选）"
+// in the language the app shows.
+func MpaManualOv() string { return In(i18n.Locale()).MpaManualOv() }
+
+// MpaManualOv says "使用已有 OpenViking（可选）"
+// in the language of msgs.
+func (msgs Messages) MpaManualOv() string {
+	return Catalog.Format(msgs.locale, "mpaManualOv", nil)
+}
+
+// MpaManualOvHint says "连接地址、资源 ID 和 API Key 须全部填写或全部留空。API Key …"
+// in the language the app shows.
+func MpaManualOvHint() string { return In(i18n.Locale()).MpaManualOvHint() }
+
+// MpaManualOvHint says "连接地址、资源 ID 和 API Key 须全部填写或全部留空。API Key …"
+// in the language of msgs.
+func (msgs Messages) MpaManualOvHint() string {
+	return Catalog.Format(msgs.locale, "mpaManualOvHint", nil)
+}
+
+// MpaOvUrl says "OpenViking 地址"
+// in the language the app shows.
+func MpaOvUrl() string { return In(i18n.Locale()).MpaOvUrl() }
+
+// MpaOvUrl says "OpenViking 地址"
+// in the language of msgs.
+func (msgs Messages) MpaOvUrl() string {
+	return Catalog.Format(msgs.locale, "mpaOvUrl", nil)
+}
+
+// MpaOvResource says "OpenViking 资源 ID"
+// in the language the app shows.
+func MpaOvResource() string { return In(i18n.Locale()).MpaOvResource() }
+
+// MpaOvResource says "OpenViking 资源 ID"
+// in the language of msgs.
+func (msgs Messages) MpaOvResource() string {
+	return Catalog.Format(msgs.locale, "mpaOvResource", nil)
+}
+
+// MpaOvKey says "OpenViking API Key"
+// in the language the app shows.
+func MpaOvKey() string { return In(i18n.Locale()).MpaOvKey() }
+
+// MpaOvKey says "OpenViking API Key"
+// in the language of msgs.
+func (msgs Messages) MpaOvKey() string {
+	return Catalog.Format(msgs.locale, "mpaOvKey", nil)
+}
+
+// MpaTosBucket says "TOS 存储桶"
+// in the language the app shows.
+func MpaTosBucket() string { return In(i18n.Locale()).MpaTosBucket() }
+
+// MpaTosBucket says "TOS 存储桶"
+// in the language of msgs.
+func (msgs Messages) MpaTosBucket() string {
+	return Catalog.Format(msgs.locale, "mpaTosBucket", nil)
+}
+
+// MpaTosHint says "从当前账号和地域选择 agentkit-platform- 前缀的桶，用于存储输出文件；可不配置。"
+// in the language the app shows.
+func MpaTosHint() string { return In(i18n.Locale()).MpaTosHint() }
+
+// MpaTosHint says "从当前账号和地域选择 agentkit-platform- 前缀的桶，用于存储输出文件；可不配置。"
+// in the language of msgs.
+func (msgs Messages) MpaTosHint() string {
+	return Catalog.Format(msgs.locale, "mpaTosHint", nil)
+}
+
+// MpaNext says "下一步"
+// in the language the app shows.
+func MpaNext() string { return In(i18n.Locale()).MpaNext() }
+
+// MpaNext says "下一步"
+// in the language of msgs.
+func (msgs Messages) MpaNext() string {
+	return Catalog.Format(msgs.locale, "mpaNext", nil)
+}
+
+// MpaBack says "上一步"
+// in the language the app shows.
+func MpaBack() string { return In(i18n.Locale()).MpaBack() }
+
+// MpaBack says "上一步"
+// in the language of msgs.
+func (msgs Messages) MpaBack() string {
+	return Catalog.Format(msgs.locale, "mpaBack", nil)
+}
+
+// MpaSubmit says "确认创建"
+// in the language the app shows.
+func MpaSubmit() string { return In(i18n.Locale()).MpaSubmit() }
+
+// MpaSubmit says "确认创建"
+// in the language of msgs.
+func (msgs Messages) MpaSubmit() string {
+	return Catalog.Format(msgs.locale, "mpaSubmit", nil)
+}
+
+// MpaClose says "关闭"
+// in the language the app shows.
+func MpaClose() string { return In(i18n.Locale()).MpaClose() }
+
+// MpaClose says "关闭"
+// in the language of msgs.
+func (msgs Messages) MpaClose() string {
+	return Catalog.Format(msgs.locale, "mpaClose", nil)
+}
+
+// MpaCancelCreation says "取消创建任务"
+// in the language the app shows.
+func MpaCancelCreation() string { return In(i18n.Locale()).MpaCancelCreation() }
+
+// MpaCancelCreation says "取消创建任务"
+// in the language of msgs.
+func (msgs Messages) MpaCancelCreation() string {
+	return Catalog.Format(msgs.locale, "mpaCancelCreation", nil)
+}
+
+// MpaCancelHint says "取消会停止后续步骤，已创建的云资源会保留。"
+// in the language the app shows.
+func MpaCancelHint() string { return In(i18n.Locale()).MpaCancelHint() }
+
+// MpaCancelHint says "取消会停止后续步骤，已创建的云资源会保留。"
+// in the language of msgs.
+func (msgs Messages) MpaCancelHint() string {
+	return Catalog.Format(msgs.locale, "mpaCancelHint", nil)
+}
+
+// MpaRetryCreation says "以原请求重试"
+// in the language the app shows.
+func MpaRetryCreation() string { return In(i18n.Locale()).MpaRetryCreation() }
+
+// MpaRetryCreation says "以原请求重试"
+// in the language of msgs.
+func (msgs Messages) MpaRetryCreation() string {
+	return Catalog.Format(msgs.locale, "mpaRetryCreation", nil)
+}
+
+// MpaNewCreation says "新建另一个 MPA"
+// in the language the app shows.
+func MpaNewCreation() string { return In(i18n.Locale()).MpaNewCreation() }
+
+// MpaNewCreation says "新建另一个 MPA"
+// in the language of msgs.
+func (msgs Messages) MpaNewCreation() string {
+	return Catalog.Format(msgs.locale, "mpaNewCreation", nil)
+}
+
+// MpaReadStatus says "核对状态"
+// in the language the app shows.
+func MpaReadStatus() string { return In(i18n.Locale()).MpaReadStatus() }
+
+// MpaReadStatus says "核对状态"
+// in the language of msgs.
+func (msgs Messages) MpaReadStatus() string {
+	return Catalog.Format(msgs.locale, "mpaReadStatus", nil)
+}
+
+// MpaOpenTask says "查看进度"
+// in the language the app shows.
+func MpaOpenTask() string { return In(i18n.Locale()).MpaOpenTask() }
+
+// MpaOpenTask says "查看进度"
+// in the language of msgs.
+func (msgs Messages) MpaOpenTask() string {
+	return Catalog.Format(msgs.locale, "mpaOpenTask", nil)
+}
+
+// MpaCreateUnknown says "创建结果尚未确认。请先核对状态，保留原请求身份。"
+// in the language the app shows.
+func MpaCreateUnknown() string { return In(i18n.Locale()).MpaCreateUnknown() }
+
+// MpaCreateUnknown says "创建结果尚未确认。请先核对状态，保留原请求身份。"
+// in the language of msgs.
+func (msgs Messages) MpaCreateUnknown() string {
+	return Catalog.Format(msgs.locale, "mpaCreateUnknown", nil)
+}
+
+// MpaPendingSecret says "原请求使用了手动 OpenViking，请重新输入 API Key 后重试。"
+// in the language the app shows.
+func MpaPendingSecret() string { return In(i18n.Locale()).MpaPendingSecret() }
+
+// MpaPendingSecret says "原请求使用了手动 OpenViking，请重新输入 API Key 后重试。"
+// in the language of msgs.
+func (msgs Messages) MpaPendingSecret() string {
+	return Catalog.Format(msgs.locale, "mpaPendingSecret", nil)
+}
+
+// MpaBackgroundHint says "关闭窗口后任务继续执行，可在操作记录中查看。"
+// in the language the app shows.
+func MpaBackgroundHint() string { return In(i18n.Locale()).MpaBackgroundHint() }
+
+// MpaBackgroundHint says "关闭窗口后任务继续执行，可在操作记录中查看。"
+// in the language of msgs.
+func (msgs Messages) MpaBackgroundHint() string {
+	return Catalog.Format(msgs.locale, "mpaBackgroundHint", nil)
+}
+
+// MpaEngineUnavailable says "创建引擎不可用，请检查应用安装并重试。"
+// in the language the app shows.
+func MpaEngineUnavailable() string { return In(i18n.Locale()).MpaEngineUnavailable() }
+
+// MpaEngineUnavailable says "创建引擎不可用，请检查应用安装并重试。"
+// in the language of msgs.
+func (msgs Messages) MpaEngineUnavailable() string {
+	return Catalog.Format(msgs.locale, "mpaEngineUnavailable", nil)
+}
+
+// MpaRetryLoad says "重新加载"
+// in the language the app shows.
+func MpaRetryLoad() string { return In(i18n.Locale()).MpaRetryLoad() }
+
+// MpaRetryLoad says "重新加载"
+// in the language of msgs.
+func (msgs Messages) MpaRetryLoad() string {
+	return Catalog.Format(msgs.locale, "mpaRetryLoad", nil)
+}
+
+// MpaOperationHistory says "操作记录"
+// in the language the app shows.
+func MpaOperationHistory() string { return In(i18n.Locale()).MpaOperationHistory() }
+
+// MpaOperationHistory says "操作记录"
+// in the language of msgs.
+func (msgs Messages) MpaOperationHistory() string {
+	return Catalog.Format(msgs.locale, "mpaOperationHistory", nil)
+}
+
+// MpaNoOperations says "当前地域还没有操作记录。"
+// in the language the app shows.
+func MpaNoOperations() string { return In(i18n.Locale()).MpaNoOperations() }
+
+// MpaNoOperations says "当前地域还没有操作记录。"
+// in the language of msgs.
+func (msgs Messages) MpaNoOperations() string {
+	return Catalog.Format(msgs.locale, "mpaNoOperations", nil)
+}
+
+// MpaDelete says "删除 MPA"
+// in the language the app shows.
+func MpaDelete() string { return In(i18n.Locale()).MpaDelete() }
+
+// MpaDelete says "删除 MPA"
+// in the language of msgs.
+func (msgs Messages) MpaDelete() string {
+	return Catalog.Format(msgs.locale, "mpaDelete", nil)
+}
+
+// MpaDeleteHint says "确认前检查会话及资源归属。删除无法撤销。"
+// in the language the app shows.
+func MpaDeleteHint() string { return In(i18n.Locale()).MpaDeleteHint() }
+
+// MpaDeleteHint says "确认前检查会话及资源归属。删除无法撤销。"
+// in the language of msgs.
+func (msgs Messages) MpaDeleteHint() string {
+	return Catalog.Format(msgs.locale, "mpaDeleteHint", nil)
+}
+
+// MpaDeleteChecking says "正在检查会话和清理范围…"
+// in the language the app shows.
+func MpaDeleteChecking() string { return In(i18n.Locale()).MpaDeleteChecking() }
+
+// MpaDeleteChecking says "正在检查会话和清理范围…"
+// in the language of msgs.
+func (msgs Messages) MpaDeleteChecking() string {
+	return Catalog.Format(msgs.locale, "mpaDeleteChecking", nil)
+}
+
+// MpaDeleteSessions says "共 {total} 个会话：{active} 个活动，{idle} 个空闲。"
+// in the language the app shows.
+func MpaDeleteSessions(total string, active string, idle string) string {
+	return In(i18n.Locale()).MpaDeleteSessions(total, active, idle)
+}
+
+// MpaDeleteSessions says "共 {total} 个会话：{active} 个活动，{idle} 个空闲。"
+// in the language of msgs.
+func (msgs Messages) MpaDeleteSessions(total string, active string, idle string) string {
+	return Catalog.Format(msgs.locale, "mpaDeleteSessions", map[string]any{"total": total, "active": active, "idle": idle})
+}
+
+// MpaDeletePlan says "清理计划"
+// in the language the app shows.
+func MpaDeletePlan() string { return In(i18n.Locale()).MpaDeletePlan() }
+
+// MpaDeletePlan says "清理计划"
+// in the language of msgs.
+func (msgs Messages) MpaDeletePlan() string {
+	return Catalog.Format(msgs.locale, "mpaDeletePlan", nil)
+}
+
+// MpaDeleteRetained says "保留的资源"
+// in the language the app shows.
+func MpaDeleteRetained() string { return In(i18n.Locale()).MpaDeleteRetained() }
+
+// MpaDeleteRetained says "保留的资源"
+// in the language of msgs.
+func (msgs Messages) MpaDeleteRetained() string {
+	return Catalog.Format(msgs.locale, "mpaDeleteRetained", nil)
+}
+
+// MpaDeleteSharedHint says "共享数据库、Workspace、网络、APIG 和其他共享资源会保留。"
+// in the language the app shows.
+func MpaDeleteSharedHint() string { return In(i18n.Locale()).MpaDeleteSharedHint() }
+
+// MpaDeleteSharedHint says "共享数据库、Workspace、网络、APIG 和其他共享资源会保留。"
+// in the language of msgs.
+func (msgs Messages) MpaDeleteSharedHint() string {
+	return Catalog.Format(msgs.locale, "mpaDeleteSharedHint", nil)
+}
+
+// MpaDeleteActive says "仍有活动会话，请结束这些会话后重新检查。"
+// in the language the app shows.
+func MpaDeleteActive() string { return In(i18n.Locale()).MpaDeleteActive() }
+
+// MpaDeleteActive says "仍有活动会话，请结束这些会话后重新检查。"
+// in the language of msgs.
+func (msgs Messages) MpaDeleteActive() string {
+	return Catalog.Format(msgs.locale, "mpaDeleteActive", nil)
+}
+
+// MpaDeleteBusy says "存在活动生命周期操作，或 Runtime 尚未就绪。请稍后重新检查。"
+// in the language the app shows.
+func MpaDeleteBusy() string { return In(i18n.Locale()).MpaDeleteBusy() }
+
+// MpaDeleteBusy says "存在活动生命周期操作，或 Runtime 尚未就绪。请稍后重新检查。"
+// in the language of msgs.
+func (msgs Messages) MpaDeleteBusy() string {
+	return Catalog.Format(msgs.locale, "mpaDeleteBusy", nil)
+}
+
+// MpaDeleteChanged says "Runtime 或会话已变化，请重新检查删除范围。"
+// in the language the app shows.
+func MpaDeleteChanged() string { return In(i18n.Locale()).MpaDeleteChanged() }
+
+// MpaDeleteChanged says "Runtime 或会话已变化，请重新检查删除范围。"
+// in the language of msgs.
+func (msgs Messages) MpaDeleteChanged() string {
+	return Catalog.Format(msgs.locale, "mpaDeleteChanged", nil)
+}
+
+// MpaDeleteUnknown says "删除结果尚未确认。核对状态不会重复执行删除；请稍后重新检查。"
+// in the language the app shows.
+func MpaDeleteUnknown() string { return In(i18n.Locale()).MpaDeleteUnknown() }
+
+// MpaDeleteUnknown says "删除结果尚未确认。核对状态不会重复执行删除；请稍后重新检查。"
+// in the language of msgs.
+func (msgs Messages) MpaDeleteUnknown() string {
+	return Catalog.Format(msgs.locale, "mpaDeleteUnknown", nil)
+}
+
+// MpaDeleteConfirm says "确认删除"
+// in the language the app shows.
+func MpaDeleteConfirm() string { return In(i18n.Locale()).MpaDeleteConfirm() }
+
+// MpaDeleteConfirm says "确认删除"
+// in the language of msgs.
+func (msgs Messages) MpaDeleteConfirm() string {
+	return Catalog.Format(msgs.locale, "mpaDeleteConfirm", nil)
+}
+
+// MpaDeleteRecheck says "重新检查删除范围"
+// in the language the app shows.
+func MpaDeleteRecheck() string { return In(i18n.Locale()).MpaDeleteRecheck() }
+
+// MpaDeleteRecheck says "重新检查删除范围"
+// in the language of msgs.
+func (msgs Messages) MpaDeleteRecheck() string {
+	return Catalog.Format(msgs.locale, "mpaDeleteRecheck", nil)
+}
+
+// MpaConnectCreated says "连接此 Runtime"
+// in the language the app shows.
+func MpaConnectCreated() string { return In(i18n.Locale()).MpaConnectCreated() }
+
+// MpaConnectCreated says "连接此 Runtime"
+// in the language of msgs.
+func (msgs Messages) MpaConnectCreated() string {
+	return Catalog.Format(msgs.locale, "mpaConnectCreated", nil)
+}
+
+// MpaStageSessions says "清理空闲会话"
+// in the language the app shows.
+func MpaStageSessions() string { return In(i18n.Locale()).MpaStageSessions() }
+
+// MpaStageSessions says "清理空闲会话"
+// in the language of msgs.
+func (msgs Messages) MpaStageSessions() string {
+	return Catalog.Format(msgs.locale, "mpaStageSessions", nil)
+}
+
+// MpaStageResources says "清理专属受管资源"
+// in the language the app shows.
+func MpaStageResources() string { return In(i18n.Locale()).MpaStageResources() }
+
+// MpaStageResources says "清理专属受管资源"
+// in the language of msgs.
+func (msgs Messages) MpaStageResources() string {
+	return Catalog.Format(msgs.locale, "mpaStageResources", nil)
+}
+
+// MpaStageRuntime says "删除 Runtime"
+// in the language the app shows.
+func MpaStageRuntime() string { return In(i18n.Locale()).MpaStageRuntime() }
+
+// MpaStageRuntime says "删除 Runtime"
+// in the language of msgs.
+func (msgs Messages) MpaStageRuntime() string {
+	return Catalog.Format(msgs.locale, "mpaStageRuntime", nil)
+}
+
+// MpaStageWorker says "清理专属 Worker"
+// in the language the app shows.
+func MpaStageWorker() string { return In(i18n.Locale()).MpaStageWorker() }
+
+// MpaStageWorker says "清理专属 Worker"
+// in the language of msgs.
+func (msgs Messages) MpaStageWorker() string {
+	return Catalog.Format(msgs.locale, "mpaStageWorker", nil)
+}
+
+// MpaStageSkills says "清理专属技能空间"
+// in the language the app shows.
+func MpaStageSkills() string { return In(i18n.Locale()).MpaStageSkills() }
+
+// MpaStageSkills says "清理专属技能空间"
+// in the language of msgs.
+func (msgs Messages) MpaStageSkills() string {
+	return Catalog.Format(msgs.locale, "mpaStageSkills", nil)
+}
+
+// MpaStagePreparing says "准备云资源"
+// in the language the app shows.
+func MpaStagePreparing() string { return In(i18n.Locale()).MpaStagePreparing() }
+
+// MpaStagePreparing says "准备云资源"
+// in the language of msgs.
+func (msgs Messages) MpaStagePreparing() string {
+	return Catalog.Format(msgs.locale, "mpaStagePreparing", nil)
+}
+
+// MpaStageChecking says "检查配置和归属"
+// in the language the app shows.
+func MpaStageChecking() string { return In(i18n.Locale()).MpaStageChecking() }
+
+// MpaStageChecking says "检查配置和归属"
+// in the language of msgs.
+func (msgs Messages) MpaStageChecking() string {
+	return Catalog.Format(msgs.locale, "mpaStageChecking", nil)
+}
+
+// MpaStageComplete says "完成"
+// in the language the app shows.
+func MpaStageComplete() string { return In(i18n.Locale()).MpaStageComplete() }
+
+// MpaStageComplete says "完成"
+// in the language of msgs.
+func (msgs Messages) MpaStageComplete() string {
+	return Catalog.Format(msgs.locale, "mpaStageComplete", nil)
+}
+
+// MpaRunning says "执行中"
+// in the language the app shows.
+func MpaRunning() string { return In(i18n.Locale()).MpaRunning() }
+
+// MpaRunning says "执行中"
+// in the language of msgs.
+func (msgs Messages) MpaRunning() string {
+	return Catalog.Format(msgs.locale, "mpaRunning", nil)
+}
+
+// MpaCancelling says "正在取消"
+// in the language the app shows.
+func MpaCancelling() string { return In(i18n.Locale()).MpaCancelling() }
+
+// MpaCancelling says "正在取消"
+// in the language of msgs.
+func (msgs Messages) MpaCancelling() string {
+	return Catalog.Format(msgs.locale, "mpaCancelling", nil)
+}
+
+// MpaSucceeded says "已完成"
+// in the language the app shows.
+func MpaSucceeded() string { return In(i18n.Locale()).MpaSucceeded() }
+
+// MpaSucceeded says "已完成"
+// in the language of msgs.
+func (msgs Messages) MpaSucceeded() string {
+	return Catalog.Format(msgs.locale, "mpaSucceeded", nil)
+}
+
+// MpaFailed says "失败"
+// in the language the app shows.
+func MpaFailed() string { return In(i18n.Locale()).MpaFailed() }
+
+// MpaFailed says "失败"
+// in the language of msgs.
+func (msgs Messages) MpaFailed() string {
+	return Catalog.Format(msgs.locale, "mpaFailed", nil)
+}
+
+// MpaCancelled says "已取消"
+// in the language the app shows.
+func MpaCancelled() string { return In(i18n.Locale()).MpaCancelled() }
+
+// MpaCancelled says "已取消"
+// in the language of msgs.
+func (msgs Messages) MpaCancelled() string {
+	return Catalog.Format(msgs.locale, "mpaCancelled", nil)
+}
+
+// MpaUnknown says "结果待确认"
+// in the language the app shows.
+func MpaUnknown() string { return In(i18n.Locale()).MpaUnknown() }
+
+// MpaUnknown says "结果待确认"
+// in the language of msgs.
+func (msgs Messages) MpaUnknown() string {
+	return Catalog.Format(msgs.locale, "mpaUnknown", nil)
+}
+
+// MpaRequestId says "请求 ID"
+// in the language the app shows.
+func MpaRequestId() string { return In(i18n.Locale()).MpaRequestId() }
+
+// MpaRequestId says "请求 ID"
+// in the language of msgs.
+func (msgs Messages) MpaRequestId() string {
+	return Catalog.Format(msgs.locale, "mpaRequestId", nil)
+}
+
+// MpaSafeDiagnostic says "诊断"
+// in the language the app shows.
+func MpaSafeDiagnostic() string { return In(i18n.Locale()).MpaSafeDiagnostic() }
+
+// MpaSafeDiagnostic says "诊断"
+// in the language of msgs.
+func (msgs Messages) MpaSafeDiagnostic() string {
+	return Catalog.Format(msgs.locale, "mpaSafeDiagnostic", nil)
+}
+
+// MpaHistoricalDiagnostic says "历史诊断"
+// in the language the app shows.
+func MpaHistoricalDiagnostic() string { return In(i18n.Locale()).MpaHistoricalDiagnostic() }
+
+// MpaHistoricalDiagnostic says "历史诊断"
+// in the language of msgs.
+func (msgs Messages) MpaHistoricalDiagnostic() string {
+	return Catalog.Format(msgs.locale, "mpaHistoricalDiagnostic", nil)
+}
+
+// MpaHistoricalDiagnosticHint says "以下为创建过程中的历史记录。创建已完成，这些记录不代表当前状态。"
+// in the language the app shows.
+func MpaHistoricalDiagnosticHint() string { return In(i18n.Locale()).MpaHistoricalDiagnosticHint() }
+
+// MpaHistoricalDiagnosticHint says "以下为创建过程中的历史记录。创建已完成，这些记录不代表当前状态。"
+// in the language of msgs.
+func (msgs Messages) MpaHistoricalDiagnosticHint() string {
+	return Catalog.Format(msgs.locale, "mpaHistoricalDiagnosticHint", nil)
+}
+
+// MpaReauthenticate says "请登录云账号后管理 Runtime。"
+// in the language the app shows.
+func MpaReauthenticate() string { return In(i18n.Locale()).MpaReauthenticate() }
+
+// MpaReauthenticate says "请登录云账号后管理 Runtime。"
+// in the language of msgs.
+func (msgs Messages) MpaReauthenticate() string {
+	return Catalog.Format(msgs.locale, "mpaReauthenticate", nil)
+}
+
+// MpaResourcesMayRemain says "失败或取消不会回滚已创建的资源。重试会沿用原请求身份。"
+// in the language the app shows.
+func MpaResourcesMayRemain() string { return In(i18n.Locale()).MpaResourcesMayRemain() }
+
+// MpaResourcesMayRemain says "失败或取消不会回滚已创建的资源。重试会沿用原请求身份。"
+// in the language of msgs.
+func (msgs Messages) MpaResourcesMayRemain() string {
+	return Catalog.Format(msgs.locale, "mpaResourcesMayRemain", nil)
+}
+
+// MpaInvalidForm says "请检查名称、描述、实例上限及资源字段。"
+// in the language the app shows.
+func MpaInvalidForm() string { return In(i18n.Locale()).MpaInvalidForm() }
+
+// MpaInvalidForm says "请检查名称、描述、实例上限及资源字段。"
+// in the language of msgs.
+func (msgs Messages) MpaInvalidForm() string {
+	return Catalog.Format(msgs.locale, "mpaInvalidForm", nil)
+}
+
+// MpaRequestRejected says "请求未被接受。请检查配置或权限后重试。"
+// in the language the app shows.
+func MpaRequestRejected() string { return In(i18n.Locale()).MpaRequestRejected() }
+
+// MpaRequestRejected says "请求未被接受。请检查配置或权限后重试。"
+// in the language of msgs.
+func (msgs Messages) MpaRequestRejected() string {
+	return Catalog.Format(msgs.locale, "mpaRequestRejected", nil)
+}
+
+// MpaCreateRecovery says "已恢复之前的创建请求；请先核对状态。"
+// in the language the app shows.
+func MpaCreateRecovery() string { return In(i18n.Locale()).MpaCreateRecovery() }
+
+// MpaCreateRecovery says "已恢复之前的创建请求；请先核对状态。"
+// in the language of msgs.
+func (msgs Messages) MpaCreateRecovery() string {
+	return Catalog.Format(msgs.locale, "mpaCreateRecovery", nil)
+}
+
+// MpaDefaultImages says "使用 Studio 默认 Runtime 和 Worker 镜像，创建时固定实际版本。"
+// in the language the app shows.
+func MpaDefaultImages() string { return In(i18n.Locale()).MpaDefaultImages() }
+
+// MpaDefaultImages says "使用 Studio 默认 Runtime 和 Worker 镜像，创建时固定实际版本。"
+// in the language of msgs.
+func (msgs Messages) MpaDefaultImages() string {
+	return Catalog.Format(msgs.locale, "mpaDefaultImages", nil)
+}
+
+// MpaStageIam says "准备运行角色"
+// in the language the app shows.
+func MpaStageIam() string { return In(i18n.Locale()).MpaStageIam() }
+
+// MpaStageIam says "准备运行角色"
+// in the language of msgs.
+func (msgs Messages) MpaStageIam() string {
+	return Catalog.Format(msgs.locale, "mpaStageIam", nil)
+}
+
+// MpaStageAdminWorkspace says "准备管理 Workspace"
+// in the language the app shows.
+func MpaStageAdminWorkspace() string { return In(i18n.Locale()).MpaStageAdminWorkspace() }
+
+// MpaStageAdminWorkspace says "准备管理 Workspace"
+// in the language of msgs.
+func (msgs Messages) MpaStageAdminWorkspace() string {
+	return Catalog.Format(msgs.locale, "mpaStageAdminWorkspace", nil)
+}
+
+// MpaStageBusinessWorkspace says "准备业务 Workspace"
+// in the language the app shows.
+func MpaStageBusinessWorkspace() string { return In(i18n.Locale()).MpaStageBusinessWorkspace() }
+
+// MpaStageBusinessWorkspace says "准备业务 Workspace"
+// in the language of msgs.
+func (msgs Messages) MpaStageBusinessWorkspace() string {
+	return Catalog.Format(msgs.locale, "mpaStageBusinessWorkspace", nil)
+}
+
+// MpaStageDatabase says "准备数据库"
+// in the language the app shows.
+func MpaStageDatabase() string { return In(i18n.Locale()).MpaStageDatabase() }
+
+// MpaStageDatabase says "准备数据库"
+// in the language of msgs.
+func (msgs Messages) MpaStageDatabase() string {
+	return Catalog.Format(msgs.locale, "mpaStageDatabase", nil)
+}
+
+// MpaStageNetwork says "准备网络"
+// in the language the app shows.
+func MpaStageNetwork() string { return In(i18n.Locale()).MpaStageNetwork() }
+
+// MpaStageNetwork says "准备网络"
+// in the language of msgs.
+func (msgs Messages) MpaStageNetwork() string {
+	return Catalog.Format(msgs.locale, "mpaStageNetwork", nil)
+}
+
+// MpaStageGateway says "准备 APIG"
+// in the language the app shows.
+func MpaStageGateway() string { return In(i18n.Locale()).MpaStageGateway() }
+
+// MpaStageGateway says "准备 APIG"
+// in the language of msgs.
+func (msgs Messages) MpaStageGateway() string {
+	return Catalog.Format(msgs.locale, "mpaStageGateway", nil)
+}
+
+// MpaStageCreateWorker says "准备 Worker"
+// in the language the app shows.
+func MpaStageCreateWorker() string { return In(i18n.Locale()).MpaStageCreateWorker() }
+
+// MpaStageCreateWorker says "准备 Worker"
+// in the language of msgs.
+func (msgs Messages) MpaStageCreateWorker() string {
+	return Catalog.Format(msgs.locale, "mpaStageCreateWorker", nil)
+}
+
+// MpaStageCreateSkills says "准备技能空间"
+// in the language the app shows.
+func MpaStageCreateSkills() string { return In(i18n.Locale()).MpaStageCreateSkills() }
+
+// MpaStageCreateSkills says "准备技能空间"
+// in the language of msgs.
+func (msgs Messages) MpaStageCreateSkills() string {
+	return Catalog.Format(msgs.locale, "mpaStageCreateSkills", nil)
+}
+
+// MpaStageOpenViking says "准备 OpenViking"
+// in the language the app shows.
+func MpaStageOpenViking() string { return In(i18n.Locale()).MpaStageOpenViking() }
+
+// MpaStageOpenViking says "准备 OpenViking"
+// in the language of msgs.
+func (msgs Messages) MpaStageOpenViking() string {
+	return Catalog.Format(msgs.locale, "mpaStageOpenViking", nil)
+}
+
+// MpaStageDeploying says "部署 Runtime"
+// in the language the app shows.
+func MpaStageDeploying() string { return In(i18n.Locale()).MpaStageDeploying() }
+
+// MpaStageDeploying says "部署 Runtime"
+// in the language of msgs.
+func (msgs Messages) MpaStageDeploying() string {
+	return Catalog.Format(msgs.locale, "mpaStageDeploying", nil)
+}
+
+// MpaStageVerifying says "验证就绪状态"
+// in the language the app shows.
+func MpaStageVerifying() string { return In(i18n.Locale()).MpaStageVerifying() }
+
+// MpaStageVerifying says "验证就绪状态"
+// in the language of msgs.
+func (msgs Messages) MpaStageVerifying() string {
+	return Catalog.Format(msgs.locale, "mpaStageVerifying", nil)
+}
+
+// MpaNameTaken says "此名称已被占用，请修改名称。"
+// in the language the app shows.
+func MpaNameTaken() string { return In(i18n.Locale()).MpaNameTaken() }
+
+// MpaNameTaken says "此名称已被占用，请修改名称。"
+// in the language of msgs.
+func (msgs Messages) MpaNameTaken() string {
+	return Catalog.Format(msgs.locale, "mpaNameTaken", nil)
+}
+
+// MpaLoadingManagement says "正在加载管理组件和操作记录，首次使用可能需要几分钟…"
+// in the language the app shows.
+func MpaLoadingManagement() string { return In(i18n.Locale()).MpaLoadingManagement() }
+
+// MpaLoadingManagement says "正在加载管理组件和操作记录，首次使用可能需要几分钟…"
+// in the language of msgs.
+func (msgs Messages) MpaLoadingManagement() string {
+	return Catalog.Format(msgs.locale, "mpaLoadingManagement", nil)
+}
+
+// MpaCreateUnconfigured says "当前地域未提供 MPA 创建配置，请选择其他地域或检查部署配置。"
+// in the language the app shows.
+func MpaCreateUnconfigured() string { return In(i18n.Locale()).MpaCreateUnconfigured() }
+
+// MpaCreateUnconfigured says "当前地域未提供 MPA 创建配置，请选择其他地域或检查部署配置。"
+// in the language of msgs.
+func (msgs Messages) MpaCreateUnconfigured() string {
+	return Catalog.Format(msgs.locale, "mpaCreateUnconfigured", nil)
+}
+
+// MpaTosLoading says "正在读取 TOS 桶…"
+// in the language the app shows.
+func MpaTosLoading() string { return In(i18n.Locale()).MpaTosLoading() }
+
+// MpaTosLoading says "正在读取 TOS 桶…"
+// in the language of msgs.
+func (msgs Messages) MpaTosLoading() string {
+	return Catalog.Format(msgs.locale, "mpaTosLoading", nil)
+}
+
+// MpaTosRefresh says "刷新桶列表"
+// in the language the app shows.
+func MpaTosRefresh() string { return In(i18n.Locale()).MpaTosRefresh() }
+
+// MpaTosRefresh says "刷新桶列表"
+// in the language of msgs.
+func (msgs Messages) MpaTosRefresh() string {
+	return Catalog.Format(msgs.locale, "mpaTosRefresh", nil)
+}
+
+// MpaTosSearch says "搜索桶名"
+// in the language the app shows.
+func MpaTosSearch() string { return In(i18n.Locale()).MpaTosSearch() }
+
+// MpaTosSearch says "搜索桶名"
+// in the language of msgs.
+func (msgs Messages) MpaTosSearch() string {
+	return Catalog.Format(msgs.locale, "mpaTosSearch", nil)
+}
+
+// MpaTosNone says "不配置输出桶"
+// in the language the app shows.
+func MpaTosNone() string { return In(i18n.Locale()).MpaTosNone() }
+
+// MpaTosNone says "不配置输出桶"
+// in the language of msgs.
+func (msgs Messages) MpaTosNone() string {
+	return Catalog.Format(msgs.locale, "mpaTosNone", nil)
+}
+
+// MpaTosEmpty says "当前地域没有可选的 agentkit-platform- 前缀桶。"
+// in the language the app shows.
+func MpaTosEmpty() string { return In(i18n.Locale()).MpaTosEmpty() }
+
+// MpaTosEmpty says "当前地域没有可选的 agentkit-platform- 前缀桶。"
+// in the language of msgs.
+func (msgs Messages) MpaTosEmpty() string {
+	return Catalog.Format(msgs.locale, "mpaTosEmpty", nil)
+}
+
+// MpaTosNoMatches says "没有匹配的桶。"
+// in the language the app shows.
+func MpaTosNoMatches() string { return In(i18n.Locale()).MpaTosNoMatches() }
+
+// MpaTosNoMatches says "没有匹配的桶。"
+// in the language of msgs.
+func (msgs Messages) MpaTosNoMatches() string {
+	return Catalog.Format(msgs.locale, "mpaTosNoMatches", nil)
+}
+
+// MpaTosSaved says "已保存的选择（未在当前列表中找到）"
+// in the language the app shows.
+func MpaTosSaved() string { return In(i18n.Locale()).MpaTosSaved() }
+
+// MpaTosSaved says "已保存的选择（未在当前列表中找到）"
+// in the language of msgs.
+func (msgs Messages) MpaTosSaved() string {
+	return Catalog.Format(msgs.locale, "mpaTosSaved", nil)
+}
+
+// MpaTosInvalid says "请选择 agentkit-platform- 前缀的有效桶。"
+// in the language the app shows.
+func MpaTosInvalid() string { return In(i18n.Locale()).MpaTosInvalid() }
+
+// MpaTosInvalid says "请选择 agentkit-platform- 前缀的有效桶。"
+// in the language of msgs.
+func (msgs Messages) MpaTosInvalid() string {
+	return Catalog.Format(msgs.locale, "mpaTosInvalid", nil)
+}
+
+// MpaTosTitle says "会话输出存储"
+// in the language the app shows.
+func MpaTosTitle() string { return In(i18n.Locale()).MpaTosTitle() }
+
+// MpaTosTitle says "会话输出存储"
+// in the language of msgs.
+func (msgs Messages) MpaTosTitle() string {
+	return Catalog.Format(msgs.locale, "mpaTosTitle", nil)
+}
+
+// MpaTosDescription says "可选。选择存储桶，持久保存每个会话的输出目录，使用沙箱 IAM Role …"
+// in the language the app shows.
+func MpaTosDescription() string { return In(i18n.Locale()).MpaTosDescription() }
+
+// MpaTosDescription says "可选。选择存储桶，持久保存每个会话的输出目录，使用沙箱 IAM Role …"
+// in the language of msgs.
+func (msgs Messages) MpaTosDescription() string {
+	return Catalog.Format(msgs.locale, "mpaTosDescription", nil)
+}
+
+// MpaTosSelectExisting says "请选择已有资源"
+// in the language the app shows.
+func MpaTosSelectExisting() string { return In(i18n.Locale()).MpaTosSelectExisting() }
+
+// MpaTosSelectExisting says "请选择已有资源"
+// in the language of msgs.
+func (msgs Messages) MpaTosSelectExisting() string {
+	return Catalog.Format(msgs.locale, "mpaTosSelectExisting", nil)
+}
+
+// MpaTosLoaded says "实际服务区域：{region} · 已加载 {loaded}/{total}"
+// in the language the app shows.
+func MpaTosLoaded(region string, loaded string, total string) string {
+	return In(i18n.Locale()).MpaTosLoaded(region, loaded, total)
+}
+
+// MpaTosLoaded says "实际服务区域：{region} · 已加载 {loaded}/{total}"
+// in the language of msgs.
+func (msgs Messages) MpaTosLoaded(region string, loaded string, total string) string {
+	return Catalog.Format(msgs.locale, "mpaTosLoaded", map[string]any{"region": region, "loaded": loaded, "total": total})
+}
+
+// MpaTosPermissions says "…"
+// in the language the app shows.
+func MpaTosPermissions() string { return In(i18n.Locale()).MpaTosPermissions() }
+
+// MpaTosPermissions says "…"
+// in the language of msgs.
+func (msgs Messages) MpaTosPermissions() string {
+	return Catalog.Format(msgs.locale, "mpaTosPermissions", nil)
+}
+
+// MpaTosClear says "清除桶选择"
+// in the language the app shows.
+func MpaTosClear() string { return In(i18n.Locale()).MpaTosClear() }
+
+// MpaTosClear says "清除桶选择"
+// in the language of msgs.
+func (msgs Messages) MpaTosClear() string {
+	return Catalog.Format(msgs.locale, "mpaTosClear", nil)
+}

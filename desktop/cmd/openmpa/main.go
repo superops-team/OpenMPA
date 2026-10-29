@@ -14,6 +14,7 @@ import (
 	"github.com/superops-team/OpenMPA/desktop/internal/ipc"
 	"github.com/superops-team/OpenMPA/desktop/internal/knowledge"
 	"github.com/superops-team/OpenMPA/desktop/internal/localization"
+	"github.com/superops-team/OpenMPA/desktop/internal/mpalifecycle"
 	"github.com/superops-team/OpenMPA/desktop/internal/runtimeconfig"
 	"github.com/superops-team/OpenMPA/desktop/internal/runtimeterminal"
 	"github.com/superops-team/OpenMPA/desktop/internal/schedule"
@@ -63,6 +64,15 @@ func main() {
 	documents := workspace.New(func() (string, error) { return dataPath("workspace.json") })
 	pending := session.NewPendingStore(func() (string, error) { return dataPath("pending") })
 	mygo.BindAs("Platform", platform)
+	lifecycle := mpalifecycle.New(cloudClient, func() (string, error) { return dataPath("mpa-lifecycle") }, func() (string, error) {
+		root, err := mygo.App.Path(mygo.PathResources)
+		return filepath.Join(root, "mpa-engine.tar.gz"), err
+	}, func(epoch uint64, region, runtimeID string) {
+		if ipc.ClearDeletedRuntime(platform, epoch, region, runtimeID) {
+			host.NotifyConnection(shell)
+		}
+	})
+	mygo.BindAs("MPALifecycle", lifecycle)
 	connectionService := &ipc.Connection{Client: conn, Platform: platform}
 	channelService := channels.New(conn)
 	knowledgeService := knowledge.New(conn)
@@ -98,6 +108,7 @@ func main() {
 		host.RestrictPagePermissions(page)
 	})
 	mygo.App.OnQuit(func() {
+		mpalifecycle.Shutdown(lifecycle)
 		terminalService.CloseAll()
 		conn.Disconnect()
 		workspace.Shutdown(documents)

@@ -98,6 +98,7 @@ var railIcons = map[string]*ui.SVG{
 	"knowledge":       ui.MustParseSVG([]byte(`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M12 5v16M3 4l9 2 9-2v16l-9 2-9-2Z"/></svg>`)),
 	"channels":        ui.MustParseSVG([]byte(`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="m12 3 10 5-10 5L2 8Z M2 12l10 5 10-5M2 16l10 5 10-5"/></svg>`)),
 	"resources":       ui.MustParseSVG([]byte(`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><path d="M14 17h7M17.5 14v7"/></svg>`)),
+	"runtimes":        ui.MustParseSVG([]byte(`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="3" y="3" width="18" height="7" rx="2"/><rect x="3" y="14" width="18" height="7" rx="2"/><path d="M7 6.5h.01M7 17.5h.01"/></svg>`)),
 	"collaboration":   ui.MustParseSVG([]byte(`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="8" cy="7" r="3"/><path d="M2 21v-3a6 6 0 0 1 12 0v3M16 4a3 3 0 0 1 0 6M17 15a5 5 0 0 1 5 5"/></svg>`)),
 }
 
@@ -258,6 +259,7 @@ func (r *nativeRail) sidebar(c *ui.Context) {
 		if len(state.Assistants) == 0 {
 			ui.Text(c, localization.UI("Choose your Runtime in Settings.")).Padding(6).FontSize(design.TypographyUiSm).TextColor(c.Theme().TextMuted)
 		}
+		row("runtimes", "", localization.Text("manageRuntimes", nil), "", state.View == "runtimes")
 		row("newConversation", "", "New conversation", "", false)
 		ui.TextInput(c.Key("navigation-search"), &r.query).Label(localization.Text("findConversations", nil)).Placeholder(localization.Text("searchConversations", nil)).FillWidth()
 		matches := func(item NavigationItem) bool {
@@ -351,7 +353,7 @@ func NewDesktopWindow(h *Host, options mygo.WindowOptions) (*mygo.Window, *mygo.
 }
 func validShellState(state ShellState) bool {
 	switch state.View {
-	case "chat", "tasks", "channels", "settings", "knowledge", "resources", "collaboration":
+	case "chat", "tasks", "channels", "settings", "knowledge", "resources", "collaboration", "runtimes":
 	default:
 		return false
 	}
