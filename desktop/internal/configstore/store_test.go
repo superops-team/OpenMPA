@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"fmt"
 	"github.com/egoist/mygo"
 	"github.com/superops-team/OpenMPA/desktop/internal/dto"
 	"os"
@@ -207,7 +208,7 @@ func TestSettingsRejectSecretsAndUnknownSchema(t *testing.T) {
 		t.Fatal("invalid principal scope accepted")
 	}
 	path := store.Path()
-	if _, err := store.db.Exec("PRAGMA user_version = 3"); err != nil {
+	if _, err := store.db.Exec(fmt.Sprintf("PRAGMA user_version = %d", SchemaVersion+1)); err != nil {
 		t.Fatal(err)
 	}
 	store.Close()
@@ -226,6 +227,25 @@ func testVaultRecord(account string) VaultRecord {
 		Ciphertext: []byte("ciphertext-only"),
 		AccountID:  account,
 		Region:     "cn-beijing",
+		UpdatedAt:  1700000000000,
+	}
+}
+
+func testUserTokenVaultRecord(runtimeID string) UserTokenVaultRecord {
+	return UserTokenVaultRecord{
+		RuntimeID:  runtimeID,
+		Version:    1,
+		KDF:        "pbkdf2-sha256",
+		Iterations: 100000,
+		Salt:       make([]byte, 16),
+		Nonce:      make([]byte, 12),
+		Ciphertext: []byte("ciphertext-only"),
+		Issuer:     "https://issuer.example",
+		ClientID:   "client-1",
+		Subject:    "user-1",
+		MPAID:      "mi-1",
+		SpaceID:    "space-1",
+		ExpiresAt:  "2026-10-29T12:00:00Z",
 		UpdatedAt:  1700000000000,
 	}
 }
@@ -282,6 +302,36 @@ func TestVaultRecordValidation(t *testing.T) {
 	}
 }
 
+func TestUserTokenVaultRecordRoundTripAndReplacement(t *testing.T) {
+	store := openTest(t)
+	ctx := context.Background()
+	if _, err := store.LoadUserTokenVault(ctx, "runtime-1"); !errors.Is(err, ErrNoVault) {
+		t.Fatalf("expected missing user token vault, got %v", err)
+	}
+	if err := store.SaveUserTokenVault(ctx, testUserTokenVaultRecord("runtime-1")); err != nil {
+		t.Fatal(err)
+	}
+	loaded, err := store.LoadUserTokenVault(ctx, "runtime-1")
+	if err != nil || loaded.Subject != "user-1" || string(loaded.Ciphertext) != "ciphertext-only" {
+		t.Fatalf("bad user token vault load: %+v %v", loaded, err)
+	}
+	replacement := testUserTokenVaultRecord("runtime-1")
+	replacement.Subject = "user-2"
+	if err := store.SaveUserTokenVault(ctx, replacement); err != nil {
+		t.Fatal(err)
+	}
+	loaded, err = store.LoadUserTokenVault(ctx, "runtime-1")
+	if err != nil || loaded.Subject != "user-2" {
+		t.Fatalf("user token vault replacement failed: %+v %v", loaded, err)
+	}
+	if err := store.DeleteUserTokenVault(ctx, "runtime-1"); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := store.LoadUserTokenVault(ctx, "runtime-1"); !errors.Is(err, ErrNoVault) {
+		t.Fatalf("user token vault survived delete: %v", err)
+	}
+}
+
 func TestVaultTableMigratesFromVersionOne(t *testing.T) {
 	dir := t.TempDir()
 	path := filepath.Join(dir, "openmpa.db")
@@ -299,6 +349,9 @@ func TestVaultTableMigratesFromVersionOne(t *testing.T) {
 		t.Fatal(err)
 	}
 	if _, err := raw.Exec("DROP TABLE credential_vault"); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := raw.Exec("DROP TABLE user_token_vault"); err != nil {
 		t.Fatal(err)
 	}
 	if _, err := raw.Exec("PRAGMA user_version = 1"); err != nil {
@@ -321,6 +374,44 @@ func TestVaultTableMigratesFromVersionOne(t *testing.T) {
 	}
 	if _, err := reopened.LoadVault(context.Background()); !errors.Is(err, ErrNoVault) {
 		t.Fatalf("migrated vault table not empty: %v", err)
+	}
+	if _, err := reopened.LoadUserTokenVault(context.Background(), "runtime-1"); !errors.Is(err, ErrNoVault) {
+		t.Fatalf("migrated user token vault table not empty: %v", err)
+	}
+}
+
+func TestUserTokenVaultTableMigratesFromVersionTwo(t *testing.T) {
+	dir := t.TempDir()
+	path := filepath.Join(dir, "openmpa.db")
+	store, err := Open(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	store.Close()
+
+	raw, err := sql.Open("sqlite", path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := raw.Exec("DROP TABLE user_token_vault"); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := raw.Exec("PRAGMA user_version = 2"); err != nil {
+		t.Fatal(err)
+	}
+	raw.Close()
+
+	reopened, err := Open(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer reopened.Close()
+	var version int
+	if err := reopened.db.QueryRow("PRAGMA user_version").Scan(&version); err != nil || version != SchemaVersion {
+		t.Fatalf("schema version = %d, err=%v", version, err)
+	}
+	if _, err := reopened.LoadUserTokenVault(context.Background(), "runtime-1"); !errors.Is(err, ErrNoVault) {
+		t.Fatalf("migrated user token vault table not empty: %v", err)
 	}
 }
 

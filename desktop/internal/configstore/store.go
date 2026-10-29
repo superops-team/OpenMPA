@@ -29,7 +29,7 @@ const (
 	DefaultRegion   = "cn-beijing"
 	DefaultProject  = "default"
 
-	SchemaVersion = 2
+	SchemaVersion = 3
 )
 
 // ErrNoVault reports that no encrypted credential record is stored.
@@ -46,6 +46,23 @@ type VaultRecord struct {
 	Ciphertext []byte
 	AccountID  string
 	Region     string
+	UpdatedAt  int64
+}
+
+type UserTokenVaultRecord struct {
+	RuntimeID  string
+	Version    int
+	KDF        string
+	Iterations int
+	Salt       []byte
+	Nonce      []byte
+	Ciphertext []byte
+	Issuer     string
+	ClientID   string
+	Subject    string
+	MPAID      string
+	SpaceID    string
+	ExpiresAt  string
 	UpdatedAt  int64
 }
 
@@ -170,7 +187,8 @@ func (s *Store) migrate(ctx context.Context) error {
 			}
 		}
 	}
-	if _, err := tx.ExecContext(ctx, `CREATE TABLE credential_vault (
+	if version < 2 {
+		if _, err := tx.ExecContext(ctx, `CREATE TABLE IF NOT EXISTS credential_vault (
         id INTEGER PRIMARY KEY CHECK (id = 1),
         version INTEGER NOT NULL,
         kdf TEXT NOT NULL,
@@ -182,9 +200,30 @@ func (s *Store) migrate(ctx context.Context) error {
         region TEXT NOT NULL,
         updated_at INTEGER NOT NULL
     ) STRICT`); err != nil {
-		return err
+			return err
+		}
 	}
-	if _, err := tx.ExecContext(ctx, "PRAGMA user_version = 2"); err != nil {
+	if version < 3 {
+		if _, err := tx.ExecContext(ctx, `CREATE TABLE IF NOT EXISTS user_token_vault (
+        runtime_id TEXT PRIMARY KEY NOT NULL CHECK(length(runtime_id) BETWEEN 1 AND 256),
+        version INTEGER NOT NULL,
+        kdf TEXT NOT NULL,
+        iterations INTEGER NOT NULL,
+        salt BLOB NOT NULL,
+        nonce BLOB NOT NULL,
+        ciphertext BLOB NOT NULL,
+        issuer TEXT NOT NULL,
+        client_id TEXT NOT NULL,
+        subject TEXT NOT NULL,
+        mpa_id TEXT NOT NULL,
+        space_id TEXT NOT NULL,
+        expires_at TEXT NOT NULL,
+        updated_at INTEGER NOT NULL
+    ) STRICT`); err != nil {
+			return err
+		}
+	}
+	if _, err := tx.ExecContext(ctx, "PRAGMA user_version = 3"); err != nil {
 		return err
 	}
 	return tx.Commit()
@@ -386,6 +425,25 @@ func validVaultRecord(r VaultRecord) bool {
 		validID(r.AccountID, 128) && validID(r.Region, 64)
 }
 
+func validUserTokenVaultText(value string, limit int) bool {
+	return value != "" && len(value) <= limit && !strings.ContainsAny(value, "\x00\r\n")
+}
+
+func validUserTokenVaultRecord(r UserTokenVaultRecord) bool {
+	return validID(r.RuntimeID, 256) &&
+		r.Version >= 1 && r.Version <= 16 &&
+		r.KDF != "" && len(r.KDF) <= 64 && !strings.ContainsAny(r.KDF, "\x00\r\n") &&
+		r.Iterations >= 100000 && r.Iterations <= 2000000 &&
+		len(r.Salt) == 16 && len(r.Nonce) == 12 &&
+		len(r.Ciphertext) > 0 && len(r.Ciphertext) <= 32768 &&
+		validUserTokenVaultText(r.Issuer, 1024) &&
+		validUserTokenVaultText(r.ClientID, 512) &&
+		validUserTokenVaultText(r.Subject, 512) &&
+		validUserTokenVaultText(r.MPAID, 256) &&
+		validUserTokenVaultText(r.SpaceID, 256) &&
+		validUserTokenVaultText(r.ExpiresAt, 64)
+}
+
 // SaveVault replaces the single encrypted credential record. The payload is
 // already ciphertext; this store never sees plaintext credentials.
 func (s *Store) SaveVault(ctx context.Context, r VaultRecord) error {
@@ -427,6 +485,57 @@ func (s *Store) DeleteVault(ctx context.Context) error {
 		return err
 	}
 	// Flush the WAL so the removed ciphertext does not stay in a side file.
+	_, err := s.db.ExecContext(ctx, "PRAGMA wal_checkpoint(TRUNCATE)")
+	return err
+}
+
+func (s *Store) SaveUserTokenVault(ctx context.Context, r UserTokenVaultRecord) error {
+	if !validUserTokenVaultRecord(r) {
+		return errors.New("invalid user token vault record")
+	}
+	_, err := s.db.ExecContext(ctx, `INSERT INTO user_token_vault
+        (runtime_id, version, kdf, iterations, salt, nonce, ciphertext, issuer, client_id, subject, mpa_id, space_id, expires_at, updated_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ON CONFLICT(runtime_id) DO UPDATE SET
+            version=excluded.version, kdf=excluded.kdf, iterations=excluded.iterations,
+            salt=excluded.salt, nonce=excluded.nonce, ciphertext=excluded.ciphertext,
+            issuer=excluded.issuer, client_id=excluded.client_id, subject=excluded.subject,
+            mpa_id=excluded.mpa_id, space_id=excluded.space_id, expires_at=excluded.expires_at,
+            updated_at=excluded.updated_at`,
+		r.RuntimeID, r.Version, r.KDF, r.Iterations, r.Salt, r.Nonce, r.Ciphertext,
+		r.Issuer, r.ClientID, r.Subject, r.MPAID, r.SpaceID, r.ExpiresAt, r.UpdatedAt)
+	return err
+}
+
+func (s *Store) LoadUserTokenVault(ctx context.Context, runtimeID string) (UserTokenVaultRecord, error) {
+	if !validID(runtimeID, 256) {
+		return UserTokenVaultRecord{}, errors.New("invalid Runtime identity")
+	}
+	var r UserTokenVaultRecord
+	err := s.db.QueryRowContext(ctx, `SELECT runtime_id, version, kdf, iterations, salt, nonce, ciphertext, issuer, client_id, subject, mpa_id, space_id, expires_at, updated_at
+        FROM user_token_vault WHERE runtime_id = ?`, runtimeID).Scan(
+		&r.RuntimeID, &r.Version, &r.KDF, &r.Iterations, &r.Salt, &r.Nonce, &r.Ciphertext,
+		&r.Issuer, &r.ClientID, &r.Subject, &r.MPAID, &r.SpaceID, &r.ExpiresAt, &r.UpdatedAt,
+	)
+	if errors.Is(err, sql.ErrNoRows) {
+		return UserTokenVaultRecord{}, ErrNoVault
+	}
+	if err != nil {
+		return UserTokenVaultRecord{}, err
+	}
+	if !validUserTokenVaultRecord(r) {
+		return UserTokenVaultRecord{}, errors.New("invalid user token vault record")
+	}
+	return r, nil
+}
+
+func (s *Store) DeleteUserTokenVault(ctx context.Context, runtimeID string) error {
+	if !validID(runtimeID, 256) {
+		return errors.New("invalid Runtime identity")
+	}
+	if _, err := s.db.ExecContext(ctx, "DELETE FROM user_token_vault WHERE runtime_id = ?", runtimeID); err != nil {
+		return err
+	}
 	_, err := s.db.ExecContext(ctx, "PRAGMA wal_checkpoint(TRUNCATE)")
 	return err
 }
