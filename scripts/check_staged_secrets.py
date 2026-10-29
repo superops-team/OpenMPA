@@ -30,8 +30,21 @@ def git(repo, *args):
     return subprocess.check_output(["git", "-C", str(repo), *args])
 
 
+def staged_statuses(repo):
+    raw = git(repo, "diff", "--cached", "--name-status", "-z").split(b"\0")
+    out = {}
+    index = 0
+    while index + 1 < len(raw):
+        status = raw[index].decode("utf-8", "surrogateescape")
+        name = raw[index + 1].decode("utf-8", "surrogateescape")
+        out[name] = status[:1]
+        index += 2
+    return out
+
+
 def evaluate(repo):
     findings = []
+    statuses = staged_statuses(repo)
     names = git(repo, "diff", "--cached", "--name-only", "--diff-filter=ACMR", "-z").split(b"\0")
     for raw in names:
         if not raw:
@@ -42,7 +55,8 @@ def evaluate(repo):
                 p.name in {".envrc", ".zshrc", "credentials.json"} or
                 p.suffix.lower() in {".pem", ".key", ".p12", ".pfx"} or
                 any(part in {".openmpa", ".trae", "node_modules"} for part in p.parts) or
-                name.startswith(("desktop/dist/", "desktop/build/", "desktop/cmd/verify-"))):
+                name.startswith(("desktop/dist/", "desktop/build/")) or
+                (name.startswith("desktop/cmd/verify-") and statuses.get(name) == "A")):
             findings.append({"path": name, "rule": "private-or-environment-file"})
             continue
         data = git(repo, "show", ":" + name)

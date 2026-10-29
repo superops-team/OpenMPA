@@ -213,8 +213,20 @@ export function createDesktopServices(): DesktopServices {
       set: async (mode) => unwrap(await Localization.set({ mode })),
     },
     trace: {
-      read: async (connectionEpoch, sessionId, invocationId) =>
-        unwrap(await Trace.read({ connectionEpoch, sessionId, invocationId })),
+      read: async (connectionEpoch, sessionId, invocationId, forceRefresh) =>
+        unwrap(
+          await Trace.read({
+            connectionEpoch,
+            sessionId,
+            invocationId,
+            forceRefresh,
+          }),
+        ),
+      prefetch: async (connectionEpoch, sessionId, invocationId) => {
+        unwrap(
+          await Trace.prefetch({ connectionEpoch, sessionId, invocationId }),
+        );
+      },
     },
     terminal: {
       open: async (connectionEpoch, sessionId, title) => {
@@ -256,9 +268,11 @@ export function createDesktopServices(): DesktopServices {
         ).sessions.map(sessionVM);
         return list;
       },
-      create: async (connectionEpoch, title, mpaInstanceId) => {
+      create: async (connectionEpoch, title, mpaInstanceId, sessionId) => {
         const session = sessionVM(
-          unwrap(await Session.create({ connectionEpoch, mpaInstanceId })),
+          unwrap(
+            await Session.create({ connectionEpoch, mpaInstanceId, sessionId }),
+          ),
         );
         if (title)
           unwrap(
@@ -365,6 +379,10 @@ export function createDesktopServices(): DesktopServices {
         unwrap(
           await Session.ensureExecutionConfig({ connectionEpoch, sessionId }),
         ),
+      modelCatalog: async (connectionEpoch) =>
+        unwrap(await Session.models({ connectionEpoch })).models.map((id) => ({
+          id,
+        })),
       updateExecutionConfig: async (
         connectionEpoch,
         sessionId,

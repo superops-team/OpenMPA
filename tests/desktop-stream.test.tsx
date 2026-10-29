@@ -241,6 +241,117 @@ it('releases the next turn after a terminal error while preserving the failure m
   await act(async () => renderer.unmount());
   hostCall.resolve();
 });
+
+it('keeps observed working steps after terminal history only returns the final answer', async () => {
+  vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true);
+  const read = vi
+    .fn()
+    .mockResolvedValueOnce({
+      session: { id: 's', title: 'Chat' },
+      messages: [],
+    })
+    .mockResolvedValue({
+      session: { id: 's', title: 'Chat' },
+      messages: [
+        {
+          id: 'answer',
+          role: 'assistant',
+          content: 'Final answer',
+          invocationId: 'i',
+          partial: false,
+          kind: 'text',
+        },
+      ],
+      completedInvocations: ['i'],
+    });
+  const service = {
+    sessions: {
+      pending: async () => [],
+      read,
+      submit: vi.fn(async () => ({ invocationId: 'i', status: 'accepted' })),
+      subscribe: vi.fn((_epoch, _id, _invocation, subscriptionEpoch) => ({
+        finished: Promise.resolve(),
+        close() {},
+        events: (async function* () {
+          yield {
+            connectionEpoch: 2,
+            subscriptionEpoch,
+            sessionId: 's',
+            invocationId: 'i',
+            eventId: 'tool-1',
+            kind: 'toolResult',
+            toolId: 'tool-1',
+            toolName: 'commandExecution',
+            toolStatus: 'success',
+            toolSubject: '/bin/bash -lc pwd',
+          };
+          yield {
+            connectionEpoch: 2,
+            subscriptionEpoch,
+            sessionId: 's',
+            invocationId: 'i',
+            eventId: 'usage-1',
+            kind: 'text',
+            text: '[usage] 42 tokens',
+          };
+          yield {
+            connectionEpoch: 2,
+            subscriptionEpoch,
+            sessionId: 's',
+            invocationId: 'i',
+            eventId: 'answer-delta',
+            kind: 'text',
+            text: 'Final answer',
+            partial: true,
+          };
+          yield {
+            connectionEpoch: 2,
+            subscriptionEpoch,
+            sessionId: 's',
+            invocationId: 'i',
+            eventId: 'done-i',
+            kind: 'done',
+            terminal: true,
+          };
+        })(),
+      })),
+    },
+  } as unknown as DesktopServices;
+  let renderer!: ReactTestRenderer;
+  await act(async () => {
+    renderer = create(
+      <DesktopChat
+        services={service}
+        connection={{
+          epoch: 2,
+          scope: 'scope',
+          runtimeId: 'r',
+          status: 'connected',
+        }}
+        session={{ id: 's', title: 'Chat' }}
+        onSchedule={() => {}}
+      />,
+    );
+  });
+  await act(async () =>
+    renderer.root
+      .findByProps({ 'aria-label': 'Message' })
+      .props.onChange({ target: { value: 'Run' } }),
+  );
+  await act(async () => {
+    renderer.root.findByType('form').props.onSubmit({ preventDefault() {} });
+    await Promise.resolve();
+    await Promise.resolve();
+  });
+  const output = JSON.stringify(renderer.toJSON());
+  expect(output).toContain('Run command');
+  expect(output).toContain('/bin/bash -lc pwd');
+  expect(output).toContain('Usage');
+  expect(output).toContain('42 tokens');
+  expect(output).toContain('Final answer');
+  expect(output).not.toContain('Progress');
+  await act(async () => renderer.unmount());
+});
 it('clears the composer and renders the user message before slow submit returns', async () => {
   vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true);
   const submit = deferred<{ invocationId: string; status: string }>();

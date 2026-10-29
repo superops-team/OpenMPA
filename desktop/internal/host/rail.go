@@ -95,6 +95,7 @@ var railIcons = map[string]*ui.SVG{
 	"trace":           ui.MustParseSVG([]byte(`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M4 6h16M4 12h10M4 18h7"/><circle cx="18" cy="12" r="2"/><circle cx="15" cy="18" r="2"/></svg>`)),
 	"selectSpace":     ui.MustParseSVG([]byte(`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M3 7V5a2 2 0 0 1 2-2h5l2 3h7a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z"/></svg>`)),
 	"selectSession":   ui.MustParseSVG([]byte(`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M21 11a9 9 0 0 1-9 9c-2 0-3-.3-4-1L3 21l1-5c-1-1-1-3-1-5a9 9 0 0 1 18 0Z"/></svg>`)),
+	"sessionActions":  ui.MustParseSVG([]byte(`<svg viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.7"/><circle cx="12" cy="12" r="1.7"/><circle cx="19" cy="12" r="1.7"/></svg>`)),
 	"knowledge":       ui.MustParseSVG([]byte(`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M12 5v16M3 4l9 2 9-2v16l-9 2-9-2Z"/></svg>`)),
 	"channels":        ui.MustParseSVG([]byte(`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="m12 3 10 5-10 5L2 8Z M2 12l10 5 10-5M2 16l10 5 10-5"/></svg>`)),
 	"resources":       ui.MustParseSVG([]byte(`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><path d="M14 17h7M17.5 14v7"/></svg>`)),
@@ -213,6 +214,29 @@ func (r *nativeRail) sidebar(c *ui.Context) {
 					ui.Text(c, localization.UI(subtitle)).FontSize(design.TypographyUiSm).TextColor(c.Theme().TextMuted).SingleLine()
 				}
 			})
+			if action == "selectSession" {
+				menuColor := c.Theme().TextMuted
+				if !b.Hovered() && !b.Focused() {
+					menuColor = ui.Transparent
+				}
+				menu := ui.Button(c.Key("session-actions:"+id), "").Label(localization.Text("assistantActions", nil)).Tooltip(localization.Text("assistantActions", nil)).Size(design.ControlMd, design.ControlMd).Padding(0).Radius(design.RadiusMd).BorderWidth(0).Background(ui.Transparent)
+				if menu.Hovered() || menu.Pressed() || menu.Focused() {
+					menu.Background(c.Theme().Border)
+					menuColor = c.Theme().Text
+				}
+				buttonFeedback(c, menu)
+				menu.Children(func() {
+					ui.Icon(c, railIcons["sessionActions"]).FontSize(design.IconMd).TextColor(menuColor)
+				})
+				menu.Menu(func(m *ui.Menu) {
+					if m.Item(localization.Text("editAssistant", nil)).Chosen() {
+						r.action("editSession", id)
+					}
+					if m.Item(localization.Text("delete", nil)).Chosen() {
+						r.action("deleteSession", id)
+					}
+				})
+			}
 		})
 		if b.Clicked() {
 			r.action(action, id)
@@ -261,7 +285,6 @@ func (r *nativeRail) sidebar(c *ui.Context) {
 		if len(state.Assistants) == 0 {
 			ui.Text(c, localization.UI("Choose your Runtime in Settings.")).Padding(6).FontSize(design.TypographyUiSm).TextColor(c.Theme().TextMuted)
 		}
-		row("newConversation", "", "New conversation", "", false)
 		ui.TextInput(c.Key("navigation-search"), &r.query).Label(localization.Text("findConversations", nil)).Placeholder(localization.Text("searchConversations", nil)).FillWidth()
 		matches := func(item NavigationItem) bool {
 			return strings.Contains(strings.ToLower(item.ID+" "+item.Title), strings.ToLower(strings.TrimSpace(r.query)))
@@ -271,9 +294,9 @@ func (r *nativeRail) sidebar(c *ui.Context) {
 			heading, action, id, title, subtitle, actionLabel string
 			selected                                          bool
 		}
-		rows := []navRow{{heading: "CONVERSATIONS", action: "refreshSessions", actionLabel: "Refresh conversations"}}
+		rows := []navRow{{heading: "ASSISTANTS", action: "newConversation", actionLabel: "New assistant"}}
 		if len(state.Sessions) == 0 {
-			rows = append(rows, navRow{title: "No conversations yet."})
+			rows = append(rows, navRow{title: "No assistants yet."})
 		}
 		for _, item := range state.Sessions {
 			if !matches(item) {
@@ -311,14 +334,22 @@ func (r *nativeRail) view(c *ui.Context) {
 		r.titlebar(c)
 		ui.Row(c).Grow(1).MinHeight(0).AlignItems(ui.Stretch).Children(func() {
 			ui.Column(c).Width(design.LayoutRailWidth).Shrink(0).Children(func() { r.controls(c) })
-			if !r.snapshot().Collapsed {
-				ui.Column(c).Width(design.LayoutSidebarWidth).Shrink(0).Children(func() { r.sidebar(c) })
+			viewport := ui.Column(c).Key("sidebar-viewport").Shrink(0).MinWidth(0).Clip()
+			target := float32(design.LayoutSidebarWidth)
+			if r.snapshot().Collapsed {
+				target = 0
 			}
-			if r.page != nil {
-				ui.Column(c).Grow(1).MinWidth(0).MinHeight(0).Children(func() {
-					ui.WebView(c, r.page).Grow(1).MinWidth(0)
-				})
-			}
+			width := viewport.AnimateWith("width", target, time.Duration(design.SidebarDurationMs)*time.Millisecond, ui.EaseOut)
+			viewport.Width(width).Children(func() {
+				if width > 0 {
+					ui.Column(c).Key("sidebar-content").Width(design.LayoutSidebarWidth).Shrink(0).FillHeight().Translate(width-design.LayoutSidebarWidth, 0).Children(func() { r.sidebar(c) })
+				}
+			})
+			ui.Column(c).Key("workspace-content").Label("Workspace content").Grow(1).MinWidth(0).MinHeight(0).Children(func() {
+				if r.page != nil {
+					ui.WebView(c, r.page).Key("workspace-webview").Grow(1).MinWidth(0)
+				}
+			})
 		})
 	})
 }

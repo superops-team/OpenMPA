@@ -1,325 +1,202 @@
-import {
-  errorMessage,
-  localized,
-  useMessages,
-  useMessageState,
-} from './locale';
-import { useEffect, useMemo, useRef, useState } from 'react';
-import { FileText, Plus, Puzzle, Trash2, Upload } from 'lucide-react';
-import { Button, IconButton, ModalDialog, TabPanel, Tabs } from '../ui';
+import { useId, useState } from 'react';
+import { FileText, Puzzle } from 'lucide-react';
+import { Button, ModalDialog, TabPanel, Tabs } from '../ui';
+import { useMessages } from './locale';
+import { useAssistantSettings } from './use-assistant-settings';
+import { useModelCatalog } from './use-model-catalog';
+import { ComposerModelPicker } from './ComposerModelPicker';
+import { AssistantSkills } from './AssistantSkills';
 import type {
-  AssistantConfigVM,
-  AssistantSkillVM,
+  AssistantSetupInput,
   ConnectionVM,
   DesktopServices,
   SessionVM,
 } from './models';
 
-function skillLabel(skill: AssistantSkillVM) {
-  return skill.name || skill.id;
-}
-
-function uniqueSkills(skills: AssistantSkillVM[]) {
-  const seen = new Set<string>();
-  const out: AssistantSkillVM[] = [];
-  for (const skill of skills) {
-    const id = skill.id.trim();
-    if (!id || seen.has(id)) continue;
-    seen.add(id);
-    out.push({ ...skill, id, name: skill.name.trim() || id });
-  }
-  return out;
-}
-
-export function DesktopBotSettings({
-  services,
-  connection,
-  session,
-  onSaved,
-  onClose,
-}: {
+export function DesktopBotSettings(props: {
   services: DesktopServices;
   connection: ConnectionVM;
-  session: SessionVM;
-  onSaved: (session: SessionVM) => void;
+  session?: SessionVM;
+  onSaved?: (session: SessionVM) => void;
+  onCreate?: (input: AssistantSetupInput) => Promise<void>;
   onClose: () => void;
+  mode?: 'create' | 'edit';
 }) {
   const m = useMessages();
-  const [config, setConfig] = useState<AssistantConfigVM>();
-  const [catalog, setCatalog] = useState<AssistantSkillVM[]>([]);
-  const [query, setQuery] = useState('');
-  const [skillDraft, setSkillDraft] = useState('');
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useMessageState();
+  const editor = useAssistantSettings(props);
+  const catalog = useModelCatalog(
+    props.services,
+    props.connection,
+    props.session?.id,
+  );
   const [activeTab, setActiveTab] = useState<'instructions' | 'skills'>(
     'instructions',
   );
-  const generation = useRef(0);
-  const assistantId = session.mpaInstanceId || connection.runtimeId;
-  useEffect(() => {
-    const current = ++generation.current;
-    setConfig(undefined);
-    setCatalog([]);
-    setError('');
-    void Promise.all([
-      services.sessions.assistantConfig(
-        connection.epoch,
-        session.id,
-        assistantId,
-      ),
-      services.sessions.skillCatalog(connection.epoch, ''),
-    ])
-      .then(([config, catalog]) => {
-        if (generation.current === current) {
-          setConfig(config);
-          setCatalog(catalog);
-        }
-      })
-      .catch((failure: unknown) => {
-        if (generation.current === current)
-          setError(
-            errorMessage(
-              failure,
-              localized((m) => m.settingsAssistantLoadFailed()),
-            ),
-          );
-      });
-    return () => {
-      generation.current++;
-    };
-  }, [services, connection.epoch, session.id, assistantId]);
-
-  const filteredCatalog = useMemo(() => {
-    const needle = query.trim().toLowerCase();
-    if (!needle) return catalog;
-    return catalog.filter((skill) =>
-      `${skill.id} ${skill.name} ${skill.description || ''}`
-        .toLowerCase()
-        .includes(needle),
-    );
-  }, [catalog, query]);
-
-  const addSkill = (skill: AssistantSkillVM) => {
-    if (!config) return;
-    setConfig({
-      ...config,
-      skills: uniqueSkills([...config.skills, skill]),
-    });
+  const formId = useId();
+  const creating = !props.session;
+  const close = () => {
+    if (!editor.busy) props.onClose();
   };
-
-  const removeSkill = (id: string) => {
-    if (!config) return;
-    setConfig({
-      ...config,
-      skills: config.skills.filter((skill) => skill.id !== id),
-    });
-  };
-
-  const importSkillText = () => {
-    const value = skillDraft.trim();
-    if (!value || !config) return;
-    addSkill({
-      id: value.split(/\s+/)[0],
-      name: value.split(/\s+/)[0],
-      description: value,
-      source: 'imported',
-      content: value,
-    });
-    setSkillDraft('');
-  };
-
+  const errorMessage =
+    editor.error instanceof Error && !/^[a-zA-Z]+$/.test(editor.error.message)
+      ? editor.error.message
+      : creating
+        ? m.createAssistantFailed()
+        : m.saveAssistantSettingsFailed();
   return (
     <ModalDialog
-      closeLabel={m.closeDialog(m.settingsAssistantTitle())}
-      title={m.settingsAssistantTitle()}
-      description={m.settingsAssistantDialogDescription()}
-      onClose={onClose}
+      className="assistant-dialog"
+      title={creating ? m.newAssistant() : m.assistantSettingsTitle()}
+      description={
+        creating
+          ? m.newAssistantDescription()
+          : m.assistantSettingsDescription()
+      }
+      closeLabel={m.dismiss()}
+      onClose={close}
       footer={
         <>
-          <Button type="button" variant="ghost" onClick={onClose}>
+          <Button variant="ghost" onClick={close} disabled={editor.busy}>
             {m.cancel()}
           </Button>
           <Button
             type="submit"
-            form="assistant-settings-form"
+            form={formId}
             variant="primary"
-            disabled={busy || !config}
+            disabled={editor.busy || editor.loading || !editor.name.trim()}
           >
-            {m.settingsSaveAssistantSettings()}
+            {editor.busy
+              ? m.working()
+              : creating
+                ? m.createAssistant()
+                : m.saveAssistantSettings()}
           </Button>
         </>
       }
     >
-      <div className="desktop-form assistant-settings">
-        {error && <p role="alert">{error}</p>}
-        {!config ? (
-          <p role="status">{m.settingsAssistantLoading()}</p>
-        ) : (
-          <form
-            id="assistant-settings-form"
-            className="desktop-form"
-            onSubmit={(event) => {
-              event.preventDefault();
-              if (busy) return;
-              const current = generation.current;
-              setBusy(true);
-              setError('');
-              void services.sessions
-                .saveAssistantConfig(
-                  connection.epoch,
-                  session.id,
-                  assistantId,
-                  {
-                    agentsMd: config.agentsMd,
-                    skills: uniqueSkills(config.skills),
-                  },
-                )
-                .then((saved) => {
-                  if (generation.current === current) {
-                    setConfig(saved);
-                    onSaved(session);
-                  }
-                })
-                .catch((failure: unknown) => {
-                  if (generation.current === current)
-                    setError(
-                      errorMessage(
-                        failure,
-                        localized((m) => m.settingsAssistantSaveFailed()),
-                      ),
-                    );
-                })
-                .finally(() => {
-                  if (generation.current === current) setBusy(false);
-                });
-            }}
-          >
-            <Tabs
-              group="assistant-settings"
-              label={m.settingsAssistantSections()}
-              value={activeTab}
-              onChange={setActiveTab}
-              options={[
-                {
-                  id: 'instructions',
-                  label: 'AGENTS.md',
-                  icon: <FileText aria-hidden="true" />,
-                },
-                {
-                  id: 'skills',
-                  label: m.settingsSkills(),
-                  icon: <Puzzle aria-hidden="true" />,
-                },
-              ]}
-            />
-            <TabPanel
-              group="assistant-settings"
-              id="instructions"
-              active={activeTab === 'instructions'}
-            >
-              <div className="assistant-instructions-panel">
-                <label>
-                  AGENTS.md
-                  <textarea
-                    autoFocus
-                    className="assistant-agents-editor"
-                    value={config.agentsMd}
-                    maxLength={32000}
-                    placeholder={m.settingsAssistantInstructionsPlaceholder()}
-                    onChange={(event) =>
-                      setConfig({ ...config, agentsMd: event.target.value })
-                    }
-                  />
-                </label>
-                <p>{m.settingsAssistantInstructionsHint()}</p>
-              </div>
-            </TabPanel>
-            <TabPanel
-              group="assistant-settings"
-              id="skills"
-              active={activeTab === 'skills'}
-            >
-              <div className="assistant-settings-grid">
-                <section>
-                  <h3>{m.settingsSelectedSkills()}</h3>
-                  {config.skills.length === 0 ? (
-                    <p>{m.settingsNoSelectedSkills()}</p>
-                  ) : (
-                    <div className="assistant-skill-list">
-                      {config.skills.map((skill) => (
-                        <div className="assistant-skill-row" key={skill.id}>
-                          <div>
-                            <strong>{skillLabel(skill)}</strong>
-                            <p>{skill.description || skill.id}</p>
-                          </div>
-                          <IconButton
-                            label={m.settingsRemoveSkill(skillLabel(skill))}
-                            variant="ghost"
-                            size="icon-sm"
-                            onClick={() => removeSkill(skill.id)}
-                          >
-                            <Trash2 size={14} />
-                          </IconButton>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                  <label>
-                    {m.settingsImportSkillText()}
-                    <textarea
-                      value={skillDraft}
-                      placeholder={m.settingsSkillImportPlaceholder()}
-                      onChange={(event) => setSkillDraft(event.target.value)}
-                    />
-                  </label>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    leading={<Upload size={14} />}
-                    disabled={!skillDraft.trim()}
-                    onClick={importSkillText}
-                  >
-                    {m.settingsImportSkill()}
-                  </Button>
-                </section>
-                <section>
-                  <h3>{m.settingsSkillSpace()}</h3>
-                  <label>
-                    {m.settingsSearchSkills()}
-                    <input
-                      value={query}
-                      placeholder={m.settingsSearchSkillsPlaceholder()}
-                      onChange={(event) => setQuery(event.target.value)}
-                    />
-                  </label>
-                  <div className="assistant-skill-list assistant-skill-catalog">
-                    {filteredCatalog.map((skill) => (
-                      <Button
-                        type="button"
-                        className="assistant-skill-option"
-                        variant="outline"
-                        size="content"
-                        key={skill.id}
-                        onClick={() => addSkill(skill)}
-                        disabled={config.skills.some(
-                          (item) => item.id === skill.id,
-                        )}
-                      >
-                        <Plus size={14} aria-hidden="true" />
-                        <span>
-                          <strong>{skillLabel(skill)}</strong>
-                          <small>{skill.description || skill.id}</small>
-                        </span>
-                      </Button>
-                    ))}
-                  </div>
-                </section>
-              </div>
-            </TabPanel>
-          </form>
+      <form
+        id={formId}
+        className="desktop-form assistant-settings"
+        onSubmit={(event) => {
+          event.preventDefault();
+          void editor.save();
+        }}
+      >
+        {editor.error != null && (
+          <div className="assistant-settings-error" role="alert">
+            <span>
+              {editor.loading ? m.loadAssistantSettingsFailed() : errorMessage}
+            </span>
+            {editor.loading && (
+              <Button size="sm" onClick={editor.retry}>
+                {m.retryLoading()}
+              </Button>
+            )}
+          </div>
         )}
-      </div>
+        <fieldset
+          disabled={editor.busy || editor.loading}
+          className="assistant-settings-fields"
+        >
+          <div className="assistant-basics">
+            <label>
+              {m.assistantName()}
+              <input
+                data-autofocus="true"
+                aria-label={m.assistantName()}
+                value={editor.name}
+                maxLength={256}
+                placeholder={m.assistantNamePlaceholder()}
+                onChange={(event) => editor.setName(event.target.value)}
+              />
+            </label>
+            <div className="assistant-model-picker">
+              <span>{m.model()}</span>
+              <ComposerModelPicker
+                config={editor.model}
+                busy={editor.busy || editor.loading}
+                unavailable={editor.modelUnavailable}
+                modelCatalog={catalog.models}
+                catalog={catalog}
+                catalogLoading={catalog.loading}
+                catalogFailed={catalog.failed}
+                onRetryCatalog={catalog.retry}
+                placement="below"
+                onApply={async (mode, model) => {
+                  editor.setModel({
+                    ...editor.model,
+                    modelMode: mode,
+                    model: mode === 'inherit' ? undefined : model,
+                  });
+                  return true;
+                }}
+              />
+              {editor.modelUnavailable && (
+                <p className="composer-model-note">
+                  {m.diagnosticModelUnavailable()}
+                </p>
+              )}
+            </div>
+          </div>
+          <Tabs
+            group={formId}
+            label={m.assistantSettingsTitle()}
+            value={activeTab}
+            onChange={setActiveTab}
+            options={[
+              {
+                id: 'instructions',
+                label: 'AGENTS.md',
+                icon: <FileText aria-hidden="true" />,
+              },
+              {
+                id: 'skills',
+                label: 'Skills',
+                icon: <Puzzle aria-hidden="true" />,
+              },
+            ]}
+          />
+          <TabPanel
+            group={formId}
+            id="instructions"
+            active={activeTab === 'instructions'}
+          >
+            <div className="assistant-instructions-panel">
+              <label>
+                AGENTS.md
+                <textarea
+                  className="assistant-agents-editor"
+                  value={editor.config.agentsMd}
+                  maxLength={32000}
+                  placeholder={m.agentsMdPlaceholder()}
+                  onChange={(event) =>
+                    editor.setConfig({
+                      ...editor.config,
+                      agentsMd: event.target.value,
+                    })
+                  }
+                />
+              </label>
+              <p>{m.agentsMdHelp()}</p>
+            </div>
+          </TabPanel>
+          <TabPanel group={formId} id="skills" active={activeTab === 'skills'}>
+            {editor.skillsFailed && <p role="status">{m.skillsLoadFailed()}</p>}
+            <AssistantSkills
+              skills={editor.config.skills}
+              catalog={editor.catalog}
+              onChange={(skills) =>
+                editor.setConfig({ ...editor.config, skills })
+              }
+            />
+          </TabPanel>
+        </fieldset>
+        {editor.loading && editor.error == null && (
+          <span className="sr-only" role="status">
+            {m.loadingAssistantSettings()}
+          </span>
+        )}
+      </form>
     </ModalDialog>
   );
 }

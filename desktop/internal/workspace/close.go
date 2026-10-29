@@ -27,6 +27,11 @@ func (s *Service) closeState() *CloseState {
 	}
 	return out
 }
+func (s *Service) SafeClose() bool {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	return len(s.unsavedDrafts) == 0
+}
 func (s *Service) CanClose(ctx context.Context, _ CanCloseRequest) CloseStateResult {
 	s.mu.Lock()
 	defer s.mu.Unlock()

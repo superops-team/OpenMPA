@@ -6,7 +6,7 @@ Connections give a Dot tools from remote [MCP](https://modelcontextprotocol.io) 
 
 1. Open a Dot's settings (**Edit specialist**).
 2. Under **Connections**, enter a name, the server's Streamable HTTP endpoint (for example `https://example.com/mcp`), and an optional bearer token.
-3. Select **Connect**. OpenDots lists the server's tools and saves them.
+3. Select **Connect**. OpenMPA lists the server's tools and saves them.
 
 Use **Refresh** after the server adds or changes tools. Your choices for existing tools are kept.
 

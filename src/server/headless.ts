@@ -62,9 +62,9 @@ export async function runThreadTurn(
   try {
     signal.throwIfAborted();
     const idPrefix =
-      metadata?.opendotsSource === 'voice_receipt'
+      metadata?.openmpaSource === 'voice_receipt'
         ? voiceReceiptMessagePrefix
-        : metadata?.opendotsSource === 'scheduled_task'
+        : metadata?.openmpaSource === 'scheduled_task'
           ? scheduledTaskMessagePrefix
           : '';
     agent.addMessage({

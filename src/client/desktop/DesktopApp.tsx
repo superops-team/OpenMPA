@@ -1,12 +1,5 @@
-import { useEffect, useState } from 'react';
-import {
-  ActivitySquare,
-  Pencil,
-  Settings2,
-  SquareTerminal,
-  Trash2,
-  X,
-} from 'lucide-react';
+import { useEffect } from 'react';
+import { ActivitySquare, Settings2, SquareTerminal, X } from 'lucide-react';
 import { Mascot } from '../Mascot';
 import { DesktopBotSettings } from './BotSettings';
 import { DesktopChannels } from './Channels';
@@ -32,7 +25,6 @@ export function DesktopApp({ services }: { services: DesktopServices }) {
 function DesktopAppContent({ services }: { services: DesktopServices }) {
   const m = useMessages();
   const state = useDesktopAppState({ services });
-  const [configuringSession, setConfiguringSession] = useState(false);
   const {
     error,
     errorSource,
@@ -48,14 +40,20 @@ function DesktopAppContent({ services }: { services: DesktopServices }) {
     setTheme,
     connection,
     navigate,
-    setSelected,
     session,
-    epoch,
-    refresh,
     createSession,
+    creatingAssistant,
+    setCreatingAssistant,
+    saveNewAssistant,
+    updateSession,
+    assistantSettingsSessionId,
+    setAssistantSettingsSessionId,
     connect,
   } = state;
   const canUseConversationTools = Boolean(connection && session);
+  const editingSession = state.sessions.find(
+    (item) => item.id === assistantSettingsSessionId,
+  );
   useEffect(() => {
     if (!canUseConversationTools && traceOpen) setTraceOpen(false);
   }, [canUseConversationTools, traceOpen, setTraceOpen]);
@@ -74,6 +72,28 @@ function DesktopAppContent({ services }: { services: DesktopServices }) {
   return (
     <div className="app template-app desktop-app">
       <div className="workspace">
+        {creatingAssistant && connection && (
+          <DesktopBotSettings
+            mode="create"
+            services={services}
+            connection={connection}
+            onCreate={saveNewAssistant}
+            onClose={() => setCreatingAssistant(false)}
+          />
+        )}
+        {connection && editingSession && !creatingAssistant && (
+          <DesktopBotSettings
+            key={`${connection.epoch}:${editingSession.id}`}
+            services={services}
+            connection={connection}
+            session={editingSession}
+            onSaved={(updated) => {
+              updateSession(updated);
+              setAssistantSettingsSessionId(undefined);
+            }}
+            onClose={() => setAssistantSettingsSessionId(undefined)}
+          />
+        )}
         {error && (
           <div
             className="error-banner"
@@ -177,7 +197,9 @@ function DesktopAppContent({ services }: { services: DesktopServices }) {
           session={session}
           target={state.conversationTarget}
           onUse={state.useInConversation}
-          onConfigureMCP={() => setConfiguringSession(true)}
+          onConfigureMCP={() => {
+            if (session) setAssistantSettingsSessionId(session.id);
+          }}
           hidden={view !== 'resources'}
         />
         <DesktopCollaboration
@@ -186,18 +208,6 @@ function DesktopAppContent({ services }: { services: DesktopServices }) {
           connection={connection}
           hidden={view !== 'collaboration'}
         />
-        {configuringSession && connection && session && (
-          <DesktopBotSettings
-            services={services}
-            connection={connection}
-            session={session}
-            onSaved={() => {
-              setConfiguringSession(false);
-              void refresh(true);
-            }}
-            onClose={() => setConfiguringSession(false)}
-          />
-        )}
         {view === 'resources' || view === 'collaboration' ? null : view ===
           'runtimes' ? (
           <RuntimeManager
@@ -217,6 +227,7 @@ function DesktopAppContent({ services }: { services: DesktopServices }) {
             section={settingsSection}
             onSectionChange={setSettingsSection}
             session={session}
+            onSessionSaved={updateSession}
             theme={theme}
             onThemeChange={setTheme}
           />
@@ -272,68 +283,10 @@ function DesktopAppContent({ services }: { services: DesktopServices }) {
                   <>
                     <button
                       className="text-button"
-                      onClick={() => setConfiguringSession(true)}
+                      onClick={() => setAssistantSettingsSessionId(session.id)}
                     >
                       <Settings2 size={13} />
                       {m.openBotSettings()}
-                    </button>
-                    <button
-                      className="text-button"
-                      onClick={() => {
-                        const title = window.prompt(
-                          m.conversationTitle(),
-                          session.title,
-                        );
-                        if (title?.trim()) {
-                          const current = connection.epoch;
-                          void services.sessions
-                            .rename(current, session.id, title.trim())
-                            .then(() => {
-                              if (epoch.current === current)
-                                return refresh(true);
-                            })
-                            .catch((error: unknown) =>
-                              setError(
-                                error instanceof Error
-                                  ? error.message
-                                  : localized((m) => m.desktopRenameFailed()),
-                              ),
-                            );
-                        }
-                      }}
-                    >
-                      <Pencil size={13} />
-                      {m.rename()}
-                    </button>
-                    <button
-                      className="text-button"
-                      onClick={() => {
-                        if (
-                          window.confirm(
-                            m.deleteConversationConfirm(session.id),
-                          )
-                        ) {
-                          const current = connection.epoch;
-                          void services.sessions
-                            .remove(current, session.id)
-                            .then(() => {
-                              if (epoch.current === current) {
-                                setSelected(undefined);
-                                return refresh(true);
-                              }
-                            })
-                            .catch((error: unknown) =>
-                              setError(
-                                error instanceof Error
-                                  ? error.message
-                                  : localized((m) => m.desktopDeleteFailed()),
-                              ),
-                            );
-                        }
-                      }}
-                    >
-                      <Trash2 size={13} />
-                      {m.delete()}
                     </button>
                   </>
                 )}
@@ -341,14 +294,13 @@ function DesktopAppContent({ services }: { services: DesktopServices }) {
               {connection && session ? (
                 <>
                   <DesktopChat
-                    key={`${connection.epoch}:${connection.scope}:${session.id}:${session.configVersion || ''}`}
+                    key={`${connection.epoch}:${connection.scope}:${session.id}`}
                     services={services}
                     connection={connection}
                     session={session}
                     composerDraft={state.composerDraft}
                     traceOpen={traceOpen}
                     onCloseTrace={() => setTraceOpen(false)}
-                    onOpenTrace={() => setTraceOpen(true)}
                     onSchedule={() => navigate('tasks')}
                   />
                 </>
@@ -367,9 +319,7 @@ function DesktopAppContent({ services }: { services: DesktopServices }) {
                             : navigate('settings')
                         }
                       >
-                        {connection
-                          ? m.startConversation()
-                          : m.connectAccount()}
+                        {connection ? m.newAssistant() : m.connectAccount()}
                       </button>
                     </div>
                   </div>

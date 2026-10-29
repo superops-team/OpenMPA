@@ -6,6 +6,12 @@ import {
   type DisplayMessage,
 } from './projection';
 
+function finiteDuration(value?: number | null) {
+  return typeof value === 'number' && Number.isFinite(value)
+    ? value
+    : undefined;
+}
+
 export function displayEvent(event: ClientEvent): DisplayEvent {
   const reasoningVisibility = ['hidden', 'summary', 'detail'].includes(
     event.reasoningVisibility || '',
@@ -47,9 +53,17 @@ export function displayEvent(event: ClientEvent): DisplayEvent {
     toolId: event.toolId,
     toolName: event.toolName,
     toolStatus,
-    toolSubject: event.toolSubject,
+    toolSubject: event.toolSubject || event.safeCommandSummary?.commandPreview,
+    startedAt: event.startedAt,
+    endedAt: event.endedAt,
+    durationMs: finiteDuration(event.durationMs),
+    safeCommandSummary: event.safeCommandSummary,
+    outputPreview: event.outputPreview,
+    stderrPreview: event.stderrPreview,
     partial: event.partial,
     terminal: event.terminal,
+    terminalStatus:
+      event.terminal && event.kind === 'stopped' ? 'stopped' : undefined,
   };
 }
 

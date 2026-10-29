@@ -86,32 +86,25 @@ func (s *Service) Models(ctx context.Context, r dto.ScopeRequest) ModelCatalogRe
 		if out.DefaultModel != "" && !validModelID(out.DefaultModel) {
 			return invalidModelCatalog()
 		}
-		// Studio intersects Runtime choices with available account models. If the
-		// account catalog is unavailable, it falls back to the Runtime choices.
-		if s.platform != nil && len(out.Models) > 0 {
-			available, err := s.platform.AvailableModelIDs(ctx)
-			if s.platform.Epoch() != platformEpoch || !s.conn.Current(r.ConnectionEpoch) {
-				return ModelCatalogResult{Error: dto.Failure("staleConnection", "platform", "reload", 0)}
-			}
-			if err == nil {
-				filtered := []string{}
-				for _, id := range out.Models {
-					if available[id] {
-						filtered = append(filtered, id)
-					}
-				}
-				out.Models = filtered
+		if s.platform == nil {
+			return ModelCatalogResult{Error: dto.Failure("modelCatalogUnavailable", "platform", "readOnly", 0)}
+		}
+		available, err := s.platform.AvailableModelIDs(ctx)
+		if s.platform.Epoch() != platformEpoch || !s.conn.Current(r.ConnectionEpoch) {
+			return ModelCatalogResult{Error: dto.Failure("staleConnection", "platform", "reload", 0)}
+		}
+		if err != nil {
+			return ModelCatalogResult{Error: err}
+		}
+		filtered := []string{}
+		for _, id := range out.Models {
+			if available[id] {
+				filtered = append(filtered, id)
 			}
 		}
-		if out.DefaultModel != "" {
-			found := false
-			for _, id := range out.Models {
-				found = found || id == out.DefaultModel
-			}
-			if !found {
-				out.Models = append([]string{out.DefaultModel}, out.Models...)
-			}
-		}
+		out.Models = filtered
+		// The advertised default is metadata, never permission to reinsert a
+		// model excluded by activation, key ACL or Responses support.
 		out.Supported = len(out.Models) > 0
 		break
 	}

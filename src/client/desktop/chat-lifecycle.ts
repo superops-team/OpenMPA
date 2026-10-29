@@ -2,6 +2,7 @@ import type { MessageText } from './locale';
 import { errorMessage, localized } from './locale';
 import {
   useEffect,
+  useLayoutEffect,
   useRef,
   useState,
   type Dispatch,
@@ -144,7 +145,7 @@ export function useChatTranscript(messages: DisplayMessage[]) {
   const transcript = useRef<HTMLDivElement>(null);
   const stickToBottom = useRef(true);
   const [showJump, setShowJump] = useState(false);
-  useEffect(() => {
+  useLayoutEffect(() => {
     const element = transcript.current;
     if (!element) return;
     if (stickToBottom.current) {

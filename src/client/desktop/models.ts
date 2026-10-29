@@ -97,6 +97,13 @@ export interface AssistantConfigVM {
   skills: AssistantSkillVM[];
   updatedAt?: string;
 }
+export interface AssistantSetupInput {
+  name: string;
+  agentsMd: string;
+  skills: AssistantSkillVM[];
+  modelMode: string;
+  model: string;
+}
 export interface PlatformVM {
   scope?: string;
   signedIn: boolean;
@@ -267,7 +274,13 @@ export interface DesktopServices {
       epoch: number,
       sessionId: string,
       invocationId: string,
+      forceRefresh?: boolean,
     ): Promise<TraceVM>;
+    prefetch?(
+      epoch: number,
+      sessionId: string,
+      invocationId: string,
+    ): Promise<void>;
   };
   terminal?: {
     open(epoch: number, sessionId: string, title: string): Promise<void>;
@@ -307,6 +320,7 @@ export interface DesktopServices {
       epoch: number,
       title: string,
       mpaInstanceId?: string,
+      sessionId?: string,
     ): Promise<SessionVM>;
     read(
       epoch: number,
@@ -346,6 +360,7 @@ export interface DesktopServices {
       epoch: number,
       id: string,
     ): Promise<ExecutionConfigVM>;
+    modelCatalog?(epoch: number, id: string): Promise<Array<{ id: string }>>;
     updateExecutionConfig(
       epoch: number,
       id: string,

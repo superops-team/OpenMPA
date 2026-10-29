@@ -15,7 +15,7 @@ import {
 } from '../src/server/setup-telemetry.js';
 
 it('persists bounded offline events with stable IDs and CLI identity across restart', async () => {
-  const dir = mkdtempSync(join(tmpdir(), 'opendots-telemetry-'));
+  const dir = mkdtempSync(join(tmpdir(), 'openmpa-telemetry-'));
   const path = join(dir, 'store.sqlite');
   let store = new Store(path);
   const offline = vi.fn(async () => {
@@ -51,8 +51,8 @@ it('persists bounded offline events with stable IDs and CLI identity across rest
     event_id: id,
     event: 'oss.runtime.setup_step_viewed',
     global_properties: {
-      accessibility_title: 'OpenDots',
-      opendots_distribution: 'web',
+      accessibility_title: 'OpenMPA',
+      openmpa_distribution: 'web',
       installation_id: installationId,
     },
   });

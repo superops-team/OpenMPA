@@ -27,7 +27,7 @@ func TestModelsReadCurrentRuntimeCapabilityOnly(t *testing.T) {
 	epoch, _ := c.Bind(connection.Binding{Endpoint: server.URL}, true)
 	s := New(c, nil)
 	result := s.Models(context.Background(), dto.ScopeRequest{ConnectionEpoch: epoch})
-	if !result.OK || result.Value == nil || !result.Value.Supported || result.Value.DefaultModel != "runtime-default" || !reflect.DeepEqual(result.Value.Models, []string{"runtime-default", "new-runtime-model", "another-model"}) {
+	if result.OK || result.Error == nil || result.Error.Code != "modelCatalogUnavailable" {
 		t.Fatalf("unexpected catalog: %+v", result)
 	}
 	c.Disconnect()
@@ -46,9 +46,9 @@ func TestModelsMatchStudioAccountIntersectionAndDefaultFallback(t *testing.T) {
 		want       []string
 		stale      bool
 	}{
-		{"available only", "normal", []string{"runtime-default", "deepseek-version"}, false},
-		{"empty account catalog retains default", "empty", []string{"runtime-default"}, false},
-		{"catalog unavailable uses Runtime fallback", "denied", []string{"qwen-version", "deepseek-version", "runtime-default", "key-denied"}, false},
+		{"available only", "normal", []string{"deepseek-version"}, false},
+		{"empty account catalog never reinserts default", "empty", []string{}, false},
+		{"catalog unavailable returns an error", "denied", nil, false},
 		{"account change rejects response", "account-change", nil, true},
 		{"Runtime change rejects response", "runtime-change", nil, true},
 	} {
@@ -66,6 +66,15 @@ func TestModelsMatchStudioAccountIntersectionAndDefaultFallback(t *testing.T) {
 				switch r.URL.Query().Get("Action") {
 				case "GetCallerIdentity":
 					payload = `{"Result":{"AccountId":"account","UserId":"user","IdentityType":"User"}}`
+				case "ListModelChargeItems":
+					payload = `{"Result":{"Items":[{"FoundationModelName":"deepseek","State":"Available"},{"FoundationModelName":"qwen","State":"Unavailable"},{"FoundationModelName":"account-only","State":"Available"}],"TotalCount":3,"PageSize":100}}`
+				case "ListFoundationModels":
+					payload = `{"Result":{"Items":[{"Name":"deepseek","PrimaryVersion":"version"},{"Name":"account-only","PrimaryVersion":"v1"}]}}`
+				case "ListModelMetaDatas":
+					var input struct{ FoundationModelName, FoundationModelVersion string }
+					_ = json.NewDecoder(r.Body).Decode(&input)
+					value, _ := json.Marshal(map[string]any{"Result": map[string]any{"ModelMetaDatas": []any{map[string]any{"FoundationModelName": input.FoundationModelName, "FoundationModelVersion": input.FoundationModelVersion, "Key": "api.responses.support", "Data": []string{"true"}}}, "Total": 1}})
+					payload = string(value)
 				case "ListApiKeys":
 					if tc.mode == "denied" {
 						payload = `{"ResponseMetadata":{"Error":{"Code":"LackPolicy"}}}`
@@ -97,6 +106,12 @@ func TestModelsMatchStudioAccountIntersectionAndDefaultFallback(t *testing.T) {
 			}
 			service := NewWithCache(conn, nil, nil, platform)
 			result := service.Models(context.Background(), dto.ScopeRequest{ConnectionEpoch: epoch})
+			if tc.mode == "denied" {
+				if result.OK || result.Error == nil {
+					t.Fatal("catalog failure was hidden")
+				}
+				return
+			}
 			if tc.stale {
 				if result.OK || result.Error == nil || result.Error.Code != "staleConnection" {
 					t.Fatalf("accepted stale catalog: %+v", result)

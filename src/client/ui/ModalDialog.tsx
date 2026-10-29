@@ -1,5 +1,5 @@
 import {
-  useEffect,
+  useLayoutEffect,
   useId,
   useRef,
   type KeyboardEvent,
@@ -19,6 +19,7 @@ export function ModalDialog({
   children,
   footer,
   size = 'wide',
+  className = '',
   closeLabel,
 }: {
   title: string;
@@ -27,34 +28,53 @@ export function ModalDialog({
   children: ReactNode;
   footer?: ReactNode;
   size?: 'default' | 'wide';
+  className?: string;
   closeLabel?: string;
 }) {
   const card = useRef<HTMLElement>(null);
   const titleId = useId();
   const descriptionId = useId();
-  useEffect(() => {
+  useLayoutEffect(() => {
     const node = card.current;
     if (!node) return;
     const previous = document.activeElement;
-    const preferred = node.querySelector<HTMLElement>('[autofocus]');
-    const first =
-      preferred ?? node.querySelector<HTMLElement>(focusable) ?? node;
-    requestAnimationFrame(() => first.focus());
+    const preferred = [
+      ...node.querySelectorAll<HTMLElement>(
+        '[data-autofocus="true"], [autofocus]',
+      ),
+    ].find((item) => !item.matches(':disabled'));
+    const background = [...document.body.children]
+      .filter(
+        (item): item is HTMLElement =>
+          item instanceof HTMLElement && !item.contains(node),
+      )
+      .map((item) => ({ item, inert: item.inert }));
+    for (const { item } of background) item.inert = true;
+    const overflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    // Resolve focus before paint. Async content must not move focus again or
+    // temporarily focus the close button while the form is loading.
+    (preferred ?? node).focus({ preventScroll: true });
     return () => {
+      for (const { item, inert } of background) item.inert = inert;
+      document.body.style.overflow = overflow;
       if (previous instanceof HTMLElement && previous.isConnected)
-        previous.focus();
+        previous.focus({ preventScroll: true });
     };
   }, []);
   const handleKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
-    if (event.key === 'Escape') {
+    if (event.key === 'Escape' && !event.nativeEvent?.isComposing) {
       event.preventDefault();
+      event.stopPropagation?.();
       onClose();
       return;
     }
     if (event.key !== 'Tab' || !card.current) return;
     const items = [
       ...card.current.querySelectorAll<HTMLElement>(focusable),
-    ].filter((item) => item.offsetParent !== null);
+    ].filter(
+      (item) => item.offsetParent !== null && !item.matches(':disabled'),
+    );
     if (!items.length) {
       event.preventDefault();
       card.current.focus();
@@ -62,10 +82,18 @@ export function ModalDialog({
     }
     const first = items[0];
     const last = items.at(-1)!;
-    if (event.shiftKey && document.activeElement === first) {
+    if (
+      event.shiftKey &&
+      (document.activeElement === first ||
+        document.activeElement === card.current)
+    ) {
       event.preventDefault();
       last.focus();
-    } else if (!event.shiftKey && document.activeElement === last) {
+    } else if (
+      !event.shiftKey &&
+      (document.activeElement === last ||
+        document.activeElement === card.current)
+    ) {
       event.preventDefault();
       first.focus();
     }
@@ -80,7 +108,7 @@ export function ModalDialog({
     >
       <section
         ref={card}
-        className="ui-modal-dialog desktop-app template-app"
+        className={`ui-modal-dialog desktop-app template-app ${className}`.trim()}
         data-size={size}
         role="dialog"
         aria-modal="true"

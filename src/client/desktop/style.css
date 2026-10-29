@@ -224,6 +224,14 @@
 .desktop-app .chat-bubble td {
   background: var(--color-input);
 }
+.desktop-app .chat-bubble a,
+.desktop-app .chat-bubble.user a,
+.desktop-app .chat-bubble.assistant a {
+  color: var(--color-link);
+  font-weight: 500;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
 .desktop-app .chat-column {
   display: flex;
   flex-direction: column;
@@ -292,18 +300,27 @@
   white-space: pre-wrap;
   overflow-wrap: anywhere;
 }
-/* Composer follows the Codex surface: one soft rounded field with the Bot and
+/* Composer follows the Codex surface: one soft rounded field with the assistant and
    remote architecture above it, and the model control in the bottom bar. */
 .desktop-app .chat-composer {
   margin-top: 12px;
 }
 .desktop-app .composer-context {
+  position: relative;
+  z-index: 0;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
+  gap: var(--space-3);
+  width: calc(100% - var(--space-4) * 2);
   min-width: 0;
-  padding: 0 6px 8px;
+  min-height: calc(var(--control-input) + var(--space-2));
+  margin: 0 auto calc(-1 * var(--space-2));
+  padding: var(--space-2) var(--space-4) var(--space-4);
+  border: 1px solid var(--color-border);
+  border-bottom: 0;
+  border-radius: var(--radius-2xl) var(--radius-2xl) 0 0;
+  background: var(--color-surface-hover);
 }
 .desktop-app .composer-context-identity {
   display: flex;
@@ -351,6 +368,8 @@
   color: var(--color-foreground);
 }
 .desktop-app .composer-field {
+  position: relative;
+  z-index: 1;
   border-radius: var(--radius-2xl);
   padding: 13px 14px 9px;
   box-shadow: none;
@@ -408,46 +427,16 @@
   left: 0;
   bottom: calc(100% + 8px);
   z-index: var(--layer-popover);
-  width: min(360px, calc(100vw - 64px));
+  width: min(var(--layout-model-menu-width), calc(100vw - var(--space-6) * 2));
   padding: 12px;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-xl);
   background: var(--color-input);
   box-shadow: var(--shadow-overlay);
 }
-.desktop-app .composer-model-head {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 12px;
-  margin: 0 2px 10px;
-}
-.desktop-app .composer-model-heading {
-  margin: 0;
-  font-size: var(--text-ui-sm);
-  font-weight: 600;
-  letter-spacing: 0;
-  color: var(--color-foreground);
-}
-.desktop-app .composer-model-close {
-  display: inline-grid;
-  place-items: center;
-  width: 26px;
-  height: 26px;
-  flex: none;
-  padding: 0;
-  border: 1px solid transparent;
-  border-radius: var(--radius-md);
-  background: transparent;
-  color: var(--color-foreground-subtle);
-}
-.desktop-app .composer-model-close:hover {
-  background: var(--color-surface-hover);
-  color: var(--color-foreground);
-}
 .desktop-app .composer-model-option {
   display: grid;
-  grid-template-columns: 15px minmax(0, 1fr) 14px;
+  grid-template-columns: minmax(0, 1fr) var(--icon-sm);
   align-items: center;
   gap: 9px;
   width: 100%;
@@ -466,22 +455,13 @@
 .desktop-app .composer-model-option:hover:not(:disabled) {
   background: var(--color-surface-hover);
 }
-.desktop-app .composer-model-option > span:not(.composer-model-radio) {
+.desktop-app .composer-model-option > span {
   display: grid;
   gap: 2px;
   min-width: 0;
 }
-.desktop-app .composer-model-radio {
-  width: 13px;
-  height: 13px;
-  border: 1px solid var(--color-border-hover);
-  border-radius: var(--radius-full);
-  background: var(--color-input);
-  box-shadow: none;
-}
-.desktop-app .composer-model-option[aria-checked='true'] .composer-model-radio {
-  border-color: var(--color-primary);
-  background: var(--color-primary);
+.desktop-app .model-check-hidden {
+  visibility: hidden;
 }
 .desktop-app .composer-model-option strong {
   font-size: var(--text-ui-sm);
@@ -511,8 +491,9 @@
   color: var(--color-disabled-foreground);
 }
 .desktop-app .composer-model-search:focus-within {
-  outline: 2px solid var(--color-focus);
-  outline-offset: 1px;
+  border-color: var(--color-focus);
+  outline: none;
+  box-shadow: none;
 }
 .desktop-app .composer-model-search input {
   flex: 1;
@@ -524,6 +505,14 @@
   font-size: var(--text-ui-sm);
   outline: none;
 }
+.desktop-app .composer-model-search input:focus,
+.desktop-app .composer-model-search input:focus-visible,
+.desktop-app.app .composer-model-search input:focus-visible,
+.template-app.desktop-app .composer-model-search input:focus-visible {
+  outline: none;
+  outline-offset: 0;
+  box-shadow: none;
+}
 .desktop-app .composer-model-search input:disabled {
   color: var(--color-disabled-foreground);
   cursor: not-allowed;
@@ -531,7 +520,7 @@
 .desktop-app .composer-model-list {
   display: grid;
   gap: 2px;
-  max-height: 280px;
+  max-height: min(var(--layout-model-menu-height), 35dvh);
   overflow-y: auto;
   padding: 0 2px;
 }
@@ -613,6 +602,19 @@
 .desktop-app .assistant-settings-grid h3 {
   margin: 0 0 8px;
   font-size: var(--text-ui-caption);
+}
+.desktop-app .assistant-basics {
+  display: grid;
+  gap: 12px;
+}
+.desktop-app .assistant-model-picker {
+  display: grid;
+  gap: 8px;
+}
+.desktop-app .assistant-model-picker > span {
+  color: var(--color-foreground-subtle);
+  font-size: var(--text-ui-caption);
+  font-weight: 500;
 }
 .desktop-app .assistant-skill-list {
   display: grid;

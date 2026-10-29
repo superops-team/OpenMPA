@@ -12,7 +12,7 @@ WHERE event IN (
     'oss.runtime.setup_activated',
     'oss.runtime.setup_abandoned'
   )
-  AND properties.accessibility_title = 'OpenDots'
+  AND properties.accessibility_title = 'OpenMPA'
   AND timestamp >= now() - INTERVAL 30 DAY
   AND empty(toString(properties.validation_run_id))
 GROUP BY event, step, error_class

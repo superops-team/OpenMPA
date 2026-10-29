@@ -41,6 +41,17 @@ class StagedSecretGuardTest(unittest.TestCase):
         finding = guard.evaluate(self.repo)[0]
         self.assertEqual(set(finding), {"path", "rule"})
 
+    def test_new_verifier_files_are_rejected_but_tracked_files_are_scanned(self):
+        self.stage("desktop/cmd/verify-native-shell/private.go", "package main\n")
+        self.assertEqual(guard.evaluate(self.repo)[0]["rule"], "private-or-environment-file")
+        subprocess.run(["git", "-C", str(self.repo), "commit", "-qm", "seed"], check=True)
+        (self.repo / "desktop/cmd/verify-native-shell/private.go").write_text("//go:build verifier_tools\n\npackage main\n")
+        subprocess.run(
+            ["git", "-C", str(self.repo), "add", "--", "desktop/cmd/verify-native-shell/private.go"],
+            check=True,
+        )
+        self.assertEqual(guard.evaluate(self.repo), [])
+
 
 if __name__ == "__main__":
     unittest.main()

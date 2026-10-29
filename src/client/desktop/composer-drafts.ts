@@ -108,6 +108,16 @@ export class ComposerDraftStore {
     entry.choices = choices;
   }
 
+  restore(snapshot: DraftSnapshot, cleared: DraftSnapshot) {
+    if (!this.current(snapshot)) return;
+    const entry = this.drafts.get(snapshot.sessionId);
+    if (!entry || entry.editRevision !== cleared.editRevision) return;
+    const choices = entry.choices.slice(cleared.choiceCount);
+    entry.value = choices.reduce(composeChoice, snapshot.value);
+    entry.choices = [];
+    entry.editRevision++;
+  }
+
   remove(sessionId: string) {
     this.drafts.delete(sessionId);
   }

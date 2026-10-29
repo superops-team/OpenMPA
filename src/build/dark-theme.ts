@@ -194,7 +194,7 @@ export function excludeFixed(selector: string, containers: string[]) {
 }
 export function darkTheme(): Plugin {
   return {
-    postcssPlugin: 'opendots-dark-theme',
+    postcssPlugin: 'openmpa-dark-theme',
     Once(root) {
       let fixed = false;
       const containers: string[] = [];

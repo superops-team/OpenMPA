@@ -144,7 +144,9 @@ try {
     .getByRole('button', { name: 'Refresh collaboration', exact: true })
     .click();
   check('A2A unbind and bind require confirmation and a fresh revision');
-  await page.getByTestId('collaboration-member').selectOption('a-fixture');
+  const member = page.getByTestId('collaboration-member-a-fixture');
+  await member.click();
+  assert.equal(await member.getAttribute('aria-pressed'), 'true');
   await page.getByTestId('collaboration-alias').fill('auditor');
   await page
     .getByRole('button', { name: 'Save member alias', exact: true })
@@ -153,17 +155,28 @@ try {
   await page
     .getByRole('button', { name: 'Refresh collaboration', exact: true })
     .click();
-  await page.getByText('auditor', { exact: false }).first().waitFor();
-  await page.getByTestId('collaboration-task').fill('Review this');
-  await page
-    .getByRole('button', { name: 'Use in conversation', exact: true })
-    .click();
-  assert.match(await composer.inputValue(), /^@auditor Review this/);
-  assert.match(await composer.inputValue(), /Retained conversation draft/);
-  assert.match(await composer.inputValue(), /\$release-review/);
-  check(
-    'Persisted collaboration alias adds an @mention before the retained draft',
+  await member.getByText('@auditor', { exact: true }).waitFor();
+  assert.equal(
+    await page.getByTestId('collaboration-alias').inputValue(),
+    'auditor',
   );
+  check(
+    'Member selection and alias save persist after refreshing the directory',
+  );
+  assert.equal(await page.getByTestId('collaboration-task').count(), 0);
+  assert.equal(
+    await page
+      .getByTestId('studio-collaboration')
+      .getByRole('button', { name: 'Use in conversation', exact: true })
+      .count(),
+    0,
+  );
+  await navigate('chat');
+  assert.equal(
+    await composer.inputValue(),
+    'Retained conversation draft\n$release-review',
+  );
+  check('Collaboration management preserves the unsent conversation draft');
 
   const evidence = await page.evaluate(() => ({
     missing: globalThis.__designMissing,
@@ -174,6 +187,10 @@ try {
   assert.equal(evidence.missing.length, 0, evidence.missing.join(', '));
   assert.equal(evidence.calls.includes('Session.Submit'), false);
   assert.equal(evidence.calls.includes('Session.Send'), false);
+  assert.equal(
+    evidence.usageMethods.includes('Usage.CollaborationMention'),
+    false,
+  );
   check('Choices do not submit a conversation or contact cloud services');
   assert.equal(await page.getByTestId('studio-resources').isVisible(), false);
   assert.equal(

@@ -1,5 +1,27 @@
 # Changelog
 
+## 0.1.5 — 2026-10-29
+
+### Features
+
+- Add account-eligible OpenAI Responses-compatible model discovery for assistant creation, assistant settings and the chat composer, with shared searchable pickers and in-memory catalog reuse.
+- Cache execution trace history and normalized SSE records locally so finished runs remain visible after Runtime rebuilds or short-lived remote retention.
+- Add local prefetch and verification harnesses for Runtime selection stability, chat send interactions, recorded traces, assistant lifecycle and native WebKit model selection.
+
+### Fixes
+
+- Keep Runtime selection visually stable while binding succeeds or fails; success/error feedback no longer shifts the page and localized action labels no longer resize the row.
+- Clear the chat composer on the first rendered frame after send, preserve later user edits across late receipts, and remove the distracting send/stop pulse animation.
+- Settle Working steps when reasoning, tools and terminal events finish; final answers remain separate from process rows, and completed live processes no longer collapse unexpectedly.
+- Replace the native sidebar's one-frame insert/remove jump with an interruptible slide that respects reduced motion and keeps the WebView identity stable.
+- Normalize trace step status, timing, command summaries, worker events, URL contrast, input focus rings and recorded worker metrics across light/dark layouts.
+- Rename OpenDots product references to OpenMPA in code, docs and telemetry assets.
+
+### Known limitations
+
+- The macOS application remains ad-hoc signed and is not Apple-notarized. The GitHub prerelease provides DMG and app ZIP packages with `SHA256SUMS` and `build-verification.json`.
+- Trace TLS-log mirroring still requires Runtime topic configuration that is not bundled with this desktop release.
+
 ## 0.1.4 — 2026-10-28
 
 ### Features

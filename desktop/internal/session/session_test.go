@@ -23,7 +23,7 @@ func TestSSEMultilineAndSafeProjection(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(out) != 5 || out[0].Text != "你好" || out[1].Kind != "reasoning" || out[1].Text != "" || out[1].ReasoningVisibility != "hidden" || out[2].ToolName != "read" || out[2].ToolStatus != "running" || out[2].ToolSubject != "src/client/desktop/Chat.tsx" || out[3].Kind != "toolResult" || out[3].ToolStatus != "success" || out[4].Kind != "done" {
+	if len(out) != 5 || out[0].Text != "你好" || out[1].Kind != "reasoning" || out[1].Text != "hidden reasoning" || out[1].ReasoningVisibility != "summary" || out[2].ToolName != "read" || out[2].ToolStatus != "running" || out[2].ToolSubject != "src/client/desktop/Chat.tsx" || out[3].Kind != "toolResult" || out[3].ToolStatus != "success" || out[4].Kind != "done" {
 		t.Fatalf("bad projection: %+v", out)
 	}
 	for _, event := range out {
@@ -31,12 +31,51 @@ func TestSSEMultilineAndSafeProjection(t *testing.T) {
 		if marshalErr != nil {
 			t.Fatal(marshalErr)
 		}
-		if strings.Contains(string(encoded), "hidden reasoning") || strings.Contains(string(encoded), "NEVER") {
+		if strings.Contains(string(encoded), "NEVER") {
 			t.Fatalf("unsafe projection: %s", encoded)
 		}
 		if event.Kind != "done" && (event.PartIndex == nil || event.SchemaVersion != 2) {
 			t.Fatalf("missing v2 identity: %+v", event)
 		}
+	}
+}
+
+func TestCanonicalToolEventPreservesSafeCommandAndDuration(t *testing.T) {
+	payload := `{"eventId":"100","type":"codex.tool.result","payload":{"invocationId":"invocation","commandId":"call-1","toolName":"commandExecution","status":"completed","durationMs":423,"outputPreview":"5\n","safeCommandSummary":{"commandPreview":"/bin/bash -lc 'ps aux | wc -l'","parameters":[{"name":"workdir","value":"/data/workspace"}]}}}`
+	events, err := Project([]byte(payload), "message", dto.SubscribeRequest{SessionID: "session", InvocationID: "invocation"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(events) != 1 {
+		t.Fatalf("events %+v", events)
+	}
+	event := events[0]
+	if event.Kind != "toolResult" || event.ToolName != "commandExecution" || event.ToolID != "call-1" || event.ToolStatus != "success" {
+		t.Fatalf("bad tool projection %+v", event)
+	}
+	if event.DurationMS == nil || *event.DurationMS != 423 {
+		t.Fatalf("duration not preserved %+v", event.DurationMS)
+	}
+	if event.SafeCommandSummary == nil || event.SafeCommandSummary.CommandPreview != "/bin/bash -lc 'ps aux | wc -l'" || event.ToolSubject != event.SafeCommandSummary.CommandPreview {
+		t.Fatalf("safe command summary missing %+v", event)
+	}
+	if event.OutputPreview != "5\n" {
+		t.Fatalf("output preview missing %+v", event)
+	}
+}
+
+func TestCanonicalMessageDeltaProjectsAsPartialAnswer(t *testing.T) {
+	payload := `{"eventId":"101","type":"codex.turn.message_delta","payload":{"invocationId":"invocation","delta":"partial answer"}}`
+	events, err := Project([]byte(payload), "message", dto.SubscribeRequest{SessionID: "session", InvocationID: "invocation"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(events) != 1 {
+		t.Fatalf("events %+v", events)
+	}
+	event := events[0]
+	if event.Kind != "text" || event.Text != "partial answer" || !event.Partial || event.Completeness != "partial" {
+		t.Fatalf("message delta was not projected as partial answer: %+v", event)
 	}
 }
 
@@ -176,6 +215,46 @@ func TestOrdinarySessionStreamDoesNotProbeAdminConsole(t *testing.T) {
 	out := service.stream(context.Background(), dto.SubscribeRequest{ConnectionEpoch: epoch, SessionID: "s", InvocationID: "i"}, func(dto.ClientEvent) error { return nil })
 	if !out.OK || strings.Join(calls, "\n") != "POST /api/v1/sessions/s/sse" {
 		t.Fatalf("ordinary stream changed %+v calls=%v", out, calls)
+	}
+}
+
+func TestStreamArchivesOnlyMatchingInvocationBeforeDelivery(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		io.WriteString(w, "event: message\ndata: {\"id\":\"foreign\",\"invocationId\":\"other\",\"sourceType\":\"codex.tool.result\",\"payload\":{\"toolName\":\"exec_command\",\"commandId\":\"other-tool\",\"status\":\"completed\"}}\n\nevent: message\ndata: {\"id\":\"result\",\"invocationId\":\"i\",\"sourceType\":\"codex.tool.result\",\"payload\":{\"toolName\":\"exec_command\",\"commandId\":\"tool\",\"status\":\"completed\",\"durationMs\":7}}\n\nevent: done\ndata: {\"invocationId\":\"i\",\"terminal\":true}\n\n")
+	}))
+	defer server.Close()
+	conn := connection.New()
+	epoch, _ := conn.Bind(connection.Binding{Endpoint: server.URL, Scope: "scope"}, true)
+	service := New(conn, NewPendingStore(func() (string, error) { return t.TempDir(), nil }))
+	archived := []dto.ClientEvent{}
+	SetEventHook(service, func(event dto.ClientEvent) { archived = append(archived, event) })
+	result := service.stream(context.Background(), dto.SubscribeRequest{ConnectionEpoch: epoch, SessionID: "s", InvocationID: "i"}, func(event dto.ClientEvent) error {
+		if event.EventID == "result" && (len(archived) != 1 || archived[0].SourceType != "codex.tool.result" || archived[0].DurationMS == nil || *archived[0].DurationMS != 7) {
+			t.Error("event delivered before correct evidence was archived")
+		}
+		return nil
+	})
+	if !result.OK || len(archived) != 2 {
+		t.Fatalf("archive boundary mismatch: %+v %d", result, len(archived))
+	}
+}
+
+func TestDeleteRunsLocalCleanupHookAfterRemoteDelete(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != "DELETE" || r.URL.Path != "/api/v1/sessions/s" {
+			t.Fatalf("unexpected request %s %s", r.Method, r.URL.Path)
+		}
+		io.WriteString(w, `{"sessionId":"s"}`)
+	}))
+	defer server.Close()
+	conn := connection.New()
+	epoch, _ := conn.Bind(connection.Binding{Endpoint: server.URL, Scope: "scope"}, true)
+	service := New(conn, NewPendingStore(func() (string, error) { return t.TempDir(), nil }))
+	cleaned := ""
+	SetDeleteHook(service, func(sessionID string) { cleaned = sessionID })
+	deleted := service.Delete(context.Background(), dto.SessionRequest{ConnectionEpoch: epoch, SessionID: "s"})
+	if !deleted.OK || cleaned != "s" {
+		t.Fatalf("delete hook not run deleted=%+v cleaned=%q", deleted, cleaned)
 	}
 }
 

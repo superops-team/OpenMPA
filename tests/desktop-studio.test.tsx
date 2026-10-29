@@ -559,6 +559,27 @@ describe('Studio collaboration', () => {
 });
 
 describe('Composer drafts', () => {
+  it('restores a rejected submission alongside later choices without overwriting edits', () => {
+    const store = new ComposerDraftStore();
+    store.reset(2, 'scope');
+    store.set(target, '  original prompt  ');
+    const original = store.snapshot(target);
+    store.accept(original);
+    const cleared = store.snapshot(target);
+    store.insert(target, '$later');
+    store.restore(original, cleared);
+    expect(store.value(target)).toBe('  original prompt  $later');
+    store.set(target, 'send again');
+    const again = store.snapshot(target);
+    store.accept(again);
+    const empty = store.snapshot(target);
+    store.set(target, '');
+    store.restore(again, empty);
+    expect(store.value(target)).toBe('');
+    store.remove(target.sessionId);
+    store.restore(again, empty);
+    expect(store.value(target)).toBeUndefined();
+  });
   it('does not let a no-op recovery seed consume later choice history', () => {
     const store = new ComposerDraftStore();
     store.reset(2, 'scope');

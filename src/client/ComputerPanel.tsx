@@ -203,7 +203,7 @@ export function ComputerPanel({ dot }: { dot: Dot }) {
                 Dot gets its own browser and workspace.
               </p>
               <a
-                href="https://github.com/CopilotKit/OpenDots/blob/main/docs/COMPUTERS.md"
+                href="https://github.com/superops-team/OpenMPA/blob/main/docs/COMPUTERS.md"
                 target="_blank"
                 rel="noreferrer"
               >

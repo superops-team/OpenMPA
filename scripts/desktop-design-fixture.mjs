@@ -15,6 +15,26 @@ export function installDesktopFixture() {
     runtimeName: 'Design review assistant',
     hasCredential: true,
   };
+  const sessions = new Map([[summary.id, summary]]);
+  const configs = new Map();
+  const assistantConfigs = new Map();
+  const executionConfig = (id) =>
+    configs.get(id) || {
+      executionConfigVersion: '1',
+      etag: '"1"',
+      model: 'design-model',
+      modelMode: 'inherit',
+      mcpMode: 'inherit',
+      mcpServers: [],
+      profileBound: true,
+      invalidRefsCount: 0,
+      catalog: {
+        models: [
+          { id: 'design-model', name: 'Design model' },
+          { id: 'design-alternate', name: 'Design alternate' },
+        ],
+      },
+    };
   const event = (id, kind, text, author = 'assistant', extra = {}) => ({
     schemaVersion: 2,
     connectionEpoch: 1,
@@ -152,10 +172,28 @@ export function installDesktopFixture() {
     }),
     'Connection.Status': () => connection,
     'Localization.Status': () => ({ mode: 'en', locale: 'en', dir: 'ltr' }),
-    'Session.List': () => ({ sessions: [summary] }),
+    'Session.List': () => ({ sessions: [...sessions.values()] }),
+    'Session.Create': ({ sessionId }) => {
+      if (!sessions.has(sessionId))
+        sessions.set(sessionId, {
+          ...summary,
+          id: sessionId,
+          sessionId,
+          title: '',
+        });
+      return sessions.get(sessionId);
+    },
+    'Session.Rename': ({ sessionId, title }) => {
+      sessions.get(sessionId).title = title;
+      return {};
+    },
+    'Session.Delete': ({ sessionId }) => {
+      sessions.delete(sessionId);
+      return {};
+    },
     'Session.Pending': () => ({ operations: [] }),
-    'Session.Read': () => ({
-      summary,
+    'Session.Read': ({ sessionId }) => ({
+      summary: sessions.get(sessionId),
       events: [
         event(
           'user',
@@ -170,6 +208,13 @@ export function installDesktopFixture() {
           toolSubject: 'DESIGN.md',
         }),
         event(
+          'reasoning',
+          'reasoning',
+          'Checking the complete execution history.\nCompare live steps with the final persisted result.',
+          'assistant',
+          { reasoningVisibility: 'detail' },
+        ),
+        event(
           'answer',
           'text',
           '## Review complete\n\nThe design contract is now shared across the workspace.\n\n| Surface | Result |\n| --- | --- |\n| Settings | Reviewed |\n| Trace | Reviewed |\n\n```ts\nconst theme = "light";\n```',
@@ -177,27 +222,42 @@ export function installDesktopFixture() {
         event('done', 'done', '', 'assistant', { terminal: true }),
       ],
     }),
+    'Session.ExecutionConfig': ({ sessionId }) => executionConfig(sessionId),
+    'Session.EnsureExecutionConfig': ({ sessionId }) =>
+      executionConfig(sessionId),
+    'Session.UpdateExecutionConfig': (request) => {
+      const previous = executionConfig(request.sessionId);
+      const version = String(Number(previous.executionConfigVersion) + 1);
+      const config = {
+        ...previous,
+        ...request,
+        executionConfigVersion: version,
+        etag: JSON.stringify(version),
+      };
+      configs.set(request.sessionId, config);
+      return config;
+    },
     'Session.Models': () => ({
-      models: ['design-model'],
+      models: ['design-model', 'design-alternate'],
       defaultModel: 'design-model',
       supported: true,
     }),
-    'Session.ExecutionConfig': () => ({
-      executionConfigVersion: '1',
-      etag: '"1"',
-      model: 'design-model',
-      modelMode: 'inherit',
-      mcpMode: 'inherit',
-      mcpServers: [],
-      profileBound: true,
-      invalidRefsCount: 0,
-      catalog: { models: [{ id: 'design-model', name: 'Design model' }] },
+    'Session.ModelCatalog': () => ({
+      models: [
+        { id: 'design-model', name: 'Design model' },
+        { id: 'design-alternate', name: 'Design alternate' },
+      ],
     }),
-    'Session.AssistantConfig': () => ({
-      assistantId: connection.runtimeId,
-      agentsMd: '# Assistant\nFollow the project design contract.',
-      skills: [],
-    }),
+    'Session.SaveAssistantConfig': (request) => {
+      assistantConfigs.set(request.sessionId, request);
+      return request;
+    },
+    'Session.AssistantConfig': ({ sessionId }) =>
+      assistantConfigs.get(sessionId) || {
+        assistantId: sessionId,
+        agentsMd: '# Assistant\nFollow the project design contract.',
+        skills: [],
+      },
     'Session.SkillCatalog': () => ({
       skills: [
         {
@@ -343,12 +403,22 @@ export function installDesktopFixture() {
       },
     }),
     'Trace.Read': () => trace,
+    'Trace.Prefetch': () => ({}),
   };
   globalThis.__designCalls = [];
   globalThis.__designMissing = [];
+  globalThis.__designRequests = [];
+  // UI tests can hold catalog responses and inject one-off failures without
+  // changing production code or using live account credentials.
+  globalThis.__designOverrides = {};
   globalThis.__designNavigate = (action, id = '') => {
     for (const listener of listeners.get('NavigationRequested') ?? [])
       listener({ action, id });
+  };
+  globalThis.__designLocale = (locale) => {
+    globalThis.mygo.locale = locale;
+    for (const listener of listeners.get('mygo:locale') ?? [])
+      listener({ locale, dir: 'ltr' });
   };
   globalThis.mygo = {
     locale: 'en',
@@ -361,6 +431,9 @@ export function installDesktopFixture() {
     },
     async call(method, arg) {
       globalThis.__designCalls.push(method);
+      globalThis.__designRequests.push({ method, arg });
+      if (globalThis.__designOverrides[method])
+        return globalThis.__designOverrides[method](arg, methods[method]);
       if (!methods[method]) {
         globalThis.__designMissing.push(method);
         return {
@@ -371,7 +444,7 @@ export function installDesktopFixture() {
           },
         };
       }
-      return { ok: true, value: methods[method](arg) };
+      return { ok: true, value: await methods[method](arg) };
     },
   };
 }

@@ -2,25 +2,20 @@ import { act, create, type ReactTestRenderer } from 'react-test-renderer';
 import { expect, it, vi } from 'vitest';
 import { DesktopBotSettings } from '../src/client/desktop/BotSettings';
 import type { DesktopServices } from '../src/client/desktop/models';
-import { messages, messagesIn } from '../src/client/desktop/generated/locales';
-import { LocaleProvider } from '../src/client/desktop/locale';
-
-const m = messages;
 
 it('edits local AGENTS.md and selected skills for the assistant', async () => {
   vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true);
-  let locale = 'zh-Hans';
-  let changed!: (payload: { locale: string; dir: string }) => void;
-  const previousMyGo = (globalThis as { mygo?: unknown }).mygo;
-  (globalThis as { mygo?: unknown }).mygo = {
-    get locale() {
-      return locale;
-    },
-    on: (_name: string, listener: typeof changed) => {
-      changed = listener;
-      return () => {};
-    },
-  };
+  const rename = vi.fn(async () => {});
+  const updateExecutionConfig = vi.fn(async (_epoch, _session, input) => ({
+    executionConfigVersion: '8',
+    etag: '"rev-8"',
+    model: input.model,
+    modelMode: input.modelMode,
+    mcpMode: input.mcpMode,
+    mcpServers: input.mcpServers,
+    profileBound: true,
+    invalidRefsCount: 0,
+  }));
   const saveAssistantConfig = vi.fn(
     async (_epoch, _session, assistantId, input) => ({
       assistantId,
@@ -32,10 +27,26 @@ it('edits local AGENTS.md and selected skills for the assistant', async () => {
   const service = {
     sessions: {
       assistantConfig: vi.fn(async () => ({
-        assistantId: 'runtime-a',
+        assistantId: 's',
         agentsMd: 'Old instructions',
         skills: [],
       })),
+      modelCatalog: vi.fn(async () => [
+        { id: 'deepseek-v4-pro-260101' },
+        { id: 'doubao-seed-2-1-pro-260628' },
+      ]),
+      executionConfig: vi.fn(async () => ({
+        executionConfigVersion: '7',
+        etag: '"rev-7"',
+        model: 'deepseek-v4-pro-260101',
+        modelMode: 'replace',
+        mcpMode: 'inherit',
+        mcpServers: [],
+        profileBound: true,
+        invalidRefsCount: 0,
+      })),
+      rename,
+      updateExecutionConfig,
       skillCatalog: vi.fn(async () => [
         {
           id: 'meegle',
@@ -48,28 +59,59 @@ it('edits local AGENTS.md and selected skills for the assistant', async () => {
       saveAssistantConfig,
     },
   } as unknown as DesktopServices;
+  const onSaved = vi.fn();
   let renderer!: ReactTestRenderer;
   await act(async () => {
     renderer = create(
-      <LocaleProvider>
-        <DesktopBotSettings
-          services={service}
-          connection={{
-            epoch: 2,
-            scope: 'scope',
-            runtimeId: 'runtime-a',
-            status: 'connected',
-          }}
-          session={{ id: 's', title: 'Assistant' }}
-          onSaved={() => {}}
-          onClose={() => {}}
-        />
-      </LocaleProvider>,
+      <DesktopBotSettings
+        services={service}
+        connection={{
+          epoch: 2,
+          scope: 'scope',
+          runtimeId: 'runtime-a',
+          status: 'connected',
+        }}
+        session={{ id: 's', title: 'Assistant' }}
+        onSaved={onSaved}
+        onClose={() => {}}
+      />,
     );
   });
   await act(async () => {});
+  expect(JSON.stringify(renderer.toJSON())).toContain('Assistant settings');
+  await act(async () =>
+    renderer.root
+      .findByProps({ className: 'composer-model-trigger' })
+      .props.onClick(),
+  );
+  expect(
+    renderer.root
+      .findAllByProps({ 'aria-checked': true })
+      .some((node) =>
+        node
+          .findAllByType('strong')
+          .some((span) => span.children.includes('deepseek-v4-pro-260101')),
+      ),
+  ).toBe(true);
+  const modelSearch = renderer.root.findByProps({
+    'aria-label': 'Filter models',
+  });
+  await act(async () =>
+    modelSearch.props.onChange({ target: { value: 'doubao' } }),
+  );
   expect(JSON.stringify(renderer.toJSON())).toContain(
-    m.settingsAssistantTitle(),
+    'doubao-seed-2-1-pro-260628',
+  );
+  expect(
+    renderer.root
+      .findAllByProps({ role: 'radio' })
+      .map((node) => node.findByType('strong').children.join('')),
+  ).not.toContain('deepseek-v4-pro-260101');
+  await act(async () => modelSearch.props.onChange({ target: { value: '' } }));
+  await act(async () =>
+    renderer.root
+      .findByProps({ className: 'composer-model-trigger' })
+      .props.onClick(),
   );
   expect(renderer.root.findAllByProps({ role: 'dialog' })).toHaveLength(1);
   expect(
@@ -83,23 +125,21 @@ it('edits local AGENTS.md and selected skills for the assistant', async () => {
     'Conversation configuration',
   );
   const agents = renderer.root.findByProps({
-    placeholder: m.settingsAssistantInstructionsPlaceholder(),
+    placeholder: 'Write persistent instructions for this assistant.',
   });
   await act(async () =>
     agents.props.onChange({ target: { value: 'Use concise answers.' } }),
   );
-  expect(JSON.stringify(renderer.toJSON())).not.toContain(
-    m.settingsSkillSpace(),
-  );
+  expect(JSON.stringify(renderer.toJSON())).not.toContain('Skill Space');
   const skillsTab = renderer.root
     .findAllByProps({ role: 'tab' })
     .find((tab) =>
       tab
         .findAllByType('span')
-        .some((span) => span.children.includes(m.settingsSkills())),
+        .some((span) => span.children.includes('Skills')),
     )!;
   await act(async () => skillsTab.props.onClick());
-  expect(JSON.stringify(renderer.toJSON())).toContain(m.settingsSkillSpace());
+  expect(JSON.stringify(renderer.toJSON())).toContain('Skill Space');
   const skill = renderer.root
     .findAllByType('button')
     .find((button) =>
@@ -109,28 +149,9 @@ it('edits local AGENTS.md and selected skills for the assistant', async () => {
     )!;
   await act(async () => skill.props.onClick());
   await act(async () =>
-    renderer.root
-      .findByProps({ placeholder: m.settingsSkillImportPlaceholder() })
-      .props.onChange({ target: { value: 'Unsaved skill instruction' } }),
-  );
-  const en = messagesIn('en');
-  await act(async () => {
-    locale = 'en';
-    changed({ locale, dir: 'ltr' });
-  });
-  expect(JSON.stringify(renderer.toJSON())).toContain(en.settingsSkillSpace());
-  expect(JSON.stringify(renderer.toJSON())).toContain('飞书项目操作');
-  expect(
-    renderer.root.findByProps({
-      placeholder: en.settingsSkillImportPlaceholder(),
-    }).props.value,
-  ).toBe('Unsaved skill instruction');
-  expect(service.sessions.assistantConfig).toHaveBeenCalledTimes(1);
-  expect(service.sessions.skillCatalog).toHaveBeenCalledTimes(1);
-  await act(async () =>
     renderer.root.findByType('form').props.onSubmit({ preventDefault() {} }),
   );
-  expect(saveAssistantConfig).toHaveBeenCalledWith(2, 's', 'runtime-a', {
+  expect(saveAssistantConfig).toHaveBeenCalledWith(2, 's', 's', {
     agentsMd: 'Use concise answers.',
     skills: [
       {
@@ -142,8 +163,15 @@ it('edits local AGENTS.md and selected skills for the assistant', async () => {
       },
     ],
   });
+  expect(updateExecutionConfig).not.toHaveBeenCalled();
+  expect(onSaved).toHaveBeenCalledWith(
+    expect.objectContaining({
+      id: 's',
+      title: 'Assistant',
+      configVersion: '7',
+    }),
+  );
   await act(async () => renderer.unmount());
-  (globalThis as { mygo?: unknown }).mygo = previousMyGo;
 });
 
 it('closes the shared modal on cancel instead of changing page layout', async () => {
@@ -152,9 +180,19 @@ it('closes the shared modal on cancel instead of changing page layout', async ()
   const service = {
     sessions: {
       assistantConfig: vi.fn(async () => ({
-        assistantId: 'runtime-a',
+        assistantId: 's',
         agentsMd: '',
         skills: [],
+      })),
+      modelCatalog: vi.fn(async () => []),
+      executionConfig: vi.fn(async () => ({
+        executionConfigVersion: '7',
+        etag: '"rev-7"',
+        modelMode: 'inherit',
+        mcpMode: 'inherit',
+        mcpServers: [],
+        profileBound: true,
+        invalidRefsCount: 0,
       })),
       skillCatalog: vi.fn(async () => []),
     },

@@ -3,12 +3,12 @@
 set -euo pipefail
 umask 077
 
-VERSION='0.1.4'
+VERSION='0.1.5'
 BUNDLE_ID='com.superops.openmpa'
 MIN_MACOS_VERSION='13.0'
 BASE_URL='https://openmpa-downloads.tos-cn-beijing.volces.com'
-DMG_NAME='OpenMPA-v0.1.4-macos-arm64.dmg'
-DMG_SHA256='abf86f1e1f879b8768ef24405aa1387856645905bb1536a533eded16fd9b514a'
+DMG_NAME='OpenMPA-v0.1.5-macos-arm64.dmg'
+DMG_SHA256='ff0ec5399e4bc52f29f416b08ef0c74d6e71af32b4474188ece12bbdc54bafe0'
 
 INSTALL_DIR='/Applications'
 OPEN_AFTER_INSTALL=1
@@ -37,7 +37,7 @@ die() {
 
 usage() {
   cat <<'EOF'
-Install OpenMPA v0.1.4 for macOS Apple Silicon.
+Install OpenMPA v0.1.5 for macOS Apple Silicon.
 
 Usage: install-macos.sh [--install-dir ABSOLUTE_DIRECTORY] [--no-open]
 

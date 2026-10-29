@@ -134,6 +134,72 @@ it('projects worker lifecycle and binding steps into the worker lane', () => {
     'worker.start_turn',
     'worker.binding',
   ]);
+  expect(model.workerSteps.map((step) => step.kind)).toEqual([
+    'worker.start_turn',
+    'worker.binding',
+  ]);
+});
+
+it('preserves authoritative counts and derives timings from recorded evidence', () => {
+  const model = buildTraceModel(
+    {
+      ...trace,
+      run: {
+        status: 'success',
+        startedAt: '2026-10-27T00:00:00Z',
+        wallDurationMs: 95_000,
+        modelRequestCount: 0,
+        toolCount: 0,
+      },
+      steps: [
+        trace.steps[0],
+        {
+          stepId: 'usage',
+          parentStepId: 'root',
+          sequence: 2,
+          kind: 'usage.updated',
+          title: 'Model usage',
+          status: 'success',
+          startedAt: '2026-10-27T00:00:00.200Z',
+          durationMs: 3533,
+          details: {
+            inputTokens: 9174,
+            outputTokens: 53,
+            totalTokens: 9227,
+            firstContentFrameMs: 2107,
+          },
+        },
+        {
+          stepId: 'tool-accepted',
+          parentStepId: 'root',
+          sequence: 3,
+          kind: 'tool.accepted',
+          title: 'exec_command',
+          status: 'success',
+          startedAt: '2026-10-27T00:00:04Z',
+          durationMs: 617,
+        },
+        {
+          stepId: 'answer',
+          parentStepId: 'root',
+          sequence: 4,
+          kind: 'codex.turn.message_delta',
+          title: 'Reply output',
+          status: 'success',
+          startedAt: '2026-10-27T00:00:05Z',
+        },
+      ],
+    },
+    Date.parse('2026-10-27T00:00:06Z'),
+  );
+  expect(model.summary.modelRequestCount).toBe(0);
+  expect(model.summary.toolCount).toBe(0);
+  expect(model.summary.totalTokens).toBe(9227);
+  expect(model.summary.firstModelContentMs).toBe(2107);
+  expect(model.summary.firstVisibleAnswerMs).toBe(5000);
+  expect(
+    traceStepCategory(model.steps.find((step) => step.stepId === 'usage')!),
+  ).toBe('model');
 });
 
 it('formats durations and redacts sensitive detail keys', () => {
@@ -187,7 +253,7 @@ it('does not double count token totals, cached input or other numeric usage fiel
   expect(model.summary.totalTokens).toBe(42);
 });
 
-it('keeps absent metrics unknown for incomplete traces and respects measured zero', () => {
+it('uses observed step evidence for incomplete traces and respects measured zero', () => {
   const model = buildTraceModel({
     ...trace,
     run: { wallDurationMs: 0 },
@@ -195,9 +261,60 @@ it('keeps absent metrics unknown for incomplete traces and respects measured zer
     steps: trace.steps,
   });
   expect(model.summary.wallDurationMs).toBe(0);
-  expect(model.summary.totalTokens).toBeUndefined();
-  expect(model.summary.modelRequestCount).toBeUndefined();
+  expect(model.summary.totalTokens).toBe(42);
+  expect(model.summary.modelRequestCount).toBe(1);
   expect(model.summary.retryCount).toBeUndefined();
+});
+
+it('honors v1.4 aggregate coverage and does not count tooling preparation as a tool call', () => {
+  const model = buildTraceModel({
+    ...trace,
+    traceVersion: '1.4',
+    run: { status: 'success' },
+    coverage: {
+      complete: true,
+      aggregateComplete: 'unknown',
+      workerTrajectory: { status: 'unavailable' },
+    },
+    steps: [{ ...trace.steps[0], kind: 'tooling.refresh_check' }],
+  });
+  expect(model.coverage.complete).toBe(false);
+  expect(model.summary.toolCount).toBeUndefined();
+  expect(model.summary.modelRequestCount).toBeUndefined();
+});
+
+it('does not add multiple cumulative usage snapshots into a fake total', () => {
+  const model = buildTraceModel({
+    ...trace,
+    run: { status: 'success' },
+    steps: [100, 200].map((totalTokens, index) => ({
+      ...trace.steps[0],
+      stepId: `usage-${index}`,
+      kind: 'codex.usage.updated',
+      details: { totalTokens },
+    })),
+  });
+  expect(model.summary.totalTokens).toBeUndefined();
+  expect(model.summary.modelRequestCount).toBe(0);
+});
+
+it('treats a Runtime milestone as an occurrence, not a zero-cost operation', () => {
+  const model = buildTraceModel({
+    ...trace,
+    steps: [
+      ...trace.steps,
+      {
+        ...trace.steps[0],
+        stepId: 'worker-event',
+        kind: 'codex.turn.reasoning_delta',
+        durationMs: 0,
+        timing: { kind: 'milestone' },
+      },
+    ],
+  });
+  const event = model.steps.find((step) => step.stepId === 'worker-event')!;
+  expect(event.duration).toBeUndefined();
+  expect(event.offsetMs).toBeDefined();
 });
 
 it('does not extend a finished step to the current time when end timing is absent', () => {

@@ -176,6 +176,7 @@
     "press-duration": "120ms",
     "state-duration": "150ms",
     "overlay-duration": "180ms",
+    "sidebar-duration": "220ms",
     "spinner-duration": "900ms",
     "ease-out": "cubic-bezier(0.2, 0, 0, 1)"
   },
@@ -190,7 +191,11 @@
     "reading-column": "760px",
     "fixture-column": "920px",
     "settings-column": "800px",
-    "assistant-skill-list-height": "320px"
+    "assistant-skill-list-height": "320px",
+    "assistant-dialog-width": "640px",
+    "assistant-dialog-height": "640px",
+    "model-menu-width": "360px",
+    "model-menu-height": "280px"
   },
   "font": {
     "ui": "-apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",

@@ -40,6 +40,8 @@ export function SettingsRuntime({
     setQuery,
     visibleRuntimes,
     setNotice,
+    error,
+    notice,
   } = state;
   const statuses: Record<string, string> = {
     ready: m.knowledgeReady(),
@@ -113,6 +115,14 @@ export function SettingsRuntime({
           onChange={(event) => setQuery(event.target.value)}
         />
       </label>
+      <div className="desktop-runtime-feedback">
+        {error && (
+          <div className="desktop-runtime-error" role="alert">
+            {error}
+          </div>
+        )}
+        <div role="status">{notice}</div>
+      </div>
       {directoryLoading && <p role="status">{m.settingsRuntimesLoading()}</p>}
       {platform?.signedIn && !directoryLoading && !visibleRuntimes.length && (
         <p>{m.settingsRuntimesNoMatches()}</p>
@@ -141,6 +151,7 @@ export function SettingsRuntime({
                 </p>
               </div>
               <Button
+                className="desktop-runtime-action"
                 variant={selecting ? 'primary' : 'outline'}
                 disabled={busy || directoryLoading || selected}
                 aria-busy={selecting}
@@ -164,11 +175,25 @@ export function SettingsRuntime({
                   );
                 }}
               >
-                {selecting
-                  ? m.settingsRuntimeSelecting()
-                  : selected
-                    ? m.settingsRuntimeIsSelected()
-                    : m.settingsUseRuntime()}
+                {[
+                  {
+                    label: m.settingsUseRuntime(),
+                    visible: !selected && !selecting,
+                  },
+                  { label: m.settingsRuntimeSelecting(), visible: selecting },
+                  {
+                    label: m.settingsRuntimeIsSelected(),
+                    visible: selected && !selecting,
+                  },
+                ].map(({ label, visible }) => (
+                  <span
+                    key={label}
+                    aria-hidden={!visible}
+                    data-visible={visible}
+                  >
+                    {label}
+                  </span>
+                ))}
               </Button>
             </div>
           );

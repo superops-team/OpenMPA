@@ -280,7 +280,7 @@ export function App() {
             onChange={(e) => setAuth(e.target.value)}
             required
           />
-          <button className="primary">Unlock OpenDots</button>
+          <button className="primary">Unlock OpenMPA</button>
         </form>
         {error && (
           <p className="chat-error" role="alert">
@@ -308,7 +308,7 @@ export function App() {
       <nav className="icon-rail" aria-label="Workspace navigation">
         <button
           className="rail-brand"
-          aria-label="OpenDots home"
+          aria-label="OpenMPA home"
           onClick={() => {
             setView('chat');
             setSelectedThread(undefined);
@@ -381,7 +381,7 @@ export function App() {
             <i />
             <i />
           </span>
-          OpenDots<span className="wordmark-dot">•</span>
+          OpenMPA<span className="wordmark-dot">•</span>
         </button>
         <button
           className="new-chat nav-item"
@@ -505,7 +505,7 @@ export function App() {
           </button>
           <a
             className="nav-item"
-            href="https://github.com/CopilotKit/OpenDots"
+            href="https://github.com/superops-team/OpenMPA"
             target="_blank"
             rel="noreferrer"
           >
@@ -669,7 +669,7 @@ export function App() {
                         <p>
                           Setup and usage metadata is collected by default.{' '}
                           <a
-                            href="https://github.com/CopilotKit/OpenDots/blob/main/docs/SETUP-TELEMETRY.md"
+                            href="https://github.com/superops-team/OpenMPA/blob/main/docs/SETUP-TELEMETRY.md"
                             target="_blank"
                             rel="noreferrer"
                           >
@@ -677,7 +677,7 @@ export function App() {
                           </a>
                         </p>
                         <a
-                          href="https://github.com/CopilotKit/OpenDots/blob/main/docs/SETUP.md"
+                          href="https://github.com/superops-team/OpenMPA/blob/main/docs/SETUP.md"
                           target="_blank"
                           rel="noreferrer"
                         >

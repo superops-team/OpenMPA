@@ -33,18 +33,19 @@ open a second tab strip inside the content.
 The Home button at the top of the sidebar returns to chat and expands the sidebar
 when it is collapsed. It never destroys the selected conversation.
 
-The assistant selector is a dropdown. Each Runtime is one assistant. The
-conversation list below it belongs to the selected assistant. New conversation
-is a single action below the selector and requires a selected assistant.
+The Runtime selector is a dropdown. Its assistant list contains independent
+conversations with their own name, model, AGENTS.md and Skills. New assistant
+is a single action below the selector and requires a selected Runtime. Each
+row exposes an Edit/Delete menu on hover or keyboard focus.
 
-Knowledge and scheduled tasks are scoped to the selected assistant and
-conversation. They are not global directories.
+Knowledge and scheduled tasks are scoped to the selected Runtime and assistant.
 
 ## Motion rules
 
 Press feedback is immediate. Hover and selected states use 150ms color
 transitions. Overlays use 180ms. Frequent navigation has no
-entrance animation. Reduced motion removes transforms and keeps the state change.
+entrance animation. Dialogs use opacity only and keep stable geometry across
+loading and tab changes. Reduced motion removes animation and keeps the state change.
 
 Animate color, opacity and transform. Do not animate layout height, width or
 position on every keystroke. Streaming text may update per frame but must not

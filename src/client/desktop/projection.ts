@@ -15,7 +15,26 @@ export interface DisplayMessage {
   toolName?: string;
   toolStatus?: 'preparing' | 'running' | 'success' | 'failed' | 'stopped';
   toolSubject?: string;
+  startedAt?: string;
+  endedAt?: string;
+  durationMs?: number;
+  safeCommandSummary?: SafeCommandSummary;
+  outputPreview?: string;
+  stderrPreview?: string;
   terminalStatus?: 'completed' | 'failed' | 'stopped';
+  /** A closed text/reasoning step, independent of whole-turn completion. */
+  stepStatus?: 'completed' | 'failed' | 'stopped';
+}
+export interface SafeCommandParameter {
+  name: string;
+  value: string;
+}
+export interface SafeCommandSummary {
+  binary?: string;
+  commandPreview?: string;
+  argumentCount?: number;
+  redacted?: boolean;
+  parameters?: SafeCommandParameter[];
 }
 export interface DisplayEvent extends StreamScope {
   schemaVersion?: number;
@@ -31,8 +50,15 @@ export interface DisplayEvent extends StreamScope {
   toolName?: string;
   toolStatus?: 'preparing' | 'running' | 'success' | 'failed' | 'stopped';
   toolSubject?: string;
+  startedAt?: string;
+  endedAt?: string;
+  durationMs?: number;
+  safeCommandSummary?: SafeCommandSummary;
+  outputPreview?: string;
+  stderrPreview?: string;
   partial?: boolean;
   terminal?: boolean;
+  terminalStatus?: 'completed' | 'failed' | 'stopped';
 }
 export interface StreamSlot {
   invocationId: string;
@@ -86,6 +112,39 @@ function replaceMessage(
 ) {
   return messages.map((message) => (message.id === id ? next : message));
 }
+function metadataFromEvent(event: DisplayEvent) {
+  return {
+    startedAt: event.startedAt,
+    endedAt: event.endedAt,
+    durationMs: event.durationMs,
+    safeCommandSummary: event.safeCommandSummary,
+    outputPreview: event.outputPreview,
+    stderrPreview: event.stderrPreview,
+  };
+}
+function mergedMetadata(
+  event: DisplayEvent,
+  existing?: DisplayMessage,
+): Pick<
+  DisplayMessage,
+  | 'startedAt'
+  | 'endedAt'
+  | 'durationMs'
+  | 'safeCommandSummary'
+  | 'outputPreview'
+  | 'stderrPreview'
+> {
+  const incoming = metadataFromEvent(event);
+  return {
+    startedAt: incoming.startedAt ?? existing?.startedAt,
+    endedAt: incoming.endedAt ?? existing?.endedAt,
+    durationMs: incoming.durationMs ?? existing?.durationMs,
+    safeCommandSummary:
+      incoming.safeCommandSummary ?? existing?.safeCommandSummary,
+    outputPreview: incoming.outputPreview ?? existing?.outputPreview,
+    stderrPreview: incoming.stderrPreview ?? existing?.stderrPreview,
+  };
+}
 export function projectEvent(
   state: Projection,
   event: DisplayEvent,
@@ -111,37 +170,77 @@ export function projectEvent(
   if (event.kind === 'heartbeat') return state;
   if (event.kind === 'done' && !event.terminal) return state;
   if (event.kind === 'error' && !event.terminal) return { ...state, seen };
-  if ((event.kind === 'done' || event.kind === 'error') && event.terminal) {
-    const terminalStatus = event.kind === 'error' ? 'failed' : 'completed';
-    const messages = state.messages.map((message) =>
-      message.invocationId === event.invocationId &&
-      isToolKind(message.kind) &&
-      ['preparing', 'running'].includes(message.toolStatus ?? 'running')
-        ? {
-            ...message,
-            toolStatus:
-              event.kind === 'error'
-                ? ('failed' as const)
-                : ('stopped' as const),
-          }
-        : message,
+  if (event.terminal) {
+    const requestedStatus =
+      event.terminalStatus ??
+      (event.kind === 'error'
+        ? 'failed'
+        : event.kind === 'stopped'
+          ? 'stopped'
+          : 'completed');
+    const previousStatus = state.messages.find(
+      (message) => message.id === `${event.invocationId}:terminal`,
     );
-    const status: DisplayMessage = {
-      id: `${event.invocationId}:terminal`,
-      invocationId: event.invocationId,
-      role: 'assistant',
-      kind: 'status',
-      partial: false,
-      content: event.text ?? '',
-      terminalStatus,
-    };
+    const preserveStatus =
+      requestedStatus === 'completed' &&
+      (previousStatus?.terminalStatus === 'failed' ||
+        previousStatus?.terminalStatus === 'stopped');
+    const terminalStatus = preserveStatus
+      ? previousStatus.terminalStatus!
+      : requestedStatus;
+    // Some Runtime events carry both the answer and terminal authority.
+    // Project the content first so neither the final answer nor its open slot is lost.
+    const contentState =
+      event.kind !== 'done' && event.kind !== 'error'
+        ? projectEvent(state, { ...event, terminal: false, partial: false })
+        : state;
+    const messages = contentState.messages.map((message) => {
+      if (message.invocationId !== event.invocationId) return message;
+      if (
+        isToolKind(message.kind) &&
+        ['preparing', 'running'].includes(
+          message.toolStatus ??
+            (message.kind.toLowerCase().includes('result')
+              ? 'success'
+              : 'running'),
+        )
+      )
+        return {
+          ...message,
+          toolStatus:
+            terminalStatus === 'failed'
+              ? ('failed' as const)
+              : ('stopped' as const),
+        };
+      if (message.partial)
+        return { ...message, partial: false, stepStatus: terminalStatus };
+      return message;
+    });
+    const status: DisplayMessage = preserveStatus
+      ? {
+          ...previousStatus,
+          ...mergedMetadata(event, previousStatus),
+        }
+      : {
+          id: `${event.invocationId}:terminal`,
+          invocationId: event.invocationId,
+          role: 'assistant',
+          kind: 'status',
+          partial: false,
+          content:
+            event.kind === 'done' || event.kind === 'error'
+              ? (event.text ?? '')
+              : '',
+          terminalStatus,
+          ...metadataFromEvent(event),
+        };
     const existingStatus = messages.findIndex(
       (message) => message.id === status.id,
     );
     if (existingStatus >= 0) messages[existingStatus] = status;
     else messages.push(status);
     return {
-      ...state,
+      ...contentState,
       seen,
       stream: undefined,
       running: state.invocationId !== event.invocationId && state.running,
@@ -152,6 +251,31 @@ export function projectEvent(
   const role = event.role ?? 'assistant';
   const invocationId = event.invocationId;
 
+  // Switching from reasoning to text/tools (or from text to reasoning/tools)
+  // closes only the preceding step. It is not a turn terminal.
+  const incomingKind = event.kind === 'reasoning' ? 'reasoning' : 'text';
+  if (
+    state.stream &&
+    (isToolKind(event.kind) || event.kind === 'reasoning' || event.text) &&
+    (isToolKind(event.kind) ||
+      !activeSlot(state, invocationId, role, incomingKind))
+  ) {
+    const id = streamID(
+      state.stream.invocationId,
+      state.stream.author,
+      state.stream.slot,
+    );
+    state = {
+      ...state,
+      stream: undefined,
+      messages: state.messages.map((message) =>
+        message.id === id && message.partial
+          ? { ...message, partial: false, stepStatus: 'completed' }
+          : message,
+      ),
+    };
+  }
+
   // A tool call or result closes the current partial slot, so text before and
   // after a tool never collapse into one bubble.
   if (isToolKind(event.kind)) {
@@ -159,7 +283,9 @@ export function projectEvent(
     const id = `${invocationId}:tool:${toolId}`;
     const existing = state.messages.find(
       (message) =>
-        message.id === id || (event.toolId && message.toolId === event.toolId),
+        message.invocationId === invocationId &&
+        (message.id === id ||
+          (event.toolId && message.toolId === event.toolId)),
     );
     const incomingStatus =
       event.toolStatus ??
@@ -189,6 +315,7 @@ export function projectEvent(
           ? existing?.toolStatus
           : incomingStatus,
       toolSubject: event.toolSubject ?? existing?.toolSubject,
+      ...mergedMetadata(event, existing),
     };
     return {
       ...state,
@@ -196,14 +323,14 @@ export function projectEvent(
       stream: undefined,
       invocationId,
       messages: existing
-        ? replaceMessage(state.messages, id, next)
+        ? replaceMessage(state.messages, existing.id, next)
         : [...state.messages, next],
     };
   }
 
   if (event.kind === 'reasoning') {
     const visibility = event.reasoningVisibility ?? 'hidden';
-    const text = visibility === 'hidden' ? '' : (event.text ?? '');
+    const text = event.text ?? '';
     const active = activeSlot(state, invocationId, role, 'reasoning');
     const slot = active ? active.slot : state.streamSlot + 1;
     const id = streamID(invocationId, role, slot);
@@ -216,12 +343,13 @@ export function projectEvent(
       partial: event.partial ?? false,
       content: event.partial ? (existing?.content ?? '') + text : text,
       reasoningVisibility: visibility,
+      ...mergedMetadata(event, existing),
     };
     return {
       ...state,
       seen,
       invocationId,
-      running: event.partial ?? state.running,
+      running: event.partial || state.running,
       streamSlot: slot,
       stream: event.partial
         ? { invocationId, author: role, kind: 'reasoning', slot }
@@ -246,6 +374,7 @@ export function projectEvent(
       kind: event.kind,
       partial: true,
       content: (existing?.content ?? '') + event.text,
+      ...mergedMetadata(event, existing),
     };
     return {
       ...state,
@@ -271,12 +400,13 @@ export function projectEvent(
         kind: event.kind,
         partial: false,
         content: event.text,
+        ...mergedMetadata(event, existing),
       };
       return {
         ...state,
         seen,
         invocationId,
-        running: false,
+        running: state.running,
         stream: undefined,
         messages: replaceMessage(state.messages, id, next),
       };
@@ -297,12 +427,13 @@ export function projectEvent(
         ...optimistic,
         kind: event.kind,
         content: event.text,
+        ...mergedMetadata(event, optimistic),
       };
       return {
         ...state,
         seen,
         invocationId,
-        running: false,
+        running: state.running,
         stream: undefined,
         messages: replaceMessage(state.messages, optimistic.id, next),
       };
@@ -318,12 +449,13 @@ export function projectEvent(
     kind: event.kind,
     partial: false,
     content: event.text,
+    ...mergedMetadata(event, existing),
   };
   return {
     ...state,
     seen,
     invocationId,
-    running: false,
+    running: state.running,
     stream: undefined,
     messages: existing
       ? replaceMessage(state.messages, id, next)

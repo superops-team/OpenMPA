@@ -1,4 +1,9 @@
-import { act, create, type ReactTestRenderer } from 'react-test-renderer';
+import {
+  act,
+  create,
+  type ReactTestRenderer,
+  type ReactTestInstance,
+} from 'react-test-renderer';
 import { expect, it, vi } from 'vitest';
 import { DesktopSettings } from '../src/client/desktop/Settings';
 import { LocaleProvider } from '../src/client/desktop/locale';
@@ -6,6 +11,15 @@ import { messages, messagesIn } from '../src/client/desktop/generated/locales';
 import type { DesktopServices, RuntimeVM } from '../src/client/desktop/models';
 
 const m = messages;
+
+function hasRuntimeAction(button: ReactTestInstance, label: string) {
+  return button
+    .findAllByType('span')
+    .some(
+      (span) =>
+        span.props['aria-hidden'] === false && span.children.includes(label),
+    );
+}
 
 it('loads the signed-in account directory and rejects old region results before binding', async () => {
   vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true);
@@ -67,7 +81,7 @@ it('loads the signed-in account directory and rejects old region results before 
   await act(async () => {
     renderer.root
       .findAllByType('button')
-      .find((button) => button.children.includes(m.settingsUseRuntime()))!
+      .find((button) => hasRuntimeAction(button, m.settingsUseRuntime()))!
       .props.onClick();
   });
   expect(bind).toHaveBeenCalledWith('cn-shanghai', 'default', 'r-new');
@@ -173,12 +187,14 @@ it('shows the Runtime being selected until the authoritative binding returns', a
   await act(async () => {
     renderer.root
       .findAllByType('button')
-      .find((button) => button.children.includes(m.settingsUseRuntime()))!
+      .find((button) => hasRuntimeAction(button, m.settingsUseRuntime()))!
       .props.onClick();
   });
-  expect(JSON.stringify(renderer.toJSON())).toContain(
-    m.settingsRuntimeSelecting(),
-  );
+  expect(
+    renderer.root
+      .findAllByType('button')
+      .some((button) => hasRuntimeAction(button, m.settingsRuntimeSelecting())),
+  ).toBe(true);
   expect(renderer.root.findByProps({ 'aria-busy': true }).props.disabled).toBe(
     true,
   );

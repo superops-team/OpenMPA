@@ -75,6 +75,11 @@ type ExecutionConfigResult struct {
 	Value *ExecutionConfig `json:"value,omitempty"`
 	Error *SafeError       `json:"error,omitempty"`
 }
+type ModelCatalogResult struct {
+	OK    bool          `json:"ok"`
+	Value *ModelCatalog `json:"value,omitempty"`
+	Error *SafeError    `json:"error,omitempty"`
+}
 type PendingListResult struct {
 	OK    bool         `json:"ok"`
 	Value *PendingList `json:"value,omitempty"`

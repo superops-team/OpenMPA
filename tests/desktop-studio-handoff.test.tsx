@@ -33,10 +33,12 @@ afterEach(async () => {
 });
 function deferred<T>() {
   let resolve!: (value: T) => void;
-  const promise = new Promise<T>((done) => {
+  let reject!: (error: Error) => void;
+  const promise = new Promise<T>((done, fail) => {
     resolve = done;
+    reject = fail;
   });
-  return { promise, resolve };
+  return { promise, resolve, reject };
 }
 async function mount(overrides: Partial<DesktopServices['sessions']> = {}) {
   const receipt = deferred<{ invocationId: string; status: string }>();
@@ -118,8 +120,9 @@ it('accepts the exact submitted draft after Chat unmount while retaining later c
     'first',
     'submitted',
     undefined,
-    'r-current',
+    'first',
   );
+  expect(app.chat().draft).toBe('');
   await act(async () => {
     app.state().navigate('resources');
   });
@@ -163,6 +166,32 @@ it('retains newer manual edits on a late receipt and isolates other sessions', a
   expect(app.state().composerDraft?.value).toBe('second draft');
   await act(async () => app.navigate('selectSession', 'first'));
   expect(app.state().composerDraft?.value).toBe('manual edit');
+});
+
+it('restores a rejected shared draft after unmount when no submission is pending', async () => {
+  const app = await mount();
+  await act(async () => app.chat().setDraft('rejected prompt'));
+  await act(async () => {
+    void app.chat().send();
+  });
+  expect(app.chat().draft).toBe('');
+  await act(async () => {
+    app.state().navigate('resources');
+  });
+  await act(async () => app.receipt.reject(new Error('rejected')));
+  expect(app.state().composerDraft?.value).toBe('rejected prompt');
+});
+
+it('clears before loading material and prevents repeated synchronous submissions', async () => {
+  const app = await mount();
+  await act(async () => app.chat().setDraft('one submission'));
+  await act(async () => {
+    const send = app.chat().send;
+    void send();
+    void send();
+  });
+  expect(app.submit).toHaveBeenCalledTimes(1);
+  expect(app.chat().draft).toBe('');
 });
 
 it.each([

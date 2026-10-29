@@ -113,6 +113,7 @@ export const designTokenSchema = z
         'press-duration': duration,
         'state-duration': duration,
         'overlay-duration': duration,
+        'sidebar-duration': duration,
         'spinner-duration': duration,
         'ease-out': z.string().regex(/^cubic-bezier\([\d., ]+\)$/),
       })
@@ -128,6 +129,10 @@ export const designTokenSchema = z
       'fixture-column',
       'settings-column',
       'assistant-skill-list-height',
+      'assistant-dialog-width',
+      'assistant-dialog-height',
+      'model-menu-width',
+      'model-menu-height',
     ]),
   })
   .strict();

@@ -127,6 +127,7 @@ ${goPalette('light')}
 const (
 ${goDimensions}
   PressDurationMs = ${parseInt(tokens.motion['press-duration'], 10)}
+  SidebarDurationMs = ${parseInt(tokens.motion['sidebar-duration'], 10)}
 )
 `;
 const goContent = execFileSync('gofmt', [], {

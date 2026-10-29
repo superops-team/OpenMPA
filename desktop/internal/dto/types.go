@@ -268,27 +268,45 @@ type SubscribeRequest struct {
 	InvocationID      string `json:"invocationId"`
 	LastEventID       string `json:"lastEventId,omitempty"`
 }
+type SafeCommandParameter struct {
+	Name  string `json:"name"`
+	Value string `json:"value"`
+}
+type SafeCommandSummary struct {
+	Binary         string                 `json:"binary,omitempty"`
+	CommandPreview string                 `json:"commandPreview,omitempty"`
+	ArgumentCount  *int                   `json:"argumentCount,omitempty"`
+	Redacted       *bool                  `json:"redacted,omitempty"`
+	Parameters     []SafeCommandParameter `json:"parameters,omitempty"`
+}
 type ClientEvent struct {
-	SchemaVersion       int        `json:"schemaVersion"`
-	ConnectionEpoch     uint64     `json:"connectionEpoch"`
-	SubscriptionEpoch   uint64     `json:"subscriptionEpoch"`
-	SessionID           string     `json:"sessionId"`
-	InvocationID        string     `json:"invocationId"`
-	EventID             string     `json:"eventId,omitempty"`
-	BlockID             string     `json:"blockId,omitempty"`
-	PartIndex           *int       `json:"partIndex,omitempty"`
-	Kind                string     `json:"kind"`
-	Completeness        string     `json:"completeness"`
-	Text                string     `json:"text,omitempty"`
-	ReasoningVisibility string     `json:"reasoningVisibility,omitempty"`
-	ToolID              string     `json:"toolId,omitempty"`
-	ToolName            string     `json:"toolName,omitempty"`
-	ToolStatus          string     `json:"toolStatus,omitempty"`
-	ToolSubject         string     `json:"toolSubject,omitempty"`
-	Author              string     `json:"author,omitempty"`
-	Partial             bool       `json:"partial"`
-	Terminal            bool       `json:"terminal"`
-	Error               *SafeError `json:"error,omitempty"`
+	SchemaVersion       int                 `json:"schemaVersion"`
+	ConnectionEpoch     uint64              `json:"connectionEpoch"`
+	SubscriptionEpoch   uint64              `json:"subscriptionEpoch"`
+	SessionID           string              `json:"sessionId"`
+	InvocationID        string              `json:"invocationId"`
+	EventID             string              `json:"eventId,omitempty"`
+	BlockID             string              `json:"blockId,omitempty"`
+	PartIndex           *int                `json:"partIndex,omitempty"`
+	Kind                string              `json:"kind"`
+	SourceType          string              `json:"sourceType,omitempty"`
+	Completeness        string              `json:"completeness"`
+	Text                string              `json:"text,omitempty"`
+	ReasoningVisibility string              `json:"reasoningVisibility,omitempty"`
+	ToolID              string              `json:"toolId,omitempty"`
+	ToolName            string              `json:"toolName,omitempty"`
+	ToolStatus          string              `json:"toolStatus,omitempty"`
+	ToolSubject         string              `json:"toolSubject,omitempty"`
+	Author              string              `json:"author,omitempty"`
+	StartedAt           string              `json:"startedAt,omitempty"`
+	EndedAt             string              `json:"endedAt,omitempty"`
+	DurationMS          *float64            `json:"durationMs,omitempty"`
+	SafeCommandSummary  *SafeCommandSummary `json:"safeCommandSummary,omitempty"`
+	OutputPreview       string              `json:"outputPreview,omitempty"`
+	StderrPreview       string              `json:"stderrPreview,omitempty"`
+	Partial             bool                `json:"partial"`
+	Terminal            bool                `json:"terminal"`
+	Error               *SafeError          `json:"error,omitempty"`
 }
 type AbortReceipt struct {
 	SessionID string `json:"sessionId"`
@@ -303,6 +321,12 @@ type ExecutionConfig struct {
 	MCPMode                string   `json:"mcpMode"`
 	MCPServers             []string `json:"mcpServers"`
 	InvalidRefsCount       int      `json:"invalidRefsCount"`
+}
+type ModelCatalogItem struct {
+	ID string `json:"id"`
+}
+type ModelCatalog struct {
+	Models []ModelCatalogItem `json:"models"`
 }
 type ExecutionConfigUpdateRequest struct {
 	ConnectionEpoch uint64   `json:"connectionEpoch"`

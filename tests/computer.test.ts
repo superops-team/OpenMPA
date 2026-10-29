@@ -29,7 +29,7 @@ function fixture(deadline = 1000) {
       return Response.json({
         computers: workspace.dots().map((dot) => ({
           botId: dot.id,
-          container: `opendots-computer-${dot.id}`,
+          container: `openmpa-computer-${dot.id}`,
           status: 'running',
           ...(endpoint ? { url: endpoint } : {}),
         })),
@@ -37,9 +37,9 @@ function fixture(deadline = 1000) {
     if (url.endsWith('/ensure'))
       return Response.json({
         botId: id,
-        container: `opendots-computer-${id}`,
+        container: `openmpa-computer-${id}`,
         status: 'running',
-        url: `http://opendots-computer-${id}:4100`,
+        url: `http://openmpa-computer-${id}:4100`,
       });
     if (url.endsWith('/control'))
       return Response.json({
@@ -129,7 +129,7 @@ it('status never provisions and actions use per-Dot derived credentials with aud
   ).toEqual({ text: '[redacted]' });
   const request = f.calls.find((call) => call.url.endsWith('/files/read'))!;
   expect(new Headers(request.init?.headers).get('authorization')).toBe(
-    `Bearer ${createHmac('sha256', 'master-secret').update(`opendots-computer:${f.id}`).digest('hex')}`,
+    `Bearer ${createHmac('sha256', 'master-secret').update(`openmpa-computer:${f.id}`).digest('hex')}`,
   );
   expect(new Headers(request.init?.headers).get('x-openbot-bot-id')).toBe(f.id);
   expect(request.init?.redirect).toBe('error');
