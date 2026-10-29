@@ -13,6 +13,7 @@ import type {
   PlatformVM,
   RegionVM,
   RuntimeVM,
+  UserTokenVaultStatusVM,
   VaultStatusVM,
 } from './models';
 import { reviewImages } from './image-review';
@@ -44,9 +45,14 @@ export function useDesktopSettingsState({
   const [vaultStatus, setVaultStatus] = useState<VaultStatusVM>({
     exists: false,
   });
+  const [userTokenVaultStatus, setUserTokenVaultStatus] =
+    useState<UserTokenVaultStatusVM>({
+      exists: false,
+    });
   const [vaultPassphrase, setVaultPassphrase] = useState('');
   const [vaultConfirm, setVaultConfirm] = useState('');
   const [vaultUnlockPassphrase, setVaultUnlockPassphrase] = useState('');
+  const [userTokenVaultPassphrase, setUserTokenVaultPassphrase] = useState('');
   const [showVaultPassphrase, setShowVaultPassphrase] = useState(false);
   const [region, setRegion] = useState('cn-beijing');
   const [regionCatalog, setRegions] = useState<RegionVM[]>();
@@ -138,6 +144,36 @@ export function useDesktopSettingsState({
     }
     setVaultStatus(await services.platform.vaultStatus());
   }, [services]);
+  const loadUserTokenVaultStatus = useCallback(
+    async (runtimeId = connection?.runtimeId) => {
+      if (!runtimeId || !services.platform.userTokenVaultStatus) {
+        setUserTokenVaultStatus({ exists: false });
+        return;
+      }
+      setUserTokenVaultStatus(
+        await services.platform.userTokenVaultStatus(runtimeId),
+      );
+    },
+    [connection?.runtimeId, services],
+  );
+  useEffect(() => {
+    let active = true;
+    if (!connection?.runtimeId || !services.platform.userTokenVaultStatus) {
+      setUserTokenVaultStatus({ exists: false });
+      return;
+    }
+    void services.platform
+      .userTokenVaultStatus(connection.runtimeId)
+      .then((value) => {
+        if (active) setUserTokenVaultStatus(value);
+      })
+      .catch(() => {
+        if (active) setUserTokenVaultStatus({ exists: false });
+      });
+    return () => {
+      active = false;
+    };
+  }, [connection?.runtimeId, services]);
   useLayoutEffect(() => {
     generation.current++;
     setBusy(false);
@@ -264,15 +300,20 @@ export function useDesktopSettingsState({
     setCredentials,
     vaultStatus,
     setVaultStatus,
+    userTokenVaultStatus,
+    setUserTokenVaultStatus,
     vaultPassphrase,
     setVaultPassphrase,
     vaultConfirm,
     setVaultConfirm,
     vaultUnlockPassphrase,
     setVaultUnlockPassphrase,
+    userTokenVaultPassphrase,
+    setUserTokenVaultPassphrase,
     showVaultPassphrase,
     setShowVaultPassphrase,
     loadVaultStatus,
+    loadUserTokenVaultStatus,
     setRegion,
     setNotice,
     region,

@@ -344,6 +344,101 @@ it('saves and unlocks encrypted cloud credentials from the React account setting
   await act(async () => renderer.unmount());
 });
 
+it('unlocks saved Agent Identity for the current Runtime connection', async () => {
+  vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true);
+  const userTokenVaultStatus = vi.fn(async () => ({
+    exists: true,
+    runtimeId: 'runtime-1',
+    subject: 'user-1',
+    expiresAt: '2026-10-29T12:00:00Z',
+  }));
+  const unlockUserTokenVault = vi.fn(async () => ({
+    exists: true,
+    runtimeId: 'runtime-1',
+    subject: 'user-1',
+  }));
+  const status = vi.fn(async () => ({
+    epoch: 8,
+    scope: 'scope/business/profile-user-1',
+    runtimeId: 'runtime-1',
+    status: m.explicitIdentityStatus(),
+    businessIdentity: 'explicit' as const,
+  }));
+  const services = {
+    platform: {
+      status: async () => ({
+        signedIn: true,
+        accountId: '1234567890',
+        region: 'cn-beijing',
+      }),
+      userTokenVaultStatus,
+      unlockUserTokenVault,
+      forgetUserTokenVault: vi.fn(async () => {}),
+    },
+    connection: {
+      status,
+      test: vi.fn(async () => 'ok'),
+    },
+  } as unknown as DesktopServices;
+  const onConnection = vi.fn();
+  let renderer!: ReactTestRenderer;
+  await act(async () => {
+    renderer = create(
+      <DesktopSettings
+        services={services}
+        connection={{
+          epoch: 7,
+          scope: 'scope',
+          runtimeId: 'runtime-1',
+          status: m.runtimeKeyStatus(),
+          businessIdentity: 'missing',
+        }}
+        onConnection={onConnection}
+        section="Authentication"
+      />,
+    );
+  });
+  await act(async () => {});
+  expect(userTokenVaultStatus).toHaveBeenCalledWith('runtime-1');
+  expect(JSON.stringify(renderer.toJSON())).toContain(
+    m.settingsConnectionSummary(
+      'user-1',
+      m.settingsLegacyJwtAuthenticated(),
+      '2026-10-29T12:00:00Z',
+    ),
+  );
+  const input = renderer.root.findByProps({
+    'aria-label': m.vaultUnlockHint(),
+  });
+  const unlockButton = () =>
+    renderer.root
+      .findAllByType('button')
+      .find((button) => button.children.includes(m.unlockAndSignIn()))!;
+  expect(unlockButton().props.disabled).toBe(true);
+  await act(async () =>
+    input.props.onChange({ target: { value: 'correct horse battery' } }),
+  );
+  expect(unlockButton().props.disabled).toBe(false);
+  await act(async () => unlockButton().props.onClick());
+  expect(unlockUserTokenVault).toHaveBeenCalledWith(
+    'runtime-1',
+    'correct horse battery',
+    7,
+  );
+  expect(status).toHaveBeenCalledTimes(1);
+  expect(onConnection).toHaveBeenCalledWith(
+    expect.objectContaining({
+      runtimeId: 'runtime-1',
+      epoch: 8,
+      businessIdentity: 'explicit',
+    }),
+  );
+  expect(JSON.stringify(renderer.toJSON())).not.toContain(
+    'correct horse battery',
+  );
+  await act(async () => renderer.unmount());
+});
+
 it('renders saved credential unlock copy in Chinese without crowding labels', async () => {
   vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true);
   let changed: ((payload: { locale: string; dir: string }) => void) | undefined;

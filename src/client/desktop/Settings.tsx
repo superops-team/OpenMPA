@@ -12,6 +12,7 @@ import { ImageReviewError, reviewImages } from './image-review';
 import { RuntimeConfiguration } from './RuntimeConfiguration';
 import { useDesktopSettingsState } from './SettingsState';
 import { SettingsAccount } from './SettingsAccount';
+import { SettingsAuthentication } from './SettingsAuthentication';
 import { SettingsRuntime } from './SettingsRuntime';
 import { localized, renderMessage, useMessages } from './locale';
 export function DesktopSettings({
@@ -48,10 +49,6 @@ export function DesktopSettings({
     act,
     generation,
     setNotice,
-    identity,
-    setIdentity,
-    channelAuth,
-    setChannelAuth,
     setUpdates,
     setImages,
     images,
@@ -125,152 +122,12 @@ export function DesktopSettings({
         />
       )}
       {section === 'Authentication' && connection && (
-        <section className="task-detail-card">
-          <h2>{m.settingsBusinessConnection()}</h2>
-          <p>
-            {m.settingsConnectionSummary(
-              connection.runtimeId,
-              connection.status,
-              connection.scope,
-            )}
-          </p>
-          <button
-            className="text-button"
-            disabled={busy}
-            onClick={() =>
-              void act(async () =>
-                setNotice(await services.connection.test(connection.epoch)),
-              )
-            }
-          >
-            {m.testConnection()}
-          </button>
-          <form
-            className="desktop-form"
-            onSubmit={(event) => {
-              event.preventDefault();
-              void act(async () => {
-                const currentEpoch = connection.epoch;
-                const current = generation.current;
-                const next = await services.connection.identity(
-                  currentEpoch,
-                  identity.userId,
-                  '',
-                  identity.applicationToken,
-                  '',
-                  '',
-                  identity.testDeployment,
-                );
-                if (generation.current !== current) return;
-                onConnection(next);
-                setIdentity({ ...identity, applicationToken: '' });
-                setNotice(localized((m) => m.settingsBusinessIdentitySaved()));
-              });
-            }}
-          >
-            <label>
-              {m.businessUserId()}
-              <input
-                required
-                value={identity.userId}
-                onChange={(event) =>
-                  setIdentity({ ...identity, userId: event.target.value })
-                }
-              />
-            </label>
-            <label className="desktop-check">
-              <input
-                type="checkbox"
-                checked={identity.testDeployment}
-                onChange={(event) =>
-                  setIdentity({
-                    ...identity,
-                    testDeployment: event.target.checked,
-                  })
-                }
-              />{' '}
-              {m.verifiedTest()}
-            </label>
-            {(['applicationToken'] as const).map((slot) => (
-              <label key={slot}>
-                {m.settingsLegacyJwtAuthenticated()}
-                <input
-                  type="password"
-                  autoComplete="off"
-                  value={identity[slot]}
-                  onChange={(event) =>
-                    setIdentity({ ...identity, [slot]: event.target.value })
-                  }
-                />
-              </label>
-            ))}
-            <button className="primary" disabled={busy}>
-              {m.saveBusinessIdentity()}
-            </button>
-          </form>
-        </section>
-      )}
-      {section === 'Authentication' && connection && (
-        <section className="task-detail-card">
-          <h2>{m.settingsChannelAdministratorCredentials()}</h2>
-          <p>{m.settingsChannelCredentialsHint()}</p>
-          <form
-            className="desktop-form"
-            onSubmit={(event) => {
-              event.preventDefault();
-              void act(async () => {
-                const current = generation.current;
-                const next = await services.connection.channelAuth(
-                  connection.epoch,
-                  channelAuth.mode,
-                  channelAuth.secret,
-                );
-                if (generation.current !== current) return;
-                onConnection(next);
-                setChannelAuth({ ...channelAuth, secret: '' });
-                setNotice(
-                  localized((m) => m.settingsChannelAuthenticationSaved()),
-                );
-              });
-            }}
-          >
-            <label>
-              {m.channelAuthenticationMode()}
-              <select
-                value={channelAuth.mode}
-                onChange={(event) =>
-                  setChannelAuth({ mode: event.target.value, secret: '' })
-                }
-              >
-                <option value="runtimeKey">
-                  {m.settingsRuntimeChannelKey()}
-                </option>
-                <option value="legacyJwt">{m.legacyJwt()}</option>
-                <option value="none">{m.channelUseRuntimeIdentity()}</option>
-              </select>
-            </label>
-            {channelAuth.mode !== 'none' && (
-              <label>
-                {m.channelCredential()}
-                <input
-                  required
-                  type="password"
-                  autoComplete="off"
-                  value={channelAuth.secret}
-                  onChange={(event) =>
-                    setChannelAuth({
-                      ...channelAuth,
-                      secret: event.target.value,
-                    })
-                  }
-                />
-              </label>
-            )}
-            <button className="primary" disabled={busy}>
-              {m.saveChannelAuthentication()}
-            </button>
-          </form>
-        </section>
+        <SettingsAuthentication
+          connection={connection}
+          onConnection={onConnection}
+          services={services}
+          state={state}
+        />
       )}
       {section === 'Assistant' &&
         (connection && session ? (
