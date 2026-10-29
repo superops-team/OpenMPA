@@ -8830,11 +8830,11 @@ func (msgs Messages) SharedAgentsMdScope() string {
 	return Catalog.Format(msgs.locale, "sharedAgentsMdScope", nil)
 }
 
-// MainProfileScope says "Main 配置仅影响 Main。保存指令会保留其模型和技能配置。"
+// MainProfileScope says "集中管理 Main 的指令、模型、技能与 MCP，整份配置一起保存。不会修改 Worker 配置。"
 // in the language the app shows.
 func MainProfileScope() string { return In(i18n.Locale()).MainProfileScope() }
 
-// MainProfileScope says "Main 配置仅影响 Main。保存指令会保留其模型和技能配置。"
+// MainProfileScope says "集中管理 Main 的指令、模型、技能与 MCP，整份配置一起保存。不会修改 Worker 配置。"
 // in the language of msgs.
 func (msgs Messages) MainProfileScope() string {
 	return Catalog.Format(msgs.locale, "mainProfileScope", nil)
@@ -9472,11 +9472,11 @@ func (msgs Messages) ChannelScanned() string {
 	return Catalog.Format(msgs.locale, "channelScanned", nil)
 }
 
-// ResourcePageSubtitle says "管理 Worker 可用的技能、工具与共享指令。"
+// ResourcePageSubtitle says "管理 Worker 的技能与共享指令，以及 Main 的独立配置。"
 // in the language the app shows.
 func ResourcePageSubtitle() string { return In(i18n.Locale()).ResourcePageSubtitle() }
 
-// ResourcePageSubtitle says "管理 Worker 可用的技能、工具与共享指令。"
+// ResourcePageSubtitle says "管理 Worker 的技能与共享指令，以及 Main 的独立配置。"
 // in the language of msgs.
 func (msgs Messages) ResourcePageSubtitle() string {
 	return Catalog.Format(msgs.locale, "resourcePageSubtitle", nil)
@@ -11166,4 +11166,444 @@ func MpaTosClear() string { return In(i18n.Locale()).MpaTosClear() }
 // in the language of msgs.
 func (msgs Messages) MpaTosClear() string {
 	return Catalog.Format(msgs.locale, "mpaTosClear", nil)
+}
+
+// ProfileEdit says "编辑"
+// in the language the app shows.
+func ProfileEdit() string { return In(i18n.Locale()).ProfileEdit() }
+
+// ProfileEdit says "编辑"
+// in the language of msgs.
+func (msgs Messages) ProfileEdit() string {
+	return Catalog.Format(msgs.locale, "profileEdit", nil)
+}
+
+// AgentsDocumentScope says "当前 Runtime 的共享工作指令，供 Worker 使用。"
+// in the language the app shows.
+func AgentsDocumentScope() string { return In(i18n.Locale()).AgentsDocumentScope() }
+
+// AgentsDocumentScope says "当前 Runtime 的共享工作指令，供 Worker 使用。"
+// in the language of msgs.
+func (msgs Messages) AgentsDocumentScope() string {
+	return Catalog.Format(msgs.locale, "agentsDocumentScope", nil)
+}
+
+// ProfileReadFailed says "暂时无法读取内容，请重试。"
+// in the language the app shows.
+func ProfileReadFailed() string { return In(i18n.Locale()).ProfileReadFailed() }
+
+// ProfileReadFailed says "暂时无法读取内容，请重试。"
+// in the language of msgs.
+func (msgs Messages) ProfileReadFailed() string {
+	return Catalog.Format(msgs.locale, "profileReadFailed", nil)
+}
+
+// ProfileNoInstructions says "尚未设置指令。"
+// in the language the app shows.
+func ProfileNoInstructions() string { return In(i18n.Locale()).ProfileNoInstructions() }
+
+// ProfileNoInstructions says "尚未设置指令。"
+// in the language of msgs.
+func (msgs Messages) ProfileNoInstructions() string {
+	return Catalog.Format(msgs.locale, "profileNoInstructions", nil)
+}
+
+// ProfileUnsaved says "有未保存的修改"
+// in the language the app shows.
+func ProfileUnsaved() string { return In(i18n.Locale()).ProfileUnsaved() }
+
+// ProfileUnsaved says "有未保存的修改"
+// in the language of msgs.
+func (msgs Messages) ProfileUnsaved() string {
+	return Catalog.Format(msgs.locale, "profileUnsaved", nil)
+}
+
+// ProfileDraftRetained says "已读取最新版本，并保留你的草稿。请核对后保存。"
+// in the language the app shows.
+func ProfileDraftRetained() string { return In(i18n.Locale()).ProfileDraftRetained() }
+
+// ProfileDraftRetained says "已读取最新版本，并保留你的草稿。请核对后保存。"
+// in the language of msgs.
+func (msgs Messages) ProfileDraftRetained() string {
+	return Catalog.Format(msgs.locale, "profileDraftRetained", nil)
+}
+
+// MainInstructionsHeading says "指令 · AGENTS.md"
+// in the language the app shows.
+func MainInstructionsHeading() string { return In(i18n.Locale()).MainInstructionsHeading() }
+
+// MainInstructionsHeading says "指令 · AGENTS.md"
+// in the language of msgs.
+func (msgs Messages) MainInstructionsHeading() string {
+	return Catalog.Format(msgs.locale, "mainInstructionsHeading", nil)
+}
+
+// MainNextTurn says "保存后用于后续回合，不改变正在执行的任务。"
+// in the language the app shows.
+func MainNextTurn() string { return In(i18n.Locale()).MainNextTurn() }
+
+// MainNextTurn says "保存后用于后续回合，不改变正在执行的任务。"
+// in the language of msgs.
+func (msgs Messages) MainNextTurn() string {
+	return Catalog.Format(msgs.locale, "mainNextTurn", nil)
+}
+
+// MainModelMode says "模型选择"
+// in the language the app shows.
+func MainModelMode() string { return In(i18n.Locale()).MainModelMode() }
+
+// MainModelMode says "模型选择"
+// in the language of msgs.
+func (msgs Messages) MainModelMode() string {
+	return Catalog.Format(msgs.locale, "mainModelMode", nil)
+}
+
+// MainModelInherited says "跟随会话选择或 Runtime 默认模型"
+// in the language the app shows.
+func MainModelInherited() string { return In(i18n.Locale()).MainModelInherited() }
+
+// MainModelInherited says "跟随会话选择或 Runtime 默认模型"
+// in the language of msgs.
+func (msgs Messages) MainModelInherited() string {
+	return Catalog.Format(msgs.locale, "mainModelInherited", nil)
+}
+
+// MainModelFixed says "固定 Main 模型"
+// in the language the app shows.
+func MainModelFixed() string { return In(i18n.Locale()).MainModelFixed() }
+
+// MainModelFixed says "固定 Main 模型"
+// in the language of msgs.
+func (msgs Messages) MainModelFixed() string {
+	return Catalog.Format(msgs.locale, "mainModelFixed", nil)
+}
+
+// MainModelId says "模型 ID"
+// in the language the app shows.
+func MainModelId() string { return In(i18n.Locale()).MainModelId() }
+
+// MainModelId says "模型 ID"
+// in the language of msgs.
+func (msgs Messages) MainModelId() string {
+	return Catalog.Format(msgs.locale, "mainModelId", nil)
+}
+
+// MainModelHint says "固定模型仅用于 Main，模型须由 Runtime 部署的模型端点支持。未固定时，使用会话选择或 …"
+// in the language the app shows.
+func MainModelHint() string { return In(i18n.Locale()).MainModelHint() }
+
+// MainModelHint says "固定模型仅用于 Main，模型须由 Runtime 部署的模型端点支持。未固定时，使用会话选择或 …"
+// in the language of msgs.
+func (msgs Messages) MainModelHint() string {
+	return Catalog.Format(msgs.locale, "mainModelHint", nil)
+}
+
+// MainSkillsHint says "为 Main 提供固定版本的技能说明，不会安装到 Worker 或执行技能脚本。"
+// in the language the app shows.
+func MainSkillsHint() string { return In(i18n.Locale()).MainSkillsHint() }
+
+// MainSkillsHint says "为 Main 提供固定版本的技能说明，不会安装到 Worker 或执行技能脚本。"
+// in the language of msgs.
+func (msgs Messages) MainSkillsHint() string {
+	return Catalog.Format(msgs.locale, "mainSkillsHint", nil)
+}
+
+// MainNoSkills says "尚未添加 Main 技能。"
+// in the language the app shows.
+func MainNoSkills() string { return In(i18n.Locale()).MainNoSkills() }
+
+// MainNoSkills says "尚未添加 Main 技能。"
+// in the language of msgs.
+func (msgs Messages) MainNoSkills() string {
+	return Catalog.Format(msgs.locale, "mainNoSkills", nil)
+}
+
+// MainNewSkill says "新技能"
+// in the language the app shows.
+func MainNewSkill() string { return In(i18n.Locale()).MainNewSkill() }
+
+// MainNewSkill says "新技能"
+// in the language of msgs.
+func (msgs Messages) MainNewSkill() string {
+	return Catalog.Format(msgs.locale, "mainNewSkill", nil)
+}
+
+// ProfileName says "名称"
+// in the language the app shows.
+func ProfileName() string { return In(i18n.Locale()).ProfileName() }
+
+// ProfileName says "名称"
+// in the language of msgs.
+func (msgs Messages) ProfileName() string {
+	return Catalog.Format(msgs.locale, "profileName", nil)
+}
+
+// ProfileVersion says "固定版本"
+// in the language the app shows.
+func ProfileVersion() string { return In(i18n.Locale()).ProfileVersion() }
+
+// ProfileVersion says "固定版本"
+// in the language of msgs.
+func (msgs Messages) ProfileVersion() string {
+	return Catalog.Format(msgs.locale, "profileVersion", nil)
+}
+
+// MainSkillContent says "技能说明"
+// in the language the app shows.
+func MainSkillContent() string { return In(i18n.Locale()).MainSkillContent() }
+
+// MainSkillContent says "技能说明"
+// in the language of msgs.
+func (msgs Messages) MainSkillContent() string {
+	return Catalog.Format(msgs.locale, "mainSkillContent", nil)
+}
+
+// MainAddSkill says "添加技能"
+// in the language the app shows.
+func MainAddSkill() string { return In(i18n.Locale()).MainAddSkill() }
+
+// MainAddSkill says "添加技能"
+// in the language of msgs.
+func (msgs Messages) MainAddSkill() string {
+	return Catalog.Format(msgs.locale, "mainAddSkill", nil)
+}
+
+// ProfileRemoveItem says "移除 {name}"
+// in the language the app shows.
+func ProfileRemoveItem(name string) string { return In(i18n.Locale()).ProfileRemoveItem(name) }
+
+// ProfileRemoveItem says "移除 {name}"
+// in the language of msgs.
+func (msgs Messages) ProfileRemoveItem(name string) string {
+	return Catalog.Format(msgs.locale, "profileRemoveItem", map[string]any{"name": name})
+}
+
+// ProfileDuplicateName says "名称不能为空或与已有项重复。"
+// in the language the app shows.
+func ProfileDuplicateName() string { return In(i18n.Locale()).ProfileDuplicateName() }
+
+// ProfileDuplicateName says "名称不能为空或与已有项重复。"
+// in the language of msgs.
+func (msgs Messages) ProfileDuplicateName() string {
+	return Catalog.Format(msgs.locale, "profileDuplicateName", nil)
+}
+
+// MainMcpHint says "仅供 Main 调用，与 Worker 的 MCP 配置独立。支持 Runtime 目录引用和 HTTPS 直接连接。"
+// in the language the app shows.
+func MainMcpHint() string { return In(i18n.Locale()).MainMcpHint() }
+
+// MainMcpHint says "仅供 Main 调用，与 Worker 的 MCP 配置独立。支持 Runtime 目录引用和 HTTPS 直接连接。"
+// in the language of msgs.
+func (msgs Messages) MainMcpHint() string {
+	return Catalog.Format(msgs.locale, "mainMcpHint", nil)
+}
+
+// MainNoMcp says "尚未配置 Main MCP。"
+// in the language the app shows.
+func MainNoMcp() string { return In(i18n.Locale()).MainNoMcp() }
+
+// MainNoMcp says "尚未配置 Main MCP。"
+// in the language of msgs.
+func (msgs Messages) MainNoMcp() string {
+	return Catalog.Format(msgs.locale, "mainNoMcp", nil)
+}
+
+// MainResourceId says "资源 ID"
+// in the language the app shows.
+func MainResourceId() string { return In(i18n.Locale()).MainResourceId() }
+
+// MainResourceId says "资源 ID"
+// in the language of msgs.
+func (msgs Messages) MainResourceId() string {
+	return Catalog.Format(msgs.locale, "mainResourceId", nil)
+}
+
+// MainCatalogSource says "目录引用"
+// in the language the app shows.
+func MainCatalogSource() string { return In(i18n.Locale()).MainCatalogSource() }
+
+// MainCatalogSource says "目录引用"
+// in the language of msgs.
+func (msgs Messages) MainCatalogSource() string {
+	return Catalog.Format(msgs.locale, "mainCatalogSource", nil)
+}
+
+// MainDirectSource says "直接连接"
+// in the language the app shows.
+func MainDirectSource() string { return In(i18n.Locale()).MainDirectSource() }
+
+// MainDirectSource says "直接连接"
+// in the language of msgs.
+func (msgs Messages) MainDirectSource() string {
+	return Catalog.Format(msgs.locale, "mainDirectSource", nil)
+}
+
+// MainMcpUrl says "服务地址（HTTPS）"
+// in the language the app shows.
+func MainMcpUrl() string { return In(i18n.Locale()).MainMcpUrl() }
+
+// MainMcpUrl says "服务地址（HTTPS）"
+// in the language of msgs.
+func (msgs Messages) MainMcpUrl() string {
+	return Catalog.Format(msgs.locale, "mainMcpUrl", nil)
+}
+
+// MainToolAccess says "工具使用范围"
+// in the language the app shows.
+func MainToolAccess() string { return In(i18n.Locale()).MainToolAccess() }
+
+// MainToolAccess says "工具使用范围"
+// in the language of msgs.
+func (msgs Messages) MainToolAccess() string {
+	return Catalog.Format(msgs.locale, "mainToolAccess", nil)
+}
+
+// MainAllTools says "允许该来源的全部工具"
+// in the language the app shows.
+func MainAllTools() string { return In(i18n.Locale()).MainAllTools() }
+
+// MainAllTools says "允许该来源的全部工具"
+// in the language of msgs.
+func (msgs Messages) MainAllTools() string {
+	return Catalog.Format(msgs.locale, "mainAllTools", nil)
+}
+
+// MainSelectedTools says "仅允许指定工具"
+// in the language the app shows.
+func MainSelectedTools() string { return In(i18n.Locale()).MainSelectedTools() }
+
+// MainSelectedTools says "仅允许指定工具"
+// in the language of msgs.
+func (msgs Messages) MainSelectedTools() string {
+	return Catalog.Format(msgs.locale, "mainSelectedTools", nil)
+}
+
+// MainSourceDisabled says "禁用此来源"
+// in the language the app shows.
+func MainSourceDisabled() string { return In(i18n.Locale()).MainSourceDisabled() }
+
+// MainSourceDisabled says "禁用此来源"
+// in the language of msgs.
+func (msgs Messages) MainSourceDisabled() string {
+	return Catalog.Format(msgs.locale, "mainSourceDisabled", nil)
+}
+
+// MainToolNames says "工具名称（每行一个）"
+// in the language the app shows.
+func MainToolNames() string { return In(i18n.Locale()).MainToolNames() }
+
+// MainToolNames says "工具名称（每行一个）"
+// in the language of msgs.
+func (msgs Messages) MainToolNames() string {
+	return Catalog.Format(msgs.locale, "mainToolNames", nil)
+}
+
+// MainAddCatalog says "引用已有 MCP"
+// in the language the app shows.
+func MainAddCatalog() string { return In(i18n.Locale()).MainAddCatalog() }
+
+// MainAddCatalog says "引用已有 MCP"
+// in the language of msgs.
+func (msgs Messages) MainAddCatalog() string {
+	return Catalog.Format(msgs.locale, "mainAddCatalog", nil)
+}
+
+// MainAddDirect says "添加 MCP 连接"
+// in the language the app shows.
+func MainAddDirect() string { return In(i18n.Locale()).MainAddDirect() }
+
+// MainAddDirect says "添加 MCP 连接"
+// in the language of msgs.
+func (msgs Messages) MainAddDirect() string {
+	return Catalog.Format(msgs.locale, "mainAddDirect", nil)
+}
+
+// MainHeaderName says "请求头名称"
+// in the language the app shows.
+func MainHeaderName() string { return In(i18n.Locale()).MainHeaderName() }
+
+// MainHeaderName says "请求头名称"
+// in the language of msgs.
+func (msgs Messages) MainHeaderName() string {
+	return Catalog.Format(msgs.locale, "mainHeaderName", nil)
+}
+
+// MainHeaderValue says "请求头值"
+// in the language the app shows.
+func MainHeaderValue() string { return In(i18n.Locale()).MainHeaderValue() }
+
+// MainHeaderValue says "请求头值"
+// in the language of msgs.
+func (msgs Messages) MainHeaderValue() string {
+	return Catalog.Format(msgs.locale, "mainHeaderValue", nil)
+}
+
+// MainHeaderReenter says "已保存，请重新输入"
+// in the language the app shows.
+func MainHeaderReenter() string { return In(i18n.Locale()).MainHeaderReenter() }
+
+// MainHeaderReenter says "已保存，请重新输入"
+// in the language of msgs.
+func (msgs Messages) MainHeaderReenter() string {
+	return Catalog.Format(msgs.locale, "mainHeaderReenter", nil)
+}
+
+// MainAddHeader says "添加请求头"
+// in the language the app shows.
+func MainAddHeader() string { return In(i18n.Locale()).MainAddHeader() }
+
+// MainAddHeader says "添加请求头"
+// in the language of msgs.
+func (msgs Messages) MainAddHeader() string {
+	return Catalog.Format(msgs.locale, "mainAddHeader", nil)
+}
+
+// MainSavedHeaders says "已保存凭据：{names}"
+// in the language the app shows.
+func MainSavedHeaders(names string) string { return In(i18n.Locale()).MainSavedHeaders(names) }
+
+// MainSavedHeaders says "已保存凭据：{names}"
+// in the language of msgs.
+func (msgs Messages) MainSavedHeaders(names string) string {
+	return Catalog.Format(msgs.locale, "mainSavedHeaders", map[string]any{"names": names})
+}
+
+// MainCredentialsRequired says "此配置包含已保存的 MCP 凭据。Runtime 保存整份 Profile …"
+// in the language the app shows.
+func MainCredentialsRequired() string { return In(i18n.Locale()).MainCredentialsRequired() }
+
+// MainCredentialsRequired says "此配置包含已保存的 MCP 凭据。Runtime 保存整份 Profile …"
+// in the language of msgs.
+func (msgs Messages) MainCredentialsRequired() string {
+	return Catalog.Format(msgs.locale, "mainCredentialsRequired", nil)
+}
+
+// ProfileInvalidFields says "请检查模型 ID、技能名称与固定版本、总指令长度（最多 40,000 字符）、MCP …"
+// in the language the app shows.
+func ProfileInvalidFields() string { return In(i18n.Locale()).ProfileInvalidFields() }
+
+// ProfileInvalidFields says "请检查模型 ID、技能名称与固定版本、总指令长度（最多 40,000 字符）、MCP …"
+// in the language of msgs.
+func (msgs Messages) ProfileInvalidFields() string {
+	return Catalog.Format(msgs.locale, "profileInvalidFields", nil)
+}
+
+// MainCreateProfile says "新建 Main 配置"
+// in the language the app shows.
+func MainCreateProfile() string { return In(i18n.Locale()).MainCreateProfile() }
+
+// MainCreateProfile says "新建 Main 配置"
+// in the language of msgs.
+func (msgs Messages) MainCreateProfile() string {
+	return Catalog.Format(msgs.locale, "mainCreateProfile", nil)
+}
+
+// MainProfileSaved says "Main 配置已保存。"
+// in the language the app shows.
+func MainProfileSaved() string { return In(i18n.Locale()).MainProfileSaved() }
+
+// MainProfileSaved says "Main 配置已保存。"
+// in the language of msgs.
+func (msgs Messages) MainProfileSaved() string {
+	return Catalog.Format(msgs.locale, "mainProfileSaved", nil)
 }

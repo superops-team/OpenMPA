@@ -423,3 +423,255 @@
     max-width: 120px;
   }
 }
+
+/* Documents use a reading layout, with explicit edit/save actions in one toolbar. */
+.resource-document {
+  min-width: 0;
+  border: 1px solid var(--color-card-border);
+  border-radius: var(--radius-xl);
+  background: var(--color-card);
+  overflow: clip;
+}
+.resource-editor-toolbar {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: var(--color-card);
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--space-4);
+  padding: var(--space-5);
+  border-bottom: 1px solid var(--color-border);
+}
+.resource-editor-toolbar h2 {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin: 0;
+  font-size: var(--text-ui-lg);
+}
+.resource-editor-toolbar p,
+.resource-editor-note,
+.profile-meta {
+  color: var(--color-foreground-subtle);
+  font-size: var(--text-ui-caption);
+  line-height: var(--line-body);
+}
+.resource-editor-toolbar p {
+  margin: var(--space-2) 0 0;
+  max-width: 65ch;
+}
+.resource-editor-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+}
+.template-app.desktop-app .resource-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  flex: none;
+  width: auto;
+  min-height: var(--control-input);
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-card);
+  color: var(--color-foreground);
+  font: inherit;
+  font-size: var(--text-ui-caption);
+  cursor: pointer;
+}
+.template-app.desktop-app .resource-button:hover:not(:disabled) {
+  background: var(--color-surface-hover);
+}
+.template-app.desktop-app .resource-button.is-primary {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+  color: var(--color-primary-foreground);
+}
+.template-app.desktop-app .resource-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.resource-document-body {
+  padding: var(--space-5);
+  overflow-wrap: anywhere;
+}
+.resource-document-body .assistant-markdown {
+  max-width: 80ch;
+  font-size: var(--text-ui-base);
+}
+.resource-document-body .assistant-markdown > :first-child {
+  margin-top: 0;
+}
+.resource-document > .resource-editor-note,
+.resource-document > .resource-editor-error,
+.resource-document > [role='status'] {
+  margin: var(--space-4) var(--space-5);
+}
+.resource-editor-error {
+  color: var(--color-destructive);
+  font-size: var(--text-ui-caption);
+  line-height: var(--line-body);
+}
+.template-app.desktop-app .resource-document input,
+.template-app.desktop-app .resource-document select,
+.template-app.desktop-app .resource-document textarea {
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  padding: var(--space-3);
+  border: 1px solid var(--color-input-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-input);
+  color: var(--color-foreground);
+  font: inherit;
+  font-size: var(--text-ui-base);
+}
+.template-app.desktop-app .resource-document textarea {
+  line-height: var(--line-body);
+  resize: vertical;
+}
+.template-app.desktop-app .resource-document .resource-document-editor {
+  display: block;
+  width: calc(100% - 2 * var(--space-5));
+  min-height: 460px;
+  margin: var(--space-5);
+  font-family: var(--font-mono);
+  tab-size: 2;
+}
+.template-app.desktop-app .profile-section .resource-document-editor.is-main {
+  width: 100%;
+  min-height: 240px;
+  margin: 0;
+}
+.profile-meta {
+  display: flex;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+  padding: var(--space-4) var(--space-5);
+  background: var(--color-surface);
+}
+.profile-kind,
+.profile-count,
+.profile-version {
+  color: var(--color-foreground-subtle);
+  font-size: var(--text-ui-caption);
+  font-weight: 400;
+}
+
+.profile-section {
+  padding: var(--space-5);
+  border-top: 1px solid var(--color-border);
+}
+.profile-section h3 {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin: 0 0 var(--space-4);
+  font-size: var(--text-ui-base);
+}
+.profile-section .resource-document-body {
+  padding: 0;
+}
+.profile-section label {
+  display: grid;
+  gap: var(--space-2);
+  min-width: 0;
+  color: var(--color-foreground-subtle);
+  font-size: var(--text-ui-caption);
+}
+.profile-item {
+  margin-block: var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+}
+.profile-item summary {
+  padding: var(--space-3) var(--space-4);
+  cursor: pointer;
+  overflow-wrap: anywhere;
+}
+.profile-item-body {
+  display: grid;
+  gap: var(--space-4);
+  padding: var(--space-4);
+}
+.profile-item-body .assistant-markdown {
+  min-width: 0;
+}
+.profile-field-row {
+  display: flex;
+  gap: var(--space-3);
+  align-items: end;
+  flex-wrap: wrap;
+  min-width: 0;
+}
+.profile-field-row > label {
+  flex: 1;
+  min-width: 160px;
+}
+.profile-model-fields,
+.profile-tool-selection,
+.profile-headers {
+  display: grid;
+  gap: var(--space-3);
+}
+.profile-model-fields {
+  max-width: 640px;
+}
+.profile-address {
+  overflow-wrap: anywhere;
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: var(--text-ui-caption);
+}
+.profile-model-value {
+  font-family: var(--font-mono);
+}
+@media (max-width: 560px) {
+  .resource-editor-toolbar,
+  .profile-section,
+  .resource-document-body {
+    padding: var(--space-4);
+  }
+  .resource-editor-actions {
+    width: 100%;
+  }
+  .profile-field-row > label {
+    flex-basis: 100%;
+  }
+  .template-app.desktop-app .resource-document .resource-document-editor {
+    min-height: 360px;
+    margin: var(--space-4);
+    width: calc(100% - 2 * var(--space-4));
+  }
+  .template-app.desktop-app .profile-section .resource-document-editor.is-main {
+    width: 100%;
+    margin: 0;
+  }
+}
+
+.profile-field-row > strong {
+  min-width: 0;
+  flex: 1;
+  overflow-wrap: anywhere;
+}
+.profile-model-value,
+.resource-editor-note {
+  overflow-wrap: anywhere;
+}
+
+.profile-save-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  padding: var(--space-4) var(--space-5);
+  border-top: 1px solid var(--color-border);
+}

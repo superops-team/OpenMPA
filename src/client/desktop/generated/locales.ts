@@ -3392,7 +3392,7 @@ export interface Messages {
    */
   sharedAgentsMdScope(): string;
   /**
-   * `Main 配置仅影响 Main。保存指令会保留其模型和技能配置。`
+   * `集中管理 Main 的指令、模型、技能与 MCP，整份配置一起保存。不会修改 Worker 配置。`
    */
   mainProfileScope(): string;
   /**
@@ -3648,7 +3648,7 @@ export interface Messages {
    */
   channelScanned(): string;
   /**
-   * `管理 Worker 可用的技能、工具与共享指令。`
+   * `管理 Worker 的技能与共享指令，以及 Main 的独立配置。`
    */
   resourcePageSubtitle(): string;
   /**
@@ -4323,6 +4323,182 @@ export interface Messages {
    * `清除桶选择`
    */
   mpaTosClear(): string;
+  /**
+   * `编辑`
+   */
+  profileEdit(): string;
+  /**
+   * `当前 Runtime 的共享工作指令，供 Worker 使用。`
+   */
+  agentsDocumentScope(): string;
+  /**
+   * `暂时无法读取内容，请重试。`
+   */
+  profileReadFailed(): string;
+  /**
+   * `尚未设置指令。`
+   */
+  profileNoInstructions(): string;
+  /**
+   * `有未保存的修改`
+   */
+  profileUnsaved(): string;
+  /**
+   * `已读取最新版本，并保留你的草稿。请核对后保存。`
+   */
+  profileDraftRetained(): string;
+  /**
+   * `指令 · AGENTS.md`
+   */
+  mainInstructionsHeading(): string;
+  /**
+   * `保存后用于后续回合，不改变正在执行的任务。`
+   */
+  mainNextTurn(): string;
+  /**
+   * `模型选择`
+   */
+  mainModelMode(): string;
+  /**
+   * `跟随会话选择或 Runtime 默认模型`
+   */
+  mainModelInherited(): string;
+  /**
+   * `固定 Main 模型`
+   */
+  mainModelFixed(): string;
+  /**
+   * `模型 ID`
+   */
+  mainModelId(): string;
+  /**
+   * `固定模型仅用于 Main，模型须由 Runtime 部署的模型端点支持。未固定时，使用会话选择或 Runtime 默认值。整份配置完全为空时，恢复 Runtime 原有行为。`
+   */
+  mainModelHint(): string;
+  /**
+   * `为 Main 提供固定版本的技能说明，不会安装到 Worker 或执行技能脚本。`
+   */
+  mainSkillsHint(): string;
+  /**
+   * `尚未添加 Main 技能。`
+   */
+  mainNoSkills(): string;
+  /**
+   * `新技能`
+   */
+  mainNewSkill(): string;
+  /**
+   * `名称`
+   */
+  profileName(): string;
+  /**
+   * `固定版本`
+   */
+  profileVersion(): string;
+  /**
+   * `技能说明`
+   */
+  mainSkillContent(): string;
+  /**
+   * `添加技能`
+   */
+  mainAddSkill(): string;
+  /**
+   * `移除 {name}`
+   */
+  profileRemoveItem(name: string): string;
+  /**
+   * `名称不能为空或与已有项重复。`
+   */
+  profileDuplicateName(): string;
+  /**
+   * `仅供 Main 调用，与 Worker 的 MCP 配置独立。支持 Runtime 目录引用和 HTTPS 直接连接。`
+   */
+  mainMcpHint(): string;
+  /**
+   * `尚未配置 Main MCP。`
+   */
+  mainNoMcp(): string;
+  /**
+   * `资源 ID`
+   */
+  mainResourceId(): string;
+  /**
+   * `目录引用`
+   */
+  mainCatalogSource(): string;
+  /**
+   * `直接连接`
+   */
+  mainDirectSource(): string;
+  /**
+   * `服务地址（HTTPS）`
+   */
+  mainMcpUrl(): string;
+  /**
+   * `工具使用范围`
+   */
+  mainToolAccess(): string;
+  /**
+   * `允许该来源的全部工具`
+   */
+  mainAllTools(): string;
+  /**
+   * `仅允许指定工具`
+   */
+  mainSelectedTools(): string;
+  /**
+   * `禁用此来源`
+   */
+  mainSourceDisabled(): string;
+  /**
+   * `工具名称（每行一个）`
+   */
+  mainToolNames(): string;
+  /**
+   * `引用已有 MCP`
+   */
+  mainAddCatalog(): string;
+  /**
+   * `添加 MCP 连接`
+   */
+  mainAddDirect(): string;
+  /**
+   * `请求头名称`
+   */
+  mainHeaderName(): string;
+  /**
+   * `请求头值`
+   */
+  mainHeaderValue(): string;
+  /**
+   * `已保存，请重新输入`
+   */
+  mainHeaderReenter(): string;
+  /**
+   * `添加请求头`
+   */
+  mainAddHeader(): string;
+  /**
+   * `已保存凭据：{names}`
+   */
+  mainSavedHeaders(names: string): string;
+  /**
+   * `此配置包含已保存的 MCP 凭据。Runtime 保存整份 Profile 时需要重新提供这些请求头值，请重新输入，或明确移除不再使用的请求头。`
+   */
+  mainCredentialsRequired(): string;
+  /**
+   * `请检查模型 ID、技能名称与固定版本、总指令长度（最多 40,000 字符）、MCP 地址和工具名称。`
+   */
+  profileInvalidFields(): string;
+  /**
+   * `新建 Main 配置`
+   */
+  mainCreateProfile(): string;
+  /**
+   * `Main 配置已保存。`
+   */
+  mainProfileSaved(): string;
 }
 
 const catalog = createCatalog<Messages>({
@@ -5413,6 +5589,50 @@ const catalog = createCatalog<Messages>({
     "mpaTosLoaded": ["region", "loaded", "total"],
     "mpaTosPermissions": [],
     "mpaTosClear": [],
+    "profileEdit": [],
+    "agentsDocumentScope": [],
+    "profileReadFailed": [],
+    "profileNoInstructions": [],
+    "profileUnsaved": [],
+    "profileDraftRetained": [],
+    "mainInstructionsHeading": [],
+    "mainNextTurn": [],
+    "mainModelMode": [],
+    "mainModelInherited": [],
+    "mainModelFixed": [],
+    "mainModelId": [],
+    "mainModelHint": [],
+    "mainSkillsHint": [],
+    "mainNoSkills": [],
+    "mainNewSkill": [],
+    "profileName": [],
+    "profileVersion": [],
+    "mainSkillContent": [],
+    "mainAddSkill": [],
+    "profileRemoveItem": ["name"],
+    "profileDuplicateName": [],
+    "mainMcpHint": [],
+    "mainNoMcp": [],
+    "mainResourceId": [],
+    "mainCatalogSource": [],
+    "mainDirectSource": [],
+    "mainMcpUrl": [],
+    "mainToolAccess": [],
+    "mainAllTools": [],
+    "mainSelectedTools": [],
+    "mainSourceDisabled": [],
+    "mainToolNames": [],
+    "mainAddCatalog": [],
+    "mainAddDirect": [],
+    "mainHeaderName": [],
+    "mainHeaderValue": [],
+    "mainHeaderReenter": [],
+    "mainAddHeader": [],
+    "mainSavedHeaders": ["names"],
+    "mainCredentialsRequired": [],
+    "profileInvalidFields": [],
+    "mainCreateProfile": [],
+    "mainProfileSaved": [],
   },
   messages: {
     "zh-Hans": {
@@ -6263,7 +6483,7 @@ const catalog = createCatalog<Messages>({
       "toolDetailsUnavailable": "此 Runtime 不提供工具详情。",
       "noServerTools": "此服务器未列出工具。",
       "sharedAgentsMdScope": "这里是 Studio 为当前 Runtime 配置的共享 AGENTS.md，会提供给 Worker 任务使用。编辑后需明确保存。",
-      "mainProfileScope": "Main 配置仅影响 Main。保存指令会保留其模型和技能配置。",
+      "mainProfileScope": "集中管理 Main 的指令、模型、技能与 MCP，整份配置一起保存。不会修改 Worker 配置。",
       "mainProfileUnsupportedOrUnconfigured": "Main 配置不受支持或尚未设置。不会创建配置。",
       "mainProfileUnconfigured": "Main 配置尚未设置。不会创建配置。",
       "mainProfileUnsupported": "此 Runtime 不支持 Main 配置。",
@@ -6327,7 +6547,7 @@ const catalog = createCatalog<Messages>({
       "channelUseRuntimeIdentity": "使用已连接 Runtime 的身份",
       "workerResourcesScope": "这里展示当前 Runtime 已配置、供 Worker 使用的资源，无需先选择会话。",
       "channelScanned": "已扫码",
-      "resourcePageSubtitle": "管理 Worker 可用的技能、工具与共享指令。",
+      "resourcePageSubtitle": "管理 Worker 的技能与共享指令，以及 Main 的独立配置。",
       "searchBoundSkills": "搜索技能",
       "boundSkillsCount": "{count} 项技能",
       "loadingBoundSkills": "正在读取技能…",
@@ -6496,6 +6716,50 @@ const catalog = createCatalog<Messages>({
       "mpaTosLoaded": "实际服务区域：{region} · 已加载 {loaded}/{total}",
       "mpaTosPermissions": "创建时为共享角色追加所选桶的会话输出访问权限，使用该角色的其他运行时和沙箱也将获得相同权限。",
       "mpaTosClear": "清除桶选择",
+      "profileEdit": "编辑",
+      "agentsDocumentScope": "当前 Runtime 的共享工作指令，供 Worker 使用。",
+      "profileReadFailed": "暂时无法读取内容，请重试。",
+      "profileNoInstructions": "尚未设置指令。",
+      "profileUnsaved": "有未保存的修改",
+      "profileDraftRetained": "已读取最新版本，并保留你的草稿。请核对后保存。",
+      "mainInstructionsHeading": "指令 · AGENTS.md",
+      "mainNextTurn": "保存后用于后续回合，不改变正在执行的任务。",
+      "mainModelMode": "模型选择",
+      "mainModelInherited": "跟随会话选择或 Runtime 默认模型",
+      "mainModelFixed": "固定 Main 模型",
+      "mainModelId": "模型 ID",
+      "mainModelHint": "固定模型仅用于 Main，模型须由 Runtime 部署的模型端点支持。未固定时，使用会话选择或 Runtime 默认值。整份配置完全为空时，恢复 Runtime 原有行为。",
+      "mainSkillsHint": "为 Main 提供固定版本的技能说明，不会安装到 Worker 或执行技能脚本。",
+      "mainNoSkills": "尚未添加 Main 技能。",
+      "mainNewSkill": "新技能",
+      "profileName": "名称",
+      "profileVersion": "固定版本",
+      "mainSkillContent": "技能说明",
+      "mainAddSkill": "添加技能",
+      "profileRemoveItem": "移除 {name}",
+      "profileDuplicateName": "名称不能为空或与已有项重复。",
+      "mainMcpHint": "仅供 Main 调用，与 Worker 的 MCP 配置独立。支持 Runtime 目录引用和 HTTPS 直接连接。",
+      "mainNoMcp": "尚未配置 Main MCP。",
+      "mainResourceId": "资源 ID",
+      "mainCatalogSource": "目录引用",
+      "mainDirectSource": "直接连接",
+      "mainMcpUrl": "服务地址（HTTPS）",
+      "mainToolAccess": "工具使用范围",
+      "mainAllTools": "允许该来源的全部工具",
+      "mainSelectedTools": "仅允许指定工具",
+      "mainSourceDisabled": "禁用此来源",
+      "mainToolNames": "工具名称（每行一个）",
+      "mainAddCatalog": "引用已有 MCP",
+      "mainAddDirect": "添加 MCP 连接",
+      "mainHeaderName": "请求头名称",
+      "mainHeaderValue": "请求头值",
+      "mainHeaderReenter": "已保存，请重新输入",
+      "mainAddHeader": "添加请求头",
+      "mainSavedHeaders": "已保存凭据：{names}",
+      "mainCredentialsRequired": "此配置包含已保存的 MCP 凭据。Runtime 保存整份 Profile 时需要重新提供这些请求头值，请重新输入，或明确移除不再使用的请求头。",
+      "profileInvalidFields": "请检查模型 ID、技能名称与固定版本、总指令长度（最多 40,000 字符）、MCP 地址和工具名称。",
+      "mainCreateProfile": "新建 Main 配置",
+      "mainProfileSaved": "Main 配置已保存。",
     },
     "en": {
       "settings": "Settings",
@@ -7345,7 +7609,7 @@ const catalog = createCatalog<Messages>({
       "toolDetailsUnavailable": "Tool details are unavailable in this Runtime.",
       "noServerTools": "No tools are listed for this server.",
       "sharedAgentsMdScope": "Shared AGENTS.md configured in Studio for this Runtime. It is supplied to Worker tasks; save changes explicitly.",
-      "mainProfileScope": "Main Profile affects only Main. Saving instructions preserves its model and skills.",
+      "mainProfileScope": "Manage Main instructions, model, skills and MCP as one profile. Saving does not change Worker configuration.",
       "mainProfileUnsupportedOrUnconfigured": "Main Profile is unsupported or not configured. No profile will be created.",
       "mainProfileUnconfigured": "Main Profile is not configured. No profile will be created.",
       "mainProfileUnsupported": "Main Profile is not supported by this Runtime.",
@@ -7409,7 +7673,7 @@ const catalog = createCatalog<Messages>({
       "channelUseRuntimeIdentity": "Use the connected Runtime identity",
       "workerResourcesScope": "Configured Worker resources from this Runtime; no conversation is required.",
       "channelScanned": "Scanned",
-      "resourcePageSubtitle": "Manage the skills, tools and shared instructions available to your Worker.",
+      "resourcePageSubtitle": "Manage Worker skills and shared instructions, and the independent Main profile.",
       "searchBoundSkills": "Search skills",
       "boundSkillsCount": "{count} skills",
       "loadingBoundSkills": "Loading skills…",
@@ -7578,6 +7842,50 @@ const catalog = createCatalog<Messages>({
       "mpaTosLoaded": "Service region: {region} · Loaded {loaded}/{total}",
       "mpaTosPermissions": "Creation adds session-output access to the selected bucket for the shared role. Other runtimes and sandboxes using that role receive the same permissions.",
       "mpaTosClear": "Clear bucket selection",
+      "profileEdit": "Edit",
+      "agentsDocumentScope": "Shared instructions for Workers on this Runtime.",
+      "profileReadFailed": "Content could not be loaded. Please retry.",
+      "profileNoInstructions": "No instructions configured.",
+      "profileUnsaved": "Unsaved changes",
+      "profileDraftRetained": "Loaded the latest version and retained your draft. Review it before saving.",
+      "mainInstructionsHeading": "Instructions · AGENTS.md",
+      "mainNextTurn": "Saved changes apply to subsequent turns; running tasks keep their configuration.",
+      "mainModelMode": "Model selection",
+      "mainModelInherited": "Follow the conversation selection or Runtime default",
+      "mainModelFixed": "Pin a Main model",
+      "mainModelId": "Model ID",
+      "mainModelHint": "The pinned model applies only to Main and must be supported by the deployed model endpoint. Otherwise Main follows the conversation selection or Runtime default. A completely empty profile restores the Runtime’s legacy behavior.",
+      "mainSkillsHint": "Pinned skill instructions for Main. These do not install Worker skills or execute scripts.",
+      "mainNoSkills": "No Main skills configured.",
+      "mainNewSkill": "New skill",
+      "profileName": "Name",
+      "profileVersion": "Pinned version",
+      "mainSkillContent": "Skill instructions",
+      "mainAddSkill": "Add skill",
+      "profileRemoveItem": "Remove {name}",
+      "profileDuplicateName": "The name must be non-empty and unique.",
+      "mainMcpHint": "Main-only MCP configuration, independent of Worker MCP. Reference Runtime resources or connect directly over HTTPS.",
+      "mainNoMcp": "No Main MCP configured.",
+      "mainResourceId": "Resource ID",
+      "mainCatalogSource": "Catalog reference",
+      "mainDirectSource": "Direct connection",
+      "mainMcpUrl": "Server URL (HTTPS)",
+      "mainToolAccess": "Allowed tools",
+      "mainAllTools": "Allow all tools from this source",
+      "mainSelectedTools": "Allow selected tools only",
+      "mainSourceDisabled": "Disable this source",
+      "mainToolNames": "Tool names (one per line)",
+      "mainAddCatalog": "Reference an MCP resource",
+      "mainAddDirect": "Add an MCP connection",
+      "mainHeaderName": "Header name",
+      "mainHeaderValue": "Header value",
+      "mainHeaderReenter": "Saved; enter the value again",
+      "mainAddHeader": "Add header",
+      "mainSavedHeaders": "Saved credentials: {names}",
+      "mainCredentialsRequired": "This profile has saved MCP credentials. Runtime requires the header values again when replacing the whole profile. Re-enter them, or explicitly remove headers you no longer use.",
+      "profileInvalidFields": "Check the model ID, skill names and pinned versions, total instructions (40,000 characters), MCP URLs and tool names.",
+      "mainCreateProfile": "Create Main profile",
+      "mainProfileSaved": "Main profile saved.",
     },
   },
 });

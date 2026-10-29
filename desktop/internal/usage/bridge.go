@@ -116,6 +116,28 @@ func (b *Bridge) SaveMainProfileInstructions(ctx context.Context, r MainProfileS
 	out, err := b.core.SaveMainProfileInstructions(requestCtx, r.ConnectionEpoch, state, r.Instructions)
 	return b.profileResult(ctx, scope, out, err)
 }
+func (b *Bridge) CreateMainProfile(ctx context.Context, r MainProfileCreateRequest) MainProfileResult {
+	scope := b.core.conn.State().Scope
+	requestCtx, cancel := deadline(ctx)
+	defer cancel()
+	id, err := b.core.ResourceInstanceID(requestCtx, r.ConnectionEpoch)
+	if err != nil {
+		return MainProfileResult{Status: MainProfileUnavailable, Error: err}
+	}
+	out, err := b.core.CreateMainProfile(requestCtx, r.ConnectionEpoch, id, r.Profile)
+	return b.profileResult(ctx, scope, out, err)
+}
+func (b *Bridge) SaveMainProfile(ctx context.Context, r MainProfileUpdateRequest) MainProfileResult {
+	scope := b.core.conn.State().Scope
+	state, err := b.claim(ctx, r.ConnectionEpoch, r.SnapshotID)
+	if err != nil {
+		return MainProfileResult{Status: MainProfileUnavailable, Error: err}
+	}
+	requestCtx, cancel := deadline(ctx)
+	defer cancel()
+	out, err := b.core.SaveMainProfile(requestCtx, r.ConnectionEpoch, state, r.Profile)
+	return b.profileResult(ctx, scope, out, err)
+}
 func (b *Bridge) CollaborationSpaces(ctx context.Context, r CollaborationPageRequest) CollaborationSpacePageResult {
 	ctx, cancel := deadline(ctx)
 	defer cancel()

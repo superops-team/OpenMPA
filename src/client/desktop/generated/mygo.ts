@@ -1224,6 +1224,24 @@ export interface MainProfile {
   agentsMd: string;
   model: MainProfileModel | null;
   skills: MainProfileSkill[];
+  mcpSources?: MainProfileMCPSource[];
+  mcpServers?: Record<string, MainProfileMCPServer>;
+}
+
+export interface MainProfileCreateRequest {
+  connectionEpoch: number;
+  profile: MainProfile;
+}
+
+export interface MainProfileMCPServer {
+  url: string;
+  headers: Record<string, string>;
+  enabledTools: string[] | null;
+}
+
+export interface MainProfileMCPSource {
+  resourceId: string;
+  enabledTools: string[] | null;
 }
 
 export interface MainProfileModel {
@@ -1267,6 +1285,12 @@ export interface MainProfileSkill {
 }
 
 export type MainProfileStatus = "configured" | "unsupported" | "unconfigured" | "unsupportedOrUnconfigured" | "unavailable";
+
+export interface MainProfileUpdateRequest {
+  connectionEpoch: number;
+  snapshotId: string;
+  profile: MainProfile;
+}
 
 export interface MainProfileView {
   status: MainProfileStatus;
@@ -2658,6 +2682,9 @@ export const Usage = {
   createCollaborationSpace(r: SpaceCreateRequest): Promise<CreatedResourceResult> {
     return call("Usage.CreateCollaborationSpace", r);
   },
+  createMainProfile(r: MainProfileCreateRequest): Promise<MainProfileResult> {
+    return call("Usage.CreateMainProfile", r);
+  },
   deleteCollaborationAgent(r: CollaborationMemberRequest): Promise<DeletedResourceResult> {
     return call("Usage.DeleteCollaborationAgent", r);
   },
@@ -2696,6 +2723,9 @@ export const Usage = {
   },
   saveAgentsMD(r: AgentsMDSaveRequest): Promise<AgentsMDResult> {
     return call("Usage.SaveAgentsMD", r);
+  },
+  saveMainProfile(r: MainProfileUpdateRequest): Promise<MainProfileResult> {
+    return call("Usage.SaveMainProfile", r);
   },
   saveMainProfileInstructions(r: MainProfileSaveRequest): Promise<MainProfileResult> {
     return call("Usage.SaveMainProfileInstructions", r);

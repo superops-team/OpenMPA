@@ -22,6 +22,15 @@ type MainProfileSaveRequest struct {
 	SnapshotID      string `json:"snapshotId"`
 	Instructions    string `json:"instructions"`
 }
+type MainProfileCreateRequest struct {
+	ConnectionEpoch uint64      `json:"connectionEpoch"`
+	Profile         MainProfile `json:"profile"`
+}
+type MainProfileUpdateRequest struct {
+	ConnectionEpoch uint64      `json:"connectionEpoch"`
+	SnapshotID      string      `json:"snapshotId"`
+	Profile         MainProfile `json:"profile"`
+}
 type MainProfileView struct {
 	Status          MainProfileStatus  `json:"status"`
 	Record          *MainProfileRecord `json:"record,omitempty"`
