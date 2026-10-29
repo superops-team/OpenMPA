@@ -289,6 +289,11 @@ export interface DesktopServices {
   connection: {
     status(): Promise<ConnectionVM | undefined>;
     test(epoch: number): Promise<string>;
+    prewarmIdentity?(
+      epoch: number,
+      idToken: string,
+      refreshToken: string,
+    ): Promise<{ senderId: string }>;
     identity(
       epoch: number,
       userId: string,

@@ -16,7 +16,6 @@ import {
 import { desktopFeatures } from './features';
 import type {
   ClientEvent,
-  ConnectionState,
   ExecutionConfig,
   SessionSummary,
 } from './generated/mygo';
@@ -24,10 +23,11 @@ type NativePage = NonNullable<
   Awaited<ReturnType<typeof Workspace.getPage>>['value']
 >;
 import { unwrap } from './result';
-import type { ConnectionVM, DesktopServices, Page, SessionVM } from './models';
+import type { DesktopServices, Page, SessionVM } from './models';
 import { displayEvent, historyMessages } from './service-events';
 import { createStudioServices } from './studio-services';
 import { createLifecycleServices } from './lifecycle-services';
+import { connectionVM } from './connection-view-model';
 export { displayEvent } from './service-events';
 
 const platformVM = (state: {
@@ -41,30 +41,6 @@ const platformVM = (state: {
   region: state.region || 'cn-beijing',
   epoch: state.epoch,
   scope: state.principal?.scope,
-});
-const connectionVM = (state: ConnectionState): ConnectionVM => ({
-  epoch: state.connectionEpoch,
-  scope: state.scope,
-  runtimeId: state.runtimeId,
-  runtimeName: state.runtimeName,
-  workerToolId: state.workerToolId,
-  runtimeImage: state.runtimeImage,
-  status: state.connected
-    ? state.hasBusinessIdentity
-      ? 'Explicit business identity'
-      : state.hasCredential
-        ? messages.runtimeKeyStatus()
-        : messages.authenticationRequired()
-    : 'Disconnected',
-  businessIdentity: !state.connected
-    ? 'unknown'
-    : state.hasBusinessIdentity
-      ? state.scope.includes('/business/test/')
-        ? 'localTest'
-        : 'explicit'
-      : state.hasCredential
-        ? 'missing'
-        : 'unknown',
 });
 const pageVM = (page: NativePage): Page => ({ ...page, sourceThreadId: null });
 const sessionVM = (session: SessionSummary) => ({
@@ -179,6 +155,14 @@ export function createDesktopServices(): DesktopServices {
           )
           .join(' · ');
       },
+      prewarmIdentity: async (connectionEpoch, idToken, refreshToken) =>
+        unwrap(
+          await Connection.prewarmIdentity({
+            connectionEpoch,
+            idToken,
+            refreshToken,
+          }),
+        ),
       channelAuth: async (connectionEpoch, authMode, secret) =>
         connectionVM(
           unwrap(
