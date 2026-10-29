@@ -1,9 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import type { ConnectionVM, SessionVM, PlatformVM } from './models';
 import type {
-  AgentsMDDocumentVM,
-  MainProfileReadVM,
-  MainProfileStatus,
   ResourcesServices,
   SkillPageVM,
   SkillSpaceVM,
@@ -25,6 +22,8 @@ import {
   ChevronRight,
   Trash2,
 } from 'lucide-react';
+import { AgentsMDEditor } from './AgentsMDEditor';
+import { MainProfileEditor } from './MainProfileEditor';
 import { SkillUploadButton } from './SkillUpload';
 import './resource-page.css';
 
@@ -33,7 +32,6 @@ export function DesktopResources({
   services,
   connection,
   platform,
-  session,
   target,
   onUse,
   hidden,
@@ -474,227 +472,20 @@ export function DesktopResources({
               ))
             )}
           </section>
-          <InstructionEditor
+          <AgentsMDEditor
+            key={`agents:${connection.epoch}:${connection.scope}`}
             services={services}
             connection={connection}
-            kind="agentsMd"
             hidden={hidden || section !== 'agentsMd'}
           />
-          <InstructionEditor
-            key={session?.mpaInstanceId || ''}
+          <MainProfileEditor
+            key={`main:${connection.epoch}:${connection.scope}`}
             services={services}
             connection={connection}
-            instanceId={session?.mpaInstanceId}
-            kind="mainProfile"
             hidden={hidden || section !== 'mainProfile'}
           />
         </>
       )}
     </main>
-  );
-}
-
-function InstructionEditor({
-  services,
-  connection,
-  instanceId,
-  kind,
-  hidden,
-}: {
-  services: ResourcesServices;
-  connection: ConnectionVM;
-  instanceId?: string;
-  kind: 'agentsMd' | 'mainProfile';
-  hidden: boolean;
-}) {
-  const m = useMessages();
-  const [draft, setDraft] = useState<string>();
-  const [baseline, setBaseline] = useState('');
-  const [document, setDocument] = useState<AgentsMDDocumentVM>();
-  const [profile, setProfile] = useState<MainProfileReadVM>();
-  const [status, setStatus] = useState<MainProfileStatus>();
-  const [busy, setBusy] = useState(false);
-  const [notice, setNotice] = useMessageState();
-  const authority = useRef<AgentsMDDocumentVM | string | undefined>(undefined);
-  const edits = useRef(0);
-  const request = useRef(0);
-  const alive = useRef(true);
-  useEffect(() => {
-    alive.current = true;
-    return () => {
-      alive.current = false;
-      request.current++;
-      authority.current = undefined;
-    };
-  }, []);
-  const apply = (
-    value: AgentsMDDocumentVM | MainProfileReadVM,
-    saving: boolean,
-    editRevision: number,
-  ) => {
-    const content =
-      'content' in value ? value.content : value.record?.profile.agentsMd;
-    authority.current = 'content' in value ? value : value.snapshotId;
-    if ('content' in value) setDocument(value);
-    else setProfile(value);
-    if (content !== undefined) {
-      setBaseline(content);
-      setDraft((previous) =>
-        previous === undefined || (saving && edits.current === editRevision)
-          ? content
-          : previous,
-      );
-    }
-  };
-  const perform = async (saving: boolean) => {
-    if (busy || (saving && authority.current === undefined)) return;
-    if (
-      !saving &&
-      draft !== undefined &&
-      draft !== baseline &&
-      !window.confirm(m.confirmReloadInstructions())
-    )
-      return;
-    const permission = authority.current;
-    authority.current = undefined;
-    const revision = edits.current;
-    const text = draft ?? '';
-    const id = ++request.current;
-    const active = () => alive.current && id === request.current;
-    setBusy(true);
-    setNotice('');
-    try {
-      if (kind === 'agentsMd') {
-        const result = saving
-          ? await services.saveAgentsMD(connection.epoch, {
-              content: text,
-              revision: (permission as AgentsMDDocumentVM).revision,
-            })
-          : await services.readAgentsMD(connection.epoch);
-        if (active()) apply(result, saving, revision);
-      } else {
-        const result = saving
-          ? await services.saveMainProfileInstructions(
-              connection.epoch,
-              permission as string,
-              text,
-            )
-          : await services.readMainProfile(connection.epoch, instanceId);
-        if (!active()) return;
-        setStatus(result.status);
-        if (result.error) {
-          setNotice(studioFailure(result.error));
-          return;
-        }
-        if (result.value) apply(result.value, saving, revision);
-      }
-      if (active() && saving)
-        setNotice(localized((m) => m.instructionsSaved()));
-    } catch (error) {
-      if (active()) setNotice(studioFailure(error));
-    } finally {
-      if (active()) setBusy(false);
-    }
-  };
-  useEffect(() => {
-    if (!hidden && kind === 'agentsMd' && draft === undefined)
-      void perform(false);
-  }, [hidden]);
-  return (
-    <section
-      className="task-detail-card desktop-form"
-      hidden={hidden}
-      style={hidden ? { display: 'none' } : undefined}
-      data-testid={`resources-${kind}`}
-    >
-      <p>
-        {kind === 'agentsMd' ? m.sharedAgentsMdScope() : m.mainProfileScope()}
-      </p>
-      {kind === 'mainProfile' && status && status !== 'configured' && (
-        <p>
-          {status === 'unsupported'
-            ? m.mainProfileUnsupported()
-            : status === 'unconfigured'
-              ? m.mainProfileUnconfigured()
-              : status === 'unsupportedOrUnconfigured'
-                ? m.mainProfileUnsupportedOrUnconfigured()
-                : m.mainProfileUnavailable()}
-        </p>
-      )}
-      <button
-        className="text-button"
-        disabled={busy}
-        onClick={() => void perform(false)}
-      >
-        {kind === 'agentsMd' ? m.reloadAgentsMd() : m.reloadMainProfile()}
-      </button>
-      <label>
-        {kind === 'agentsMd'
-          ? m.agentsMdInstructions()
-          : m.mainProfileInstructions()}
-        <textarea
-          data-testid={`resources-${kind}-draft`}
-          value={draft ?? ''}
-          onChange={(event) => {
-            edits.current++;
-            setDraft(event.target.value);
-          }}
-        />
-      </label>
-      {draft !== undefined && draft !== baseline && (
-        <p>{m.unsavedInstructionDraft()}</p>
-      )}
-      {authority.current === undefined && (
-        <p>{m.readInstructionsBeforeSaving()}</p>
-      )}
-      <button
-        className="text-button"
-        disabled={
-          busy ||
-          authority.current === undefined ||
-          draft === undefined ||
-          draft === baseline
-        }
-        onClick={() => void perform(true)}
-      >
-        {kind === 'agentsMd' ? m.saveAgentsMd() : m.saveMainProfile()}
-      </button>
-      <button
-        className="text-button"
-        disabled={draft === undefined}
-        onClick={() => {
-          if (window.confirm(m.confirmDiscardInstructions())) {
-            edits.current++;
-            setDraft(baseline);
-          }
-        }}
-      >
-        {m.discardInstructionDraft()}
-      </button>
-      {notice && <p role="status">{notice}</p>}
-      {(document || profile?.record) && (
-        <details>
-          <summary>{m.latestSavedInstructions()}</summary>
-          <p>
-            {m.loadedRevision()}{' '}
-            {document?.revision ?? profile?.record?.revision}
-          </p>
-          <pre>{baseline}</pre>
-          {profile?.record && (
-            <>
-              <p>
-                {m.model()} {profile.record.profile.model?.id}
-              </p>
-              <p>
-                {m.skills()}{' '}
-                {profile.record.profile.skills
-                  .map((skill) => skill.name)
-                  .join(', ')}
-              </p>
-            </>
-          )}
-        </details>
-      )}
-    </section>
   );
 }

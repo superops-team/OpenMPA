@@ -39,11 +39,23 @@ type MainProfileSkill struct {
 	Content string `json:"content"`
 }
 
+type MainProfileMCPSource struct {
+	ResourceID   string    `json:"resourceId"`
+	EnabledTools *[]string `json:"enabledTools"`
+}
+type MainProfileMCPServer struct {
+	URL          string            `json:"url"`
+	Headers      map[string]string `json:"headers"`
+	EnabledTools *[]string         `json:"enabledTools"`
+}
+
 // MainProfile affects only Main. Shared AGENTS.md can also affect Worker.
 type MainProfile struct {
-	AgentsMD string             `json:"agentsMd"`
-	Model    *MainProfileModel  `json:"model"`
-	Skills   []MainProfileSkill `json:"skills"`
+	AgentsMD   string                          `json:"agentsMd"`
+	Model      *MainProfileModel               `json:"model"`
+	Skills     []MainProfileSkill              `json:"skills"`
+	MCPSources []MainProfileMCPSource          `json:"mcpSources,omitempty"`
+	MCPServers map[string]MainProfileMCPServer `json:"mcpServers,omitempty"`
 }
 
 type MainProfileRecord struct {
@@ -71,6 +83,7 @@ type mainProfileSnapshot struct {
 	scope     string
 	record    MainProfileRecord
 	attempted atomic.Bool
+	creating  bool
 }
 
 var mainProfileSkillName = regexp.MustCompile(`^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$`)
@@ -97,6 +110,31 @@ func (s *Service) ReadMainProfile(ctx context.Context, epoch uint64, mpaInstance
 // this epoch. Every attempted write consumes its snapshot; recovery is a read,
 // never automatic creation or replay after a conflict or uncertain outcome.
 func (s *Service) SaveMainProfileInstructions(ctx context.Context, epoch uint64, current MainProfileState, instructions string) (MainProfileState, *dto.SafeError) {
+	if current.snapshot == nil {
+		return MainProfileState{}, resourceInputError()
+	}
+	profile := cloneMainProfileRecord(current.snapshot.record).Profile
+	profile.AgentsMD = instructions
+	return s.SaveMainProfile(ctx, epoch, current, profile)
+}
+
+// CreateMainProfile is an explicit create-only operation; a missing GET never creates a profile.
+func (s *Service) CreateMainProfile(ctx context.Context, epoch uint64, instanceID string, profile MainProfile) (MainProfileState, *dto.SafeError) {
+	if !resourceIdentifierValid(instanceID) || strings.HasPrefix(strings.ToLower(instanceID), "r-") {
+		return MainProfileState{}, resourceInputError()
+	}
+	state := MainProfileState{
+		Status: MainProfileConfigured,
+		snapshot: &mainProfileSnapshot{
+			owner: s, epoch: epoch, scope: s.conn.State().Scope, creating: true,
+			record: MainProfileRecord{MPAInstanceID: instanceID, Profile: MainProfile{Skills: []MainProfileSkill{}}},
+		},
+	}
+	return s.SaveMainProfile(ctx, epoch, state, profile)
+}
+
+// SaveMainProfile replaces the complete Main-only profile using the read snapshot's CAS authority.
+func (s *Service) SaveMainProfile(ctx context.Context, epoch uint64, current MainProfileState, profile MainProfile) (MainProfileState, *dto.SafeError) {
 	snapshot := current.snapshot
 	if current.Status != MainProfileConfigured || snapshot == nil || snapshot.owner != s {
 		return MainProfileState{}, resourceInputError()
@@ -107,9 +145,7 @@ func (s *Service) SaveMainProfileInstructions(ctx context.Context, epoch uint64,
 	if err := s.resourceEpochError(epoch); err != nil {
 		return MainProfileState{}, err
 	}
-	profile := cloneMainProfileRecord(snapshot.record).Profile
-	profile.AgentsMD = instructions
-	if !mainProfileValid(profile) || snapshot.record.Revision >= 9999999999 {
+	if !mainProfileValid(profile) || !mainProfileCredentialsReady(profile) || snapshot.record.Revision >= 9999999999 {
 		return MainProfileState{}, resourceInputError()
 	}
 	body := struct {
@@ -129,15 +165,23 @@ func (s *Service) SaveMainProfileInstructions(ctx context.Context, epoch uint64,
 		return MainProfileState{}, dto.Failure("conflict", "desktop", "reload", 0)
 	}
 	headers := http.Header{"If-Match": {snapshot.record.ETag}, "Idempotency-Key": {hex.EncodeToString(key)}}
+	if snapshot.creating {
+		headers.Del("If-Match")
+		headers.Set("If-None-Match", "*")
+	}
 	record, err := s.mainProfileRequest(ctx, epoch, http.MethodPut, snapshot.record.MPAInstanceID, data, headers)
 	if err != nil {
 		return MainProfileState{Status: mainProfileFailureStatus(err), ConnectionEpoch: epoch}, err
 	}
 	expectedRevision := snapshot.record.Revision
-	if !reflect.DeepEqual(profile, snapshot.record.Profile) {
+	if snapshot.creating || !reflect.DeepEqual(profile, snapshot.record.Profile) {
 		expectedRevision++
 	}
-	if record.Revision != expectedRevision || !reflect.DeepEqual(record.Profile, profile) ||
+	// A public read masks headers, so re-entering unchanged credentials can be a
+	// server-side no-op even though the submitted secret differs from the mask.
+	publicUnchanged := reflect.DeepEqual(publicMainProfile(profile), publicMainProfile(snapshot.record.Profile))
+	validRevision := record.Revision == expectedRevision || (!snapshot.creating && publicUnchanged && record.Revision == snapshot.record.Revision)
+	if !validRevision || !reflect.DeepEqual(record.Profile, publicMainProfile(profile)) ||
 		!reflect.DeepEqual(record.SourceProfileID, body.SourceProfileID) ||
 		!reflect.DeepEqual(record.SourceProfileDigest, body.SourceProfileDigest) {
 		return MainProfileState{}, resourceResponseError(true)
@@ -190,9 +234,11 @@ func (s *Service) mainProfileRequest(ctx context.Context, epoch uint64, method, 
 		return MainProfileRecord{}, resourceResponseError(write)
 	}
 	var profileWire struct {
-		AgentsMD *string            `json:"agentsMd"`
-		Model    json.RawMessage    `json:"model"`
-		Skills   []MainProfileSkill `json:"skills"`
+		AgentsMD   *string                         `json:"agentsMd"`
+		Model      json.RawMessage                 `json:"model"`
+		Skills     []MainProfileSkill              `json:"skills"`
+		MCPSources []MainProfileMCPSource          `json:"mcpSources,omitempty"`
+		MCPServers map[string]MainProfileMCPServer `json:"mcpServers,omitempty"`
 	}
 	// Refuse unknown profile fields rather than silently dropping settings on
 	// a newer Runtime when this client later sends a replacement profile.
@@ -203,7 +249,8 @@ func (s *Service) mainProfileRequest(ctx context.Context, epoch uint64, method, 
 	if !mainProfileStrictDecode(profileWire.Model, &model) {
 		return MainProfileRecord{}, resourceResponseError(write)
 	}
-	profile := MainProfile{AgentsMD: *profileWire.AgentsMD, Model: model, Skills: profileWire.Skills}
+	profile := MainProfile{AgentsMD: *profileWire.AgentsMD, Model: model, Skills: profileWire.Skills, MCPSources: profileWire.MCPSources, MCPServers: profileWire.MCPServers}
+	normalizeMainProfileMCP(&profile)
 	if !mainProfileValid(profile) || !mainProfileOptionalIdentifier(wire.SourceProfileID) ||
 		!mainProfileOptionalIdentifier(wire.SourceProfileDigest) {
 		return MainProfileRecord{}, resourceResponseError(write)
@@ -249,7 +296,7 @@ func mainProfileValid(profile MainProfile) bool {
 		names[name] = true
 		total += utf8.RuneCountInString(skill.Content)
 	}
-	return total <= resourceInstructionLimit
+	return total <= resourceInstructionLimit && mainProfileMCPValid(profile)
 }
 
 func mainProfileFailureStatus(err *dto.SafeError) MainProfileStatus {
@@ -282,6 +329,23 @@ func cloneMainProfileRecord(record MainProfileRecord) MainProfileRecord {
 		record.Profile.Model = &model
 	}
 	record.Profile.Skills = append([]MainProfileSkill{}, record.Profile.Skills...)
+	record.Profile.MCPSources = append([]MainProfileMCPSource(nil), record.Profile.MCPSources...)
+	for index, source := range record.Profile.MCPSources {
+		record.Profile.MCPSources[index].EnabledTools = cloneMainProfileTools(source.EnabledTools)
+	}
+	if record.Profile.MCPServers != nil {
+		servers := make(map[string]MainProfileMCPServer, len(record.Profile.MCPServers))
+		for name, server := range record.Profile.MCPServers {
+			headers := make(map[string]string, len(server.Headers))
+			for key, value := range server.Headers {
+				headers[key] = value
+			}
+			server.Headers = headers
+			server.EnabledTools = cloneMainProfileTools(server.EnabledTools)
+			servers[name] = server
+		}
+		record.Profile.MCPServers = servers
+	}
 	if record.SourceProfileID != nil {
 		value := *record.SourceProfileID
 		record.SourceProfileID = &value
@@ -291,4 +355,12 @@ func cloneMainProfileRecord(record MainProfileRecord) MainProfileRecord {
 		record.SourceProfileDigest = &value
 	}
 	return record
+}
+
+func cloneMainProfileTools(tools *[]string) *[]string {
+	if tools == nil {
+		return nil
+	}
+	result := append([]string{}, (*tools)...)
+	return &result
 }

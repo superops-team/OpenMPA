@@ -25,8 +25,9 @@
     "dev:desktop:frontend": "vite --config vite.desktop.config.ts",
     "build:desktop:frontend": "vite build --config vite.desktop.config.ts",
     "desktop:generate": "cd desktop && GOTOOLCHAIN=go1.27.3 CGO_ENABLED=0 go run github.com/egoist/mygo/cmd/mygo generate .",
-    "desktop:dev": "cd desktop && GOTOOLCHAIN=go1.27.3 CGO_ENABLED=0 go run github.com/egoist/mygo/cmd/mygo dev .",
-    "desktop:build": "cd desktop && GOTOOLCHAIN=go1.27.3 CGO_ENABLED=0 go run github.com/egoist/mygo/cmd/mygo build -platform darwin/arm64 .",
+    "desktop:engine": "python3 scripts/prepare-mpa-engine.py",
+    "desktop:dev": "npm run desktop:engine && cd desktop && GOTOOLCHAIN=go1.27.3 CGO_ENABLED=0 go run github.com/egoist/mygo/cmd/mygo dev .",
+    "desktop:build": "npm run desktop:engine && cd desktop && GOTOOLCHAIN=go1.27.3 CGO_ENABLED=0 go run github.com/egoist/mygo/cmd/mygo build -platform darwin/arm64 .",
     "desktop:test": "cd desktop && GOTOOLCHAIN=go1.27.3 go test ./..."
   },
   "keywords": [],

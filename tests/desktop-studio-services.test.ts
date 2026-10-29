@@ -105,3 +105,44 @@ it('preserves machine fields and localizes bridge failures, not provider text', 
     renderMessage((caught as LocalizedError).text, messagesIn('zh-Hans')),
   ).toBe(messagesIn('zh-Hans').businessIdentityRequired());
 });
+it('forwards the complete Main profile and keeps creation separate from snapshot updates', async () => {
+  const failure = {
+    ok: false,
+    status: 'unavailable',
+    error: { code: 'conflict', message: 'safe' },
+  };
+  const saveMainProfile = vi.fn(async () => failure);
+  const createMainProfile = vi.fn(async () => failure);
+  const bridge = {
+    saveMainProfile,
+    createMainProfile,
+  } as unknown as typeof Usage;
+  const api = createStudioServices(bridge).resources;
+  const value = {
+    agentsMd: 'Main only',
+    model: { id: 'model-id' },
+    skills: [],
+    mcpSources: [{ resourceId: 'agentkit:lookup', enabledTools: [] }],
+    mcpServers: {
+      private: {
+        url: 'https://example.test/mcp',
+        headers: {},
+        enabledTools: null,
+      },
+    },
+  };
+  expect(
+    (await api.saveMainProfile!(3, 'snapshot-authority', value)).error?.code,
+  ).toBe('conflict');
+  expect(saveMainProfile).toHaveBeenCalledExactlyOnceWith({
+    connectionEpoch: 3,
+    snapshotId: 'snapshot-authority',
+    profile: value,
+  });
+  expect(createMainProfile).not.toHaveBeenCalled();
+  await api.createMainProfile!(3, value);
+  expect(createMainProfile).toHaveBeenCalledExactlyOnceWith({
+    connectionEpoch: 3,
+    profile: value,
+  });
+});

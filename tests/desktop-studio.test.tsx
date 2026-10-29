@@ -65,6 +65,22 @@ const input = (renderer: ReactTestRenderer, id: string) =>
   renderer.root.findByProps({ 'data-testid': id });
 const text = (renderer: ReactTestRenderer) => JSON.stringify(renderer.toJSON());
 const en = messagesIn('en');
+async function editResource(
+  renderer: ReactTestRenderer,
+  section: 'agentsMd' | 'mainProfile',
+) {
+  await act(async () =>
+    input(renderer, `resources-tab-${section}`).props.onClick(),
+  );
+  const panel = input(renderer, `resources-${section}`);
+  await act(async () =>
+    panel
+      .findAllByType('button')
+      .find((b) => b.children.includes(en.profileEdit()))!
+      .props.onClick(),
+  );
+}
+
 function resourceServices(
   overrides: Partial<ResourcesServices> = {},
 ): ResourcesServices {
@@ -113,6 +129,10 @@ function resourceServices(
           createdAt: '',
         },
       },
+    })),
+    saveMainProfile: vi.fn(async (): Promise<MainProfileOutcome> => ({
+      status: 'unavailable',
+      error: { code: 'conflict', message: 'opaque' },
     })),
     saveMainProfileInstructions: vi.fn(
       async (): Promise<MainProfileOutcome> => ({
@@ -201,6 +221,7 @@ describe('Studio resources', () => {
     const renderer = await mount(
       <DesktopResources {...props} hidden={false} />,
     );
+    await editResource(renderer, 'agentsMd');
     await act(async () =>
       input(renderer, 'resources-agentsMd-draft').props.onChange({
         target: { value: 'retained' },
@@ -261,9 +282,7 @@ describe('Studio resources', () => {
         hidden={false}
       />,
     );
-    await act(async () =>
-      button(renderer, en.reloadMainProfile()).props.onClick(),
-    );
+    await editResource(renderer, 'mainProfile');
     await act(async () =>
       input(renderer, 'resources-mainProfile-draft').props.onChange({
         target: { value: 'my edit' },
@@ -272,10 +291,14 @@ describe('Studio resources', () => {
     await act(async () =>
       button(renderer, en.saveMainProfile()).props.onClick(),
     );
-    expect(services.saveMainProfileInstructions).toHaveBeenCalledWith(
+    expect(services.saveMainProfile).toHaveBeenCalledWith(
       2,
       'token',
-      'my edit',
+      expect.objectContaining({
+        agentsMd: 'my edit',
+        model: { id: 'pinned-model' },
+        skills: [],
+      }),
     );
     expect(input(renderer, 'resources-mainProfile-draft').props.value).toBe(
       'my edit',
@@ -302,9 +325,7 @@ describe('Studio resources', () => {
         hidden={false}
       />,
     );
-    await act(async () =>
-      button(renderer, en.reloadAgentsMd()).props.onClick(),
-    );
+    await editResource(renderer, 'agentsMd');
     await act(async () =>
       input(renderer, 'resources-agentsMd-draft').props.onChange({
         target: { value: 'submitted' },
@@ -340,7 +361,12 @@ describe('Studio resources', () => {
       button(renderer, en.reloadMainProfile()).props.onClick(),
     );
     expect(text(renderer)).toContain(en.mainProfileUnsupportedOrUnconfigured());
-    expect(button(renderer, en.saveMainProfile()).props.disabled).toBe(true);
+    expect(button(renderer, en.profileEdit()).props.disabled).toBe(true);
+    expect(
+      renderer.root
+        .findAllByType('button')
+        .some((b) => b.children.includes(en.saveMainProfile())),
+    ).toBe(false);
   });
   it('rejects a late Worker MCP response for an old Runtime', async () => {
     const late =

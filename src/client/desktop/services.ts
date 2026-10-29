@@ -27,11 +27,12 @@ import { unwrap } from './result';
 import type { ConnectionVM, DesktopServices, Page, SessionVM } from './models';
 import { displayEvent, historyMessages } from './service-events';
 import { createStudioServices } from './studio-services';
+import { createLifecycleServices } from './lifecycle-services';
 export { displayEvent } from './service-events';
 
 const platformVM = (state: {
   signedIn: boolean;
-  principal?: { accountId?: string } | null;
+  principal?: { accountId?: string; scope?: string } | null;
   region?: string;
   epoch?: number;
 }) => ({
@@ -39,6 +40,7 @@ const platformVM = (state: {
   accountId: state.principal?.accountId || '',
   region: state.region || 'cn-beijing',
   epoch: state.epoch,
+  scope: state.principal?.scope,
 });
 const connectionVM = (state: ConnectionState): ConnectionVM => ({
   epoch: state.connectionEpoch,
@@ -84,6 +86,7 @@ export function createDesktopServices(): DesktopServices {
   return {
     ...desktopFeatures(),
     ...createStudioServices(),
+    lifecycle: createLifecycleServices(),
     host: {
       theme: async () => {
         const value = unwrap(await Host.theme());

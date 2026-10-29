@@ -65,6 +65,20 @@ export type MainProfileStatus =
   | 'unconfigured'
   | 'unsupportedOrUnconfigured'
   | 'unavailable';
+export interface MainProfileVM {
+  agentsMd: string;
+  model: { id: string } | null;
+  skills: Array<{ name: string; version: string; content: string }>;
+  mcpSources?: Array<{ resourceId: string; enabledTools: string[] | null }>;
+  mcpServers?: Record<
+    string,
+    {
+      url: string;
+      headers: Record<string, string>;
+      enabledTools: string[] | null;
+    }
+  >;
+}
 export interface MainProfileReadVM {
   status: MainProfileStatus;
   connectionEpoch: number;
@@ -74,11 +88,7 @@ export interface MainProfileReadVM {
     revision: number;
     digest: string;
     etag: string;
-    profile: {
-      agentsMd: string;
-      model: { id: string } | null;
-      skills: Array<{ name: string; version: string; content: string }>;
-    };
+    profile: MainProfileVM;
     sourceProfileId: string | null;
     sourceProfileDigest: string | null;
     updatedBy: string;
@@ -130,6 +140,15 @@ export interface ResourcesServices {
   readMainProfile(
     epoch: number,
     mpaInstanceId?: string,
+  ): Promise<MainProfileOutcome>;
+  createMainProfile?(
+    epoch: number,
+    profile: MainProfileVM,
+  ): Promise<MainProfileOutcome>;
+  saveMainProfile?(
+    epoch: number,
+    snapshotId: string,
+    profile: MainProfileVM,
   ): Promise<MainProfileOutcome>;
   saveMainProfileInstructions(
     epoch: number,

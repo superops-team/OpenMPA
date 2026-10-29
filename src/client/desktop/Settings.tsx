@@ -22,6 +22,7 @@ export function DesktopSettings({
   session,
   theme,
   onThemeChange,
+  onManageRuntimes,
   onSessionSaved,
 }: {
   services: DesktopServices;
@@ -32,6 +33,7 @@ export function DesktopSettings({
   session?: SessionVM;
   theme?: ThemePreference;
   onThemeChange?: (theme: ThemePreference) => void;
+  onManageRuntimes?: () => void;
   onSessionSaved?: (session: SessionVM) => void;
 }) {
   const m = useMessages();
@@ -117,6 +119,7 @@ export function DesktopSettings({
           services={services}
           connection={connection}
           onConnection={onConnection}
+          onManage={onManageRuntimes}
           selectingRuntimeId={selectingRuntimeId}
           setSelectingRuntimeId={setSelectingRuntimeId}
         />

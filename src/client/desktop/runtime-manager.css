@@ -1,0 +1,417 @@
+.template-app.desktop-app .mpa-manager {
+  display: block;
+  width: min(100%, 1100px);
+  padding: var(--space-6) var(--space-5);
+  margin-inline: auto;
+}
+.mpa-manager .page-heading {
+  display: flex;
+  align-items: start;
+  gap: var(--space-4);
+  justify-content: space-between;
+  flex-wrap: wrap;
+}
+.mpa-manager .page-heading h1 {
+  font-size: var(--text-ui-xl);
+}
+.mpa-manager p,
+.mpa-dialog-content p {
+  color: var(--color-foreground-subtle);
+}
+.mpa-runtime-panel {
+  border: 1px solid var(--color-card-border);
+  border-radius: var(--radius-xl);
+  background: var(--color-card);
+  margin-top: var(--space-5);
+}
+.mpa-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  border-bottom: 1px solid var(--color-border);
+}
+.mpa-toolbar label,
+.mpa-fields label,
+label.mpa-fields {
+  display: grid;
+  gap: var(--space-2);
+  min-width: 0;
+  font-size: var(--text-ui-sm);
+}
+.mpa-toolbar label {
+  flex: 1 1 150px;
+}
+.mpa-toolbar .mpa-search {
+  flex: 2 1 180px;
+}
+.template-app.desktop-app .mpa-toolbar input,
+.template-app.desktop-app .mpa-toolbar select,
+.template-app.desktop-app .mpa-fields input,
+.template-app.desktop-app .mpa-fields textarea,
+.template-app.desktop-app .mpa-fields select {
+  box-sizing: border-box;
+  min-width: 0;
+  width: 100%;
+  height: var(--control-input);
+  padding: var(--space-2) var(--space-3);
+  font: inherit;
+  color: var(--color-foreground);
+  background: var(--color-input);
+  border: 1px solid var(--color-input-border);
+  border-radius: var(--radius-lg);
+}
+.template-app.desktop-app .mpa-fields textarea {
+  height: auto;
+  min-height: 100px;
+  resize: vertical;
+}
+.mpa-runtime-list,
+.mpa-history ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.mpa-runtime-list > li {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  padding: var(--space-4);
+  border-bottom: 1px solid var(--color-border);
+}
+.mpa-runtime-list > li:last-child {
+  border-bottom: 0;
+}
+.mpa-runtime-list > li > svg {
+  flex: none;
+  color: var(--color-foreground-subtle);
+}
+.mpa-runtime-summary {
+  flex: 1;
+  min-width: 0;
+}
+.mpa-runtime-summary p {
+  margin: var(--space-1) 0 0;
+  font-size: var(--text-ui-sm);
+}
+.mpa-row-actions {
+  display: flex;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+  flex: none;
+}
+.mpa-panel-message {
+  padding: var(--space-4);
+}
+.mpa-history {
+  margin-top: var(--space-6);
+}
+.mpa-history h2,
+.mpa-dialog-content h3 {
+  font-size: var(--text-ui-base);
+}
+.mpa-history li {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-block: var(--space-3);
+  gap: var(--space-3);
+  border-bottom: 1px solid var(--color-border);
+}
+.mpa-history li > div {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+  min-width: 0;
+}
+.mpa-identifier {
+  overflow-wrap: anywhere;
+  font-size: var(--text-ui-caption);
+}
+.mpa-status {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-1) var(--space-2);
+  font-size: var(--text-ui-caption);
+  white-space: nowrap;
+}
+.mpa-status[data-state='succeeded'] {
+  color: var(--color-brand);
+}
+.mpa-notice {
+  padding: var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+}
+.mpa-dialog-content {
+  display: grid;
+  gap: var(--space-4);
+  min-width: 0;
+}
+.mpa-dialog-content p {
+  margin: 0;
+}
+.mpa-dialog-content .studio-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+.mpa-fields {
+  display: grid;
+  gap: var(--space-4);
+  min-width: 0;
+}
+.mpa-steps {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 var(--space-2);
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-4);
+}
+.mpa-steps li {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--text-ui-sm);
+  color: var(--color-foreground-subtle);
+}
+.mpa-steps li[aria-current] {
+  color: var(--color-foreground);
+  font-weight: 600;
+}
+.mpa-steps li span {
+  display: grid;
+  place-items: center;
+  width: var(--control-sm);
+  height: var(--control-sm);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-full);
+}
+.mpa-task-progress {
+  display: grid;
+  justify-items: start;
+  gap: var(--space-3);
+}
+.mpa-task-progress progress {
+  max-width: 100%;
+  width: 280px;
+  accent-color: var(--color-brand);
+}
+.mpa-cleanup-plan {
+  margin: 0;
+  padding-left: var(--space-5);
+}
+.mpa-cleanup-plan li {
+  padding-block: var(--space-2);
+  overflow-wrap: anywhere;
+}
+.mpa-cleanup-plan code {
+  display: block;
+}
+@media (max-width: 600px) {
+  .template-app.desktop-app .mpa-manager {
+    padding: var(--space-4) var(--space-3);
+  }
+  .mpa-runtime-list > li {
+    flex-wrap: wrap;
+  }
+  .mpa-row-actions {
+    width: 100%;
+  }
+  .mpa-history li {
+    align-items: start;
+    flex-wrap: wrap;
+  }
+  .mpa-toolbar label {
+    flex-basis: 100%;
+  }
+}
+
+.mpa-bucket-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: var(--space-3);
+}
+.mpa-bucket-toolbar > label {
+  flex: 1 1 180px;
+}
+
+.template-app.desktop-app .mpa-tos-storage {
+  min-inline-size: 0;
+  margin: 0;
+  padding: var(--space-4);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+}
+.mpa-tos-storage legend {
+  padding-inline: var(--space-2);
+  font-size: var(--text-ui-base);
+  font-weight: 600;
+}
+.mpa-bucket-field {
+  display: grid;
+  gap: var(--space-2);
+  min-width: 0;
+}
+.template-app.desktop-app .mpa-resource-trigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  min-width: 0;
+  height: var(--control-input);
+  padding: var(--space-2) var(--space-3);
+  gap: var(--space-3);
+  font: inherit;
+  text-align: left;
+  color: var(--color-foreground);
+  background: var(--color-input);
+  border: 1px solid var(--color-input-border);
+  border-radius: var(--radius-lg);
+  cursor: pointer;
+}
+.mpa-resource-trigger > span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+}
+.mpa-resource-trigger > svg {
+  flex: none;
+  color: var(--color-foreground-subtle);
+}
+.template-app.desktop-app .mpa-resource-trigger[data-placeholder] {
+  color: var(--color-foreground-subtle);
+}
+.mpa-resource-panel {
+  padding: var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-card);
+  min-width: 0;
+}
+.mpa-resource-options {
+  max-height: 200px;
+  overflow-y: auto;
+  margin-top: var(--space-2);
+}
+.template-app.desktop-app .mpa-resource-options > button {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  width: 100%;
+  min-height: var(--control-input);
+  padding: var(--space-2);
+  text-align: left;
+  background: transparent;
+  border: 0;
+  border-radius: var(--radius-md);
+  font: inherit;
+  color: var(--color-foreground);
+  cursor: pointer;
+}
+.mpa-resource-options > button > span {
+  overflow-wrap: anywhere;
+  min-width: 0;
+}
+.mpa-resource-options > button > svg {
+  flex: none;
+}
+.template-app.desktop-app .mpa-resource-options > button:hover,
+.template-app.desktop-app .mpa-resource-options > button[aria-selected='true'] {
+  background: var(--color-surface-hover);
+}
+.mpa-tos-storage .mpa-tos-meta,
+.mpa-resource-empty {
+  font-size: var(--text-ui-caption);
+  color: var(--color-foreground-subtle);
+}
+.mpa-tos-error {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.mpa-creation-progress {
+  min-width: 0;
+}
+.mpa-creation-progress h3 {
+  margin: 0 0 var(--space-3);
+}
+.mpa-creation-checklist {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+.mpa-creation-checklist li {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-2) var(--space-3);
+  font-size: var(--text-ui-sm);
+  color: var(--color-foreground-subtle);
+}
+.mpa-creation-checklist li + li {
+  border-top: 1px solid var(--color-border);
+}
+.mpa-creation-checklist li[data-state='running'] {
+  background: var(--color-card-selected);
+  color: var(--color-foreground);
+  font-weight: 600;
+}
+.mpa-creation-checklist li[data-state='failed'] {
+  color: var(--color-destructive);
+}
+.mpa-creation-checklist li[data-state='completed'] > svg,
+.mpa-creation-checklist li[data-state='passed'] > svg {
+  color: var(--color-brand);
+}
+.mpa-step-state,
+.mpa-progress-note {
+  font-size: var(--text-ui-caption);
+}
+.mpa-dialog-content .mpa-progress-note {
+  margin-top: var(--space-2);
+}
+.mpa-creation-failure {
+  border: 1px solid var(--color-destructive);
+  border-radius: var(--radius-lg);
+  padding: var(--space-3);
+  display: grid;
+  gap: var(--space-3);
+}
+.mpa-diagnostic-details {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.mpa-diagnostic-details summary {
+  cursor: pointer;
+}
+.mpa-diagnostic-details[open] > p,
+.mpa-diagnostic-details dl {
+  margin-block: var(--space-3);
+}
+.mpa-diagnostic-details dl > div {
+  display: grid;
+  grid-template-columns: minmax(90px, 1fr) minmax(0, 3fr);
+  gap: var(--space-3);
+  padding-block: var(--space-1);
+  font-size: var(--text-ui-sm);
+}
+.mpa-diagnostic-details dt {
+  color: var(--color-foreground-subtle);
+}
+.mpa-diagnostic-details dd {
+  margin: 0;
+  white-space: pre-wrap;
+}

@@ -1,0 +1,11 @@
+# Bundled MPA lifecycle engine
+
+This helper adapts the unmodified Studio orchestration shipped in **VeADK Python 1.1.19**, corresponding to upstream Studio PR #1182. `uv.lock` pins the full dependency graph. The application does not execute a user-supplied CLI, open an HTTP port or depend on a Python installation on the user's machine.
+
+`engine.py` implements a private JSON line protocol over stdin/stdout. Go initializes it with one verified cloud account, principal-derived owner, private journal path and in-memory credentials. Fixed operations wrap Studio's creation routes and journal, or its managed resource cleanup. Only typed results and allowlisted diagnostic fields reach the frontend. Raw SDK stderr is discarded by the host. No keys are written to task rows or command arguments.
+
+`scripts/prepare-mpa-engine.py` prepares an isolated uv project environment, then packages the managed CPython interpreter, site packages, bridge and manifest into a tar archive. This preserves native library directories such as `.dylibs`. Pure-Python generated SDK service packages with no package data or filesystem-relative module access are retained in an importable zip; core/native code, resource-bearing packages, licenses and metadata stay as ordinary files. This avoids extracting about 27,000 tiny files without removing any SDK capabilities. The Go extractor rejects traversal, links and duplicate files, bounds archive size, uses private modes and caches by archive SHA-256. Builds target the host architecture; the supported release currently targets macOS arm64.
+
+VeADK is licensed under Apache-2.0. CPython uses the PSF license; transitive dependencies retain their respective licenses, including license files in `*.dist-info` and the Python distribution. The archive includes those notices and metadata. This adapter's source belongs to OpenMPA and follows the repository license. Updating VeADK requires reviewing the protocol and safe cleanup contracts, regenerating the lock/archive and rerunning the Python, Go, React, browser and packaged-engine tests.
+
+Tests use fake cloud clients or a fake runner. They must never provision or delete real cloud resources. The packaged smoke test supplies dummy credentials and invokes only local configuration and task-list operations.

@@ -74,3 +74,47 @@ func TestPlatformCachesRuntimeListAndRestoresPreferredRuntime(t *testing.T) {
 		t.Fatalf("preferred Runtime not restored: %+v", state)
 	}
 }
+
+func TestDeletedRuntimeClearsOnlyMatchingAccountAndTarget(t *testing.T) {
+	p := NewPlatform(cloud.NewWithTransport(&platformRoundTrip{}), connection.New())
+	ctx := context.Background()
+	signed := p.SignIn(ctx, dto.SignInRequest{Region: "cn-beijing", AccessKey: "AK", SecretKey: "SK"})
+	if !signed.OK {
+		t.Fatal(signed)
+	}
+	epoch := signed.Value.Epoch
+	bound := p.BindRuntime(ctx, dto.RuntimeRequest{Region: "cn-beijing", ProjectName: "default", RuntimeID: "runtime-a"})
+	if !bound.OK {
+		t.Fatal(bound)
+	}
+	for _, item := range []struct {
+		epoch      uint64
+		region, id string
+	}{{epoch + 1, "cn-beijing", "runtime-a"}, {epoch, "cn-shanghai", "runtime-a"}, {epoch, "cn-beijing", "runtime-other"}} {
+		if ClearDeletedRuntime(p, item.epoch, item.region, item.id) {
+			t.Fatal("cleared a different target")
+		}
+	}
+	if !p.Connection.State().Connected {
+		t.Fatal("unrelated deletion disconnected Runtime")
+	}
+	if !ClearDeletedRuntime(p, epoch, "cn-beijing", "runtime-a") {
+		t.Fatal("completed deletion did not clear target")
+	}
+	if p.Connection.State().Connected || Target(p).RuntimeID != "" {
+		t.Fatal("deleted target retained")
+	}
+	if ClearDeletedRuntime(p, epoch, "cn-beijing", "runtime-a") {
+		t.Fatal("duplicate completion cleared again")
+	}
+	signed = p.SignIn(ctx, dto.SignInRequest{Region: "cn-beijing", AccessKey: "NEW_AK", SecretKey: "NEW_SK"})
+	if !signed.OK {
+		t.Fatal(signed)
+	}
+	if bound = p.BindRuntime(ctx, dto.RuntimeRequest{Region: "cn-beijing", ProjectName: "default", RuntimeID: "runtime-a"}); !bound.OK {
+		t.Fatal(bound)
+	}
+	if ClearDeletedRuntime(p, epoch, "cn-beijing", "runtime-a") || !p.Connection.State().Connected {
+		t.Fatal("old account epoch cleared new connection")
+	}
+}

@@ -13,6 +13,18 @@ export function studioFailure(error: unknown): MessageText {
     error && typeof error === 'object' && 'code' in error ? error.code : '';
   return localized((m) => {
     switch (code) {
+      case 'runtimeNameTaken':
+        return m.mpaNameTaken();
+      case 'lifecycleUnavailable':
+        return m.mpaEngineUnavailable();
+      case 'creationRequestFailed':
+        return m.mpaRequestRejected();
+      case 'operationBusy':
+        return m.mpaDeleteBusy();
+      case 'staleDeletePreview':
+        return m.mpaDeleteChanged();
+      case 'deletePreviewFailed':
+        return m.mpaDeleteCheckFailed();
       case 'authRequired':
         return m.authRequired();
       case 'businessIdentityRequired':
@@ -137,6 +149,18 @@ export function createStudioServices(bridge?: typeof Usage): {
       readMainProfile: async (connectionEpoch, mpaInstanceId = '') =>
         profile(
           await native().readMainProfile({ connectionEpoch, mpaInstanceId }),
+        ),
+      createMainProfile: async (connectionEpoch, value) =>
+        profile(
+          await native().createMainProfile({ connectionEpoch, profile: value }),
+        ),
+      saveMainProfile: async (connectionEpoch, snapshotId, value) =>
+        profile(
+          await native().saveMainProfile({
+            connectionEpoch,
+            snapshotId,
+            profile: value,
+          }),
         ),
       saveMainProfileInstructions: async (
         connectionEpoch,
