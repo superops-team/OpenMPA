@@ -2,6 +2,7 @@ package ipc
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"github.com/superops-team/OpenMPA/desktop/internal/cloud"
 	"github.com/superops-team/OpenMPA/desktop/internal/configstore"
@@ -9,6 +10,8 @@ import (
 	"github.com/superops-team/OpenMPA/desktop/internal/deployment"
 	"github.com/superops-team/OpenMPA/desktop/internal/dto"
 	"github.com/superops-team/OpenMPA/desktop/internal/vault"
+	"io"
+	"net/http"
 	"strings"
 	"sync"
 	"time"
@@ -350,6 +353,29 @@ func (c *Connection) SetBusinessIdentity(ctx context.Context, r dto.IdentityRequ
 	}
 	out := c.Client.State()
 	return dto.ConnectionStateResult{OK: e == nil, Value: only(&out, e), Error: e}
+}
+func (c *Connection) PrewarmIdentity(ctx context.Context, r dto.IdentityPrewarmRequest) dto.IdentityPrewarmResult {
+	if len(r.IDToken) == 0 || len(r.RefreshToken) == 0 || len(r.IDToken) > 8192 || len(r.RefreshToken) > 8192 || strings.ContainsAny(r.IDToken+r.RefreshToken, "\r\n") {
+		return dto.IdentityPrewarmResult{Error: dto.Failure("invalidInput", "desktop", "never", 0)}
+	}
+	body, err := json.Marshal(struct {
+		IDToken      string `json:"idToken"`
+		RefreshToken string `json:"refreshToken"`
+	}{IDToken: r.IDToken, RefreshToken: r.RefreshToken})
+	if err != nil {
+		return dto.IdentityPrewarmResult{Error: dto.Failure("invalidInput", "desktop", "never", 0)}
+	}
+	resp, failure := c.Client.RequestRuntime(ctx, r.ConnectionEpoch, http.MethodPost, "/identity/sessions/put", body)
+	if failure != nil {
+		return dto.IdentityPrewarmResult{Error: failure}
+	}
+	defer resp.Body.Close()
+	var value dto.IdentityPrewarm
+	decoder := json.NewDecoder(io.LimitReader(resp.Body, 1<<20))
+	if decoder.Decode(&value) != nil || decoder.Decode(new(interface{})) != io.EOF || value.SenderID == "" || len(value.SenderID) > 512 || strings.ContainsAny(value.SenderID, "\r\n") {
+		return dto.IdentityPrewarmResult{Error: dto.Failure("invalidResponse", "runtimeIngress", "verifyOnly", resp.StatusCode)}
+	}
+	return dto.IdentityPrewarmResult{OK: true, Value: &value}
 }
 func (c *Connection) Disconnect() dto.EmptyResult {
 	c.Client.Disconnect()

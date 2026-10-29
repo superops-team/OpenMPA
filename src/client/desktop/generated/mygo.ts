@@ -1026,6 +1026,22 @@ export interface HostCloseStateResult {
   error?: SafeError;
 }
 
+export interface IdentityPrewarm {
+  senderId: string;
+}
+
+export interface IdentityPrewarmRequest {
+  connectionEpoch: number;
+  idToken: string;
+  refreshToken: string;
+}
+
+export interface IdentityPrewarmResult {
+  ok: boolean;
+  value?: IdentityPrewarm;
+  error?: SafeError;
+}
+
 export interface IdentityRequest {
   connectionEpoch: number;
   userId?: string;
@@ -2706,6 +2722,9 @@ export const Connection = {
   },
   disconnect(): Promise<EmptyResult> {
     return call("Connection.Disconnect");
+  },
+  prewarmIdentity(r: IdentityPrewarmRequest): Promise<IdentityPrewarmResult> {
+    return call("Connection.PrewarmIdentity", r);
   },
   setBusinessIdentity(r: IdentityRequest): Promise<ConnectionStateResult> {
     return call("Connection.SetBusinessIdentity", r);

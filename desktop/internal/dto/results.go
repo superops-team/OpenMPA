@@ -35,6 +35,11 @@ type ConnectionStateResult struct {
 	Value *ConnectionState `json:"value,omitempty"`
 	Error *SafeError       `json:"error,omitempty"`
 }
+type IdentityPrewarmResult struct {
+	OK    bool             `json:"ok"`
+	Value *IdentityPrewarm `json:"value,omitempty"`
+	Error *SafeError       `json:"error,omitempty"`
+}
 type ConnectionTestResult struct {
 	OK    bool            `json:"ok"`
 	Value *ConnectionTest `json:"value,omitempty"`

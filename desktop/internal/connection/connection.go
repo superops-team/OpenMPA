@@ -109,6 +109,14 @@ func (c *Client) State() dto.ConnectionState {
 	return out
 }
 func (c *Client) Request(ctx context.Context, epoch uint64, method, path string, body []byte, headers http.Header) (*http.Response, *dto.SafeError) {
+	return c.request(ctx, epoch, method, path, body, headers, true)
+}
+
+func (c *Client) RequestRuntime(ctx context.Context, epoch uint64, method, path string, body []byte) (*http.Response, *dto.SafeError) {
+	return c.request(ctx, epoch, method, path, body, nil, false)
+}
+
+func (c *Client) request(ctx context.Context, epoch uint64, method, path string, body []byte, headers http.Header, includeBusinessIdentity bool) (*http.Response, *dto.SafeError) {
 	c.mu.RLock()
 	b, id, jwt, current, epochCtx := c.binding, c.userID, c.legacyJWT, c.epoch, c.epochCtx
 	c.mu.RUnlock()
@@ -154,15 +162,17 @@ func (c *Client) Request(ctx context.Context, epoch uint64, method, path string,
 			req.Header.Set("X-MPA-Studio-Key", b.RuntimeKey)
 		}
 	}
-	if id != "" {
+	if includeBusinessIdentity && id != "" {
 		req.Header.Set("X-User-Id", id)
 	}
-	if jwt != "" {
+	if includeBusinessIdentity && jwt != "" {
 		req.Header.Set("X-Jwt-Token", jwt)
 	}
-	if owner, ok := ctx.Value(channelOwnerContextKey{}).(string); ok && owner != "" {
-		req.Header.Set("X-User-Id", owner)
-		req.Header.Del("X-Jwt-Token")
+	if includeBusinessIdentity {
+		if owner, ok := ctx.Value(channelOwnerContextKey{}).(string); ok && owner != "" {
+			req.Header.Set("X-User-Id", owner)
+			req.Header.Del("X-Jwt-Token")
+		}
 	}
 	for _, k := range []string{"Idempotency-Key", "If-Match", "If-None-Match", "X-MPA-Channel-Key", "X-Jwt-Token", "Content-Type"} {
 		if v := headers.Get(k); v != "" {
