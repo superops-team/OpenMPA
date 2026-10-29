@@ -20,8 +20,9 @@ type response struct {
 	OK    bool            `json:"ok"`
 	Value json.RawMessage `json:"value"`
 	Error *struct {
-		Code       string `json:"code"`
-		HTTPStatus int    `json:"httpStatus"`
+		Code       string                   `json:"code"`
+		HTTPStatus int                      `json:"httpStatus"`
+		Diagnostic *dto.OperationDiagnostic `json:"diagnostic,omitempty"`
 	} `json:"error"`
 }
 type engineProcess struct {
@@ -107,7 +108,12 @@ func (p *engineProcess) call(ctx context.Context, operation string, body, output
 	case result := <-channel:
 		if !result.OK {
 			if result.Error != nil {
-				return dto.Failure(result.Error.Code, "platform", "verifyOnly", result.Error.HTTPStatus)
+				failure := dto.Failure(result.Error.Code, "platform", "verifyOnly", result.Error.HTTPStatus)
+				failure.Diagnostic = result.Error.Diagnostic
+				if result.Error.Diagnostic != nil {
+					failure.RequestID = result.Error.Diagnostic.RequestID
+				}
+				return failure
 			}
 			return engineFailure()
 		}

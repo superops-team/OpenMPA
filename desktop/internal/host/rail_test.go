@@ -81,7 +81,7 @@ func TestNativeRailActions(t *testing.T) {
 	tt.Frame()
 	tt.Frame()
 	for _, item := range []struct{ label, action string }{
-		{"OpenMPA home", "home"}, {"Toggle sidebar", "toggleSidebar"}, {"New conversation", "newConversation"},
+		{"OpenMPA home", "home"}, {"Toggle sidebar", "toggleSidebar"}, {"Manage Runtimes", "runtimes"}, {"New conversation", "newConversation"},
 		{"Open scheduled activity", "tasks"}, {"Open settings", "settings"},
 	} {
 		if err := tt.Click(item.label); err != nil {
@@ -91,7 +91,7 @@ func TestNativeRailActions(t *testing.T) {
 			t.Fatalf("action mismatch for %s: %v", item.label, actions)
 		}
 	}
-	if len(actions) != 5 {
+	if len(actions) != 6 {
 		t.Fatalf("duplicate actions %v", actions)
 	}
 	for _, view := range []string{"resources", "collaboration"} {
@@ -221,26 +221,37 @@ func TestSidebarPreviewImages(t *testing.T) {
 	}
 }
 
-func TestRuntimeManagerIsBesideNativeChooser(t *testing.T) {
+func TestRuntimeManagerIsAboveNewConversationInRail(t *testing.T) {
 	localization.SetCurrentLocale("en")
 	defer localization.SetCurrentLocale("")
-	var action string
-	rail := &nativeRail{state: ShellState{View: "runtimes", Assistants: []NavigationItem{{ID: "r-one", Title: "One"}}}, request: func(a, id string) { action = a }}
-	tt := ui.NewTester(rail.sidebar, 240, 700)
-	tt.Frame()
-	chooser, found := tt.Find("Runtime")
-	if !found {
-		t.Fatal("Runtime chooser missing")
-	}
-	manager, found := tt.Find("Manage Runtimes")
-	if !found || manager.Y < chooser.Y+chooser.H {
-		t.Fatalf("management entry is not below chooser: %v %v", chooser, manager)
-	}
-	if err := tt.Click("Manage Runtimes"); err != nil {
-		t.Fatal(err)
-	}
-	if action != "runtimes" {
-		t.Fatalf("unexpected navigation %s", action)
+	for _, collapsed := range []bool{false, true} {
+		var action string
+		rail := &nativeRail{state: ShellState{View: "runtimes", Collapsed: collapsed}, request: func(a, id string) { action = a }}
+		tt := ui.NewTester(rail.view, 760, 700)
+		tt.Frame()
+		manager, found := tt.Find("Manage Runtimes")
+		if !found {
+			t.Fatal("management entry missing from icon rail")
+		}
+		// The sidebar also has a new-conversation row. Use a rail-only tree for order.
+		controls := ui.NewTester(rail.controls, 48, 600)
+		controls.Frame()
+		plus, _ := controls.Find("New conversation")
+		entry, found := controls.Find("Manage Runtimes")
+		if !found || entry.Y+entry.H > plus.Y || manager.X >= 48 {
+			t.Fatalf("manager must be in the icon rail above +: %v %v", entry, plus)
+		}
+		if err := tt.Click("Manage Runtimes"); err != nil {
+			t.Fatal(err)
+		}
+		if action != "runtimes" {
+			t.Fatalf("unexpected navigation %s", action)
+		}
+		sidebar := ui.NewTester(rail.sidebar, 240, 700)
+		sidebar.Frame()
+		if _, found := sidebar.Find("Manage Runtimes"); found {
+			t.Fatal("duplicate sidebar management row")
+		}
 	}
 	if !validShellState(ShellState{View: "runtimes"}) {
 		t.Fatal("management view rejected")

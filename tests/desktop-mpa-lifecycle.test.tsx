@@ -137,7 +137,7 @@ const workerDiagnostic = {
   outcome: 'retrying',
 };
 it.each(['poll', 'reopen'])(
-  'shows only the completed status and separates historical diagnostics after success (%s)',
+  'shows the completed status without intermediate diagnostics after success (%s)',
   async (source) => {
     vi.useFakeTimers();
     const completed: MpaCreationTask = {
@@ -173,15 +173,11 @@ it.each(['poll', 'reopen'])(
     expect(status.findAllByType('span')).toHaveLength(1);
     expect(status.findAllByType('progress')).toHaveLength(0);
     expect(status.findAllByType('details')).toHaveLength(0);
-    const history = renderer!.root.findByType('details');
-    expect(history.props.open).not.toBe(true);
-    expect(history.findByType('summary').children).toContain(
-      m.mpaHistoricalDiagnostic(),
-    );
+    expect(renderer!.root.findAllByType('details')).toHaveLength(0);
     const text = JSON.stringify(renderer!.toJSON());
-    expect(text).toContain(m.mpaHistoricalDiagnosticHint());
-    expect(text).toContain('worker_agent_key');
-    expect(text).not.toContain(m.mpaStageVerifying());
+    expect(text).not.toContain(m.mpaHistoricalDiagnostic());
+    expect(text).not.toContain(m.mpaHistoricalDiagnosticHint());
+    expect(text).not.toContain('worker_agent_key');
     expect(text).not.toContain(m.mpaResourcesMayRemain());
     expect(button(m.mpaConnectCreated())).toBeDefined();
   },
@@ -200,11 +196,11 @@ it('retains the current stage and actionable diagnosis for failed creation', asy
   const text = JSON.stringify(renderer!.toJSON());
   expect(text).toContain(m.mpaFailed());
   expect(text).toContain(m.mpaStageCreateWorker());
-  expect(text).toContain('metadata_missing');
+  expect(text).toContain(m.mpaFailureReasonMetadataMissing());
   expect(text).toContain(m.mpaResourcesMayRemain());
   expect(text).not.toContain(m.mpaHistoricalDiagnosticHint());
   expect(renderer!.root.findByType('summary').children).toContain(
-    m.mpaSafeDiagnostic(),
+    m.mpaFailureDetails(),
   );
 });
 it('creates only at final confirmation, using the same name-check identity', async () => {

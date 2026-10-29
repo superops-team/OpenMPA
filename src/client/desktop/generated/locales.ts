@@ -4044,7 +4044,7 @@ export interface Messages {
    */
   mpaBackgroundHint(): string;
   /**
-   * `创建引擎不可用，请检查应用安装并重试。`
+   * `资源管理引擎不可用，请检查应用安装并重试。`
    */
   mpaEngineUnavailable(): string;
   /**
@@ -4184,7 +4184,7 @@ export interface Messages {
    */
   mpaHistoricalDiagnostic(): string;
   /**
-   * `以下为创建过程中的历史记录。创建已完成，这些记录不代表当前状态。`
+   * `这是之前创建步骤的过程记录，不代表当前步骤的状态。`
    */
   mpaHistoricalDiagnosticHint(): string;
   /**
@@ -4248,7 +4248,7 @@ export interface Messages {
    */
   mpaStageOpenViking(): string;
   /**
-   * `部署 Runtime`
+   * `准备业务数据库、技能空间和 Runtime`
    */
   mpaStageDeploying(): string;
   /**
@@ -4499,6 +4499,258 @@ export interface Messages {
    * `Main 配置已保存。`
    */
   mainProfileSaved(): string;
+  /**
+   * `创建步骤`
+   */
+  mpaCreationSteps(): string;
+  /**
+   * `已完成`
+   */
+  mpaStepCompleted(): string;
+  /**
+   * `正在执行`
+   */
+  mpaStepRunning(): string;
+  /**
+   * `未开始`
+   */
+  mpaStepPending(): string;
+  /**
+   * `已复用或跳过`
+   */
+  mpaStepSkipped(): string;
+  /**
+   * `已通过`
+   */
+  mpaStepPassed(): string;
+  /**
+   * `此任务未保存完整步骤记录；“已通过”表示已推进到后续阶段。`
+   */
+  mpaStepsLegacyHint(): string;
+  /**
+   * `等待开始`
+   */
+  mpaStageQueued(): string;
+  /**
+   * `云端 Request ID`
+   */
+  mpaFailureRequestId(): string;
+  /**
+   * `等待重试`
+   */
+  mpaDiagnosticRetrying(): string;
+  /**
+   * `尝试次数`
+   */
+  mpaDiagnosticAttempt(): string;
+  /**
+   * `异常类型`
+   */
+  mpaFailureExceptionType(): string;
+  /**
+   * `HTTP 状态`
+   */
+  mpaFailureHttpStatus(): string;
+  /**
+   * `响应类型`
+   */
+  mpaFailureResponseType(): string;
+  /**
+   * `错误详情`
+   */
+  mpaFailureDetails(): string;
+  /**
+   * `复制错误信息`
+   */
+  mpaFailureCopy(): string;
+  /**
+   * `已复制`
+   */
+  mpaFailureCopied(): string;
+  /**
+   * `复制失败，可手动选择详情文字复制。`
+   */
+  mpaFailureCopyFailed(): string;
+  /**
+   * `失败阶段`
+   */
+  mpaFailureStage(): string;
+  /**
+   * `失败操作`
+   */
+  mpaFailureOperation(): string;
+  /**
+   * `错误码`
+   */
+  mpaFailureErrorCode(): string;
+  /**
+   * `运行角色的信任策略与所需配置不一致。`
+   */
+  mpaFailureReasonIamTrustConflict(): string;
+  /**
+   * `运行角色的权限策略与所需配置不一致。`
+   */
+  mpaFailureReasonIamPolicyConflict(): string;
+  /**
+   * `无法确认所选 TOS 存储桶可用。`
+   */
+  mpaFailureReasonTosBucketUnavailable(): string;
+  /**
+   * `未能完成资源名称占用检查。`
+   */
+  mpaFailureReasonNameCheckUnavailable(): string;
+  /**
+   * `运行角色的权限尚未确认就绪。`
+   */
+  mpaFailureReasonIamVerification(): string;
+  /**
+   * `模型推理接入点配置无效。`
+   */
+  mpaFailureReasonModelEndpoints(): string;
+  /**
+   * `OpenViking 拒绝了模型调用配置。`
+   */
+  mpaFailureReasonModelConfiguration(): string;
+  /**
+   * `OpenViking 创建结果尚未确认。`
+   */
+  mpaFailureReasonCreationUnconfirmed(): string;
+  /**
+   * `该资源的配额已达到上限。`
+   */
+  mpaFailureReasonQuota(): string;
+  /**
+   * `当前凭据没有执行该操作的权限，或凭据已失效。`
+   */
+  mpaFailureReasonPermission(): string;
+  /**
+   * `资源名称已被占用。`
+   */
+  mpaFailureReasonNameConflict(): string;
+  /**
+   * `数据库连接认证失败。`
+   */
+  mpaFailureReasonDatabaseAuthentication(): string;
+  /**
+   * `当前数据库账号没有执行该操作的权限。`
+   */
+  mpaFailureReasonDatabasePermission(): string;
+  /**
+   * `等待操作完成超时，当前结果尚未确认。`
+   */
+  mpaFailureReasonTimeout(): string;
+  /**
+   * `无法连接资源服务，当前操作结果尚未确认。`
+   */
+  mpaFailureReasonConnection(): string;
+  /**
+   * `资源服务限制了请求频率。`
+   */
+  mpaFailureReasonThrottled(): string;
+  /**
+   * `资源服务暂时不可用。`
+   */
+  mpaFailureReasonUnavailable(): string;
+  /**
+   * `请求参数或资源配置未通过校验。`
+   */
+  mpaFailureReasonInvalidRequest(): string;
+  /**
+   * `未找到所需资源。`
+   */
+  mpaFailureReasonNotFound(): string;
+  /**
+   * `云资源操作失败，未提供可安全展示的详细原因。`
+   */
+  mpaFailureReasonProviderError(): string;
+  /**
+   * `资源归属与当前智能体不一致。`
+   */
+  mpaFailureReasonOwnership(): string;
+  /**
+   * `资源归属信息尚未就绪。`
+   */
+  mpaFailureReasonMetadataPending(): string;
+  /**
+   * `缺少所需的资源归属信息。`
+   */
+  mpaFailureReasonMetadataMissing(): string;
+  /**
+   * `云端资源进入失败状态，未返回更详细的原因。`
+   */
+  mpaFailureReasonResourceFailed(): string;
+  /**
+   * `当前配置与已登记的创建配置不一致。`
+   */
+  mpaFailureReasonConfigurationChanged(): string;
+  /**
+   * `资源准备未完成，未提供可安全展示的详细原因。`
+   */
+  mpaFailureReasonDeploymentError(): string;
+  /**
+   * `本次创建失败，未提供可安全展示的详细原因。`
+   */
+  mpaFailureReasonUnknown(): string;
+  /**
+   * `创建进程异常退出，未返回详细原因。`
+   */
+  mpaFailureReasonChildExit(): string;
+  /**
+   * `创建进程已中断。`
+   */
+  mpaFailureReasonInterrupted(): string;
+  /**
+   * `资源服务返回的数据格式不符合预期。`
+   */
+  mpaFailureReasonProtocolError(): string;
+  /**
+   * `阶段`
+   */
+  mpaDiagnosticStage(): string;
+  /**
+   * `操作`
+   */
+  mpaDiagnosticOperation(): string;
+  /**
+   * `删除范围检查未完成，请查看错误详情后重新检查。`
+   */
+  mpaDeleteCheckFailed(): string;
+  /**
+   * `读取会话列表`
+   */
+  mpaDeleteReadSessions(): string;
+  /**
+   * `连接资源登记库`
+   */
+  mpaDeleteRegistry(): string;
+  /**
+   * `核对资源引用与归属`
+   */
+  mpaDeleteReferences(): string;
+  /**
+   * `检查受管资源`
+   */
+  mpaDeleteInspectResources(): string;
+  /**
+   * `资源绑定与登记记录不一致，已停止删除。`
+   */
+  mpaDeleteBindingConflict(): string;
+  /**
+   * `无法确认资源属于当前 MPA，已停止删除。`
+   */
+  mpaDeleteOwnershipConflict(): string;
+  /**
+   * `删除检查或清理未完成，未返回进一步的详细原因。`
+   */
+  mpaDeleteFailureUnknown(): string;
+  /**
+   * `资源服务地址`
+   */
+  mpaDeleteResourceHost(): string;
+  /**
+   * `错误位置`
+   */
+  mpaDeleteErrorSource(): string;
 }
 
 const catalog = createCatalog<Messages>({
@@ -5633,6 +5885,69 @@ const catalog = createCatalog<Messages>({
     "profileInvalidFields": [],
     "mainCreateProfile": [],
     "mainProfileSaved": [],
+    "mpaCreationSteps": [],
+    "mpaStepCompleted": [],
+    "mpaStepRunning": [],
+    "mpaStepPending": [],
+    "mpaStepSkipped": [],
+    "mpaStepPassed": [],
+    "mpaStepsLegacyHint": [],
+    "mpaStageQueued": [],
+    "mpaFailureRequestId": [],
+    "mpaDiagnosticRetrying": [],
+    "mpaDiagnosticAttempt": [],
+    "mpaFailureExceptionType": [],
+    "mpaFailureHttpStatus": [],
+    "mpaFailureResponseType": [],
+    "mpaFailureDetails": [],
+    "mpaFailureCopy": [],
+    "mpaFailureCopied": [],
+    "mpaFailureCopyFailed": [],
+    "mpaFailureStage": [],
+    "mpaFailureOperation": [],
+    "mpaFailureErrorCode": [],
+    "mpaFailureReasonIamTrustConflict": [],
+    "mpaFailureReasonIamPolicyConflict": [],
+    "mpaFailureReasonTosBucketUnavailable": [],
+    "mpaFailureReasonNameCheckUnavailable": [],
+    "mpaFailureReasonIamVerification": [],
+    "mpaFailureReasonModelEndpoints": [],
+    "mpaFailureReasonModelConfiguration": [],
+    "mpaFailureReasonCreationUnconfirmed": [],
+    "mpaFailureReasonQuota": [],
+    "mpaFailureReasonPermission": [],
+    "mpaFailureReasonNameConflict": [],
+    "mpaFailureReasonDatabaseAuthentication": [],
+    "mpaFailureReasonDatabasePermission": [],
+    "mpaFailureReasonTimeout": [],
+    "mpaFailureReasonConnection": [],
+    "mpaFailureReasonThrottled": [],
+    "mpaFailureReasonUnavailable": [],
+    "mpaFailureReasonInvalidRequest": [],
+    "mpaFailureReasonNotFound": [],
+    "mpaFailureReasonProviderError": [],
+    "mpaFailureReasonOwnership": [],
+    "mpaFailureReasonMetadataPending": [],
+    "mpaFailureReasonMetadataMissing": [],
+    "mpaFailureReasonResourceFailed": [],
+    "mpaFailureReasonConfigurationChanged": [],
+    "mpaFailureReasonDeploymentError": [],
+    "mpaFailureReasonUnknown": [],
+    "mpaFailureReasonChildExit": [],
+    "mpaFailureReasonInterrupted": [],
+    "mpaFailureReasonProtocolError": [],
+    "mpaDiagnosticStage": [],
+    "mpaDiagnosticOperation": [],
+    "mpaDeleteCheckFailed": [],
+    "mpaDeleteReadSessions": [],
+    "mpaDeleteRegistry": [],
+    "mpaDeleteReferences": [],
+    "mpaDeleteInspectResources": [],
+    "mpaDeleteBindingConflict": [],
+    "mpaDeleteOwnershipConflict": [],
+    "mpaDeleteFailureUnknown": [],
+    "mpaDeleteResourceHost": [],
+    "mpaDeleteErrorSource": [],
   },
   messages: {
     "zh-Hans": {
@@ -6646,7 +6961,7 @@ const catalog = createCatalog<Messages>({
       "mpaCreateUnknown": "创建结果尚未确认。请先核对状态，保留原请求身份。",
       "mpaPendingSecret": "原请求使用了手动 OpenViking，请重新输入 API Key 后重试。",
       "mpaBackgroundHint": "关闭窗口后任务继续执行，可在操作记录中查看。",
-      "mpaEngineUnavailable": "创建引擎不可用，请检查应用安装并重试。",
+      "mpaEngineUnavailable": "资源管理引擎不可用，请检查应用安装并重试。",
       "mpaRetryLoad": "重新加载",
       "mpaOperationHistory": "操作记录",
       "mpaNoOperations": "当前地域还没有操作记录。",
@@ -6681,7 +6996,7 @@ const catalog = createCatalog<Messages>({
       "mpaRequestId": "请求 ID",
       "mpaSafeDiagnostic": "诊断",
       "mpaHistoricalDiagnostic": "历史诊断",
-      "mpaHistoricalDiagnosticHint": "以下为创建过程中的历史记录。创建已完成，这些记录不代表当前状态。",
+      "mpaHistoricalDiagnosticHint": "这是之前创建步骤的过程记录，不代表当前步骤的状态。",
       "mpaReauthenticate": "请登录云账号后管理 Runtime。",
       "mpaResourcesMayRemain": "失败或取消不会回滚已创建的资源。重试会沿用原请求身份。",
       "mpaInvalidForm": "请检查名称、描述、实例上限及资源字段。",
@@ -6697,7 +7012,7 @@ const catalog = createCatalog<Messages>({
       "mpaStageCreateWorker": "准备 Worker",
       "mpaStageCreateSkills": "准备技能空间",
       "mpaStageOpenViking": "准备 OpenViking",
-      "mpaStageDeploying": "部署 Runtime",
+      "mpaStageDeploying": "准备业务数据库、技能空间和 Runtime",
       "mpaStageVerifying": "验证就绪状态",
       "mpaNameTaken": "此名称已被占用，请修改名称。",
       "mpaLoadingManagement": "正在加载管理组件和操作记录，首次使用可能需要几分钟…",
@@ -6760,6 +7075,69 @@ const catalog = createCatalog<Messages>({
       "profileInvalidFields": "请检查模型 ID、技能名称与固定版本、总指令长度（最多 40,000 字符）、MCP 地址和工具名称。",
       "mainCreateProfile": "新建 Main 配置",
       "mainProfileSaved": "Main 配置已保存。",
+      "mpaCreationSteps": "创建步骤",
+      "mpaStepCompleted": "已完成",
+      "mpaStepRunning": "正在执行",
+      "mpaStepPending": "未开始",
+      "mpaStepSkipped": "已复用或跳过",
+      "mpaStepPassed": "已通过",
+      "mpaStepsLegacyHint": "此任务未保存完整步骤记录；“已通过”表示已推进到后续阶段。",
+      "mpaStageQueued": "等待开始",
+      "mpaFailureRequestId": "云端 Request ID",
+      "mpaDiagnosticRetrying": "等待重试",
+      "mpaDiagnosticAttempt": "尝试次数",
+      "mpaFailureExceptionType": "异常类型",
+      "mpaFailureHttpStatus": "HTTP 状态",
+      "mpaFailureResponseType": "响应类型",
+      "mpaFailureDetails": "错误详情",
+      "mpaFailureCopy": "复制错误信息",
+      "mpaFailureCopied": "已复制",
+      "mpaFailureCopyFailed": "复制失败，可手动选择详情文字复制。",
+      "mpaFailureStage": "失败阶段",
+      "mpaFailureOperation": "失败操作",
+      "mpaFailureErrorCode": "错误码",
+      "mpaFailureReasonIamTrustConflict": "运行角色的信任策略与所需配置不一致。",
+      "mpaFailureReasonIamPolicyConflict": "运行角色的权限策略与所需配置不一致。",
+      "mpaFailureReasonTosBucketUnavailable": "无法确认所选 TOS 存储桶可用。",
+      "mpaFailureReasonNameCheckUnavailable": "未能完成资源名称占用检查。",
+      "mpaFailureReasonIamVerification": "运行角色的权限尚未确认就绪。",
+      "mpaFailureReasonModelEndpoints": "模型推理接入点配置无效。",
+      "mpaFailureReasonModelConfiguration": "OpenViking 拒绝了模型调用配置。",
+      "mpaFailureReasonCreationUnconfirmed": "OpenViking 创建结果尚未确认。",
+      "mpaFailureReasonQuota": "该资源的配额已达到上限。",
+      "mpaFailureReasonPermission": "当前凭据没有执行该操作的权限，或凭据已失效。",
+      "mpaFailureReasonNameConflict": "资源名称已被占用。",
+      "mpaFailureReasonDatabaseAuthentication": "数据库连接认证失败。",
+      "mpaFailureReasonDatabasePermission": "当前数据库账号没有执行该操作的权限。",
+      "mpaFailureReasonTimeout": "等待操作完成超时，当前结果尚未确认。",
+      "mpaFailureReasonConnection": "无法连接资源服务，当前操作结果尚未确认。",
+      "mpaFailureReasonThrottled": "资源服务限制了请求频率。",
+      "mpaFailureReasonUnavailable": "资源服务暂时不可用。",
+      "mpaFailureReasonInvalidRequest": "请求参数或资源配置未通过校验。",
+      "mpaFailureReasonNotFound": "未找到所需资源。",
+      "mpaFailureReasonProviderError": "云资源操作失败，未提供可安全展示的详细原因。",
+      "mpaFailureReasonOwnership": "资源归属与当前智能体不一致。",
+      "mpaFailureReasonMetadataPending": "资源归属信息尚未就绪。",
+      "mpaFailureReasonMetadataMissing": "缺少所需的资源归属信息。",
+      "mpaFailureReasonResourceFailed": "云端资源进入失败状态，未返回更详细的原因。",
+      "mpaFailureReasonConfigurationChanged": "当前配置与已登记的创建配置不一致。",
+      "mpaFailureReasonDeploymentError": "资源准备未完成，未提供可安全展示的详细原因。",
+      "mpaFailureReasonUnknown": "本次创建失败，未提供可安全展示的详细原因。",
+      "mpaFailureReasonChildExit": "创建进程异常退出，未返回详细原因。",
+      "mpaFailureReasonInterrupted": "创建进程已中断。",
+      "mpaFailureReasonProtocolError": "资源服务返回的数据格式不符合预期。",
+      "mpaDiagnosticStage": "阶段",
+      "mpaDiagnosticOperation": "操作",
+      "mpaDeleteCheckFailed": "删除范围检查未完成，请查看错误详情后重新检查。",
+      "mpaDeleteReadSessions": "读取会话列表",
+      "mpaDeleteRegistry": "连接资源登记库",
+      "mpaDeleteReferences": "核对资源引用与归属",
+      "mpaDeleteInspectResources": "检查受管资源",
+      "mpaDeleteBindingConflict": "资源绑定与登记记录不一致，已停止删除。",
+      "mpaDeleteOwnershipConflict": "无法确认资源属于当前 MPA，已停止删除。",
+      "mpaDeleteFailureUnknown": "删除检查或清理未完成，未返回进一步的详细原因。",
+      "mpaDeleteResourceHost": "资源服务地址",
+      "mpaDeleteErrorSource": "错误位置",
     },
     "en": {
       "settings": "Settings",
@@ -7772,7 +8150,7 @@ const catalog = createCatalog<Messages>({
       "mpaCreateUnknown": "The creation outcome is unconfirmed. Check status and keep the original request identity.",
       "mpaPendingSecret": "The original request used manual OpenViking. Enter its API key again before retrying.",
       "mpaBackgroundHint": "The task continues after closing this dialog. Reopen it from operation history.",
-      "mpaEngineUnavailable": "The lifecycle engine is unavailable. Check your app installation and retry.",
+      "mpaEngineUnavailable": "The resource management engine is unavailable. Check the app installation and try again.",
       "mpaRetryLoad": "Reload",
       "mpaOperationHistory": "Operation history",
       "mpaNoOperations": "No operations in this region yet.",
@@ -7807,7 +8185,7 @@ const catalog = createCatalog<Messages>({
       "mpaRequestId": "Request ID",
       "mpaSafeDiagnostic": "Diagnostic",
       "mpaHistoricalDiagnostic": "Diagnostic history",
-      "mpaHistoricalDiagnosticHint": "These records are from the creation process. Creation is complete; they do not describe the current state.",
+      "mpaHistoricalDiagnosticHint": "This record is from an earlier creation step. It does not describe the current step's state.",
       "mpaReauthenticate": "Sign in to your cloud account to manage Runtimes.",
       "mpaResourcesMayRemain": "Failure or cancellation does not roll back created resources. Retries reuse the original request identity.",
       "mpaInvalidForm": "Check the name, description, instance limit and resource fields.",
@@ -7823,7 +8201,7 @@ const catalog = createCatalog<Messages>({
       "mpaStageCreateWorker": "Prepare Worker",
       "mpaStageCreateSkills": "Prepare skill space",
       "mpaStageOpenViking": "Prepare OpenViking",
-      "mpaStageDeploying": "Deploy Runtime",
+      "mpaStageDeploying": "Prepare business database, skills and Runtime",
       "mpaStageVerifying": "Verify readiness",
       "mpaNameTaken": "This name is already in use. Choose another name.",
       "mpaLoadingManagement": "Loading management components and history. First use may take a few minutes…",
@@ -7886,6 +8264,69 @@ const catalog = createCatalog<Messages>({
       "profileInvalidFields": "Check the model ID, skill names and pinned versions, total instructions (40,000 characters), MCP URLs and tool names.",
       "mainCreateProfile": "Create Main profile",
       "mainProfileSaved": "Main profile saved.",
+      "mpaCreationSteps": "Creation steps",
+      "mpaStepCompleted": "Completed",
+      "mpaStepRunning": "In progress",
+      "mpaStepPending": "Not started",
+      "mpaStepSkipped": "Reused or skipped",
+      "mpaStepPassed": "Passed",
+      "mpaStepsLegacyHint": "This task has no complete step history. “Passed” means creation advanced to a later stage.",
+      "mpaStageQueued": "Waiting to start",
+      "mpaFailureRequestId": "Cloud Request ID",
+      "mpaDiagnosticRetrying": "Waiting to retry",
+      "mpaDiagnosticAttempt": "Attempt",
+      "mpaFailureExceptionType": "Exception type",
+      "mpaFailureHttpStatus": "HTTP status",
+      "mpaFailureResponseType": "Response type",
+      "mpaFailureDetails": "Error details",
+      "mpaFailureCopy": "Copy error information",
+      "mpaFailureCopied": "Copied",
+      "mpaFailureCopyFailed": "Copy failed. You can select and copy the details manually.",
+      "mpaFailureStage": "Failed stage",
+      "mpaFailureOperation": "Failed operation",
+      "mpaFailureErrorCode": "Error code",
+      "mpaFailureReasonIamTrustConflict": "The runtime role trust policy conflicts with the required configuration.",
+      "mpaFailureReasonIamPolicyConflict": "The runtime role permission policy conflicts with the required configuration.",
+      "mpaFailureReasonTosBucketUnavailable": "Availability of the selected TOS bucket could not be confirmed.",
+      "mpaFailureReasonNameCheckUnavailable": "Resource name availability could not be checked.",
+      "mpaFailureReasonIamVerification": "Runtime role permissions have not been verified.",
+      "mpaFailureReasonModelEndpoints": "Model inference endpoint configuration is invalid.",
+      "mpaFailureReasonModelConfiguration": "OpenViking rejected the model configuration.",
+      "mpaFailureReasonCreationUnconfirmed": "The OpenViking creation result is unconfirmed.",
+      "mpaFailureReasonQuota": "The resource quota has been reached.",
+      "mpaFailureReasonPermission": "The current credentials do not authorize this operation or are no longer valid.",
+      "mpaFailureReasonNameConflict": "The resource name is already in use.",
+      "mpaFailureReasonDatabaseAuthentication": "Database authentication failed.",
+      "mpaFailureReasonDatabasePermission": "The database account is not authorized to perform this operation.",
+      "mpaFailureReasonTimeout": "The operation timed out; its outcome is not confirmed.",
+      "mpaFailureReasonConnection": "The resource service could not be reached; the operation outcome is not confirmed.",
+      "mpaFailureReasonThrottled": "The resource service rate-limited the request.",
+      "mpaFailureReasonUnavailable": "The resource service is temporarily unavailable.",
+      "mpaFailureReasonInvalidRequest": "Request parameters or resource configuration failed validation.",
+      "mpaFailureReasonNotFound": "A required resource was not found.",
+      "mpaFailureReasonProviderError": "The cloud resource operation failed without further safely displayable details.",
+      "mpaFailureReasonOwnership": "Resource ownership does not match this agent.",
+      "mpaFailureReasonMetadataPending": "Resource ownership metadata is not ready.",
+      "mpaFailureReasonMetadataMissing": "Required resource ownership metadata is missing.",
+      "mpaFailureReasonResourceFailed": "The cloud resource entered a failed state without further details.",
+      "mpaFailureReasonConfigurationChanged": "The current configuration differs from the registered creation configuration.",
+      "mpaFailureReasonDeploymentError": "Resource preparation did not complete; no further safely displayable details are available.",
+      "mpaFailureReasonUnknown": "Creation failed without further safely displayable details.",
+      "mpaFailureReasonChildExit": "The creation process exited unexpectedly without further details.",
+      "mpaFailureReasonInterrupted": "The creation process was interrupted.",
+      "mpaFailureReasonProtocolError": "The resource service returned an unexpected response format.",
+      "mpaDiagnosticStage": "Stage",
+      "mpaDiagnosticOperation": "Operation",
+      "mpaDeleteCheckFailed": "The deletion scope check did not complete. Review the error details and check again.",
+      "mpaDeleteReadSessions": "Read Runtime sessions",
+      "mpaDeleteRegistry": "Connect to resource registry",
+      "mpaDeleteReferences": "Verify resource references and ownership",
+      "mpaDeleteInspectResources": "Inspect managed resources",
+      "mpaDeleteBindingConflict": "Resource bindings differ from the registry. Deletion was stopped.",
+      "mpaDeleteOwnershipConflict": "Resource ownership could not be verified for this MPA. Deletion was stopped.",
+      "mpaDeleteFailureUnknown": "The deletion check or cleanup did not complete without further safe error details.",
+      "mpaDeleteResourceHost": "Resource service host",
+      "mpaDeleteErrorSource": "Error location",
     },
   },
 });

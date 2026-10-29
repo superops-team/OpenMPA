@@ -221,6 +221,7 @@ async def test_creation_routes_reuse_real_journal_and_original_identity(tmp_path
     assert cancelled["state"] == "cancelled"
     resumed = await engine.dispatch("create", body)
     assert resumed["taskId"] == first["taskId"]
+    assert resumed["visitedStages"] == ["queued"]
     await engine.creations.cancel(owner_key("owner"), first["taskId"])
     # Simulate a supervisor process that disappeared between app launches.
     engine.creations._update(first["taskId"], state="running", supervisor=99999999)
@@ -278,4 +279,185 @@ async def test_engine_uses_studio_cleanup_ownership_and_retention_rules(harness,
         assert entry.record["deletion"]["worker_template"] == "deleted"
         assert entry.record["deletion"]["skill_space"] == "deleted"
     assert entry.record["state"] == "deleted"
+    await h.engine.close()
+
+
+def test_stage_journal_captures_fast_transitions_restarts_and_retry(tmp_path):
+    import json
+    import os
+    import sqlite3
+    from engine import DesktopCreationTasks
+    from veadk.integrations.mpa.managed.tasks import CreationTasks, TaskError
+
+    path = tmp_path / 'stages.sqlite3'
+    # Upgrade an existing journal without inventing previous steps.
+    legacy = CreationTasks(path)
+    with legacy.db() as db:
+        db.execute("INSERT INTO tasks(id,owner,request,payload,state,stage,supervisor,updated) VALUES(?,?,?,?,?,?,?,?)",
+                   ('old', 'owner', 'old-request', '{}', 'succeeded', 'verifying', os.getpid(), 0))
+    tasks = DesktopCreationTasks(path)
+    assert 'visitedStages' not in tasks.get('owner', 'old')
+    with tasks.db() as db:
+        db.execute("INSERT INTO tasks(id,owner,request,payload,state,stage,supervisor,updated) VALUES(?,?,?,?,?,?,?,?)",
+                   ('new', 'owner', 'new-request', '{}', 'running', 'queued', os.getpid(), 0))
+    # A different connection models writes from the supervisor, between UI polls.
+    with sqlite3.connect(path) as db:
+        for stage in ['checking', 'iam_role', 'worker', 'deploying', 'verifying']:
+            db.execute('UPDATE tasks SET stage=? WHERE id=?', (stage, 'new'))
+        db.execute("UPDATE tasks SET state='succeeded' WHERE id='new'")
+    restarted = DesktopCreationTasks(path)
+    expected = ['queued', 'checking', 'iam_role', 'worker', 'deploying', 'verifying']
+    assert restarted.get('owner', 'new')['visitedStages'] == expected
+    with pytest.raises(TaskError):
+        restarted.get('other-owner', 'new')
+    with restarted.db() as db:
+        db.execute("UPDATE tasks SET state='running', stage='queued' WHERE id='new'")
+        db.execute("UPDATE tasks SET stage='worker' WHERE id='new'")
+    assert restarted.get('owner', 'new')['visitedStages'] == ['queued', 'worker']
+    # Stage tracking never stores payloads or cloud exception bodies.
+    with restarted.db() as db:
+        columns = [row[1] for row in db.execute('PRAGMA table_info(desktop_creation_stages)')]
+    assert columns == ['id', 'task_id', 'stage']
+
+
+@pytest.mark.asyncio
+async def test_creation_failure_details_survive_real_supervisor_and_routes(tmp_path, monkeypatch):
+    import json
+    import sys
+    import frontend.server.mpa_creation as routes
+
+    monkeypatch.setenv('VOLCENGINE_ACCESS_KEY', 'TEST_AK')
+    monkeypatch.setenv('VOLCENGINE_SECRET_KEY', 'TEST_SK')
+    monkeypatch.setattr(routes, 'check_creation_name', AsyncMock(return_value='account'))
+    engine = Engine('account', 'owner', tmp_path)
+    diagnostic = dict(operation='get_worker', category='permission', attempt=2, outcome='failed',
+                      errorCode='AccessDenied.Tool', requestId='0123456789abcdef0123456789abcdef',
+                      exceptionType='HTTPError -> ApiError', httpStatus=403, responseType='application/json')
+    events = [{'stage':'checking'}, {'stage':'worker'}, {'diagnostic':diagnostic}]
+    runner = "import sys; sys.stdin.read(); " + '; '.join('print('+repr('MPA_EVENT '+json.dumps(event))+',flush=True)' for event in events) + '; sys.exit(1)'
+    engine.creations.command = lambda: [sys.executable, '-c', runner]
+    try:
+        first = await engine.dispatch('create', {'requestId':str(uuid4()),'region':'cn-beijing','name':'my-mpa','description':'test','maxInstance':20,'openvikingMode':'auto'})
+        for _ in range(100):
+            value = await engine.dispatch('readCreation', {'region':'cn-beijing','taskId':first['taskId']})
+            if value['state'] == 'failed': break
+            await asyncio.sleep(.02)
+        assert value['state'] == 'failed'
+        assert value['latestDiagnostic'] == {'stage':'worker', **diagnostic}
+        assert value['visitedStages'] == ['queued','checking','worker']
+        listed = (await engine.dispatch('listCreations', {'region':'cn-beijing'}))['tasks'][0]
+        assert listed['latestDiagnostic'] == value['latestDiagnostic']
+        assert listed['visitedStages'] == value['visitedStages']
+    finally:
+        await engine.close()
+
+
+@pytest.mark.asyncio
+async def test_preview_failure_reports_stage_and_safe_http_details_without_mutation(harness):
+    from frontend.server.mpa.runtime_client import MpaRuntimeError
+    h = harness
+    h.runtime.list_sessions.side_effect = MpaRuntimeError('runtime_request_failed', status_code=403,
+                                                         request_id='0123456789abcdef0123456789abcdef')
+    with pytest.raises(LifecycleError) as failure:
+        await h.engine.preview(h.target)
+    assert failure.value.code == 'deletePreviewFailed'
+    diagnostic = failure.value.diagnostic
+    assert diagnostic['stage'] == 'runtime_sessions'
+    assert diagnostic['operation'] == 'list_sessions'
+    assert diagnostic['category'] == 'permission'
+    assert diagnostic['httpStatus'] == 403
+    assert diagnostic['requestId'] == '0123456789abcdef0123456789abcdef'
+    h.cloud.call.assert_not_called()
+    h.runtime.delete_session.assert_not_called()
+    h.cleanup.delete_resources.assert_not_called()
+    with h.engine.db() as db:
+        assert db.execute('SELECT count(*) FROM deletions').fetchone()[0] == 0
+        assert db.execute('SELECT count(*) FROM diagnostics').fetchone()[0] == 1
+    await h.engine.close()
+
+
+@pytest.mark.asyncio
+async def test_preview_unknown_exception_never_discloses_exception_text_or_credentials(harness):
+    h = harness
+    h.cleanup.preview.side_effect = TypeError('SECRET token password postgres://private')
+    with pytest.raises(LifecycleError) as failure:
+        await h.engine.preview(h.target)
+    diagnostic = failure.value.diagnostic
+    assert diagnostic['stage'] == 'managed_resources'
+    assert diagnostic['exceptionType'] == 'TypeError'
+    assert 'SECRET' not in str(diagnostic)
+    assert 'postgres://' not in str(diagnostic)
+    assert 'private' not in str(diagnostic)
+    h.cloud.call.assert_not_called()
+    await h.engine.close()
+
+
+@pytest.mark.asyncio
+async def test_deletion_directory_snapshot_is_private_and_refreshable(monkeypatch):
+    from engine import DeletionCloud
+    from veadk.integrations.mpa.managed.runtime import RuntimeCloud
+    listing=AsyncMock(side_effect=[[{'RuntimeId':'one','Envs':[]}],[{'RuntimeId':'one'},{'RuntimeId':'new-reference'}]])
+    monkeypatch.setattr(RuntimeCloud,'list_runtimes',listing)
+    cloud=DeletionCloud(region='cn-beijing',credential_file='')
+    assert cloud.cache_identity is True
+    first=await cloud.list_runtimes()
+    first[0]['Envs'].append({'Key':'modified','Value':'never-cached'})
+    assert (await cloud.list_runtimes())[0]['Envs'] == []
+    assert listing.await_count == 1
+    cloud.invalidate_directory()
+    assert len(await cloud.list_runtimes()) == 2
+    assert listing.await_count == 2
+
+
+@pytest.mark.asyncio
+async def test_registry_timeout_preserves_actual_stage_and_does_not_accept_deletion(harness,monkeypatch):
+    import engine as module
+    h=harness
+    @asynccontextmanager
+    async def blocked(**kwargs):
+        await asyncio.Event().wait()
+        yield
+    h.engine.cleanup=blocked
+    monkeypatch.setattr(module,'PREVIEW_TIMEOUT',.02)
+    with pytest.raises(LifecycleError) as failure:
+        await h.engine.preview(h.target)
+    assert failure.value.diagnostic['stage']=='registry'
+    assert failure.value.diagnostic['operation']=='open_registry'
+    assert failure.value.diagnostic['category']=='timeout'
+    with h.engine.db() as db:assert db.execute('SELECT count(*) FROM deletions').fetchone()[0]==0
+    h.cloud.call.assert_not_called()
+    await h.engine.close()
+
+
+@pytest.mark.asyncio
+async def test_accepted_delete_invalidates_preview_directory_before_destructive_cleanup(harness, monkeypatch):
+    from engine import DeletionCloud
+    from veadk.integrations.mpa.managed.runtime import RuntimeCloud
+    h=harness
+    listings=AsyncMock(side_effect=lambda: [deepcopy(h.record)])
+    monkeypatch.setattr(RuntimeCloud,'list_runtimes',listings)
+    instances=[]
+    def factory(_region):
+        cloud=DeletionCloud(region='cn-beijing',credential_file='')
+        cloud.account_id=AsyncMock(return_value='account')
+        cloud.get=AsyncMock(side_effect=lambda _:deepcopy(h.record))
+        cloud.call=AsyncMock()
+        instances.append(cloud)
+        return cloud
+    h.engine.cloud_factory=factory
+    async def cleanup():
+        cloud=instances[-1]
+        # A new Runtime reference could appear after the reviewed snapshot.
+        assert cloud._directory is None
+        listings.side_effect=lambda:[deepcopy(h.record),{'RuntimeId':'new-reference'}]
+        assert len(await cloud.list_runtimes())==2
+    h.cleanup.delete_resources.side_effect=cleanup
+    preview=await h.engine.preview(h.target)
+    body={**h.target,'operationId':str(uuid4()),'fingerprint':preview['fingerprint'],'confirm':True}
+    await h.engine.start_delete(body)
+    await h.engine.deleting[body['operationId']]
+    result=await h.engine.read_delete({'operationId':body['operationId'],'region':'cn-beijing'})
+    assert result['state']=='succeeded'
+    assert len(instances)==3  # independent preview, acceptance recheck, execution check
+    assert listings.await_count==4  # plus the forced fresh scan inside cleanup
     await h.engine.close()

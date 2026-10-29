@@ -74,14 +74,16 @@ type Config struct {
 	Error                     string `json:"error,omitempty"`
 }
 type Diagnostic struct {
-	Stage      string `json:"stage"`
-	Operation  string `json:"operation"`
-	Category   string `json:"category"`
-	Attempt    int    `json:"attempt"`
-	Outcome    string `json:"outcome"`
-	ErrorCode  string `json:"errorCode,omitempty"`
-	RequestID  string `json:"requestId,omitempty"`
-	HTTPStatus int    `json:"httpStatus,omitempty"`
+	Stage         string `json:"stage"`
+	Operation     string `json:"operation"`
+	Category      string `json:"category"`
+	Attempt       int    `json:"attempt"`
+	Outcome       string `json:"outcome"`
+	ErrorCode     string `json:"errorCode,omitempty"`
+	RequestID     string `json:"requestId,omitempty"`
+	HTTPStatus    int    `json:"httpStatus,omitempty"`
+	ExceptionType string `json:"exceptionType,omitempty"`
+	ResponseType  string `json:"responseType,omitempty"`
 }
 type CreationTask struct {
 	TaskID                string      `json:"taskId"`
@@ -92,6 +94,7 @@ type CreationTask struct {
 	MaxInstance           int         `json:"maxInstance"`
 	State                 string      `json:"state"`
 	Stage                 string      `json:"stage"`
+	VisitedStages         []string    `json:"visitedStages,omitempty"`
 	Error                 string      `json:"error,omitempty"`
 	PGHost                string      `json:"pgHost,omitempty"`
 	PGPort                string      `json:"pgPort,omitempty"`
@@ -134,14 +137,15 @@ type DeletePreview struct {
 	RetainedResources []PlanStage `json:"retainedResources"`
 }
 type DeletionTask struct {
-	OperationID string  `json:"operationId"`
-	RuntimeID   string  `json:"runtimeId"`
-	Region      string  `json:"region"`
-	Name        string  `json:"name"`
-	State       string  `json:"state"`
-	Stage       string  `json:"stage"`
-	Error       string  `json:"error,omitempty"`
-	UpdatedAt   float64 `json:"updatedAt"`
+	OperationID      string                   `json:"operationId"`
+	RuntimeID        string                   `json:"runtimeId"`
+	Region           string                   `json:"region"`
+	Name             string                   `json:"name"`
+	State            string                   `json:"state"`
+	Stage            string                   `json:"stage"`
+	Error            string                   `json:"error,omitempty"`
+	UpdatedAt        float64                  `json:"updatedAt"`
+	LatestDiagnostic *dto.OperationDiagnostic `json:"latestDiagnostic,omitempty"`
 }
 type DeletionList struct {
 	Tasks []DeletionTask `json:"tasks"`

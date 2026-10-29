@@ -23,6 +23,8 @@ export function studioFailure(error: unknown): MessageText {
         return m.mpaDeleteBusy();
       case 'staleDeletePreview':
         return m.mpaDeleteChanged();
+      case 'deletePreviewFailed':
+        return m.mpaDeleteCheckFailed();
       case 'authRequired':
         return m.authRequired();
       case 'businessIdentityRequired':

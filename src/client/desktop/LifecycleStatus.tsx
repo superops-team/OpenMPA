@@ -1,4 +1,5 @@
 import { useMessages } from './locale';
+import type { Messages } from './generated/locales';
 
 export function LifecycleStatus({ state }: { state: string }) {
   const m = useMessages();
@@ -24,7 +25,16 @@ export function LifecycleStage({
   deleting?: boolean;
 }) {
   const m = useMessages();
+  return <span>{lifecycleStageLabel(m, stage, deleting)}</span>;
+}
+
+export function lifecycleStageLabel(
+  m: Messages,
+  stage: string,
+  deleting = false,
+) {
   const label: Record<string, string> = {
+    queued: m.mpaStageQueued(),
     checking: m.mpaStageChecking(),
     complete: m.mpaStageComplete(),
     runtime_sessions: m.mpaStageSessions(),
@@ -46,5 +56,5 @@ export function LifecycleStage({
     deploying: m.mpaStageDeploying(),
     verifying: m.mpaStageVerifying(),
   };
-  return <span>{label[stage] || m.mpaStagePreparing()}</span>;
+  return label[stage] || m.mpaStagePreparing();
 }

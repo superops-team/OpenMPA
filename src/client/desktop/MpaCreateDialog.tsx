@@ -5,6 +5,8 @@ import { useMessages, useMessageState, localized } from './locale';
 import { studioFailure } from './studio-services';
 import { LifecycleStage, LifecycleStatus } from './LifecycleStatus';
 import { MpaTosBucketPicker } from './MpaTosBucketPicker';
+import { MpaCreationProgress } from './MpaCreationProgress';
+import { MpaCreationDiagnostic } from './MpaCreationDiagnostic';
 import {
   creationActive,
   creationTerminal,
@@ -481,33 +483,14 @@ export function MpaCreateDialog({
                 <LifecycleStatus state={task.state} />
                 {!succeeded && <LifecycleStage stage={task.stage} />}
                 {active && <progress aria-label={m.mpaOpenTask()} />}
-                {!succeeded && task.error && (
-                  <p>
-                    {m.mpaRequestRejected()} <code>{task.error}</code>
-                  </p>
-                )}
               </div>
             )}
-            {task?.latestDiagnostic && (
-              <details key={succeeded ? 'history' : 'diagnostic'}>
-                <summary>
-                  {succeeded
-                    ? m.mpaHistoricalDiagnostic()
-                    : m.mpaSafeDiagnostic()}
-                </summary>
-                {succeeded && <p>{m.mpaHistoricalDiagnosticHint()}</p>}
-                <p className="mpa-identifier">
-                  {[
-                    task.latestDiagnostic.stage,
-                    task.latestDiagnostic.operation,
-                    task.latestDiagnostic.category,
-                    task.latestDiagnostic.errorCode,
-                    task.latestDiagnostic.requestId,
-                  ]
-                    .filter(Boolean)
-                    .join(' · ')}
-                </p>
-              </details>
+            {task && <MpaCreationProgress task={task} />}
+            {task && (
+              <MpaCreationDiagnostic
+                key={`${task.taskId}:${task.state}:${JSON.stringify(task.latestDiagnostic)}`}
+                task={task}
+              />
             )}
             {uncertain && <p>{m.mpaCreateUnknown()}</p>}
             {!succeeded && (

@@ -13,6 +13,8 @@ export function installLifecycleFixture() {
     };
   };
   const tasks = [];
+  globalThis.__lifecycleTasks = tasks;
+  globalThis.__holdCreation = false;
   const deletions = [];
   let present = true;
   let activeSessions = false;
@@ -85,6 +87,17 @@ export function installLifecycleFixture() {
         taskId: crypto.randomUUID(),
         state: 'running',
         stage: 'worker',
+        visitedStages: [
+          'queued',
+          'checking',
+          'iam_role',
+          'admin_workspace',
+          'admin_database',
+          'business_workspace',
+          'network',
+          'gateway',
+          'worker',
+        ],
         latestDiagnostic: {
           stage: 'worker',
           operation: 'worker_agent_key',
@@ -98,10 +111,16 @@ export function installLifecycleFixture() {
     },
     'MPALifecycle.ReadCreation': ({ taskId }) => {
       const task = tasks.find((task) => task.taskId === taskId);
-      if (task.state === 'running')
+      if (task.state === 'running' && !globalThis.__holdCreation)
         Object.assign(task, {
           state: 'succeeded',
           stage: 'verifying',
+          visitedStages: [
+            ...task.visitedStages,
+            'openviking',
+            'deploying',
+            'verifying',
+          ],
           result: {
             runtime_id: 'runtime-created',
             skill_space_id: 'space-created',
@@ -170,6 +189,30 @@ export function installLifecycleFixture() {
   runtime.call = async (method, request) => {
     if (!methods[method]) return base(method, request);
     globalThis.__lifecycleRequests.push({ method, request });
+    if (
+      method === 'MPALifecycle.PreviewDelete' &&
+      globalThis.__deletePreviewFailure
+    )
+      return {
+        ok: false,
+        error: {
+          code: 'deletePreviewFailed',
+          message: 'Safe deletion check failure',
+          httpStatus: 503,
+          diagnostic: {
+            stage: 'references',
+            operation: 'list_runtimes',
+            category: 'timeout',
+            attempt: 1,
+            outcome: 'failed',
+            exceptionType: 'TimeoutError',
+            httpStatus: 504,
+            source: 'threads.py:25:to_thread',
+            resourceHost: 'registry.example.invalid',
+            requestId: '0123456789abcdef0123456789abcdef',
+          },
+        },
+      };
     return { ok: true, value: methods[method](request) };
   };
   addEventListener('DOMContentLoaded', () => {

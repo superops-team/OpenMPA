@@ -153,7 +153,9 @@ func (r *nativeRail) controls(c *ui.Context) {
 			action, label string
 			selected      bool
 		}{
-			{"toggleSidebar", "Toggle sidebar", !state.Collapsed}, {"newConversation", "New conversation", false},
+			{"toggleSidebar", "Toggle sidebar", !state.Collapsed},
+			{"runtimes", localization.Text("manageRuntimes", nil), state.View == "runtimes"},
+			{"newConversation", "New conversation", false},
 			{"tasks", "Open scheduled activity", state.View == "tasks"},
 		} {
 			item := item
@@ -259,7 +261,6 @@ func (r *nativeRail) sidebar(c *ui.Context) {
 		if len(state.Assistants) == 0 {
 			ui.Text(c, localization.UI("Choose your Runtime in Settings.")).Padding(6).FontSize(design.TypographyUiSm).TextColor(c.Theme().TextMuted)
 		}
-		row("runtimes", "", localization.Text("manageRuntimes", nil), "", state.View == "runtimes")
 		row("newConversation", "", "New conversation", "", false)
 		ui.TextInput(c.Key("navigation-search"), &r.query).Label(localization.Text("findConversations", nil)).Placeholder(localization.Text("searchConversations", nil)).FillWidth()
 		matches := func(item NavigationItem) bool {

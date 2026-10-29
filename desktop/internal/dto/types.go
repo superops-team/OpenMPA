@@ -13,15 +13,34 @@ type CurrentState struct {
 	Status                 string `json:"status,omitempty"`
 	Generation             int    `json:"generation,omitempty"`
 }
+
+// OperationDiagnostic contains only bounded, structured troubleshooting fields.
+// Exception messages, response bodies and credentials must never be placed here.
+type OperationDiagnostic struct {
+	Stage         string `json:"stage"`
+	Operation     string `json:"operation"`
+	Category      string `json:"category"`
+	Attempt       int    `json:"attempt"`
+	Outcome       string `json:"outcome"`
+	ErrorCode     string `json:"errorCode,omitempty"`
+	RequestID     string `json:"requestId,omitempty"`
+	HTTPStatus    int    `json:"httpStatus,omitempty"`
+	ExceptionType string `json:"exceptionType,omitempty"`
+	ResponseType  string `json:"responseType,omitempty"`
+	Reason        string `json:"reason,omitempty"`
+	Source        string `json:"source,omitempty"`
+	ResourceHost  string `json:"resourceHost,omitempty"`
+}
 type SafeError struct {
-	Code             string        `json:"code"`
-	Message          string        `json:"message"`
-	HTTPStatus       int           `json:"httpStatus"`
-	Plane            string        `json:"plane"`
-	OriginConfidence string        `json:"originConfidence"`
-	RetryDisposition string        `json:"retryDisposition"`
-	RequestID        string        `json:"requestId,omitempty"`
-	CurrentState     *CurrentState `json:"currentState,omitempty"`
+	Code             string               `json:"code"`
+	Message          string               `json:"message"`
+	HTTPStatus       int                  `json:"httpStatus"`
+	Plane            string               `json:"plane"`
+	OriginConfidence string               `json:"originConfidence"`
+	RetryDisposition string               `json:"retryDisposition"`
+	RequestID        string               `json:"requestId,omitempty"`
+	CurrentState     *CurrentState        `json:"currentState,omitempty"`
+	Diagnostic       *OperationDiagnostic `json:"diagnostic,omitempty"`
 }
 
 func (e *SafeError) Error() string { return e.Code }

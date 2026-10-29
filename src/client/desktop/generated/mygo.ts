@@ -667,6 +667,7 @@ export interface CreationTask {
   maxInstance: number;
   state: string;
   stage: string;
+  visitedStages?: string[];
   error?: string;
   pgHost?: string;
   pgPort?: string;
@@ -801,6 +802,7 @@ export interface DeletionTask {
   stage: string;
   error?: string;
   updatedAt: number;
+  latestDiagnostic?: OperationDiagnostic;
 }
 
 export interface Delivery {
@@ -851,6 +853,8 @@ export interface Diagnostic {
   errorCode?: string;
   requestId?: string;
   httpStatus?: number;
+  exceptionType?: string;
+  responseType?: string;
 }
 
 export interface Diagnostics {
@@ -1402,6 +1406,26 @@ export interface Operation {
   message: string;
 }
 
+/**
+ * OperationDiagnostic contains only bounded, structured troubleshooting fields.
+ * Exception messages, response bodies and credentials must never be placed here.
+ */
+export interface OperationDiagnostic {
+  stage: string;
+  operation: string;
+  category: string;
+  attempt: number;
+  outcome: string;
+  errorCode?: string;
+  requestId?: string;
+  httpStatus?: number;
+  exceptionType?: string;
+  responseType?: string;
+  reason?: string;
+  source?: string;
+  resourceHost?: string;
+}
+
 export interface OperationList {
   connectionEpoch: number;
   operations: Operation[];
@@ -1936,6 +1960,7 @@ export interface SafeError {
   retryDisposition: string;
   requestId?: string;
   currentState?: CurrentState;
+  diagnostic?: OperationDiagnostic;
 }
 
 export interface SaveDraftRequest {

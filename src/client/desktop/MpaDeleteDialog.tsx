@@ -4,6 +4,10 @@ import { Button } from '../ui';
 import { useMessages, useMessageState, localized } from './locale';
 import { studioFailure } from './studio-services';
 import { LifecycleStage, LifecycleStatus } from './LifecycleStatus';
+import {
+  MpaDeletionDiagnostic,
+  deletionErrorDiagnostic,
+} from './MpaDeletionDiagnostic';
 import type {
   MpaDeletePreview,
   MpaDeletionTask,
@@ -37,9 +41,15 @@ export function MpaDeleteDialog({
   const [busy, setBusy] = useState(false);
   const [uncertain, setUncertain] = useState(false);
   const [notice, setNotice] = useMessageState();
+  const [failure, setFailure] = useState<unknown>();
+  const report = (error: unknown) => {
+    setFailure(error);
+    setNotice(deletionErrorDiagnostic(error) ? '' : studioFailure(error));
+  };
   const operationId = useRef(crypto.randomUUID());
   const alive = useRef(true);
   const writing = useRef(false);
+  const inspecting = useRef(false);
   const notified = useRef(false);
   const callbacks = useRef({ onChanged, onDeleted });
   callbacks.current = { onChanged, onDeleted };
@@ -69,6 +79,7 @@ export function MpaDeleteDialog({
   const read = async () => {
     setBusy(true);
     setNotice('');
+    setFailure(undefined);
     try {
       await accept(
         await services.readDeletion(
@@ -78,15 +89,17 @@ export function MpaDeleteDialog({
         ),
       );
     } catch (error) {
-      if (alive.current) setNotice(studioFailure(error));
+      if (alive.current) report(error);
     } finally {
       if (alive.current) setBusy(false);
     }
   };
   const inspect = async () => {
-    if (writing.current) return;
+    if (writing.current || inspecting.current) return;
+    inspecting.current = true;
     setBusy(true);
     setNotice('');
+    setFailure(undefined);
     setPreview(undefined);
     try {
       // Resolve an ambiguous receipt read-only before preparing a new intent.
@@ -118,13 +131,19 @@ export function MpaDeleteDialog({
       const value = await services.previewDelete(epoch, region, runtimeId);
       if (alive.current) {
         setPreview(value);
+        setFailure(undefined);
+        setNotice('');
         setTask(undefined);
         setUncertain(false);
         operationId.current = crypto.randomUUID();
       }
     } catch (error) {
-      if (alive.current) setNotice(studioFailure(error));
+      if (alive.current) {
+        setPreview(undefined);
+        report(error);
+      }
     } finally {
+      inspecting.current = false;
       if (alive.current) setBusy(false);
     }
   };
@@ -161,6 +180,7 @@ export function MpaDeleteDialog({
     writing.current = true;
     setBusy(true);
     setNotice('');
+    setFailure(undefined);
     try {
       await accept(await services.delete(epoch, preview, operationId.current));
       callbacks.current.onChanged();
@@ -170,9 +190,15 @@ export function MpaDeleteDialog({
           error && typeof error === 'object' && 'httpStatus' in error
             ? Number(error.httpStatus)
             : 0;
-        const rejected = status >= 400 && status < 500;
+        const preflightRejected =
+          error &&
+          typeof error === 'object' &&
+          'code' in error &&
+          error.code === 'deletePreviewFailed';
+        const rejected = preflightRejected || (status >= 400 && status < 500);
         setUncertain(!rejected);
         setPreview(undefined);
+        setFailure(error);
         setNotice(
           rejected
             ? localized((m) => m.mpaDeleteChanged())
@@ -219,6 +245,14 @@ export function MpaDeleteDialog({
           </p>
         )}
         {busy && <p role="status">{m.mpaDeleteChecking()}</p>}
+        <MpaDeletionDiagnostic
+          key={JSON.stringify(
+            deletionErrorDiagnostic(failure) || task?.latestDiagnostic,
+          )}
+          diagnostic={
+            deletionErrorDiagnostic(failure) || task?.latestDiagnostic
+          }
+        />
         {preview && (
           <>
             <p>

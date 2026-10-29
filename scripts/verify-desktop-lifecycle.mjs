@@ -148,6 +148,9 @@ try {
     ),
     0,
   );
+  await page.evaluate(() => {
+    globalThis.__holdCreation = true;
+  });
   await click('Confirm creation');
   assert.equal(
     await page.evaluate(
@@ -158,54 +161,213 @@ try {
     ),
     'agentkit-platform-fixture-outputs',
   );
-  await page.getByText('Succeeded', { exact: true }).first().waitFor();
   const creationDialog = page.getByRole('dialog');
-  const completedStatus = creationDialog.getByRole('status');
-  assert.equal(await completedStatus.innerText(), 'Succeeded');
+  const steps = creationDialog.locator('.mpa-creation-checklist');
+  assert.equal(await steps.locator('li').count(), 11);
   assert.equal(
-    await creationDialog.getByText('Verify readiness', { exact: true }).count(),
-    0,
+    await steps.locator('[data-stage="checking"]').getAttribute('data-state'),
+    'completed',
   );
+  assert.equal(
+    await steps.locator('[data-stage="worker"]').getAttribute('data-state'),
+    'running',
+  );
+  assert.equal(
+    await steps.locator('[data-stage="verifying"]').getAttribute('data-state'),
+    'pending',
+  );
+  for (const theme of ['dark', 'light']) {
+    await page.evaluate((theme) => {
+      document.documentElement.dataset.theme = theme;
+    }, theme);
+    for (const width of [1280, 768, 390]) {
+      await page.setViewportSize({ width, height: 900 });
+      await widthCheck();
+    }
+    await page.screenshot({
+      path: resolve(output, `creation-steps-${theme}.png`),
+    });
+  }
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await creationDialog.locator('details summary').click();
+  await page.evaluate(() => {
+    const task = globalThis.__lifecycleTasks[0];
+    task.stage = 'openviking';
+    task.visitedStages.push('openviking');
+  });
+  await click('Check status');
   const history = creationDialog.locator('details');
-  assert.equal(await history.getAttribute('open'), null);
   assert.equal(
     await history.locator('summary').innerText(),
     'Diagnostic history',
   );
-  assert.equal(
-    await creationDialog
-      .getByText('worker · worker_agent_key · metadata_pending', {
-        exact: true,
-      })
-      .isVisible(),
-    false,
-  );
+  assert.equal(await history.getAttribute('open'), null);
   await history.locator('summary').click();
   await creationDialog
-    .getByText('worker · worker_agent_key · metadata_pending', { exact: true })
-    .waitFor();
-  await creationDialog
     .getByText(
-      'These records are from the creation process. Creation is complete; they do not describe the current state.',
+      "This record is from an earlier creation step. It does not describe the current step's state.",
       { exact: true },
     )
     .waitFor();
-  assert.equal(await completedStatus.innerText(), 'Succeeded');
+  assert.equal(
+    await creationDialog.getByText('Waiting to retry', { exact: true }).count(),
+    0,
+  );
+  await creationDialog.getByText('worker_agent_key', { exact: true }).waitFor();
   await page.screenshot({
-    path: resolve(output, 'creation-completed-history.png'),
+    path: resolve(output, 'creation-running-history.png'),
   });
-  await history.locator('summary').click();
   checks.push(
-    'Successful creation shows only completed status; prior retry diagnostics are collapsed and explicitly labeled as history',
+    'Advancing past a step collapses its old retry diagnosis into history without implying it is still retrying',
+  );
+  await page.evaluate(() => {
+    globalThis.__holdCreation = false;
+  });
+  await creationDialog.getByText('Succeeded', { exact: true }).waitFor();
+  const completedStatus = creationDialog.getByRole('status');
+  assert.equal(await completedStatus.innerText(), 'Succeeded');
+  assert.equal(await steps.locator('[data-state="running"]').count(), 0);
+  assert.equal(await steps.locator('[data-state="completed"]').count(), 11);
+  assert.equal(await creationDialog.locator('details').count(), 0);
+  assert.equal(
+    await creationDialog.getByText('worker_agent_key', { exact: true }).count(),
+    0,
+  );
+  await page.screenshot({
+    path: resolve(output, 'creation-completed-clean.png'),
+  });
+  checks.push(
+    'All steps retain their completed states after success, with no intermediate diagnostic or diagnostic-history entry',
   );
   checks.push(
     'Three-step creation submits once at final confirmation and reaches the durable task result',
   );
   await button('Close').last().click();
+  await page.evaluate(() => {
+    const previous = globalThis.__lifecycleTasks[0];
+    globalThis.__lifecycleTasks.push({
+      ...previous,
+      taskId: crypto.randomUUID(),
+      requestId: crypto.randomUUID(),
+      name: 'failed-fixture',
+      state: 'failed',
+      stage: 'worker',
+      visitedStages: previous.visitedStages.slice(0, 9),
+      result: undefined,
+      latestDiagnostic: {
+        stage: 'worker',
+        operation: 'get_worker',
+        category: 'permission',
+        attempt: 2,
+        outcome: 'failed',
+        errorCode: 'AccessDenied.Tool',
+        requestId: '0123456789abcdef0123456789abcdef',
+        exceptionType: 'HTTPError -> ApiError',
+        httpStatus: 403,
+        responseType: 'application/json',
+      },
+    });
+  });
+  await click('List current account');
+  await page
+    .locator('.mpa-history li')
+    .filter({ hasText: 'failed-fixture' })
+    .getByRole('button')
+    .click();
+  await creationDialog
+    .getByRole('alert')
+    .getByText(
+      'The current credentials do not authorize this operation or are no longer valid.',
+      { exact: true },
+    )
+    .waitFor();
+  await creationDialog.getByText('Error details', { exact: true }).click();
+  await creationDialog
+    .getByText('HTTPError -> ApiError', { exact: true })
+    .waitFor();
+  assert.equal(
+    await creationDialog
+      .locator('[data-stage="worker"]')
+      .getAttribute('data-state'),
+    'failed',
+  );
+  await context.grantPermissions(['clipboard-read', 'clipboard-write'], {
+    origin,
+  });
+  await click('Copy error information');
+  await creationDialog.getByText('Copied', { exact: true }).waitFor();
+  const copied = await page.evaluate(() => navigator.clipboard.readText());
+  assert.ok(
+    copied.includes('AccessDenied.Tool') && copied.includes('HTTP status: 403'),
+  );
+  await page.setViewportSize({ width: 390, height: 900 });
+  await widthCheck();
+  await page.screenshot({
+    path: resolve(output, 'creation-error-details-narrow.png'),
+  });
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await page.screenshot({
+    path: resolve(output, 'creation-error-details.png'),
+  });
+  await button('Close').last().click();
+  checks.push(
+    'Failure shows the Studio reason, stage, operation, exception chain, HTTP/response type and Request ID, with working copy',
+  );
   await click('Chat fixture');
   assert.equal(await composer.inputValue(), 'Keep this draft');
   checks.push('Manager navigation preserves the conversation draft');
   await click('Manage fixture');
+  const previewCountBefore = await page.evaluate(
+    () =>
+      globalThis.__lifecycleRequests.filter(
+        (row) => row.method === 'MPALifecycle.PreviewDelete',
+      ).length,
+  );
+  await page.evaluate(() => {
+    globalThis.__deletePreviewFailure = true;
+  });
+  await click('Delete MPA');
+  await page.getByRole('dialog').getByRole('alert').waitFor();
+  assert.equal(
+    await page.evaluate(
+      () =>
+        globalThis.__lifecycleRequests.filter(
+          (row) => row.method === 'MPALifecycle.PreviewDelete',
+        ).length,
+    ),
+    previewCountBefore + 1,
+  );
+  await page.getByText('Error details', { exact: true }).click();
+  await page
+    .getByText('Verify resource references and ownership', { exact: true })
+    .waitFor();
+  await page.getByText('list_runtimes', { exact: true }).waitFor();
+  assert.equal(await button('Confirm deletion').count(), 0);
+  await click('Copy error information');
+  await page.getByText('Copied', { exact: true }).waitFor();
+  await page.screenshot({
+    path: resolve(output, 'deletion-preflight-error.png'),
+  });
+  await page.setViewportSize({ width: 390, height: 900 });
+  await widthCheck();
+  await page.screenshot({
+    path: resolve(output, 'deletion-preflight-error-narrow.png'),
+  });
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await page.evaluate(() => {
+    globalThis.__deletePreviewFailure = false;
+  });
+  await click('Review cleanup scope again');
+  await page.getByText('t-worker-owned', { exact: true }).waitFor();
+  assert.equal(await page.getByRole('dialog').getByRole('alert').count(), 0);
+  assert.equal(
+    await page.getByText('Error details', { exact: true }).count(),
+    0,
+  );
+  await button('Close').last().click();
+  checks.push(
+    'Deletion preflight reports the real failed operation and safe details; confirmation stays absent until a successful recheck',
+  );
   await click('Toggle active sessions');
   await click('Delete MPA');
   await page.getByText('Active sessions remain.', { exact: false }).waitFor();
@@ -266,6 +428,39 @@ try {
       exact: true,
     })
     .waitFor();
+  await page
+    .locator('.mpa-history li')
+    .filter({ hasText: 'fixture-mpa' })
+    .getByRole('button')
+    .click();
+  await creationDialog
+    .getByRole('status')
+    .getByText('已完成', { exact: true })
+    .waitFor();
+  assert.equal(
+    await creationDialog.locator('[data-state="running"]').count(),
+    0,
+  );
+  await page.screenshot({ path: resolve(output, 'creation-completed-zh.png') });
+  await button('关闭').last().click();
+  await page
+    .locator('.mpa-history li')
+    .filter({ hasText: 'failed-fixture' })
+    .getByRole('button')
+    .click();
+  await creationDialog
+    .getByRole('alert')
+    .getByText('当前凭据没有执行该操作的权限，或凭据已失效。', { exact: true })
+    .waitFor();
+  await creationDialog.getByText('错误详情', { exact: true }).click();
+  await creationDialog.getByText('异常类型', { exact: true }).waitFor();
+  await page.screenshot({
+    path: resolve(output, 'creation-error-details-zh.png'),
+  });
+  await button('关闭').last().click();
+  checks.push(
+    'Chinese completed steps and detailed failure explanations render with the same state semantics',
+  );
   await click('创建 MPA');
   await click('核对状态');
   await click('新建另一个 MPA');

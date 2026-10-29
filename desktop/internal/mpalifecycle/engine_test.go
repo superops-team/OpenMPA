@@ -108,6 +108,8 @@ for line in sys.stdin:
   print('SECRET SHOULD NEVER BE VISIBLE',file=sys.stderr,flush=True)
   value={'id':request['id'],'ok':False,'error':{'code':'denied','httpStatus':403}}
  elif op=='readDeletion':value={'id':request['id'],'ok':True,'value':{'operationId':'op','runtimeId':'r-one','region':'cn-beijing','state':'succeeded','stage':'complete'}}
+ elif op=='readCreation':value={'id':request['id'],'ok':True,'value':{'taskId':'task','state':'failed','stage':'worker','visitedStages':['queued','checking','worker'],'latestDiagnostic':{'stage':'worker','operation':'get_worker','category':'permission','attempt':1,'outcome':'failed','exceptionType':'HTTPError -> ApiError','httpStatus':403,'responseType':'application/json','errorCode':'AccessDenied.Tool','requestId':'0123456789abcdef0123456789abcdef'}}}
+ elif op=='previewFailure':value={'id':request['id'],'ok':False,'error':{'code':'deletePreviewFailed','httpStatus':503,'diagnostic':{'stage':'references','operation':'list_runtimes','category':'timeout','attempt':1,'outcome':'failed','exceptionType':'TimeoutError','requestId':'0123456789abcdef0123456789abcdef','source':'threads.py:25:to_thread','resourceHost':'registry.example.invalid'}}}
  else:value={'id':request['id'],'ok':True,'value':{'configured':True,'region':'cn-beijing','inherited':os.environ.get('OPENMPA_TEST_SECRET','')}}
  print(json.dumps(value),flush=True)
 `
@@ -133,8 +135,19 @@ func TestPrivateProtocolCancellationAndRedaction(t *testing.T) {
 	if output["configured"] != true || output["inherited"] != "" {
 		t.Fatal(output)
 	}
+	var creation CreationTask
+	if err := p.call(ctx, "readCreation", map[string]any{}, &creation); err != nil {
+		t.Fatal(err)
+	}
+	diagnostic := creation.LatestDiagnostic
+	if len(creation.VisitedStages) != 3 || diagnostic == nil || diagnostic.ExceptionType != "HTTPError -> ApiError" || diagnostic.HTTPStatus != 403 || diagnostic.ResponseType != "application/json" || diagnostic.ErrorCode != "AccessDenied.Tool" || diagnostic.RequestID != "0123456789abcdef0123456789abcdef" {
+		t.Fatalf("creation progress or safe diagnostic fields were dropped: %+v %+v", creation, diagnostic)
+	}
 	if err := p.call(ctx, "failure", map[string]any{}, &output); err == nil || err.Code != "denied" || strings.Contains(err.Message, "SECRET") {
 		t.Fatalf("unsafe failure %+v", err)
+	}
+	if err := p.call(ctx, "previewFailure", map[string]any{}, &output); err == nil || err.Diagnostic == nil || err.Diagnostic.Operation != "list_runtimes" || err.Diagnostic.Category != "timeout" || err.Diagnostic.Source != "threads.py:25:to_thread" || err.Diagnostic.ResourceHost != "registry.example.invalid" || err.RequestID != "0123456789abcdef0123456789abcdef" {
+		t.Fatalf("preview error lost its structured diagnostic: %+v", err)
 	}
 	short, stop := context.WithTimeout(ctx, 10*time.Millisecond)
 	defer stop()

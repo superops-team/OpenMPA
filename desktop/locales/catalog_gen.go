@@ -10464,11 +10464,11 @@ func (msgs Messages) MpaBackgroundHint() string {
 	return Catalog.Format(msgs.locale, "mpaBackgroundHint", nil)
 }
 
-// MpaEngineUnavailable says "创建引擎不可用，请检查应用安装并重试。"
+// MpaEngineUnavailable says "资源管理引擎不可用，请检查应用安装并重试。"
 // in the language the app shows.
 func MpaEngineUnavailable() string { return In(i18n.Locale()).MpaEngineUnavailable() }
 
-// MpaEngineUnavailable says "创建引擎不可用，请检查应用安装并重试。"
+// MpaEngineUnavailable says "资源管理引擎不可用，请检查应用安装并重试。"
 // in the language of msgs.
 func (msgs Messages) MpaEngineUnavailable() string {
 	return Catalog.Format(msgs.locale, "mpaEngineUnavailable", nil)
@@ -10816,11 +10816,11 @@ func (msgs Messages) MpaHistoricalDiagnostic() string {
 	return Catalog.Format(msgs.locale, "mpaHistoricalDiagnostic", nil)
 }
 
-// MpaHistoricalDiagnosticHint says "以下为创建过程中的历史记录。创建已完成，这些记录不代表当前状态。"
+// MpaHistoricalDiagnosticHint says "这是之前创建步骤的过程记录，不代表当前步骤的状态。"
 // in the language the app shows.
 func MpaHistoricalDiagnosticHint() string { return In(i18n.Locale()).MpaHistoricalDiagnosticHint() }
 
-// MpaHistoricalDiagnosticHint says "以下为创建过程中的历史记录。创建已完成，这些记录不代表当前状态。"
+// MpaHistoricalDiagnosticHint says "这是之前创建步骤的过程记录，不代表当前步骤的状态。"
 // in the language of msgs.
 func (msgs Messages) MpaHistoricalDiagnosticHint() string {
 	return Catalog.Format(msgs.locale, "mpaHistoricalDiagnosticHint", nil)
@@ -10976,11 +10976,11 @@ func (msgs Messages) MpaStageOpenViking() string {
 	return Catalog.Format(msgs.locale, "mpaStageOpenViking", nil)
 }
 
-// MpaStageDeploying says "部署 Runtime"
+// MpaStageDeploying says "准备业务数据库、技能空间和 Runtime"
 // in the language the app shows.
 func MpaStageDeploying() string { return In(i18n.Locale()).MpaStageDeploying() }
 
-// MpaStageDeploying says "部署 Runtime"
+// MpaStageDeploying says "准备业务数据库、技能空间和 Runtime"
 // in the language of msgs.
 func (msgs Messages) MpaStageDeploying() string {
 	return Catalog.Format(msgs.locale, "mpaStageDeploying", nil)
@@ -11606,4 +11606,666 @@ func MainProfileSaved() string { return In(i18n.Locale()).MainProfileSaved() }
 // in the language of msgs.
 func (msgs Messages) MainProfileSaved() string {
 	return Catalog.Format(msgs.locale, "mainProfileSaved", nil)
+}
+
+// MpaCreationSteps says "创建步骤"
+// in the language the app shows.
+func MpaCreationSteps() string { return In(i18n.Locale()).MpaCreationSteps() }
+
+// MpaCreationSteps says "创建步骤"
+// in the language of msgs.
+func (msgs Messages) MpaCreationSteps() string {
+	return Catalog.Format(msgs.locale, "mpaCreationSteps", nil)
+}
+
+// MpaStepCompleted says "已完成"
+// in the language the app shows.
+func MpaStepCompleted() string { return In(i18n.Locale()).MpaStepCompleted() }
+
+// MpaStepCompleted says "已完成"
+// in the language of msgs.
+func (msgs Messages) MpaStepCompleted() string {
+	return Catalog.Format(msgs.locale, "mpaStepCompleted", nil)
+}
+
+// MpaStepRunning says "正在执行"
+// in the language the app shows.
+func MpaStepRunning() string { return In(i18n.Locale()).MpaStepRunning() }
+
+// MpaStepRunning says "正在执行"
+// in the language of msgs.
+func (msgs Messages) MpaStepRunning() string {
+	return Catalog.Format(msgs.locale, "mpaStepRunning", nil)
+}
+
+// MpaStepPending says "未开始"
+// in the language the app shows.
+func MpaStepPending() string { return In(i18n.Locale()).MpaStepPending() }
+
+// MpaStepPending says "未开始"
+// in the language of msgs.
+func (msgs Messages) MpaStepPending() string {
+	return Catalog.Format(msgs.locale, "mpaStepPending", nil)
+}
+
+// MpaStepSkipped says "已复用或跳过"
+// in the language the app shows.
+func MpaStepSkipped() string { return In(i18n.Locale()).MpaStepSkipped() }
+
+// MpaStepSkipped says "已复用或跳过"
+// in the language of msgs.
+func (msgs Messages) MpaStepSkipped() string {
+	return Catalog.Format(msgs.locale, "mpaStepSkipped", nil)
+}
+
+// MpaStepPassed says "已通过"
+// in the language the app shows.
+func MpaStepPassed() string { return In(i18n.Locale()).MpaStepPassed() }
+
+// MpaStepPassed says "已通过"
+// in the language of msgs.
+func (msgs Messages) MpaStepPassed() string {
+	return Catalog.Format(msgs.locale, "mpaStepPassed", nil)
+}
+
+// MpaStepsLegacyHint says "此任务未保存完整步骤记录；“已通过”表示已推进到后续阶段。"
+// in the language the app shows.
+func MpaStepsLegacyHint() string { return In(i18n.Locale()).MpaStepsLegacyHint() }
+
+// MpaStepsLegacyHint says "此任务未保存完整步骤记录；“已通过”表示已推进到后续阶段。"
+// in the language of msgs.
+func (msgs Messages) MpaStepsLegacyHint() string {
+	return Catalog.Format(msgs.locale, "mpaStepsLegacyHint", nil)
+}
+
+// MpaStageQueued says "等待开始"
+// in the language the app shows.
+func MpaStageQueued() string { return In(i18n.Locale()).MpaStageQueued() }
+
+// MpaStageQueued says "等待开始"
+// in the language of msgs.
+func (msgs Messages) MpaStageQueued() string {
+	return Catalog.Format(msgs.locale, "mpaStageQueued", nil)
+}
+
+// MpaFailureRequestId says "云端 Request ID"
+// in the language the app shows.
+func MpaFailureRequestId() string { return In(i18n.Locale()).MpaFailureRequestId() }
+
+// MpaFailureRequestId says "云端 Request ID"
+// in the language of msgs.
+func (msgs Messages) MpaFailureRequestId() string {
+	return Catalog.Format(msgs.locale, "mpaFailureRequestId", nil)
+}
+
+// MpaDiagnosticRetrying says "等待重试"
+// in the language the app shows.
+func MpaDiagnosticRetrying() string { return In(i18n.Locale()).MpaDiagnosticRetrying() }
+
+// MpaDiagnosticRetrying says "等待重试"
+// in the language of msgs.
+func (msgs Messages) MpaDiagnosticRetrying() string {
+	return Catalog.Format(msgs.locale, "mpaDiagnosticRetrying", nil)
+}
+
+// MpaDiagnosticAttempt says "尝试次数"
+// in the language the app shows.
+func MpaDiagnosticAttempt() string { return In(i18n.Locale()).MpaDiagnosticAttempt() }
+
+// MpaDiagnosticAttempt says "尝试次数"
+// in the language of msgs.
+func (msgs Messages) MpaDiagnosticAttempt() string {
+	return Catalog.Format(msgs.locale, "mpaDiagnosticAttempt", nil)
+}
+
+// MpaFailureExceptionType says "异常类型"
+// in the language the app shows.
+func MpaFailureExceptionType() string { return In(i18n.Locale()).MpaFailureExceptionType() }
+
+// MpaFailureExceptionType says "异常类型"
+// in the language of msgs.
+func (msgs Messages) MpaFailureExceptionType() string {
+	return Catalog.Format(msgs.locale, "mpaFailureExceptionType", nil)
+}
+
+// MpaFailureHttpStatus says "HTTP 状态"
+// in the language the app shows.
+func MpaFailureHttpStatus() string { return In(i18n.Locale()).MpaFailureHttpStatus() }
+
+// MpaFailureHttpStatus says "HTTP 状态"
+// in the language of msgs.
+func (msgs Messages) MpaFailureHttpStatus() string {
+	return Catalog.Format(msgs.locale, "mpaFailureHttpStatus", nil)
+}
+
+// MpaFailureResponseType says "响应类型"
+// in the language the app shows.
+func MpaFailureResponseType() string { return In(i18n.Locale()).MpaFailureResponseType() }
+
+// MpaFailureResponseType says "响应类型"
+// in the language of msgs.
+func (msgs Messages) MpaFailureResponseType() string {
+	return Catalog.Format(msgs.locale, "mpaFailureResponseType", nil)
+}
+
+// MpaFailureDetails says "错误详情"
+// in the language the app shows.
+func MpaFailureDetails() string { return In(i18n.Locale()).MpaFailureDetails() }
+
+// MpaFailureDetails says "错误详情"
+// in the language of msgs.
+func (msgs Messages) MpaFailureDetails() string {
+	return Catalog.Format(msgs.locale, "mpaFailureDetails", nil)
+}
+
+// MpaFailureCopy says "复制错误信息"
+// in the language the app shows.
+func MpaFailureCopy() string { return In(i18n.Locale()).MpaFailureCopy() }
+
+// MpaFailureCopy says "复制错误信息"
+// in the language of msgs.
+func (msgs Messages) MpaFailureCopy() string {
+	return Catalog.Format(msgs.locale, "mpaFailureCopy", nil)
+}
+
+// MpaFailureCopied says "已复制"
+// in the language the app shows.
+func MpaFailureCopied() string { return In(i18n.Locale()).MpaFailureCopied() }
+
+// MpaFailureCopied says "已复制"
+// in the language of msgs.
+func (msgs Messages) MpaFailureCopied() string {
+	return Catalog.Format(msgs.locale, "mpaFailureCopied", nil)
+}
+
+// MpaFailureCopyFailed says "复制失败，可手动选择详情文字复制。"
+// in the language the app shows.
+func MpaFailureCopyFailed() string { return In(i18n.Locale()).MpaFailureCopyFailed() }
+
+// MpaFailureCopyFailed says "复制失败，可手动选择详情文字复制。"
+// in the language of msgs.
+func (msgs Messages) MpaFailureCopyFailed() string {
+	return Catalog.Format(msgs.locale, "mpaFailureCopyFailed", nil)
+}
+
+// MpaFailureStage says "失败阶段"
+// in the language the app shows.
+func MpaFailureStage() string { return In(i18n.Locale()).MpaFailureStage() }
+
+// MpaFailureStage says "失败阶段"
+// in the language of msgs.
+func (msgs Messages) MpaFailureStage() string {
+	return Catalog.Format(msgs.locale, "mpaFailureStage", nil)
+}
+
+// MpaFailureOperation says "失败操作"
+// in the language the app shows.
+func MpaFailureOperation() string { return In(i18n.Locale()).MpaFailureOperation() }
+
+// MpaFailureOperation says "失败操作"
+// in the language of msgs.
+func (msgs Messages) MpaFailureOperation() string {
+	return Catalog.Format(msgs.locale, "mpaFailureOperation", nil)
+}
+
+// MpaFailureErrorCode says "错误码"
+// in the language the app shows.
+func MpaFailureErrorCode() string { return In(i18n.Locale()).MpaFailureErrorCode() }
+
+// MpaFailureErrorCode says "错误码"
+// in the language of msgs.
+func (msgs Messages) MpaFailureErrorCode() string {
+	return Catalog.Format(msgs.locale, "mpaFailureErrorCode", nil)
+}
+
+// MpaFailureReasonIamTrustConflict says "运行角色的信任策略与所需配置不一致。"
+// in the language the app shows.
+func MpaFailureReasonIamTrustConflict() string {
+	return In(i18n.Locale()).MpaFailureReasonIamTrustConflict()
+}
+
+// MpaFailureReasonIamTrustConflict says "运行角色的信任策略与所需配置不一致。"
+// in the language of msgs.
+func (msgs Messages) MpaFailureReasonIamTrustConflict() string {
+	return Catalog.Format(msgs.locale, "mpaFailureReasonIamTrustConflict", nil)
+}
+
+// MpaFailureReasonIamPolicyConflict says "运行角色的权限策略与所需配置不一致。"
+// in the language the app shows.
+func MpaFailureReasonIamPolicyConflict() string {
+	return In(i18n.Locale()).MpaFailureReasonIamPolicyConflict()
+}
+
+// MpaFailureReasonIamPolicyConflict says "运行角色的权限策略与所需配置不一致。"
+// in the language of msgs.
+func (msgs Messages) MpaFailureReasonIamPolicyConflict() string {
+	return Catalog.Format(msgs.locale, "mpaFailureReasonIamPolicyConflict", nil)
+}
+
+// MpaFailureReasonTosBucketUnavailable says "无法确认所选 TOS 存储桶可用。"
+// in the language the app shows.
+func MpaFailureReasonTosBucketUnavailable() string {
+	return In(i18n.Locale()).MpaFailureReasonTosBucketUnavailable()
+}
+
+// MpaFailureReasonTosBucketUnavailable says "无法确认所选 TOS 存储桶可用。"
+// in the language of msgs.
+func (msgs Messages) MpaFailureReasonTosBucketUnavailable() string {
+	return Catalog.Format(msgs.locale, "mpaFailureReasonTosBucketUnavailable", nil)
+}
+
+// MpaFailureReasonNameCheckUnavailable says "未能完成资源名称占用检查。"
+// in the language the app shows.
+func MpaFailureReasonNameCheckUnavailable() string {
+	return In(i18n.Locale()).MpaFailureReasonNameCheckUnavailable()
+}
+
+// MpaFailureReasonNameCheckUnavailable says "未能完成资源名称占用检查。"
+// in the language of msgs.
+func (msgs Messages) MpaFailureReasonNameCheckUnavailable() string {
+	return Catalog.Format(msgs.locale, "mpaFailureReasonNameCheckUnavailable", nil)
+}
+
+// MpaFailureReasonIamVerification says "运行角色的权限尚未确认就绪。"
+// in the language the app shows.
+func MpaFailureReasonIamVerification() string {
+	return In(i18n.Locale()).MpaFailureReasonIamVerification()
+}
+
+// MpaFailureReasonIamVerification says "运行角色的权限尚未确认就绪。"
+// in the language of msgs.
+func (msgs Messages) MpaFailureReasonIamVerification() string {
+	return Catalog.Format(msgs.locale, "mpaFailureReasonIamVerification", nil)
+}
+
+// MpaFailureReasonModelEndpoints says "模型推理接入点配置无效。"
+// in the language the app shows.
+func MpaFailureReasonModelEndpoints() string {
+	return In(i18n.Locale()).MpaFailureReasonModelEndpoints()
+}
+
+// MpaFailureReasonModelEndpoints says "模型推理接入点配置无效。"
+// in the language of msgs.
+func (msgs Messages) MpaFailureReasonModelEndpoints() string {
+	return Catalog.Format(msgs.locale, "mpaFailureReasonModelEndpoints", nil)
+}
+
+// MpaFailureReasonModelConfiguration says "OpenViking 拒绝了模型调用配置。"
+// in the language the app shows.
+func MpaFailureReasonModelConfiguration() string {
+	return In(i18n.Locale()).MpaFailureReasonModelConfiguration()
+}
+
+// MpaFailureReasonModelConfiguration says "OpenViking 拒绝了模型调用配置。"
+// in the language of msgs.
+func (msgs Messages) MpaFailureReasonModelConfiguration() string {
+	return Catalog.Format(msgs.locale, "mpaFailureReasonModelConfiguration", nil)
+}
+
+// MpaFailureReasonCreationUnconfirmed says "OpenViking 创建结果尚未确认。"
+// in the language the app shows.
+func MpaFailureReasonCreationUnconfirmed() string {
+	return In(i18n.Locale()).MpaFailureReasonCreationUnconfirmed()
+}
+
+// MpaFailureReasonCreationUnconfirmed says "OpenViking 创建结果尚未确认。"
+// in the language of msgs.
+func (msgs Messages) MpaFailureReasonCreationUnconfirmed() string {
+	return Catalog.Format(msgs.locale, "mpaFailureReasonCreationUnconfirmed", nil)
+}
+
+// MpaFailureReasonQuota says "该资源的配额已达到上限。"
+// in the language the app shows.
+func MpaFailureReasonQuota() string { return In(i18n.Locale()).MpaFailureReasonQuota() }
+
+// MpaFailureReasonQuota says "该资源的配额已达到上限。"
+// in the language of msgs.
+func (msgs Messages) MpaFailureReasonQuota() string {
+	return Catalog.Format(msgs.locale, "mpaFailureReasonQuota", nil)
+}
+
+// MpaFailureReasonPermission says "当前凭据没有执行该操作的权限，或凭据已失效。"
+// in the language the app shows.
+func MpaFailureReasonPermission() string { return In(i18n.Locale()).MpaFailureReasonPermission() }
+
+// MpaFailureReasonPermission says "当前凭据没有执行该操作的权限，或凭据已失效。"
+// in the language of msgs.
+func (msgs Messages) MpaFailureReasonPermission() string {
+	return Catalog.Format(msgs.locale, "mpaFailureReasonPermission", nil)
+}
+
+// MpaFailureReasonNameConflict says "资源名称已被占用。"
+// in the language the app shows.
+func MpaFailureReasonNameConflict() string { return In(i18n.Locale()).MpaFailureReasonNameConflict() }
+
+// MpaFailureReasonNameConflict says "资源名称已被占用。"
+// in the language of msgs.
+func (msgs Messages) MpaFailureReasonNameConflict() string {
+	return Catalog.Format(msgs.locale, "mpaFailureReasonNameConflict", nil)
+}
+
+// MpaFailureReasonDatabaseAuthentication says "数据库连接认证失败。"
+// in the language the app shows.
+func MpaFailureReasonDatabaseAuthentication() string {
+	return In(i18n.Locale()).MpaFailureReasonDatabaseAuthentication()
+}
+
+// MpaFailureReasonDatabaseAuthentication says "数据库连接认证失败。"
+// in the language of msgs.
+func (msgs Messages) MpaFailureReasonDatabaseAuthentication() string {
+	return Catalog.Format(msgs.locale, "mpaFailureReasonDatabaseAuthentication", nil)
+}
+
+// MpaFailureReasonDatabasePermission says "当前数据库账号没有执行该操作的权限。"
+// in the language the app shows.
+func MpaFailureReasonDatabasePermission() string {
+	return In(i18n.Locale()).MpaFailureReasonDatabasePermission()
+}
+
+// MpaFailureReasonDatabasePermission says "当前数据库账号没有执行该操作的权限。"
+// in the language of msgs.
+func (msgs Messages) MpaFailureReasonDatabasePermission() string {
+	return Catalog.Format(msgs.locale, "mpaFailureReasonDatabasePermission", nil)
+}
+
+// MpaFailureReasonTimeout says "等待操作完成超时，当前结果尚未确认。"
+// in the language the app shows.
+func MpaFailureReasonTimeout() string { return In(i18n.Locale()).MpaFailureReasonTimeout() }
+
+// MpaFailureReasonTimeout says "等待操作完成超时，当前结果尚未确认。"
+// in the language of msgs.
+func (msgs Messages) MpaFailureReasonTimeout() string {
+	return Catalog.Format(msgs.locale, "mpaFailureReasonTimeout", nil)
+}
+
+// MpaFailureReasonConnection says "无法连接资源服务，当前操作结果尚未确认。"
+// in the language the app shows.
+func MpaFailureReasonConnection() string { return In(i18n.Locale()).MpaFailureReasonConnection() }
+
+// MpaFailureReasonConnection says "无法连接资源服务，当前操作结果尚未确认。"
+// in the language of msgs.
+func (msgs Messages) MpaFailureReasonConnection() string {
+	return Catalog.Format(msgs.locale, "mpaFailureReasonConnection", nil)
+}
+
+// MpaFailureReasonThrottled says "资源服务限制了请求频率。"
+// in the language the app shows.
+func MpaFailureReasonThrottled() string { return In(i18n.Locale()).MpaFailureReasonThrottled() }
+
+// MpaFailureReasonThrottled says "资源服务限制了请求频率。"
+// in the language of msgs.
+func (msgs Messages) MpaFailureReasonThrottled() string {
+	return Catalog.Format(msgs.locale, "mpaFailureReasonThrottled", nil)
+}
+
+// MpaFailureReasonUnavailable says "资源服务暂时不可用。"
+// in the language the app shows.
+func MpaFailureReasonUnavailable() string { return In(i18n.Locale()).MpaFailureReasonUnavailable() }
+
+// MpaFailureReasonUnavailable says "资源服务暂时不可用。"
+// in the language of msgs.
+func (msgs Messages) MpaFailureReasonUnavailable() string {
+	return Catalog.Format(msgs.locale, "mpaFailureReasonUnavailable", nil)
+}
+
+// MpaFailureReasonInvalidRequest says "请求参数或资源配置未通过校验。"
+// in the language the app shows.
+func MpaFailureReasonInvalidRequest() string {
+	return In(i18n.Locale()).MpaFailureReasonInvalidRequest()
+}
+
+// MpaFailureReasonInvalidRequest says "请求参数或资源配置未通过校验。"
+// in the language of msgs.
+func (msgs Messages) MpaFailureReasonInvalidRequest() string {
+	return Catalog.Format(msgs.locale, "mpaFailureReasonInvalidRequest", nil)
+}
+
+// MpaFailureReasonNotFound says "未找到所需资源。"
+// in the language the app shows.
+func MpaFailureReasonNotFound() string { return In(i18n.Locale()).MpaFailureReasonNotFound() }
+
+// MpaFailureReasonNotFound says "未找到所需资源。"
+// in the language of msgs.
+func (msgs Messages) MpaFailureReasonNotFound() string {
+	return Catalog.Format(msgs.locale, "mpaFailureReasonNotFound", nil)
+}
+
+// MpaFailureReasonProviderError says "云资源操作失败，未提供可安全展示的详细原因。"
+// in the language the app shows.
+func MpaFailureReasonProviderError() string { return In(i18n.Locale()).MpaFailureReasonProviderError() }
+
+// MpaFailureReasonProviderError says "云资源操作失败，未提供可安全展示的详细原因。"
+// in the language of msgs.
+func (msgs Messages) MpaFailureReasonProviderError() string {
+	return Catalog.Format(msgs.locale, "mpaFailureReasonProviderError", nil)
+}
+
+// MpaFailureReasonOwnership says "资源归属与当前智能体不一致。"
+// in the language the app shows.
+func MpaFailureReasonOwnership() string { return In(i18n.Locale()).MpaFailureReasonOwnership() }
+
+// MpaFailureReasonOwnership says "资源归属与当前智能体不一致。"
+// in the language of msgs.
+func (msgs Messages) MpaFailureReasonOwnership() string {
+	return Catalog.Format(msgs.locale, "mpaFailureReasonOwnership", nil)
+}
+
+// MpaFailureReasonMetadataPending says "资源归属信息尚未就绪。"
+// in the language the app shows.
+func MpaFailureReasonMetadataPending() string {
+	return In(i18n.Locale()).MpaFailureReasonMetadataPending()
+}
+
+// MpaFailureReasonMetadataPending says "资源归属信息尚未就绪。"
+// in the language of msgs.
+func (msgs Messages) MpaFailureReasonMetadataPending() string {
+	return Catalog.Format(msgs.locale, "mpaFailureReasonMetadataPending", nil)
+}
+
+// MpaFailureReasonMetadataMissing says "缺少所需的资源归属信息。"
+// in the language the app shows.
+func MpaFailureReasonMetadataMissing() string {
+	return In(i18n.Locale()).MpaFailureReasonMetadataMissing()
+}
+
+// MpaFailureReasonMetadataMissing says "缺少所需的资源归属信息。"
+// in the language of msgs.
+func (msgs Messages) MpaFailureReasonMetadataMissing() string {
+	return Catalog.Format(msgs.locale, "mpaFailureReasonMetadataMissing", nil)
+}
+
+// MpaFailureReasonResourceFailed says "云端资源进入失败状态，未返回更详细的原因。"
+// in the language the app shows.
+func MpaFailureReasonResourceFailed() string {
+	return In(i18n.Locale()).MpaFailureReasonResourceFailed()
+}
+
+// MpaFailureReasonResourceFailed says "云端资源进入失败状态，未返回更详细的原因。"
+// in the language of msgs.
+func (msgs Messages) MpaFailureReasonResourceFailed() string {
+	return Catalog.Format(msgs.locale, "mpaFailureReasonResourceFailed", nil)
+}
+
+// MpaFailureReasonConfigurationChanged says "当前配置与已登记的创建配置不一致。"
+// in the language the app shows.
+func MpaFailureReasonConfigurationChanged() string {
+	return In(i18n.Locale()).MpaFailureReasonConfigurationChanged()
+}
+
+// MpaFailureReasonConfigurationChanged says "当前配置与已登记的创建配置不一致。"
+// in the language of msgs.
+func (msgs Messages) MpaFailureReasonConfigurationChanged() string {
+	return Catalog.Format(msgs.locale, "mpaFailureReasonConfigurationChanged", nil)
+}
+
+// MpaFailureReasonDeploymentError says "资源准备未完成，未提供可安全展示的详细原因。"
+// in the language the app shows.
+func MpaFailureReasonDeploymentError() string {
+	return In(i18n.Locale()).MpaFailureReasonDeploymentError()
+}
+
+// MpaFailureReasonDeploymentError says "资源准备未完成，未提供可安全展示的详细原因。"
+// in the language of msgs.
+func (msgs Messages) MpaFailureReasonDeploymentError() string {
+	return Catalog.Format(msgs.locale, "mpaFailureReasonDeploymentError", nil)
+}
+
+// MpaFailureReasonUnknown says "本次创建失败，未提供可安全展示的详细原因。"
+// in the language the app shows.
+func MpaFailureReasonUnknown() string { return In(i18n.Locale()).MpaFailureReasonUnknown() }
+
+// MpaFailureReasonUnknown says "本次创建失败，未提供可安全展示的详细原因。"
+// in the language of msgs.
+func (msgs Messages) MpaFailureReasonUnknown() string {
+	return Catalog.Format(msgs.locale, "mpaFailureReasonUnknown", nil)
+}
+
+// MpaFailureReasonChildExit says "创建进程异常退出，未返回详细原因。"
+// in the language the app shows.
+func MpaFailureReasonChildExit() string { return In(i18n.Locale()).MpaFailureReasonChildExit() }
+
+// MpaFailureReasonChildExit says "创建进程异常退出，未返回详细原因。"
+// in the language of msgs.
+func (msgs Messages) MpaFailureReasonChildExit() string {
+	return Catalog.Format(msgs.locale, "mpaFailureReasonChildExit", nil)
+}
+
+// MpaFailureReasonInterrupted says "创建进程已中断。"
+// in the language the app shows.
+func MpaFailureReasonInterrupted() string { return In(i18n.Locale()).MpaFailureReasonInterrupted() }
+
+// MpaFailureReasonInterrupted says "创建进程已中断。"
+// in the language of msgs.
+func (msgs Messages) MpaFailureReasonInterrupted() string {
+	return Catalog.Format(msgs.locale, "mpaFailureReasonInterrupted", nil)
+}
+
+// MpaFailureReasonProtocolError says "资源服务返回的数据格式不符合预期。"
+// in the language the app shows.
+func MpaFailureReasonProtocolError() string { return In(i18n.Locale()).MpaFailureReasonProtocolError() }
+
+// MpaFailureReasonProtocolError says "资源服务返回的数据格式不符合预期。"
+// in the language of msgs.
+func (msgs Messages) MpaFailureReasonProtocolError() string {
+	return Catalog.Format(msgs.locale, "mpaFailureReasonProtocolError", nil)
+}
+
+// MpaDiagnosticStage says "阶段"
+// in the language the app shows.
+func MpaDiagnosticStage() string { return In(i18n.Locale()).MpaDiagnosticStage() }
+
+// MpaDiagnosticStage says "阶段"
+// in the language of msgs.
+func (msgs Messages) MpaDiagnosticStage() string {
+	return Catalog.Format(msgs.locale, "mpaDiagnosticStage", nil)
+}
+
+// MpaDiagnosticOperation says "操作"
+// in the language the app shows.
+func MpaDiagnosticOperation() string { return In(i18n.Locale()).MpaDiagnosticOperation() }
+
+// MpaDiagnosticOperation says "操作"
+// in the language of msgs.
+func (msgs Messages) MpaDiagnosticOperation() string {
+	return Catalog.Format(msgs.locale, "mpaDiagnosticOperation", nil)
+}
+
+// MpaDeleteCheckFailed says "删除范围检查未完成，请查看错误详情后重新检查。"
+// in the language the app shows.
+func MpaDeleteCheckFailed() string { return In(i18n.Locale()).MpaDeleteCheckFailed() }
+
+// MpaDeleteCheckFailed says "删除范围检查未完成，请查看错误详情后重新检查。"
+// in the language of msgs.
+func (msgs Messages) MpaDeleteCheckFailed() string {
+	return Catalog.Format(msgs.locale, "mpaDeleteCheckFailed", nil)
+}
+
+// MpaDeleteReadSessions says "读取会话列表"
+// in the language the app shows.
+func MpaDeleteReadSessions() string { return In(i18n.Locale()).MpaDeleteReadSessions() }
+
+// MpaDeleteReadSessions says "读取会话列表"
+// in the language of msgs.
+func (msgs Messages) MpaDeleteReadSessions() string {
+	return Catalog.Format(msgs.locale, "mpaDeleteReadSessions", nil)
+}
+
+// MpaDeleteRegistry says "连接资源登记库"
+// in the language the app shows.
+func MpaDeleteRegistry() string { return In(i18n.Locale()).MpaDeleteRegistry() }
+
+// MpaDeleteRegistry says "连接资源登记库"
+// in the language of msgs.
+func (msgs Messages) MpaDeleteRegistry() string {
+	return Catalog.Format(msgs.locale, "mpaDeleteRegistry", nil)
+}
+
+// MpaDeleteReferences says "核对资源引用与归属"
+// in the language the app shows.
+func MpaDeleteReferences() string { return In(i18n.Locale()).MpaDeleteReferences() }
+
+// MpaDeleteReferences says "核对资源引用与归属"
+// in the language of msgs.
+func (msgs Messages) MpaDeleteReferences() string {
+	return Catalog.Format(msgs.locale, "mpaDeleteReferences", nil)
+}
+
+// MpaDeleteInspectResources says "检查受管资源"
+// in the language the app shows.
+func MpaDeleteInspectResources() string { return In(i18n.Locale()).MpaDeleteInspectResources() }
+
+// MpaDeleteInspectResources says "检查受管资源"
+// in the language of msgs.
+func (msgs Messages) MpaDeleteInspectResources() string {
+	return Catalog.Format(msgs.locale, "mpaDeleteInspectResources", nil)
+}
+
+// MpaDeleteBindingConflict says "资源绑定与登记记录不一致，已停止删除。"
+// in the language the app shows.
+func MpaDeleteBindingConflict() string { return In(i18n.Locale()).MpaDeleteBindingConflict() }
+
+// MpaDeleteBindingConflict says "资源绑定与登记记录不一致，已停止删除。"
+// in the language of msgs.
+func (msgs Messages) MpaDeleteBindingConflict() string {
+	return Catalog.Format(msgs.locale, "mpaDeleteBindingConflict", nil)
+}
+
+// MpaDeleteOwnershipConflict says "无法确认资源属于当前 MPA，已停止删除。"
+// in the language the app shows.
+func MpaDeleteOwnershipConflict() string { return In(i18n.Locale()).MpaDeleteOwnershipConflict() }
+
+// MpaDeleteOwnershipConflict says "无法确认资源属于当前 MPA，已停止删除。"
+// in the language of msgs.
+func (msgs Messages) MpaDeleteOwnershipConflict() string {
+	return Catalog.Format(msgs.locale, "mpaDeleteOwnershipConflict", nil)
+}
+
+// MpaDeleteFailureUnknown says "删除检查或清理未完成，未返回进一步的详细原因。"
+// in the language the app shows.
+func MpaDeleteFailureUnknown() string { return In(i18n.Locale()).MpaDeleteFailureUnknown() }
+
+// MpaDeleteFailureUnknown says "删除检查或清理未完成，未返回进一步的详细原因。"
+// in the language of msgs.
+func (msgs Messages) MpaDeleteFailureUnknown() string {
+	return Catalog.Format(msgs.locale, "mpaDeleteFailureUnknown", nil)
+}
+
+// MpaDeleteResourceHost says "资源服务地址"
+// in the language the app shows.
+func MpaDeleteResourceHost() string { return In(i18n.Locale()).MpaDeleteResourceHost() }
+
+// MpaDeleteResourceHost says "资源服务地址"
+// in the language of msgs.
+func (msgs Messages) MpaDeleteResourceHost() string {
+	return Catalog.Format(msgs.locale, "mpaDeleteResourceHost", nil)
+}
+
+// MpaDeleteErrorSource says "错误位置"
+// in the language the app shows.
+func MpaDeleteErrorSource() string { return In(i18n.Locale()).MpaDeleteErrorSource() }
+
+// MpaDeleteErrorSource says "错误位置"
+// in the language of msgs.
+func (msgs Messages) MpaDeleteErrorSource() string {
+	return Catalog.Format(msgs.locale, "mpaDeleteErrorSource", nil)
 }

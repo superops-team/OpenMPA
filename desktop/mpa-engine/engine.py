@@ -8,6 +8,8 @@ from __future__ import annotations
 
 import asyncio
 import contextlib
+import copy
+from contextvars import ContextVar
 import hashlib
 import json
 import logging
@@ -16,6 +18,7 @@ import re
 import sqlite3
 import sys
 import time
+import traceback
 from pathlib import Path
 from typing import Any
 from uuid import UUID
@@ -27,19 +30,169 @@ from frontend.server.mpa.runtime_client import MpaRuntimeClient
 from frontend.server.mpa_creation import mount_mpa_creation_routes
 from veadk.integrations.mpa.managed.credentials import Credentials
 from veadk.integrations.mpa.managed.deletion import owned_resource_cleanup
-from veadk.integrations.mpa.managed.diagnostics import classify_error
+from veadk.integrations.mpa.managed.diagnostics import classify_error, exception_details, failure_identifiers
 from veadk.integrations.mpa.managed.runtime import RuntimeCloud, env_map
 from veadk.integrations.mpa.managed.tasks import CreationTasks
 from veadk.integrations.mpa.managed.tasks import owner_key
+from veadk.integrations.mpa.managed.tasks import STAGES
 
 REGIONS = {"cn-beijing", "cn-shanghai"}
 ACTIVE = {"running", "queued", "pending", "starting", "cancelling", "stopping", "pausing", "paused", "resuming"}
 IDENTIFIER = re.compile(r"[A-Za-z0-9_-]{1,128}\Z")
+_delete_phase = ContextVar("desktop_delete_phase", default=("checking", "preview_delete"))
+PREVIEW_TIMEOUT = 60
 
 
 class LifecycleError(Exception):
-    def __init__(self, code: str, status: int = 409):
+    def __init__(self, code: str, status: int = 409, diagnostic=None):
         self.code, self.status = code, status
+        self.diagnostic = diagnostic
+
+
+def deletion_diagnostic(error, stage, operation):
+    cause = error
+    saved = None
+    for _ in range(8):
+        if cause is None: break
+        saved = getattr(cause, "_openmpa_diagnostic", None)
+        if saved: break
+        cause = cause.__cause__
+    if saved:
+        return {**saved, **({"category": "timeout"} if isinstance(error, TimeoutError) else {})}
+    details = exception_details(error)
+    code, request_id = failure_identifiers(error)
+    if code: details["errorCode"] = code
+    if request_id: details["requestId"] = request_id
+    status = getattr(error, "status_code", None)
+    if type(status) is int and 100 <= status <= 599: details["httpStatus"] = status
+    category = classify_error(error)
+    if details.get("httpStatus") in (401, 403): category = "permission"
+    elif details.get("httpStatus") == 404: category = "not_found"
+    elif details.get("httpStatus") == 429: category = "throttled"
+    elif details.get("httpStatus") in (500, 502, 503, 504): category = "unavailable"
+    diagnostic = dict(stage=stage, operation=operation, category=category,
+                      attempt=1, outcome="failed", **details)
+    reason = getattr(error, "reason", "")
+    if reason in {"runtime_binding_conflict", "active_image_update", "active_deployment",
+                  "agent_binding_conflict", "resource_binding_conflict", "ownership_conflict"}:
+        diagnostic.update(stage=getattr(error, "stage", stage), reason=reason, category="ownership")
+    frames = traceback.extract_tb(error.__traceback__)
+    if frames:
+        frame = frames[-1]
+        source = f"{Path(frame.filename).name}:{frame.lineno}:{frame.name}"
+        if re.fullmatch(r"[A-Za-z0-9_.-]+\.py:[0-9]{1,6}:[A-Za-z0-9_<>]{1,80}", source):
+            diagnostic["source"] = source
+    return diagnostic
+
+
+@contextlib.contextmanager
+def deletion_step(stage, operation):
+    _delete_phase.set((stage, operation))
+    try:
+        yield
+    except (Exception, asyncio.CancelledError) as error:
+        error.__dict__.setdefault("_openmpa_diagnostic", deletion_diagnostic(error, stage, operation))
+        raise
+
+
+class DiagnosticProxy:
+    """Keep the original cleanup implementation, adding only operation context."""
+    def __init__(self, target, methods):
+        self.target, self.methods = target, methods
+
+    def __getattr__(self, name):
+        value = getattr(self.target, name)
+        if name not in self.methods:
+            return value
+        async def traced(*args, **kwargs):
+            with deletion_step(*self.methods[name]):
+                return await value(*args, **kwargs)
+        return traced
+
+
+class DeletionCloud(RuntimeCloud):
+    """One verified identity and directory snapshot per deletion check.
+
+    A new instance is created for each preview and accepted deletion. The
+    directory is explicitly invalidated before the destructive cleanup plan.
+    """
+    def __init__(self, **kwargs):
+        super().__init__(cache_identity=True, **kwargs)
+        self._directory = None
+
+    async def list_runtimes(self):
+        if self._directory is None:
+            self._directory = await super().list_runtimes()
+        return copy.deepcopy(self._directory)
+
+    def invalidate_directory(self):
+        self._directory = None
+
+
+@contextlib.asynccontextmanager
+async def diagnostic_cleanup(**kwargs):
+    kwargs["cloud"] = DiagnosticProxy(kwargs["cloud"], {
+        "account_id": ("registry", "get_caller_identity"),
+        "list_runtimes": ("references", "list_runtimes"),
+        "get_skill_space": ("skill_space", "get_skill_space"),
+    })
+    async with owned_resource_cleanup(**kwargs) as cleanup:
+        cleanup.worker = DiagnosticProxy(cleanup.worker, {
+            "get": ("worker_template", "get_worker"),
+            "delete": ("worker_template", "delete_worker"),
+        })
+        yield cleanup
+
+
+class DesktopCreationTasks(CreationTasks):
+    """Persist observed stages in the same transaction as Studio's supervisor.
+
+    SQL triggers also cover the supervisor's writes and fast stages between UI
+    polls. Retrying the original task starts a fresh stage journal.
+    """
+    def __init__(self, path):
+        super().__init__(path)
+        with self.db() as db:
+            db.executescript("""
+                CREATE TABLE IF NOT EXISTS desktop_creation_stages (
+                    id INTEGER PRIMARY KEY, task_id TEXT NOT NULL,
+                    stage TEXT NOT NULL, UNIQUE(task_id, stage)
+                );
+                CREATE TRIGGER IF NOT EXISTS desktop_creation_stage_insert
+                AFTER INSERT ON tasks BEGIN
+                    INSERT OR IGNORE INTO desktop_creation_stages(task_id,stage)
+                        VALUES(NEW.id,NEW.stage);
+                END;
+                CREATE TRIGGER IF NOT EXISTS desktop_creation_stage_update
+                AFTER UPDATE OF stage ON tasks BEGIN
+                    DELETE FROM desktop_creation_stages
+                        WHERE task_id=NEW.id AND NEW.stage='queued';
+                    INSERT OR IGNORE INTO desktop_creation_stages(task_id,stage)
+                        VALUES(NEW.id,NEW.stage);
+                END;
+            """)
+
+    def get(self, owner, task_id):
+        value = super().get(owner, task_id)
+        with self.db() as db:
+            # A stage can change between the superclass read and this query.
+            # Read status and history from one snapshot so a later stage is
+            # never shown as completed beside an older running stage.
+            db.execute("BEGIN")
+            current = db.execute(
+                "SELECT state,stage,result,error FROM tasks WHERE id=? AND owner=?",
+                (task_id, owner),
+            ).fetchone()
+            value.update(state=current["state"], stage=current["stage"],
+                         result=json.loads(current["result"]), error=current["error"])
+            rows = db.execute(
+                "SELECT stage FROM desktop_creation_stages WHERE task_id=? ORDER BY id",
+                (task_id,),
+            ).fetchall()
+        # Old journals have no history. Do not invent completed stages for them.
+        if rows:
+            value["visitedStages"] = [row[0] for row in rows if row[0] in STAGES]
+        return value
 
 
 class Engine:
@@ -49,18 +202,19 @@ class Engine:
         self.directory = directory
         directory.mkdir(mode=0o700, parents=True, exist_ok=True)
         os.chmod(directory, 0o700)
-        self.creations = creations or CreationTasks(directory / "creations.sqlite3")
+        self.creations = creations or DesktopCreationTasks(directory / "creations.sqlite3")
         self.app = FastAPI()
         mount_mpa_creation_routes(self.app, owner=lambda _request: owner, service=self.creations)
         self.http = httpx.AsyncClient(transport=httpx.ASGITransport(app=self.app), base_url="http://engine")
-        self.cloud_factory = cloud_factory or (lambda region: RuntimeCloud(region=region, credential_file=""))
+        self.cloud_factory = cloud_factory or (lambda region: DeletionCloud(region=region, credential_file=""))
         self.runtime = runtime_client or MpaRuntimeClient()
-        self.cleanup = cleanup or owned_resource_cleanup
+        self.cleanup = cleanup or diagnostic_cleanup
         self.deleting: dict[str, asyncio.Task] = {}
         self.intent_lock = asyncio.Lock()
         self.dbpath = directory / "deletions.sqlite3"
         with self.db() as db:
             db.execute("CREATE TABLE IF NOT EXISTS deletions (id TEXT PRIMARY KEY, payload TEXT NOT NULL, view TEXT NOT NULL)")
+            db.execute("CREATE TABLE IF NOT EXISTS diagnostics (id INTEGER PRIMARY KEY, operation TEXT NOT NULL, created REAL NOT NULL, diagnostic TEXT NOT NULL)")
             for row in db.execute("SELECT id,view FROM deletions").fetchall():
                 view = json.loads(row[1])
                 if view["state"] == "running":
@@ -126,9 +280,12 @@ class Engine:
         if not IDENTIFIER.fullmatch(runtime_id) or region not in REGIONS:
             raise LifecycleError("invalidInput", 400)
         cloud = self.cloud_factory(region)
-        if await cloud.account_id() != self.account:
+        with deletion_step("checking", "get_caller_identity"):
+            account = await cloud.account_id()
+        if account != self.account:
             raise LifecycleError("scopeMismatch", 403)
-        record = await cloud.get(runtime_id)
+        with deletion_step("checking", "get_runtime"):
+            record = await cloud.get(runtime_id)
         tags = {tag["Key"]: tag.get("Value", "") for tag in record.get("Tags", [])}
         values = env_map(record)
         agent_id = values.get("MPA_AGENT_ID", "")
@@ -148,11 +305,13 @@ class Engine:
         key = auth.get("KeyAuth", {}).get("ApiKey", "")
         if not key:
             raise LifecycleError("runtimeCredentialUnavailable")
-        matches = [item for item in await cloud.list_runtimes()
-                   if env_map(item).get("MPA_AGENT_ID") == agent_id]
+        with deletion_step("checking", "list_runtimes"):
+            matches = [item for item in await cloud.list_runtimes()
+                       if env_map(item).get("MPA_AGENT_ID") == agent_id]
         if len(matches) != 1 or matches[0].get("RuntimeId") != runtime_id:
             raise LifecycleError("ownershipConflict")
-        sessions = await self.runtime.list_sessions(endpoint=endpoint, bearer_token=key, include_a2a=True, user_id=self.owner)
+        with deletion_step("runtime_sessions", "list_sessions"):
+            sessions = await self.runtime.list_sessions(endpoint=endpoint, bearer_token=key, include_a2a=True, user_id=self.owner)
         return cloud, record, agent_id, endpoint, key, sessions
 
     def preview_value(self, body, record, agent_id, sessions, resources):
@@ -173,10 +332,32 @@ class Engine:
         return payload
 
     async def preview(self, body):
-        async with asyncio.timeout(25):
-            cloud, record, agent_id, _, _, sessions = await self.target(body)
-            async with self.cleanup(runtime=record, agent_id=agent_id, region=body["region"], cloud=cloud) as cleanup:
-                return self.preview_value(body, record, agent_id, sessions, await cleanup.preview())
+        token = _delete_phase.set(("checking", "preview_delete"))
+        registry_host = ""
+        try:
+            async with asyncio.timeout(PREVIEW_TIMEOUT):
+                cloud, record, agent_id, _, _, sessions = await self.target(body)
+                registry_host = urlsplit(env_map(record).get("SHARED_APIG_DATABASE_URL", "")).hostname or ""
+                async with contextlib.AsyncExitStack() as stack:
+                    with deletion_step("registry", "open_registry"):
+                        cleanup = await stack.enter_async_context(self.cleanup(runtime=record, agent_id=agent_id, region=body["region"], cloud=cloud))
+                    with deletion_step("managed_resources", "inspect_resources"):
+                        resources = await cleanup.preview()
+                with deletion_step("checking", "snapshot_delete"):
+                    return self.preview_value(body, record, agent_id, sessions, resources)
+        except Exception as error:
+            diagnostic = deletion_diagnostic(error, *_delete_phase.get())
+            if registry_host and len(registry_host) <= 253 and re.fullmatch(r"[A-Za-z0-9.-]+", registry_host):
+                diagnostic["resourceHost"] = registry_host
+            with self.db() as db:
+                db.execute("INSERT INTO diagnostics(operation,created,diagnostic) VALUES(?,?,?)", ("previewDelete", time.time(), json.dumps(diagnostic)))
+                db.execute("DELETE FROM diagnostics WHERE id NOT IN (SELECT id FROM diagnostics ORDER BY id DESC LIMIT 100)")
+            if isinstance(error, LifecycleError):
+                error.diagnostic = diagnostic
+                raise
+            raise LifecycleError("deletePreviewFailed", diagnostic.get("httpStatus", 503), diagnostic) from None
+        finally:
+            _delete_phase.reset(token)
 
     def save_delete(self, operation_id, payload, view):
         with self.db() as db:
@@ -212,6 +393,7 @@ class Engine:
 
     async def run_delete(self, body, view):
         def stage(value):
+            _delete_phase.set((value, value))
             view.update(stage=value, updatedAt=time.time())
             self.save_delete(body["operationId"], body, view)
         try:
@@ -223,7 +405,8 @@ class Engine:
         except Exception as error:
             category = classify_error(error)
             view.update(state="failed" if isinstance(error, LifecycleError) else "unknown",
-                        error=error.code if isinstance(error, LifecycleError) else category if IDENTIFIER.fullmatch(category) else "outcomeUnknown")
+                        error=error.code if isinstance(error, LifecycleError) else category if IDENTIFIER.fullmatch(category) else "outcomeUnknown",
+                        latestDiagnostic=deletion_diagnostic(error, *_delete_phase.get()))
         finally:
             view["updatedAt"] = time.time()
             self.save_delete(body["operationId"], body, view)
@@ -241,6 +424,8 @@ class Engine:
                     raise LifecycleError("invalidResponse")
                 await self.runtime.delete_session(endpoint=endpoint, session_id=session_id, bearer_token=key, user_id=self.owner)
             stage("managed_resources")
+            if isinstance(cloud, DeletionCloud):
+                cloud.invalidate_directory()
             await cleanup.delete_resources()
             stage("agentkit_runtime")
             from agentkit.sdk.runtime.types import DeleteRuntimeRequest
@@ -301,7 +486,7 @@ async def serve():
             value = await engine.dispatch(request["operation"], request.get("body", {}))
             emit({"id": request["id"], "ok": True, "value": value})
         except LifecycleError as error:
-            emit({"id": request["id"], "ok": False, "error": {"code": error.code, "httpStatus": error.status}})
+            emit({"id": request["id"], "ok": False, "error": {"code": error.code, "httpStatus": error.status, "diagnostic": error.diagnostic}})
         except Exception:
             emit({"id": request.get("id", ""), "ok": False, "error": {"code": "lifecycleUnavailable", "httpStatus": 0}})
 

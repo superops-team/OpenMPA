@@ -148,7 +148,11 @@ func (s *Service) call(ctx context.Context, epoch uint64, region, operation stri
 	if failure != nil {
 		return failure
 	}
-	ctx, cancel := context.WithTimeout(ctx, 60*time.Second)
+	requestTimeout := 60 * time.Second
+	if operation == "previewDelete" || operation == "delete" {
+		requestTimeout = 90 * time.Second
+	}
+	ctx, cancel := context.WithTimeout(ctx, requestTimeout)
 	defer cancel()
 	failure = process.call(ctx, operation, body, output)
 	if s.cloud.Epoch() != epoch {
