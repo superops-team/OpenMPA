@@ -3,6 +3,34 @@ import { act, create, type ReactTestRenderer } from 'react-test-renderer';
 import { expect, it, vi } from 'vitest';
 import { DesktopSchedules } from '../src/client/desktop/Schedules';
 import type { DesktopServices } from '../src/client/desktop/models';
+
+it('prompts for Runtime login before loading schedules when business identity is missing', async () => {
+  vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true);
+  const list = vi.fn(async () => []);
+  const services = { schedules: { list } } as unknown as DesktopServices;
+  let renderer!: ReactTestRenderer;
+  await act(async () => {
+    renderer = create(
+      <DesktopSchedules
+        services={services}
+        connection={{
+          epoch: 4,
+          runtimeId: 'r',
+          scope: 'scope',
+          status: 'connected',
+          businessIdentity: 'missing',
+        }}
+        sessions={[]}
+      />,
+    );
+  });
+  expect(list).not.toHaveBeenCalled();
+  expect(JSON.stringify(renderer.toJSON())).toContain(
+    messages.businessIdentityRequired(),
+  );
+  await act(async () => renderer.unmount());
+});
+
 it('shows the accepted server run immediately while historical indexing is still empty', async () => {
   vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true);
   const task = {

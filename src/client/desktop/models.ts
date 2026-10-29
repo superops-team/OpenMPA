@@ -23,6 +23,7 @@ export interface ConnectionVM {
   runtimeImage?: string;
   status: string;
   userId?: string;
+  businessIdentity?: 'explicit' | 'localTest' | 'missing' | 'unknown';
 }
 export interface SessionVM {
   id: string;

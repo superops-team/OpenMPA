@@ -56,6 +56,15 @@ const connectionVM = (state: ConnectionState): ConnectionVM => ({
         ? messages.runtimeKeyStatus()
         : messages.authenticationRequired()
     : 'Disconnected',
+  businessIdentity: !state.connected
+    ? 'unknown'
+    : state.hasBusinessIdentity
+      ? state.scope.includes('/business/test/')
+        ? 'localTest'
+        : 'explicit'
+      : state.hasCredential
+        ? 'missing'
+        : 'unknown',
 });
 const pageVM = (page: NativePage): Page => ({ ...page, sourceThreadId: null });
 const sessionVM = (session: SessionSummary) => ({

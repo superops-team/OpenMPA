@@ -13,6 +13,7 @@ import type {
   ScheduleVM,
   SessionVM,
 } from './models';
+import { ScheduleRunHistory } from './ScheduleRunHistory';
 export function DesktopSchedules({
   services,
   connection,
@@ -48,35 +49,22 @@ export function DesktopSchedules({
   };
   const typeLabel = (type: string) =>
     Object.hasOwn(typeLabels, type) ? typeLabels[type] : type;
-  const statusLabel = (status: string) => {
-    const labels: Record<string, string> = {
-      queued: m.scheduleQueued(),
-      pending: m.pagePending(),
-      running: m.desktopRunning(),
-      succeeded: m.desktopSuccess(),
-      success: m.desktopSuccess(),
-      completed: m.pageCompleted(),
-      failed: m.desktopFailed(),
-      cancelled: m.pageCancelled(),
-      canceled: m.pageCancelled(),
-    };
-    const key = status.toLowerCase();
-    return Object.hasOwn(labels, key) ? labels[key] : status;
-  };
   const [busy, setBusy] = useState(false);
   const epoch = useRef(connection?.epoch);
   epoch.current = connection?.epoch;
+  const identityMissing = connection?.businessIdentity === 'missing';
   const refresh = async () => {
-    if (!connection || !services.schedules) return;
+    if (!connection || !services.schedules || identityMissing) return;
     const next = await services.schedules.list(connection.epoch);
     if (epoch.current === connection.epoch) setTasks(next);
   };
   useEffect(() => {
     void refresh().catch((error: unknown) =>
       setError(
-        error instanceof Error
-          ? error.message
-          : localized((m) => m.desktopCouldNotLoadSchedules()),
+        errorMessage(
+          error,
+          localized((m) => m.desktopCouldNotLoadSchedules()),
+        ),
       ),
     );
   }, [services, connection?.epoch]);
@@ -107,7 +95,7 @@ export function DesktopSchedules({
         </div>
         <button
           className="primary"
-          disabled={!connection || !services.schedules}
+          disabled={!connection || !services.schedules || identityMissing}
           onClick={() =>
             setDraft({
               id: '',
@@ -134,10 +122,14 @@ export function DesktopSchedules({
           {notice}
         </div>
       )}
-      {!services.schedules || !connection ? (
+      {!services.schedules || !connection || identityMissing ? (
         <div className="setup-card">
           <Clock3 size={24} />
-          <p>{m.desktopConnectARuntimeWithAVerifiedScheduledTaskIdentity()}</p>
+          <p>
+            {identityMissing
+              ? m.businessIdentityRequired()
+              : m.desktopConnectARuntimeWithAVerifiedScheduledTaskIdentity()}
+          </p>
         </div>
       ) : (
         <>
@@ -300,59 +292,28 @@ export function DesktopSchedules({
               <Trash2 size={14} /> {m.delete()}
             </button>
           </div>
-          <p>
-            {detail.count === undefined
-              ? m.scheduleCountUnavailable()
-              : `${detail.count} runs`}
-          </p>
-          <p>
-            {detail.runs.length} {m.desktopRunsShown()}
-            {detail.hasMore === undefined
-              ? ' · History pagination metadata unavailable'
-              : detail.hasMore
-                ? ' · More available'
-                : ' · History page complete'}
-          </p>
-          {detail.hasMore === true && typeof detail.nextOffset === 'number' && (
-            <button
-              className="text-button"
-              disabled={busy}
-              onClick={() =>
-                void action(async () => {
-                  const page = await services.schedules!.runs(
-                    connection.epoch,
-                    detail.task.id,
-                    detail.nextOffset!,
-                  );
-                  if (epoch.current === connection.epoch)
-                    setDetail({
-                      ...detail,
-                      ...page,
-                      runs: [...detail.runs, ...page.runs],
-                    });
-                })
-              }
-            >
-              {m.desktopLoadMoreHistory()}
-            </button>
-          )}
-          {detail.runs.map((run) => (
-            <article className="task-event" key={run.id}>
-              <strong>{statusLabel(run.status)}</strong> · {run.startedAt}
-              <p>
-                {[
-                  run.sessionId ? m.runSessionLabel(run.sessionId) : '',
-                  run.invocationId
-                    ? m.runInvocationLabel(run.invocationId)
-                    : '',
-                  run.output || '',
-                ]
-                  .filter(Boolean)
-                  .join(' · ')}
-              </p>
-              {run.error && <p role="alert">{run.error}</p>}
-            </article>
-          ))}
+          <ScheduleRunHistory
+            count={detail.count}
+            hasMore={detail.hasMore}
+            nextOffset={detail.nextOffset}
+            runs={detail.runs}
+            busy={busy}
+            onLoadMore={(offset) =>
+              void action(async () => {
+                const page = await services.schedules!.runs(
+                  connection.epoch,
+                  detail.task.id,
+                  offset,
+                );
+                if (epoch.current === connection.epoch)
+                  setDetail({
+                    ...detail,
+                    ...page,
+                    runs: [...detail.runs, ...page.runs],
+                  });
+              })
+            }
+          />
         </section>
       )}
       {draft && connection && services.schedules && (
