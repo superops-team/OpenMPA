@@ -140,11 +140,13 @@ New UI code must use semantic tokens and the local primitives in `src/client/ui/
 - Use the local `Button`, `IconButton`, `Disclosure`, `StatusRow`, `CodeBlock`, `MarkdownTable` and `ComposerShell` primitives before building a new variant.
 - Primitives depend only on React, Lucide and generated CSS tokens. They do not read Runtime, Session, Trace, locale stores or business context.
 - Business components own data and state. Primitives own semantics, geometry and visual states.
-- Turn process and Trace rows use visible text plus icons for state. Color is never the only signal.
+- Turn process and Trace rows show status text and measured duration without a redundant status icon. Missing timing stays unknown. Color is never the only signal.
 - High-frequency interactions use color and opacity transitions of 150ms or less. Press feedback is 120ms and respects reduced motion.
 - Full-width disclosure rows never use scale press feedback. Their content changes immediately; only the chevron may use the 150ms state transition, and keyboard or reduced-motion input changes it instantly.
 - Multiline action rows use the shared content-sized Button role and clamp supporting copy to two lines. They never override a fixed-height Button locally.
-- Peer navigation, tabs and frequently used view switches do not slide or animate layout. Occasional overlays may enter with the shared 180ms opacity and scale transition.
+- Peer navigation, tabs and frequently used view switches do not slide or animate layout. Occasional dialogs may enter with the shared 180ms opacity transition; their geometry stays fixed while content loads.
+- Assistant creation and settings share the composer's searchable model selector. Search inputs draw one focus border on their wrapper; the inner input has no border, outline or shadow. Buttons retain keyboard focus outlines.
+- The composer has one input surface and a neutral context strip inset by 16px. Its outer layout container has no background, border or shadow.
 - Motion uses explicit `transform` and `opacity` properties. Do not animate disclosure height, inherited CSS variables, large shadows or unspecified `all` properties.
 - Theme changes suppress transitions for one frame so the application does not smear between palettes.
 - Native controls use the same generated role values. High contrast strengthens native text and borders; reduced motion suppresses press transitions.

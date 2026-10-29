@@ -39,6 +39,9 @@ it('keeps the scrollbar in the outer chat viewport and reserves a reading gutter
   expect(css).toMatch(
     /\.desktop-app \.chat-composer[^{]*\{[^}]*max-width:\s*var\(--layout-reading-column\);/s,
   );
+  expect(css).toMatch(
+    /\.desktop-app \.chat-bubble\.user a[\s\S]*color:\s*var\(--color-link\);/s,
+  );
   const tokens = JSON.parse(
     readFileSync(
       new URL('../design/react-desktop-v2.tokens.json', import.meta.url),

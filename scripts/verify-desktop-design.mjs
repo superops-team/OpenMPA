@@ -9,6 +9,8 @@ import { execFileSync } from 'node:child_process';
 import { existsSync, readFileSync } from 'node:fs';
 import { installDesktopFixture } from './desktop-design-fixture.mjs';
 import { verifyDesktopInteractions } from './verify-desktop-interactions.mjs';
+import { verifyRuntimeSelection } from './verify-runtime-selection.mjs';
+import { verifyChatInteractions } from './verify-chat-interactions.mjs';
 
 const origin = process.argv[2] || 'http://127.0.0.1:4173';
 assert.equal(
@@ -35,6 +37,9 @@ const files = execFileSync(
     'scripts/verify-desktop-design.mjs',
     'scripts/verify-desktop-interactions.mjs',
     'scripts/desktop-design-fixture.mjs',
+    'scripts/verify-runtime-selection.mjs',
+    'scripts/verify-chat-interactions.mjs',
+    'scripts/chat-interaction-fixture.mjs',
   ],
   { encoding: 'utf8' },
 )
@@ -57,6 +62,8 @@ page.on('pageerror', (error) => errors.push(error.stack || error.message));
 const results = [];
 let assistantDialog;
 let visualFeedback;
+let runtimeSelection;
+let chatInteractions;
 try {
   await page.goto(origin);
   await page.waitForFunction(
@@ -104,7 +111,7 @@ try {
       if (journey.name === 'channels')
         await page
           .getByRole('heading', {
-            name: 'Channels and templates.',
+            name: 'Message channels',
             exact: true,
           })
           .waitFor();
@@ -126,6 +133,7 @@ try {
       );
       for (const width of [1280, 768, 320]) {
         await page.setViewportSize({ width, height: 900 });
+        await page.mouse.move(0, 0);
         await page.evaluate(
           () =>
             new Promise((resolve) =>
@@ -137,13 +145,17 @@ try {
           viewport: innerWidth,
           width: document.documentElement.scrollWidth,
           body: document.body.scrollWidth,
-          main: document.querySelector('main')?.getBoundingClientRect().width,
+          main: [...document.querySelectorAll('main')]
+            .find((element) => element.getBoundingClientRect().width > 0)
+            ?.getBoundingClientRect().width,
           primary: [
             ...document.querySelectorAll('button.primary:not(:disabled)'),
-          ].map((element) => ({
-            text: element.textContent.trim(),
-            background: getComputedStyle(element).backgroundColor,
-          })),
+          ]
+            .filter((element) => element.getClientRects().length > 0)
+            .map((element) => ({
+              text: element.textContent.trim(),
+              background: getComputedStyle(element).backgroundColor,
+            })),
           expectedPrimary: (() => {
             const value = getComputedStyle(document.documentElement)
               .getPropertyValue('--color-primary')
@@ -194,6 +206,16 @@ try {
     output,
     errors,
   }));
+  runtimeSelection = await verifyRuntimeSelection({
+    browser,
+    origin,
+    output: resolve(output, 'runtime-selection'),
+  });
+  chatInteractions = await verifyChatInteractions({
+    browser,
+    origin,
+    output: resolve(output, 'chat-interactions'),
+  });
 } catch (error) {
   errors.push(error.message);
 } finally {
@@ -207,6 +229,8 @@ try {
     results,
     assistantDialog,
     visualFeedback,
+    runtimeSelection,
+    chatInteractions,
     errors,
     missing: [...new Set(missing)],
   };

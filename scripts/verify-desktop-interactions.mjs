@@ -85,7 +85,10 @@ export async function verifyDesktopInteractions({
       return { x: rect.x, y: rect.y, width: rect.width, height: rect.height };
     });
   const beforeDialog = await chatRect();
-  const chatLauncher = page.getByRole('button', { name: 'Bot settings' });
+  const chatLauncher = page.getByRole('button', {
+    name: 'Assistant settings',
+    exact: true,
+  });
   await chatLauncher.click();
   const dialog = page.getByRole('dialog', { name: 'Assistant settings' });
   await dialog.waitFor();
@@ -241,7 +244,9 @@ export async function verifyDesktopInteractions({
     globalThis.__designNavigate('selectSession', 'session-design'),
   );
   await narrowPage.getByText('Review complete', { exact: true }).waitFor();
-  await narrowPage.getByRole('button', { name: 'Bot settings' }).click();
+  await narrowPage
+    .getByRole('button', { name: 'Assistant settings', exact: true })
+    .click();
   const narrowDialogLocator = narrowPage.getByRole('dialog', {
     name: 'Assistant settings',
   });
@@ -345,7 +350,9 @@ export async function verifyDesktopInteractions({
     path: resolve(output, disclosureFeedbackImage),
   });
   await feedbackPage.mouse.up();
-  await feedbackPage.getByRole('button', { name: 'Bot settings' }).click();
+  await feedbackPage
+    .getByRole('button', { name: 'Assistant settings', exact: true })
+    .click();
   await feedbackPage.getByRole('tab', { name: 'Skills' }).click();
   await feedbackPage
     .getByRole('textbox', { name: 'Import skill text' })
@@ -356,7 +363,7 @@ export async function verifyDesktopInteractions({
     path: resolve(output, assistantFeedbackImage),
   });
   await feedbackPage
-    .getByRole('button', { name: 'Close assistant settings' })
+    .getByRole('button', { name: 'Dismiss', exact: true })
     .click();
   await feedbackPage.evaluate(() =>
     globalThis.__designNavigate('selectSettingsSection', 'Runtime'),
@@ -402,7 +409,7 @@ export async function verifyDesktopInteractions({
     path: resolve(output, runtimeAlignmentImage),
   });
   await feedbackPage.close();
-  await page.getByRole('button', { name: 'Close assistant settings' }).click();
+  await page.getByRole('button', { name: 'Dismiss', exact: true }).click();
   await dialog.waitFor({ state: 'detached' });
   assert.deepEqual(
     await chatRect(),
@@ -420,14 +427,16 @@ export async function verifyDesktopInteractions({
     globalThis.__designNavigate('selectSettingsSection', 'Assistant'),
   );
   await page.getByRole('heading', { name: 'Assistant', exact: true }).waitFor();
-  await page.getByRole('button', { name: 'Open assistant settings' }).click();
+  await page
+    .getByRole('button', { name: 'Assistant settings', exact: true })
+    .click();
   await dialog.waitFor();
   assert.equal(
     await page.locator('body > .ui-modal-layer').count(),
     1,
     'The Settings launcher must reuse the body-portal dialog',
   );
-  await page.getByRole('button', { name: 'Close assistant settings' }).click();
+  await page.getByRole('button', { name: 'Dismiss', exact: true }).click();
   await dialog.waitFor({ state: 'detached' });
   const assistantDialog = {
     beforeDialog,

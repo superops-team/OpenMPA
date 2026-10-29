@@ -1,7 +1,8 @@
 /* Resource management has its own compact layout; generic form grids must not stretch it. */
 .template-app.desktop-app .resource-page {
   display: block;
-  width: min(100%, 1080px);
+  width: min(100%, var(--layout-fixture-column));
+  max-width: var(--layout-fixture-column);
   margin-inline: auto;
   padding: var(--space-6) var(--space-5);
 }
@@ -133,10 +134,12 @@
   gap: var(--space-2);
   flex: none;
   width: auto;
-  height: var(--control-input);
-  padding: var(--space-2) var(--space-3);
+  height: var(--control-md);
+  min-height: var(--control-md);
+  box-sizing: border-box;
+  padding: 0 var(--space-3);
   border: 1px solid var(--color-input-border);
-  border-radius: var(--radius-lg);
+  border-radius: var(--radius-md);
   background: var(--color-card);
   color: var(--color-foreground);
   font-size: var(--text-ui-sm);
@@ -144,8 +147,17 @@
   cursor: pointer;
 }
 .template-app.desktop-app .resource-icon-button {
-  width: var(--control-input);
+  width: var(--control-md);
   padding: 0;
+}
+/* Toolbar actions align with the adjacent search input. */
+.template-app.desktop-app
+  .resource-toolbar-actions
+  > :is(.resource-icon-button, .resource-upload-button) {
+  height: var(--control-input);
+}
+.template-app.desktop-app .resource-toolbar-actions > .resource-icon-button {
+  width: var(--control-input);
 }
 .template-app.desktop-app .resource-page-button.is-danger {
   color: var(--color-destructive);
@@ -165,7 +177,8 @@
   background: var(--color-surface-hover);
 }
 .template-app.desktop-app .resource-upload-button:hover:not(:disabled) {
-  filter: brightness(0.96);
+  border-color: var(--color-primary-hover);
+  background: var(--color-primary-hover);
 }
 .template-app.desktop-app
   :is(
@@ -174,7 +187,10 @@
     .resource-page-button,
     .resource-use-button
   ):disabled {
-  opacity: 0.45;
+  border-color: var(--color-disabled);
+  background: var(--color-disabled);
+  color: var(--color-disabled-foreground);
+  opacity: 1;
   cursor: not-allowed;
 }
 .resource-space-summary {
@@ -374,11 +390,22 @@
   display: grid;
   gap: var(--space-1);
 }
+.skill-upload-status.is-published {
+  background: var(--color-success-surface);
+  color: var(--color-success-surface-foreground);
+}
+.skill-upload-status.is-processing {
+  background: var(--color-progress-surface);
+  color: var(--color-progress-surface-foreground);
+}
+.skill-upload-status:is(.is-published, .is-processing) code {
+  color: inherit;
+}
 .skill-upload-success {
   display: inline-flex;
   align-items: center;
   gap: var(--space-2);
-  color: var(--color-focus);
+  color: var(--color-success);
   font-size: var(--text-ui-sm);
 }
 .skill-upload-error {
@@ -406,6 +433,7 @@
     align-items: stretch;
   }
   .resource-space-field {
+    min-width: 0;
     max-width: none;
     width: 100%;
   }
@@ -419,7 +447,20 @@
   .resource-page .resource-tabs {
     gap: var(--space-4);
   }
-  .resource-use-button {
-    max-width: 120px;
+  .resource-skill-row {
+    flex-wrap: wrap;
+  }
+  .resource-skill-copy {
+    flex-basis: calc(100% - 40px - var(--space-3));
+  }
+  .template-app.desktop-app
+    .resource-skill-row
+    :is(.resource-use-button, .resource-page-button) {
+    min-width: 0;
+    max-width: 100%;
+    height: auto;
+    padding-block: var(--space-1);
+    white-space: normal;
+    overflow-wrap: anywhere;
   }
 }

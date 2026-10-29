@@ -122,6 +122,7 @@ it.each(['running', 'completed', 'failed', 'stopped'] as const)(
         })),
         {
           type: 'text',
+          kind: 'text',
           id: 'progress',
           role: 'assistant',
           content: 'Remote progress: Running',
@@ -129,6 +130,7 @@ it.each(['running', 'completed', 'failed', 'stopped'] as const)(
         },
         {
           type: 'text',
+          kind: 'text',
           id: 'answer',
           role: 'assistant',
           content: 'Remote final answer',
@@ -142,7 +144,7 @@ it.each(['running', 'completed', 'failed', 'stopped'] as const)(
       failed: zh.chatProcessFailed(7),
       stopped: zh.chatProcessStopped(7),
     };
-    await mount(<TurnProcess turn={turn} onInspectTool={() => {}} />);
+    await mount(<TurnProcess turn={turn} />);
     if (status !== 'running')
       await act(async () => {
         renderer!.root.findByType('button').props.onClick();
@@ -153,25 +155,31 @@ it.each(['running', 'completed', 'failed', 'stopped'] as const)(
         'aria-label': zh.collapseSection(zh.desktopExecutionProcess()),
       }).props['aria-expanded'],
     ).toBe(true);
-    for (const label of [
+    const alwaysVisible = [
       zh.desktopRead(),
-      zh.desktopPreparing(),
-      zh.desktopRunning(),
       zh.desktopCompleted(),
       zh.desktopFailed(),
       zh.desktopStopped(),
       zh.desktopProgress(),
-    ])
-      expect(output()).toContain(label);
-    expect(output()).toContain(zh.chatInspectTool(zh.desktopRead()));
+    ];
+    for (const label of alwaysVisible) expect(output()).toContain(label);
+    if (status === 'running') {
+      expect(output()).toContain(zh.desktopPreparing());
+      expect(output()).toContain(zh.desktopRunning());
+    } else {
+      expect(output()).not.toContain(`"${zh.desktopPreparing()}"`);
+      expect(output()).not.toContain(`"${zh.desktopRunning()}"`);
+    }
+    expect(output()).not.toContain(zh.chatInspectTool(zh.desktopRead()));
     await switchLanguage();
-    expect(output()).toContain(en.desktopPreparing());
+    if (status === 'running') expect(output()).toContain(en.desktopPreparing());
+    else expect(output()).not.toContain(`"${en.desktopPreparing()}"`);
     expect(
       renderer!.root.findByProps({
         'aria-label': en.collapseSection(en.desktopExecutionProcess()),
       }).props['aria-expanded'],
     ).toBe(true);
-    expect(output()).toContain(en.chatInspectTool(en.desktopRead()));
+    expect(output()).not.toContain(en.chatInspectTool(en.desktopRead()));
     expect(output()).toContain('Remote tool: Read');
     expect(output()).toContain('Remote reasoning: Completed');
     expect(output()).toContain('Remote progress: Running');

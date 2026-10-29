@@ -31,10 +31,25 @@ type Host struct {
 	pending   bool
 	requestID uint64
 	quit      func()
+	canClose  func() bool
+	runOnMain func(func())
+	emitClose func(*mygo.Window, CloseRequest)
 	rail      *nativeRail
 }
 
-func New() *Host { return &Host{} }
+func New() *Host {
+	return &Host{
+		runOnMain: mygo.RunOnMain,
+		emitClose: func(w *mygo.Window, r CloseRequest) {
+			CloseRequested.Emit(w, r)
+		},
+	}
+}
+func SetCanClose(h *Host, canClose func() bool) {
+	h.mu.Lock()
+	h.canClose = canClose
+	h.mu.Unlock()
+}
 func Attach(h *Host, w *mygo.Window) {
 	h.mu.Lock()
 	h.quit = func() { w.Destroy(); mygo.App.Quit() }
@@ -52,13 +67,29 @@ func Attach(h *Host, w *mygo.Window) {
 }
 func RequestClose(h *Host, w *mygo.Window) {
 	h.mu.Lock()
+	canClose := h.canClose
+	quit := h.quit
+	h.mu.Unlock()
+	if canClose != nil && canClose() {
+		h.mu.Lock()
+		quit = h.quit
+		h.quit = nil
+		runOnMain := h.runOnMain
+		h.mu.Unlock()
+		if quit != nil {
+			runOnMain(quit)
+		}
+		return
+	}
+	h.mu.Lock()
 	if !h.pending {
 		h.pending = true
 		h.requestID++
 	}
 	id := h.requestID
+	emitClose := h.emitClose
 	h.mu.Unlock()
-	CloseRequested.Emit(w, CloseRequest{RequestID: id})
+	emitClose(w, CloseRequest{RequestID: id})
 }
 func (h *Host) CloseState() CloseStateResult {
 	h.mu.Lock()
@@ -74,12 +105,13 @@ func (h *Host) ResolveClose(r CloseResolution) dto.EmptyResult {
 	}
 	h.pending = false
 	quit := h.quit
+	runOnMain := h.runOnMain
 	if r.Allow {
 		h.quit = nil
 	}
 	h.mu.Unlock()
 	if r.Allow && quit != nil {
-		mygo.RunOnMain(quit)
+		runOnMain(quit)
 	}
 	return dto.EmptyResult{OK: true, Value: &dto.Empty{}}
 }

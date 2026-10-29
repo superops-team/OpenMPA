@@ -67,7 +67,7 @@ func TestModelCatalogJoinsActivationVersionsAndKeyPermissions(t *testing.T) {
 		}
 		return &http.Response{StatusCode: 200, Header: http.Header{}, Body: io.NopCloser(strings.NewReader(payload))}, nil
 	})
-	out, err := c.AvailableModelIDs(context.Background())
+	out, err := c.accountModelIDs(context.Background())
 	if err != nil || !reflect.DeepEqual(out, map[string]bool{"deepseek-version": true, "vision-version": true}) {
 		t.Fatalf("catalog: %+v %v", out, err)
 	}
@@ -98,6 +98,38 @@ func TestModelAPIKeyPermissionsMatchStudio(t *testing.T) {
 	}
 }
 
+func TestAccountModelsRejectIncompleteActivationPage(t *testing.T) {
+	c := New()
+	c.credential = Credentials{AccessKey: "ak", SecretKey: "sk"}
+	c.state = dto.PlatformState{SignedIn: true, Epoch: 1}
+	pages := 0
+	c.transport = roundTripFunc(func(r *http.Request) (*http.Response, error) {
+		payload := ""
+		switch r.URL.Query().Get("Action") {
+		case "ListApiKeys":
+			payload = `{"Result":{"Items":[{"Id":1,"Name":"default"}],"TotalCount":1}}`
+		case "GetRawApiKey":
+			payload = `{"Result":{"ApiKey":"PRIVATE_TEST_KEY"}}`
+		case "":
+			payload = `{"data":[]}`
+		case "ListModelActivations":
+			pages++
+			if pages == 1 {
+				payload = `{"Result":{"Items":[{"FoundationModelName":"model","State":"Available"}],"TotalCount":2}}`
+			} else {
+				payload = `{"Result":{"Items":[],"TotalCount":2}}`
+			}
+		default:
+			t.Errorf("unexpected read %s", r.URL)
+		}
+		return &http.Response{StatusCode: 200, Header: http.Header{}, Body: io.NopCloser(strings.NewReader(payload))}, nil
+	})
+	_, err := c.accountModelIDs(context.Background())
+	if err == nil || err.Code != "invalidResponse" || pages != 2 {
+		t.Fatalf("incomplete activation accepted: %+v pages=%d", err, pages)
+	}
+}
+
 func TestModelCatalogRejectsAccountChangeBeforeResolvingKey(t *testing.T) {
 	c := New()
 	c.credential = Credentials{AccessKey: "ak", SecretKey: "sk"}
@@ -108,7 +140,7 @@ func TestModelCatalogRejectsAccountChangeBeforeResolvingKey(t *testing.T) {
 		c.SignOut()
 		return &http.Response{StatusCode: 200, Body: io.NopCloser(strings.NewReader(`{"Result":{"Items":[{"Id":1,"Name":"key"}],"TotalCount":1}}`))}, nil
 	})
-	_, err := c.AvailableModelIDs(context.Background())
+	_, err := c.accountModelIDs(context.Background())
 	if err == nil || err.Code != "staleConnection" || calls != 1 {
 		t.Fatalf("account isolation: %v, calls=%d", err, calls)
 	}

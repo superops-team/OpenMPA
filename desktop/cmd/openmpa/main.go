@@ -2,6 +2,7 @@
 package main
 
 import (
+	"context"
 	"github.com/egoist/mygo"
 	"github.com/superops-team/OpenMPA/desktop/internal/artifact"
 	"github.com/superops-team/OpenMPA/desktop/internal/channels"
@@ -25,6 +26,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"sync"
 )
 
 func main() {
@@ -61,6 +63,7 @@ func main() {
 	languageService := localization.New(settingsDB)
 	mygo.App.OnLocaleChanged(localization.SetCurrentLocale)
 	documents := workspace.New(func() (string, error) { return dataPath("workspace.json") })
+	host.SetCanClose(shell, documents.SafeClose)
 	pending := session.NewPendingStore(func() (string, error) { return dataPath("pending") })
 	mygo.BindAs("Platform", platform)
 	connectionService := &ipc.Connection{Client: conn, Platform: platform}
@@ -72,6 +75,7 @@ func main() {
 	mygo.BindAs("Connection", connectionService)
 	mygo.BindAs("Usage", usage.NewBridge(usage.New(conn, cloudClient, func() deployment.Target { return ipc.DeploymentTarget(platform) })))
 	sessions := session.NewWithCache(conn, pending, settingsDB, cloudClient)
+
 	mygo.BindAs("Session", sessions)
 	mygo.BindAs("Channels", channelService)
 	artifactService := artifact.New(conn)
@@ -83,6 +87,20 @@ func main() {
 	mygo.BindAs("Deployment", deploymentService)
 	mygo.BindAs("RuntimeConfig", configService)
 	traceService := trace.New(conn)
+	traceCache, err := trace.NewCache(filepath.Join(userData, "trace-cache"))
+	if err != nil {
+		log.Fatal("OpenMPA trace cache could not start")
+	}
+	traceSweepCtx, stopTraceSweep := context.WithCancel(context.Background())
+	traceCache.StartSweeper(traceSweepCtx)
+	traceService = trace.NewWithCache(conn, traceCache)
+	session.SetDeleteHook(sessions, func(sessionID string) { _ = traceCache.DeleteSession(sessionID) })
+	var archiveWarning sync.Once
+	session.SetEventHook(sessions, func(event dto.ClientEvent) {
+		if err := traceCache.AppendEvent(event); err != nil {
+			archiveWarning.Do(func() { log.Print("OpenMPA local execution archive could not be saved") })
+		}
+	})
 	mygo.BindAs("Trace", traceService)
 	terminalService := runtimeterminal.New(cloudClient, conn, func() dto.RuntimeRequest { return ipc.Target(platform) })
 	mygo.BindAs("Terminal", runtimeterminal.NewIPC(terminalService))
@@ -98,6 +116,7 @@ func main() {
 		host.RestrictPagePermissions(page)
 	})
 	mygo.App.OnQuit(func() {
+		stopTraceSweep()
 		terminalService.CloseAll()
 		conn.Disconnect()
 		workspace.Shutdown(documents)

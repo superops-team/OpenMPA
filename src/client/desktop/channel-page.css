@@ -1,6 +1,7 @@
 .template-app.desktop-app .channel-page {
   display: block;
-  width: min(100%, 980px);
+  width: min(100%, var(--layout-fixture-column));
+  max-width: var(--layout-fixture-column);
   margin-inline: auto;
   padding: var(--space-6) var(--space-5);
 }
@@ -118,10 +119,11 @@
   gap: var(--space-2);
   flex: none;
   width: auto;
-  min-height: var(--control-input);
-  padding: var(--space-2) var(--space-3);
+  min-height: var(--control-md);
+  box-sizing: border-box;
+  padding: var(--space-1) var(--space-3);
   border: 1px solid var(--color-input-border);
-  border-radius: var(--radius-lg);
+  border-radius: var(--radius-md);
   background: var(--color-card);
   color: var(--color-foreground);
   font-size: var(--text-ui-sm);
@@ -139,18 +141,30 @@
   color: var(--color-foreground-subtle);
 }
 .template-app.desktop-app .channel-icon-button {
-  width: var(--control-input);
+  width: var(--control-md);
+  height: var(--control-md);
   padding: 0;
+}
+/* Account and permission actions align with their input fields. */
+.template-app.desktop-app
+  :is(.channel-account-picker, .channel-group-form)
+  > .channel-button {
+  min-height: var(--control-input);
 }
 .template-app.desktop-app .channel-page button:hover:not(:disabled) {
   background: var(--color-surface-hover);
 }
 .template-app.desktop-app .channel-button.is-primary:hover:not(:disabled) {
-  background: var(--color-primary);
-  filter: brightness(0.96);
+  border-color: var(--color-primary-hover);
+  background: var(--color-primary-hover);
 }
-.template-app.desktop-app .channel-page button:disabled {
-  opacity: 0.45;
+.template-app.desktop-app
+  :is(.channel-page, .channel-dialog-form)
+  button:disabled {
+  border-color: var(--color-disabled);
+  background: var(--color-disabled);
+  color: var(--color-disabled-foreground);
+  opacity: 1;
   cursor: not-allowed;
 }
 .channel-muted,
@@ -216,7 +230,7 @@
   display: inline-flex;
   align-items: center;
   gap: var(--space-1);
-  color: var(--color-focus);
+  color: var(--color-success);
   font-size: var(--text-ui-sm);
   white-space: nowrap;
 }
@@ -249,7 +263,7 @@
   overflow-wrap: anywhere;
 }
 .channel-health dd[data-ok='true'] {
-  color: var(--color-focus);
+  color: var(--color-success);
 }
 .channel-health dd svg {
   flex: none;
@@ -350,7 +364,7 @@
 .channel-setup > .desktop-form > button {
   justify-self: start;
   width: auto;
-  min-height: var(--control-input);
+  min-height: var(--control-md);
 }
 .channel-binding-result {
   margin-top: var(--space-4);

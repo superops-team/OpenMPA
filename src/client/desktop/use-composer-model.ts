@@ -1,5 +1,3 @@
-import { localized, useMessageState } from './locale';
-import type { Messages } from './generated/locales';
 import { useEffect, useRef, useState } from 'react';
 import type {
   ConnectionVM,
@@ -7,7 +5,10 @@ import type {
   ExecutionConfigVM,
   SessionVM,
 } from './models';
-import { isKnownModel, type RuntimeModelCatalog } from './model-catalog';
+import { isKnownModel } from './model-catalog';
+import { useModelCatalog } from './use-model-catalog';
+import { useMessages, localized, useMessageState } from './locale';
+import type { Messages } from './generated/locales';
 
 export type ModelSelectionMode = 'inherit' | 'clear' | 'replace';
 
@@ -21,7 +22,8 @@ export function modelSelectionLabel(
   return (
     config?.model ||
     defaultModel ||
-    (m?.desktopRuntimeDefault() ?? 'Runtime default')
+    m?.desktopRuntimeDefault() ||
+    'Runtime default'
   );
 }
 
@@ -60,52 +62,24 @@ export function useComposerModel({
   onConfigVersion?: (version: string) => void;
   locked?: boolean;
 }) {
+  const m = useMessages();
   const [config, setConfig] = useState<ExecutionConfigVM>();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useMessageState();
   const [notice, setNotice] = useMessageState();
   const [needsInitialization, setNeedsInitialization] = useState(false);
-  const [catalog, setCatalog] = useState<RuntimeModelCatalog>({
-    models: [],
-    defaultModel: '',
-    supported: false,
-  });
-  const [catalogLoading, setCatalogLoading] = useState(true);
-  const [catalogError, setCatalogError] = useMessageState();
-  const [catalogRefresh, setCatalogRefresh] = useState(0);
-  const catalogGeneration = useRef(0);
-  useEffect(() => {
-    const current = ++catalogGeneration.current;
-    setCatalog({ models: [], defaultModel: '', supported: false });
-    setCatalogError('');
-    setCatalogLoading(true);
-    const request = services.sessions.models;
-    if (!request) {
-      setCatalogLoading(false);
-      return;
-    }
-    void request(connection.epoch)
-      .then((value) => {
-        if (catalogGeneration.current === current) setCatalog(value);
-      })
-      .catch(() => {
-        if (catalogGeneration.current === current)
-          setCatalogError(localized((m) => m.modelCatalogReadFailed()));
-      })
-      .finally(() => {
-        if (catalogGeneration.current === current) setCatalogLoading(false);
-      });
-    return () => {
-      catalogGeneration.current++;
-    };
-  }, [services, connection.epoch, catalogRefresh]);
+  const [unavailable, setUnavailable] = useState(false);
+  const catalog = useModelCatalog(services, connection, session.id);
+  const modelCatalog = catalog.models;
   const generation = useRef(0);
   useEffect(() => {
     const current = ++generation.current;
     setConfig(undefined);
+    setBusy(false);
     setError('');
     setNotice('');
     setNeedsInitialization(false);
+    setUnavailable(false);
     if (!services.sessions.executionConfig) return;
     void services.sessions
       .executionConfig(connection.epoch, session.id)
@@ -114,6 +88,16 @@ export function useComposerModel({
       })
       .catch((failure: unknown) => {
         if (generation.current !== current) return;
+        if (
+          failure &&
+          typeof failure === 'object' &&
+          'code' in failure &&
+          failure.code === 'diagnosticModelUnsupported'
+        ) {
+          setUnavailable(true);
+          setError(failureMessage(failure));
+          return;
+        }
         if (isMissingConfiguration(failure)) {
           setNeedsInitialization(true);
           return;
@@ -123,11 +107,34 @@ export function useComposerModel({
     return () => {
       generation.current++;
     };
-  }, [services, connection.epoch, session.id]);
+  }, [
+    services,
+    connection.epoch,
+    connection.runtimeId,
+    connection.scope,
+    session.id,
+    session.configVersion,
+  ]);
   const apply = async (mode: ModelSelectionMode, model = '') => {
-    if (busy || locked || catalogLoading || !catalog.supported || catalogError)
+    if (
+      busy ||
+      locked ||
+      unavailable ||
+      catalog.loading ||
+      catalog.failed ||
+      !catalog.supported
+    )
       return false;
-    if (mode === 'replace' && !isKnownModel(model.trim(), catalog.models)) {
+    if (
+      mode === 'inherit' &&
+      config?.modelMode === 'inherit' &&
+      config.model &&
+      !isKnownModel(config.model, modelCatalog)
+    ) {
+      setError(localized((m) => m.chatModelInvalid(config.model || '')));
+      return false;
+    }
+    if (mode === 'replace' && !isKnownModel(model.trim(), modelCatalog)) {
       setError(
         localized((m) =>
           m.chatModelInvalid(model.trim() || m.chatEmptyModel()),
@@ -142,14 +149,10 @@ export function useComposerModel({
     try {
       let currentConfig = config;
       if (!currentConfig?.etag) {
-        if (!services.sessions.ensureExecutionConfig) {
-          setError(
-            localized((m) =>
-              m.desktopThisRuntimeCannotInitializeANextTurnModelConfiguration(),
-            ),
+        if (!services.sessions.ensureExecutionConfig)
+          throw new Error(
+            'This Runtime cannot initialize a next-turn model configuration.',
           );
-          return false;
-        }
         currentConfig = await services.sessions.ensureExecutionConfig(
           connection.epoch,
           session.id,
@@ -158,14 +161,10 @@ export function useComposerModel({
         setConfig(currentConfig);
         setNeedsInitialization(false);
       }
-      if (!currentConfig.etag) {
-        setError(
-          localized((m) =>
-            m.desktopTheRuntimeReturnedANextTurnConfigurationWithoutA(),
-          ),
+      if (!currentConfig.etag)
+        throw new Error(
+          'The Runtime returned a next-turn configuration without a revision token.',
         );
-        return false;
-      }
       const next = await services.sessions.updateExecutionConfig(
         connection.epoch,
         session.id,
@@ -188,30 +187,32 @@ export function useComposerModel({
       return true;
     } catch (failure: unknown) {
       if (generation.current === requestGeneration)
-        setError(
-          isMissingConfiguration(failure)
-            ? localized((m) =>
-                m.desktopThisLegacyDiagnosticConversationDoesNotExposeNextTurn(),
-              )
-            : failureMessage(failure),
-        );
+        setError(failureMessage(failure));
       return false;
     } finally {
       if (generation.current === requestGeneration) setBusy(false);
     }
   };
   return {
-    catalog,
-    catalogLoading,
-    catalogError,
-    refreshCatalog: () => setCatalogRefresh((value) => value + 1),
     config,
     busy,
-    error,
+    error: unavailable ? m.diagnosticModelUnavailable() : error,
     notice,
     needsInitialization,
+    unavailable,
     locked,
     editable: !!config?.etag,
+    modelCatalog,
+    catalog: {
+      models: catalog.models,
+      defaultModel: catalog.defaultModel,
+      supported: catalog.supported,
+    },
+    catalogError: catalog.failed ? m.modelCatalogReadFailed() : '',
+    refreshCatalog: catalog.retry,
+    catalogLoading: catalog.loading,
+    catalogFailed: catalog.failed,
+    retryCatalog: catalog.retry,
     apply,
   };
 }

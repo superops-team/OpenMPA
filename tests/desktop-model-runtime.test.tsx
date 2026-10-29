@@ -17,6 +17,95 @@ afterEach(async () => {
   if (renderer) await act(async () => renderer!.unmount());
   renderer = undefined;
   vi.unstubAllGlobals();
+  vi.useRealTimers();
+});
+
+it('refreshes a continuously mounted catalog when its memory cache expires', async () => {
+  vi.useFakeTimers();
+  vi.setSystemTime(0);
+  let calls = 0;
+  const models = vi.fn(async () => ({
+    supported: true,
+    defaultModel: 'new-runtime-model',
+    models: [
+      {
+        id: ++calls === 1 ? 'old-model' : 'new-runtime-model',
+      },
+    ],
+  }));
+  const api = services(models);
+  await act(async () => {
+    renderer = create(<Harness services={api} />);
+  });
+  expect(models).toHaveBeenCalledTimes(1);
+  expect(
+    renderer!.root.findByProps({ 'data-testid': 'models' }).children.join(''),
+  ).toBe('old-model');
+  await act(async () => {
+    await vi.advanceTimersByTimeAsync(12 * 60 * 60 * 1000);
+  });
+  expect(models).toHaveBeenCalledTimes(2);
+  expect(
+    renderer!.root.findByProps({ 'data-testid': 'models' }).children.join(''),
+  ).toBe('new-runtime-model');
+  expect(api.sessions.updateExecutionConfig).not.toHaveBeenCalled();
+});
+
+it('does not bypass an excluded known default by selecting inherit', async () => {
+  const api = services(async () => ({
+    supported: true,
+    defaultModel: 'excluded-default',
+    models: [{ id: 'new-runtime-model' }],
+  }));
+  vi.mocked(api.sessions.executionConfig).mockResolvedValue({
+    ...config,
+    modelMode: 'inherit',
+    model: 'excluded-default',
+  });
+  function DefaultHarness() {
+    const state = useComposerModel({
+      services: api,
+      connection: {
+        epoch: 1,
+        scope: 'default-test',
+        runtimeId: 'r',
+        status: 'connected',
+      },
+      session: { id: 's', title: 's' },
+    });
+    return (
+      <>
+        <button onClick={() => void state.apply('inherit')}>inherit</button>
+        <ComposerModelPicker
+          config={state.config}
+          busy={state.busy}
+          catalog={state.catalog}
+          onApply={state.apply}
+        />
+      </>
+    );
+  }
+  await act(async () => {
+    renderer = create(<DefaultHarness />);
+  });
+  await act(async () => {
+    renderer!.root
+      .findAllByType('button')
+      .find((button) => button.children.includes('inherit'))!
+      .props.onClick();
+  });
+  expect(api.sessions.updateExecutionConfig).not.toHaveBeenCalled();
+  await act(async () =>
+    renderer!.root
+      .findByProps({ className: 'composer-model-trigger' })
+      .props.onClick(),
+  );
+  const option = renderer!.root
+    .findAllByProps({ role: 'radio' })
+    .find((button) =>
+      button.findByType('strong').children.includes('Runtime default'),
+    )!;
+  expect(option.props.disabled).toBe(true);
 });
 const config: ExecutionConfigVM = {
   executionConfigVersion: '7',
@@ -53,6 +142,7 @@ function Harness({
       <button onClick={() => void state.apply('replace', 'new-runtime-model')}>
         apply
       </button>
+      <button onClick={() => void state.apply('inherit')}>inherit</button>
       <ComposerModelPicker
         config={state.config}
         busy={state.busy}
@@ -194,9 +284,35 @@ it('does not submit the enclosing chat form when Enter is used in model search',
     stopPropagation: vi.fn(),
   };
   renderer!.root
-    .findByProps({ placeholder: 'Search Runtime models' })
+    .findByProps({ 'aria-label': 'Filter models' })
     .props.onKeyDown(event);
   expect(event.preventDefault).toHaveBeenCalledOnce();
   expect(event.stopPropagation).toHaveBeenCalledOnce();
   expect(apply).not.toHaveBeenCalled();
+});
+
+it('uses the known inherited profile model rather than treating the advertised default as its target', async () => {
+  const api = services(async () => ({
+    supported: true,
+    defaultModel: 'excluded-advertised-default',
+    models: [{ id: 'new-runtime-model' }],
+  }));
+  vi.mocked(api.sessions.executionConfig).mockResolvedValue({
+    ...config,
+    modelMode: 'inherit',
+  });
+  await act(async () => {
+    renderer = create(<Harness services={api} />);
+  });
+  await act(async () =>
+    renderer!.root
+      .findAllByType('button')
+      .find((button) => button.children.includes('inherit'))!
+      .props.onClick(),
+  );
+  expect(api.sessions.updateExecutionConfig).toHaveBeenCalledWith(
+    1,
+    's',
+    expect.objectContaining({ modelMode: 'inherit', model: '' }),
+  );
 });

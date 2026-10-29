@@ -4,7 +4,7 @@ import {
   useMessageState,
   type MessageText,
 } from './locale';
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 import {
   emptyProjection,
@@ -25,6 +25,70 @@ import {
 } from './chat-subscription';
 import { useChatBootstrap, useChatTranscript } from './chat-lifecycle';
 import type { ComposerDraft } from './studio-models';
+
+function toolKind(kind: string) {
+  return ['toolCall', 'toolResult', 'tool_call', 'tool_result'].includes(kind);
+}
+
+function overlapsFinalAnswer(
+  message: DisplayMessage,
+  history: DisplayMessage[],
+) {
+  if (message.role === 'user' || !message.content.trim()) return false;
+  const content = message.content.trim();
+  if (/^\[usage\]/iu.test(content)) return false;
+  return history.some((candidate) => {
+    if (
+      candidate.invocationId !== message.invocationId ||
+      candidate.role === 'user' ||
+      !candidate.content.trim() ||
+      candidate.id === message.id
+    )
+      return false;
+    const answer = candidate.content.trim();
+    return (
+      content.length >= 16 &&
+      (answer.includes(content) || content.includes(answer))
+    );
+  });
+}
+
+function carriesProcessEvidence(
+  message: DisplayMessage,
+  history: DisplayMessage[],
+) {
+  if (message.kind === 'reasoning' || toolKind(message.kind)) return true;
+  if (message.kind === 'status' || message.role === 'user') return false;
+  if (/^\[usage\]/iu.test(message.content)) return true;
+  if (overlapsFinalAnswer(message, history)) return false;
+  return message.partial;
+}
+
+export function mergeHistoryMessages(
+  previous: DisplayMessage[],
+  history: DisplayMessage[],
+) {
+  if (!previous.length) return history;
+  // A just-finished invocation can precede persistence. An empty readback is
+  // not evidence that the process events already received over SSE vanished.
+  if (!history.length) return previous;
+  const historyById = new Map(history.map((message) => [message.id, message]));
+  const used = new Set<string>();
+  const merged: DisplayMessage[] = [];
+  for (const message of previous) {
+    const next = historyById.get(message.id);
+    if (next) {
+      merged.push(next);
+      used.add(next.id);
+      continue;
+    }
+    if (carriesProcessEvidence(message, history)) merged.push(message);
+  }
+  for (const message of history) {
+    if (!used.has(message.id)) merged.push(message);
+  }
+  return merged;
+}
 export function useDesktopChatState({
   services,
   connection,
@@ -53,10 +117,15 @@ export function useDesktopChatState({
   const draft = (composerDraft ? composerDraft.value : localDraft) ?? '';
   const setDraft = composerDraft?.setValue ?? setLocalDraft;
   const [submitting, setSubmitting] = useState(false);
+  const sendInFlight = useRef(false);
   const [historyLoaded, setHistoryLoaded] = useState(false);
   const [historyScope, setHistoryScope] = useState('');
   const [execution, setExecution] = useState('idle');
   const [configVersion, setConfigVersion] = useState(session.configVersion);
+  useEffect(() => {
+    if (session.configVersion !== undefined)
+      setConfigVersion(session.configVersion);
+  }, [session.configVersion]);
   const [error, setError] = useMessageState();
   const [pending, setPending] = useState<PendingRunVM[]>([]);
   const [completedInvocationIds, setCompletedInvocationIds] = useState<
@@ -93,6 +162,7 @@ export function useDesktopChatState({
     useChatTranscript(projection.messages);
   const send = async () => {
     if (
+      sendInFlight.current ||
       submitting ||
       execution === 'running' ||
       execution === 'unknown' ||
@@ -110,11 +180,15 @@ export function useDesktopChatState({
     const submittedDraft = draft;
     const draftSnapshot = composerDraft?.snapshot();
     const acceptDraft = composerDraft?.accept;
+    const restoreDraft = composerDraft?.restore;
     const optimisticId = crypto.randomUUID();
     const optimisticInvocation = `optimistic:${optimisticId}`;
+    sendInFlight.current = true;
     setSubmitting(true);
     setError('');
-    if (!composerDraft) setLocalDraft('');
+    if (draftSnapshot && acceptDraft) acceptDraft(draftSnapshot);
+    else setLocalDraft('');
+    const clearedDraft = composerDraft?.snapshot();
     setExecution('submitting');
     setProjection((previous) => ({
       ...previous,
@@ -139,12 +213,9 @@ export function useDesktopChatState({
         session.id,
         context ? `${prompt}\n\n${context}` : prompt,
         configVersion,
-        session.mpaInstanceId || connection.runtimeId,
+        session.id,
       );
       receiptAccepted = true;
-      if (draftSnapshot && acceptDraft) acceptDraft(draftSnapshot);
-      else if (generation.current === current)
-        setDraft((previous) => (previous === submittedDraft ? '' : previous));
       if (generation.current !== current) return;
       const subscriptionEpoch = ++subscriptionGeneration.current;
       setExecution(receipt.status);
@@ -246,7 +317,7 @@ export function useDesktopChatState({
           setPending(saved);
           setProjection((previous) => ({
             ...previous,
-            messages: history.messages,
+            messages: mergeHistoryMessages(previous.messages, history.messages),
           }));
           setCompletedInvocationIds(history.completedInvocations || []);
           const completed =
@@ -298,7 +369,10 @@ export function useDesktopChatState({
               if (generation.current === current) {
                 setProjection((previous) => ({
                   ...emptyProjection(previous.scope),
-                  messages: history.messages,
+                  messages: mergeHistoryMessages(
+                    previous.messages,
+                    history.messages,
+                  ),
                 }));
                 setCompletedInvocationIds(history.completedInvocations || []);
                 setError(
@@ -319,32 +393,38 @@ export function useDesktopChatState({
                 );
             });
         }
-        void services.sessions
-          .pending(connection.epoch, session.id)
-          .then((saved) => {
-            if (generation.current === current) {
-              setPending(saved);
-              if (!receiptAccepted && saved.length === 0) {
-                setProjection((previous) => ({
-                  ...previous,
-                  messages: previous.messages.filter(
-                    (message) => message.id !== optimisticId,
-                  ),
-                }));
-                setDraft((currentDraft) =>
-                  composerDraft
-                    ? (currentDraft ?? prompt)
-                    : currentDraft || prompt,
-                );
-                setExecution('idle');
-              }
-            }
-          })
-          .catch(() => {
-            /* Unknown remains blocked if pending inspection fails. */
-          });
       }
+      void services.sessions
+        .pending(connection.epoch, session.id)
+        .then((saved) => {
+          if (
+            !receiptAccepted &&
+            saved.length === 0 &&
+            draftSnapshot &&
+            clearedDraft &&
+            restoreDraft
+          )
+            restoreDraft(draftSnapshot, clearedDraft);
+          if (generation.current === current) {
+            setPending(saved);
+            if (!receiptAccepted && saved.length === 0) {
+              setProjection((previous) => ({
+                ...previous,
+                messages: previous.messages.filter(
+                  (message) => message.id !== optimisticId,
+                ),
+              }));
+              if (!composerDraft)
+                setDraft((currentDraft) => currentDraft || submittedDraft);
+              setExecution('idle');
+            }
+          }
+        })
+        .catch(() => {
+          /* Unknown remains blocked if pending inspection fails. */
+        });
     } finally {
+      sendInFlight.current = false;
       if (generation.current === current) setSubmitting(false);
     }
   };
@@ -371,7 +451,7 @@ export function useDesktopChatState({
         return;
       setProjection((previous) => ({
         ...emptyProjection(previous.scope),
-        messages: history.messages,
+        messages: mergeHistoryMessages(previous.messages, history.messages),
       }));
       setCompletedInvocationIds(history.completedInvocations || []);
       let invocation =
@@ -514,7 +594,7 @@ export function useDesktopChatState({
       ) {
         setProjection((previous) => ({
           ...previous,
-          messages: latest.messages,
+          messages: mergeHistoryMessages(previous.messages, latest.messages),
         }));
         setCompletedInvocationIds(latest.completedInvocations || []);
         setPending(saved);
@@ -565,7 +645,10 @@ export function useDesktopChatState({
             ) {
               setProjection((previous) => ({
                 ...emptyProjection(previous.scope),
-                messages: latest.messages,
+                messages: mergeHistoryMessages(
+                  previous.messages,
+                  latest.messages,
+                ),
               }));
               setCompletedInvocationIds(latest.completedInvocations || []);
               setError(

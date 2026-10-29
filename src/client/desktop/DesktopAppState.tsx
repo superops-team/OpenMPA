@@ -19,6 +19,7 @@ import type {
   ConnectionVM,
   DesktopServices,
   DesktopSettingsSection,
+  AssistantSetupInput,
   RecoveryDraftVM,
   RuntimeVM,
   SessionVM,
@@ -52,14 +53,32 @@ export function useDesktopAppState({
   const [sessionEpoch, setSessionEpoch] = useState(0);
   const [selected, selectSession] = useState<string>();
   const selectedRef = useRef<string | undefined>(undefined);
-  const setSelected = useCallback((value: string | undefined) => {
-    selectedRef.current = value;
-    selectSession(value);
-  }, []);
+  const setSelected = useCallback(
+    (
+      update:
+        | string
+        | undefined
+        | ((previous: string | undefined) => string | undefined),
+    ) => {
+      const value =
+        typeof update === 'function' ? update(selectedRef.current) : update;
+      selectedRef.current = value;
+      selectSession(value);
+    },
+    [],
+  );
   const [collapsed, setCollapsed] = useState(false);
   const [traceOpen, setTraceOpen] = useState(false);
   const [settingsSection, setSettingsSection] =
     useState<DesktopSettingsSection>('Account');
+  const [creatingAssistant, setCreatingAssistant] = useState(false);
+  const creation = useRef<
+    | { epoch: number; scope: string; id: string; mpaInstanceId?: string }
+    | undefined
+  >(undefined);
+  const deleting = useRef(new Set<string>());
+  const [assistantSettingsSessionId, setAssistantSettingsSessionId] =
+    useState<string>();
   const [theme, setTheme] = useState<ThemePreference>(themePreference());
   const platformRegion = useRef('cn-beijing');
   const platformSignedIn = useRef(false);
@@ -228,6 +247,11 @@ export function useDesktopAppState({
       if (epoch.current === current && connectionScope.current === scope) {
         setSessions(list);
         setSessionEpoch(current);
+        setSelected((previous) =>
+          previous && list.some((item) => item.id === previous)
+            ? previous
+            : list[0]?.id,
+        );
         if (errorSource.current === 'sessions') setError('');
       }
     },
@@ -237,6 +261,9 @@ export function useDesktopAppState({
     setSessions([]);
     setSessionEpoch(0);
     setSelected(undefined);
+    setCreatingAssistant(false);
+    setAssistantSettingsSessionId(undefined);
+    creation.current = undefined;
     void refresh().catch((error: unknown) => {
       if (epoch.current === connection?.epoch) reportFailure(error, 'sessions');
     });
@@ -267,30 +294,101 @@ export function useDesktopAppState({
     if (['sessions', 'bots', 'connection'].includes(errorSource.current))
       setError('');
   }, []);
+  const updateSession = useCallback((updated: SessionVM) => {
+    setSessions((previous) =>
+      previous.map((item) =>
+        item.id === updated.id ? { ...item, ...updated } : item,
+      ),
+    );
+  }, []);
   const createSession = async () => {
     if (!connection) {
       navigate('settings');
       return;
     }
-    const current = connection.epoch;
-    const scope = connection.scope;
-    try {
-      const name = window.prompt(m.conversationTitle(), m.newConversation());
-      if (!name?.trim()) return;
-      const next = await services.sessions.create(
-        current,
-        name.trim(),
+    if (creatingAssistant) return;
+    creation.current = {
+      epoch: connection.epoch,
+      scope: connection.scope,
+      id: crypto.randomUUID(),
+      mpaInstanceId:
         session?.mpaInstanceId ||
-          sessions.find((item) => item.mpaInstanceId)?.mpaInstanceId,
-      );
-      if (epoch.current === current && connectionScope.current === scope) {
-        setSessions((previous) => [next, ...previous]);
-        setSessionEpoch(current);
-        setSelected(next.id);
-        navigate('chat');
+        sessions.find((item) => item.mpaInstanceId)?.mpaInstanceId,
+    };
+    setAssistantSettingsSessionId(undefined);
+    setCreatingAssistant(true);
+  };
+  const saveNewAssistant = async (input: AssistantSetupInput) => {
+    if (!connection || !creation.current)
+      throw new Error('assistantCreationUnavailable');
+    const current = connection.epoch;
+    const request = creation.current;
+    const assertCurrent = () => {
+      if (
+        epoch.current !== current ||
+        connectionScope.current !== request.scope ||
+        request.epoch !== current ||
+        creation.current !== request
+      )
+        throw new Error('connectionChanged');
+    };
+    // Keep the UUID across all retries, including an unknown Create/Rename outcome.
+    assertCurrent();
+    const next = await services.sessions.create(
+      current,
+      input.name.trim(),
+      request.mpaInstanceId,
+      request.id,
+    );
+    assertCurrent();
+    await services.sessions.saveAssistantConfig(current, next.id, next.id, {
+      agentsMd: input.agentsMd,
+      skills: input.skills,
+    });
+    assertCurrent();
+    let configured = next;
+    if (input.modelMode === 'replace' || input.modelMode === 'clear') {
+      let currentConfig =
+        services.sessions.ensureExecutionConfig &&
+        (await services.sessions.ensureExecutionConfig(current, next.id));
+      assertCurrent();
+      if (!currentConfig?.etag) {
+        currentConfig = await services.sessions.executionConfig(
+          current,
+          next.id,
+        );
+        assertCurrent();
       }
-    } catch (error) {
-      if (epoch.current === current) reportFailure(error, 'bots');
+      if (!currentConfig?.etag) throw new Error('executionConfigUnavailable');
+      if (currentConfig.etag) {
+        const savedConfig = await services.sessions.updateExecutionConfig(
+          current,
+          next.id,
+          {
+            etag: currentConfig.etag,
+            modelMode: input.modelMode,
+            model: input.modelMode === 'replace' ? input.model : '',
+            mcpMode: currentConfig.mcpMode,
+            mcpServers: currentConfig.mcpServers,
+          },
+        );
+        assertCurrent();
+        configured = {
+          ...next,
+          configVersion: savedConfig.executionConfigVersion,
+        };
+      }
+    }
+    if (epoch.current === current) {
+      setSessions((previous) => [
+        configured,
+        ...previous.filter((item) => item.id !== configured.id),
+      ]);
+      setSessionEpoch(current);
+      setSelected(configured.id);
+      setCreatingAssistant(false);
+      creation.current = undefined;
+      navigate('chat');
     }
   };
   const session = sessions.find((session) => session.id === selected);
@@ -318,6 +416,13 @@ export function useDesktopAppState({
       snapshot: () => draftStore.current.snapshot(target),
       accept: (snapshot: ReturnType<ComposerDraft['snapshot']>) => {
         draftStore.current.accept(snapshot);
+        notifyDraft();
+      },
+      restore: (
+        snapshot: ReturnType<ComposerDraft['snapshot']>,
+        cleared: ReturnType<ComposerDraft['snapshot']>,
+      ) => {
+        draftStore.current.restore(snapshot, cleared);
         notifyDraft();
       },
     };
@@ -423,7 +528,50 @@ export function useDesktopAppState({
       setSettingsSection(id as DesktopSettingsSection);
       navigate('settings');
     } else if (action === 'newConversation') void createSession();
-    else if (action === 'selectAssistant' && id) {
+    else if (
+      action === 'editSession' &&
+      id &&
+      sessions.some((item) => item.id === id)
+    ) {
+      if (navigate('chat')) {
+        creation.current = undefined;
+        setCreatingAssistant(false);
+        setSelected(id);
+        setAssistantSettingsSessionId(id);
+      }
+    } else if (
+      action === 'deleteSession' &&
+      id &&
+      connection &&
+      sessions.some((item) => item.id === id)
+    ) {
+      const target = sessions.find((item) => item.id === id);
+      const current = connection.epoch;
+      const deletionKey = `${current}:${id}`;
+      if (deleting.current.has(deletionKey)) return;
+      if (!window.confirm(m.deleteAssistantConfirm(target?.title || id)))
+        return;
+      deleting.current.add(deletionKey);
+      void services.sessions
+        .remove(current, id)
+        .then(() => {
+          if (
+            epoch.current === current &&
+            connectionScope.current === connection.scope
+          ) {
+            draftStore.current.remove(id);
+            setSelected((previous) => (previous === id ? undefined : previous));
+            setAssistantSettingsSessionId((previous) =>
+              previous === id ? undefined : previous,
+            );
+            return refresh(true);
+          }
+        })
+        .catch((error: unknown) => {
+          if (epoch.current === current) reportFailure(error, 'sessions');
+        })
+        .finally(() => deleting.current.delete(deletionKey));
+    } else if (action === 'selectAssistant' && id) {
       if (connection?.runtimeId === id) return;
       const runtime = runtimeOptions.find((item) => item.id === id);
       if (!runtime || !platformSignedIn.current) {
@@ -543,6 +691,12 @@ export function useDesktopAppState({
     epoch,
     refresh,
     createSession,
+    creatingAssistant,
+    setCreatingAssistant,
+    saveNewAssistant,
+    updateSession,
+    assistantSettingsSessionId,
+    setAssistantSettingsSessionId,
     connect,
   };
 }

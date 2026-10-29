@@ -40,6 +40,7 @@
   --motion-press-duration: 120ms;
   --motion-state-duration: 150ms;
   --motion-overlay-duration: 180ms;
+  --motion-sidebar-duration: 220ms;
   --motion-spinner-duration: 900ms;
   --motion-ease-out: cubic-bezier(0.2, 0, 0, 1);
   --shadow-overlay: 0 12px 32px rgba(0, 0, 0, 0.14);
@@ -51,6 +52,10 @@
   --layout-fixture-column: 920px;
   --layout-settings-column: 800px;
   --layout-assistant-skill-list-height: 320px;
+  --layout-assistant-dialog-width: 640px;
+  --layout-assistant-dialog-height: 640px;
+  --layout-model-menu-width: 360px;
+  --layout-model-menu-height: 280px;
   --icon-sm: 14px;
   --icon-md: 16px;
   --icon-lg: 18px;

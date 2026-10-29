@@ -425,6 +425,7 @@
         "press-duration": { "type": "string", "pattern": "^\\d+ms$" },
         "state-duration": { "type": "string", "pattern": "^\\d+ms$" },
         "overlay-duration": { "type": "string", "pattern": "^\\d+ms$" },
+        "sidebar-duration": { "type": "string", "pattern": "^\\d+ms$" },
         "spinner-duration": { "type": "string", "pattern": "^\\d+ms$" },
         "ease-out": {
           "type": "string",
@@ -435,6 +436,7 @@
         "press-duration",
         "state-duration",
         "overlay-duration",
+        "sidebar-duration",
         "spinner-duration",
         "ease-out"
       ],
@@ -460,7 +462,11 @@
           "reading-column",
           "fixture-column",
           "settings-column",
-          "assistant-skill-list-height"
+          "assistant-skill-list-height",
+          "assistant-dialog-width",
+          "assistant-dialog-height",
+          "model-menu-width",
+          "model-menu-height"
         ]
       },
       "additionalProperties": {
@@ -474,7 +480,11 @@
         "reading-column",
         "fixture-column",
         "settings-column",
-        "assistant-skill-list-height"
+        "assistant-skill-list-height",
+        "assistant-dialog-width",
+        "assistant-dialog-height",
+        "model-menu-width",
+        "model-menu-height"
       ]
     }
   },

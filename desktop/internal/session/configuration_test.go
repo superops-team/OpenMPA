@@ -125,3 +125,39 @@ func TestEnsureConfigurationNeverRecreatesAnEditableSession(t *testing.T) {
 		t.Fatalf("editable Session was mutated: result=%+v requests=%d", result, requests)
 	}
 }
+
+func TestModelCatalogWithoutCloudClientFails(t *testing.T) {
+	c := connection.New()
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Write([]byte(`{"capabilities":{"extensions":[{"uri":"urn:veadk:mpa:model-selection:v1","params":{"models":["model"]}}]}}`))
+	}))
+	defer server.Close()
+	epoch, _ := c.Bind(connection.Binding{Endpoint: server.URL, Scope: "scope", RuntimeID: "runtime"}, true)
+	out := New(c, NewPendingStore(func() (string, error) { return t.TempDir(), nil })).ModelCatalog(context.Background(), dto.SessionRequest{ConnectionEpoch: epoch, SessionID: "s"})
+	if out.OK || out.Error == nil || out.Error.Code != "modelCatalogUnavailable" {
+		t.Fatalf("unexpected catalog without cloud client: %+v", out)
+	}
+}
+
+func TestConfirmedDiagnosticModelDoesNotAttemptSessionRepair(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		switch r.URL.Path {
+		case "/api/v1/sessions/s/execution-config":
+			w.WriteHeader(404)
+		case "/api/v1/runtime-console/admin/sessions/s/runs":
+			w.Write([]byte(`{"sessionId":"s","runs":[]}`))
+		default:
+			t.Errorf("diagnostic history must not be recreated: %s %s", r.Method, r.URL.Path)
+			w.WriteHeader(500)
+		}
+	}))
+	defer server.Close()
+	c := connection.New()
+	epoch, _ := c.Bind(connection.Binding{Endpoint: server.URL}, true)
+	s := New(c, NewPendingStore(func() (string, error) { return t.TempDir(), nil }))
+	s.markTraceSession("s")
+	result := s.EnsureExecutionConfig(context.Background(), dto.SessionRequest{ConnectionEpoch: epoch, SessionID: "s"})
+	if result.Error == nil || result.Error.Code != "diagnosticModelUnsupported" {
+		t.Fatalf("diagnostic capability not identified: %+v", result)
+	}
+}

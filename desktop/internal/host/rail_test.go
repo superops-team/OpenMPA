@@ -4,13 +4,70 @@ import (
 	"image/png"
 	"os"
 	"path/filepath"
+	"slices"
 
 	"github.com/egoist/mygo/ui"
 	"github.com/superops-team/OpenMPA/desktop/internal/localization"
 	"math"
 	"strings"
 	"testing"
+	"time"
 )
+
+func TestSidebarMovesContinuouslyAndReversesWithoutJump(t *testing.T) {
+	rail := &nativeRail{state: ShellState{View: "chat"}}
+	tt := ui.NewTester(rail.view, 1000, 700)
+	tt.Frame()
+	start, found := tt.Find("Workspace content")
+	if !found {
+		t.Fatal("workspace content must retain its own layout identity")
+	}
+	rail.state.Collapsed = true
+	tt.Frame()
+	first, _ := tt.Find("Workspace content")
+	if math.Abs(float64(first.X-start.X)) > 0.5 {
+		t.Fatalf("collapse jumped from %v to %v", start, first)
+	}
+	tt.Advance(80 * time.Millisecond)
+	tt.Frame()
+	middle, _ := tt.Find("Workspace content")
+	if middle.X >= start.X || middle.X <= 48 {
+		t.Fatalf("missing intermediate slide: %v", middle)
+	}
+	rail.state.Collapsed = false
+	tt.Frame()
+	reversed, _ := tt.Find("Workspace content")
+	if math.Abs(float64(reversed.X-middle.X)) > 0.5 {
+		t.Fatalf("reversal jumped: %v -> %v", middle, reversed)
+	}
+	tt.Advance(time.Second)
+	end, _ := tt.Find("Workspace content")
+	if end.X != start.X || end.W != start.W {
+		t.Fatalf("slide did not settle: %v -> %v", start, end)
+	}
+}
+
+func TestSidebarReducedMotionSettlesImmediately(t *testing.T) {
+	rail := &nativeRail{state: ShellState{View: "chat"}}
+	tt := ui.NewTester(rail.view, 1000, 700)
+	tt.SetPreferences(ui.Preferences{ReduceMotion: true})
+	tt.Frame()
+	rail.state.Collapsed = true
+	tt.Frame()
+	content, found := tt.Find("Workspace content")
+	if !found || content.X != 48 || content.W != 952 {
+		t.Fatalf("reduced motion must switch instantly: %v", content)
+	}
+	if _, found := tt.Find("Workspace navigation"); found {
+		t.Fatal("collapsed sidebar must not remain focusable")
+	}
+	rail.state.Collapsed = false
+	tt.Frame()
+	content, _ = tt.Find("Workspace content")
+	if content.X != 288 || content.W != 712 {
+		t.Fatalf("expanded reduced-motion layout: %v", content)
+	}
+}
 
 func TestTitlebarDividerIsCentered(t *testing.T) {
 	for _, width := range []int{640, 760, 1200} {
@@ -62,6 +119,7 @@ func TestNativeShellLayoutAndState(t *testing.T) {
 	}
 	rail.state.Collapsed = true
 	tt.Frame()
+	tt.Advance(time.Second)
 	if _, found := tt.Find("Workspace navigation"); found {
 		t.Fatal("sidebar did not collapse")
 	}
@@ -81,7 +139,7 @@ func TestNativeRailActions(t *testing.T) {
 	tt.Frame()
 	tt.Frame()
 	for _, item := range []struct{ label, action string }{
-		{"OpenMPA home", "home"}, {"Toggle sidebar", "toggleSidebar"}, {"New conversation", "newConversation"},
+		{"OpenMPA home", "home"}, {"Toggle sidebar", "toggleSidebar"},
 		{"Open scheduled activity", "tasks"}, {"Open settings", "settings"},
 	} {
 		if err := tt.Click(item.label); err != nil {
@@ -91,13 +149,16 @@ func TestNativeRailActions(t *testing.T) {
 			t.Fatalf("action mismatch for %s: %v", item.label, actions)
 		}
 	}
-	if len(actions) != 5 {
+	if len(actions) != 4 {
 		t.Fatalf("duplicate actions %v", actions)
 	}
 	for _, view := range []string{"resources", "collaboration"} {
 		if !New().SetShellState(ShellState{View: view}).OK {
 			t.Fatalf("usage navigation rejected: %s", view)
 		}
+	}
+	if _, found := tt.Find("New conversation"); found {
+		t.Fatal("rail new conversation shortcut should not duplicate sidebar create")
 	}
 	if New().SetShellState(ShellState{View: "arbitrary"}).OK {
 		t.Fatal("unknown navigation accepted")
@@ -117,17 +178,53 @@ func TestNativeSidebarSelection(t *testing.T) {
 	if action != "selectSession" || id != "session-id" {
 		t.Fatalf("session action %s %s", action, id)
 	}
-	if err := tt.Click("New conversation"); err != nil {
+	if err := tt.Click("New assistant"); err != nil {
 		t.Fatal(err)
 	}
 	if action != "newConversation" {
-		t.Fatal("new conversation action missing")
+		t.Fatal("new assistant action missing")
+	}
+	if action == "refreshSessions" {
+		t.Fatal("conversation heading plus must not refresh sessions")
 	}
 	if _, found := tt.Find("Settings & setup"); found {
 		t.Fatal("sidebar settings shortcut should not duplicate the rail settings button")
 	}
 	if _, found := tt.Find("SPACES"); found {
 		t.Fatal("Spaces navigation must be removed")
+	}
+}
+
+func TestNativeSidebarSessionActionsMenu(t *testing.T) {
+	var action, id string
+	rail := &nativeRail{state: ShellState{View: "chat", SelectedAssistant: "runtime-a", Assistants: []NavigationItem{{ID: "runtime-a", Title: "Assistant A"}}, Sessions: []NavigationItem{{ID: "session-id", Title: "My assistant"}}}, request: func(a, i string) { action, id = a, i }}
+	tt := ui.NewTester(rail.sidebar, 240, 700)
+	row, found := tt.Find("My assistant")
+	if !found {
+		t.Fatal("assistant row missing")
+	}
+	tt.Move(row.X+row.W-12, row.Y+row.H/2)
+	tt.Frame()
+	if err := tt.Click("Assistant actions"); err != nil {
+		t.Fatal(err)
+	}
+	if got := tt.Menu(); !slices.Equal(got, []string{"Edit", "Delete"}) {
+		t.Fatalf("menu %v", got)
+	}
+	if err := tt.ChooseMenuItem("Edit"); err != nil {
+		t.Fatal(err)
+	}
+	if action != "editSession" || id != "session-id" {
+		t.Fatalf("edit action %s %s", action, id)
+	}
+	if err := tt.Click("Assistant actions"); err != nil {
+		t.Fatal(err)
+	}
+	if err := tt.ChooseMenuItem("Delete"); err != nil {
+		t.Fatal(err)
+	}
+	if action != "deleteSession" || id != "session-id" {
+		t.Fatalf("delete action %s %s", action, id)
 	}
 }
 
@@ -172,7 +269,7 @@ func TestNativeSidebarSearchKeepsExactSessionIdentity(t *testing.T) {
 		}
 	}}
 	tt := ui.NewTester(rail.sidebar, 240, 700)
-	if err := tt.Click("Find conversations"); err != nil {
+	if err := tt.Click("Find assistants"); err != nil {
 		t.Fatal(err)
 	}
 	tt.Type("session-b")

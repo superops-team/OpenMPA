@@ -11,7 +11,7 @@ FROM (
            toString(properties.clerk_user_id) AS clerk_user_id
     FROM events
     WHERE event = 'oss.runtime.copilot_request_created'
-      AND properties.accessibility_title = 'OpenDots'
+      AND properties.accessibility_title = 'OpenMPA'
       AND timestamp >= now() - INTERVAL 30 DAY
       AND empty(toString(properties.validation_run_id))
   ) AS request
@@ -20,7 +20,7 @@ FROM (
            argMax(toString(properties.clerk_user_id), timestamp) AS clerk_user_id
     FROM events
     WHERE event IN ('oss.runtime.instance_created', 'oss.runtime.copilot_request_created')
-      AND properties.accessibility_title = 'OpenDots'
+      AND properties.accessibility_title = 'OpenMPA'
       AND timestamp >= now() - INTERVAL 30 DAY
       AND empty(toString(properties.validation_run_id))
       AND notEmpty(toString(properties.telemetry_id))

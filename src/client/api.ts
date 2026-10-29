@@ -1,8 +1,8 @@
-let token = sessionStorage.getItem('opendots-token') ?? '';
+let token = sessionStorage.getItem('openmpa-token') ?? '';
 export function setToken(value: string) {
   token = value;
-  if (value) sessionStorage.setItem('opendots-token', value);
-  else sessionStorage.removeItem('opendots-token');
+  if (value) sessionStorage.setItem('openmpa-token', value);
+  else sessionStorage.removeItem('openmpa-token');
 }
 export class ApiError extends Error {
   constructor(

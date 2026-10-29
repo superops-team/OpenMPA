@@ -16,6 +16,7 @@ import (
 )
 
 const APIVersion = "2025-10-30"
+const ArkAPIVersion = "2024-01-01"
 
 type Credentials struct{ AccessKey, SecretKey, Token, ExpiresAt string }
 type Client struct {
@@ -25,6 +26,12 @@ type Client struct {
 	transport  http.RoundTripper
 	endpoint   func(string, string) string
 	profiles   profileStore
+
+	modelMu      sync.Mutex
+	modelKey     string
+	modelCached  time.Time
+	modelCache   dto.ModelCatalog
+	modelPending map[string]*modelCatalogRequest
 }
 
 func New() *Client {
@@ -34,6 +41,9 @@ func New() *Client {
 		}
 		if service == "ark" || service == "vefaas" {
 			return "https://open.volcengineapi.com"
+		}
+		if service == "ark" {
+			return "https://ark." + region + ".volcengineapi.com"
 		}
 		endpoint, _ := AgentKitEndpoint(region)
 		return endpoint
@@ -145,6 +155,25 @@ func (c *Client) snapshot() (Credentials, uint64, *dto.SafeError) {
 	}
 	return c.credential, c.state.Epoch, nil
 }
+func (c *Client) snapshotState() (Credentials, dto.PlatformState, *dto.SafeError) {
+	c.mu.RLock()
+	defer c.mu.RUnlock()
+	if !c.state.SignedIn {
+		return Credentials{}, dto.PlatformState{}, dto.Failure("authRequired", "platform", "reauthenticate", 0)
+	}
+	if c.credential.ExpiresAt != "" {
+		t, e := time.Parse(time.RFC3339, c.credential.ExpiresAt)
+		if e != nil || !t.After(time.Now()) {
+			return Credentials{}, dto.PlatformState{}, dto.Failure("authRequired", "platform", "reauthenticate", 0)
+		}
+	}
+	state := c.state
+	if state.Principal != nil {
+		p := *state.Principal
+		state.Principal = &p
+	}
+	return c.credential, state, nil
+}
 func (c *Client) Action(ctx context.Context, region, action string, input, output interface{}) *dto.SafeError {
 	if !ValidRegion(region) {
 		return dto.Failure("invalidInput", "platform", "never", 0)
@@ -180,6 +209,8 @@ func (c *Client) call(ctx context.Context, cred Credentials, service, region, ac
 		version = "2018-01-01"
 	} else if service == "vefaas" {
 		version = "2021-03-03"
+	} else if service == "ark" {
+		version = ArkAPIVersion
 	}
 	if service == "ark" {
 		version = "2024-01-01"

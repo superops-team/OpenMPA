@@ -1,8 +1,10 @@
+import { readFileSync } from 'node:fs';
 import { act, create, type ReactTestRenderer } from 'react-test-renderer';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import { TracePanel } from '../src/client/desktop/TracePanel';
 import type { DesktopServices, TraceVM } from '../src/client/desktop/models';
 import { messages } from '../src/client/desktop/generated/locales';
+import { formatTraceDuration } from '../src/client/desktop/trace-model';
 
 const m = messages;
 beforeEach(() => vi.stubGlobal('mygo', { locale: 'zh-Hans' }));
@@ -82,6 +84,81 @@ it('validates the current turn trace by default', async () => {
   );
   expect(JSON.stringify(renderer.toJSON())).toContain('Read file');
   expect(JSON.stringify(renderer.toJSON())).toContain(m.desktopDuration());
+  await act(async () => renderer.unmount());
+});
+
+it('shows derived summary metrics and the worker execution strip', async () => {
+  vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true);
+  const derived: TraceVM = {
+    ...trace,
+    run: {
+      status: 'success',
+      startedAt: '2026-10-27T00:00:00Z',
+      wallDurationMs: 95_000,
+      modelRequestCount: 0,
+      toolCount: 0,
+    },
+    steps: [
+      trace.steps[0],
+      {
+        stepId: 'usage',
+        parentStepId: 'root',
+        sequence: 2,
+        kind: 'usage.updated',
+        title: 'Usage updated',
+        status: 'success',
+        startedAt: '2026-10-27T00:00:00.200Z',
+        durationMs: 3533,
+        details: {
+          inputTokens: 9174,
+          outputTokens: 53,
+          totalTokens: 9227,
+          firstContentFrameMs: 2107,
+        },
+      },
+      {
+        stepId: 'tool',
+        parentStepId: 'root',
+        sequence: 3,
+        kind: 'tool.accepted',
+        title: 'exec_command',
+        status: 'success',
+        startedAt: '2026-10-27T00:00:04Z',
+        durationMs: 617,
+      },
+      {
+        stepId: 'worker-start',
+        parentStepId: 'root',
+        sequence: 4,
+        kind: 'worker.start_turn',
+        title: 'Worker turn started',
+        status: 'success',
+        startedAt: '2026-10-27T00:00:04.700Z',
+        durationMs: 100,
+      },
+    ],
+  };
+  let renderer!: ReactTestRenderer;
+  await act(async () => {
+    renderer = create(
+      <TracePanel
+        services={services(async () => derived)}
+        connection={connection}
+        session={session}
+        invocationIds={['inv-1']}
+        currentInvocationId="inv-1"
+        onClose={() => {}}
+      />,
+    );
+  });
+  await act(async () => {});
+  const output = JSON.stringify(renderer.toJSON());
+  expect(output).toContain(m.traceRecordedModelCalls());
+  expect(output).toContain('9227');
+  expect(output).toContain(formatTraceDuration(2107, m));
+  expect(output).toContain(m.traceWorkerExecution());
+  expect(output).toContain('Worker turn started');
+  expect(output).toContain(m.traceWorkerStepsObserved('1'));
   await act(async () => renderer.unmount());
 });
 
@@ -344,4 +421,26 @@ it('refreshes active traces and stops polling after completion or close', async 
     if (renderer) await act(async () => renderer?.unmount());
     vi.useRealTimers();
   }
+});
+
+it('keeps the trace search focus ring single-layered', () => {
+  const css = readFileSync(
+    new URL('../src/client/desktop/trace.css', import.meta.url),
+    'utf8',
+  );
+  const desktopAlignment = readFileSync(
+    new URL(
+      '../src/client/styles/desktop-design-alignment.css',
+      import.meta.url,
+    ),
+    'utf8',
+  );
+  expect(css).toMatch(
+    /\.trace-search:focus-within\s*\{[^}]*border-color:\s*var\(--trace-accent\);[^}]*outline:\s*none;[^}]*box-shadow:\s*none;/s,
+  );
+  expect(desktopAlignment).toContain(
+    '.template-app.desktop-app .trace-search input:not(.call-view *):focus-visible',
+  );
+  expect(desktopAlignment).toMatch(/appearance:\s*none;/);
+  expect(desktopAlignment).toMatch(/outline-offset:\s*0;/);
 });

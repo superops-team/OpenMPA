@@ -19,6 +19,8 @@ export function TraceStepDetail({
   onClose: () => void;
 }) {
   const m = useMessages();
+  const recordedText =
+    typeof step.details?.text === 'string' ? step.details.text : '';
   return (
     <aside className="trace-detail" aria-label={m.desktopTraceStepDetails()}>
       <header>
@@ -26,7 +28,7 @@ export function TraceStepDetail({
           <span>
             {traceCategoryLabel(traceStepCategory(step), m)} · {step.kind}
           </span>
-          <strong>{traceStepTitle(step)}</strong>
+          <strong>{traceStepTitle(step, m)}</strong>
         </div>
         <IconButton
           className="trace-icon-button"
@@ -40,7 +42,11 @@ export function TraceStepDetail({
         <dt>{m.desktopStatus()}</dt>
         <dd className={step.status}>{traceStatusLabel(step.status, m)}</dd>
         <dt>{m.desktopDuration()}</dt>
-        <dd>{formatTraceDuration(step.duration, m)}</dd>
+        <dd>
+          {step.timing?.kind === 'milestone'
+            ? m.traceEvent()
+            : formatTraceDuration(step.duration, m)}
+        </dd>
         <dt>{m.desktopStarted()}</dt>
         <dd>{step.startedAt || m.valueUnavailable()}</dd>
         <dt>{m.desktopEnded()}</dt>
@@ -52,6 +58,12 @@ export function TraceStepDetail({
         </dd>
         <dt>{m.desktopStepID()}</dt>
         <dd>{step.stepId}</dd>
+        {step.details?.projectionSource === 'local.sse' && (
+          <>
+            <dt>{m.traceSource()}</dt>
+            <dd>{m.traceRecordedLocally()}</dd>
+          </>
+        )}
         {step.sourceEventId && (
           <>
             <dt>{m.desktopSourceEvent()}</dt>
@@ -59,6 +71,7 @@ export function TraceStepDetail({
           </>
         )}
       </dl>
+      {recordedText && <p className="trace-recorded-text">{recordedText}</p>}
       {step.details && Object.keys(step.details).length > 0 && (
         <details>
           <summary>{m.desktopSafeDetails()}</summary>

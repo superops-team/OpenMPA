@@ -14,8 +14,8 @@ export function isInternalVoiceReceipt(message: Message): boolean {
     (message.id.startsWith(voiceReceiptMessagePrefix) ||
       (!!metadata &&
         typeof metadata === 'object' &&
-        'opendotsSource' in metadata &&
-        metadata.opendotsSource === 'voice_receipt'))
+        'openmpaSource' in metadata &&
+        metadata.openmpaSource === 'voice_receipt'))
   );
 }
 function Receipt({ call }: { call: CallReceipt }) {

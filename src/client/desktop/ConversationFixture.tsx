@@ -43,6 +43,7 @@ const runningTurn: ConversationTurn = {
       id: 'narration',
       role: 'assistant',
       content: 'Reading the conversation renderer and its event projection.',
+      kind: 'text',
       partial: false,
     },
     {
@@ -66,6 +67,7 @@ const runningTurn: ConversationTurn = {
       id: 'streaming-answer',
       role: 'assistant',
       content: 'The final answer is streaming below the process.',
+      kind: 'text',
       partial: true,
     },
   ],
@@ -116,7 +118,6 @@ export function ConversationFixture() {
       ? 'dark'
       : 'light',
   );
-  const [inspected, setInspected] = useState('');
 
   const updateTheme = (next: Exclude<ThemePreference, 'system'>) => {
     setTheme(next);
@@ -174,25 +175,18 @@ export function ConversationFixture() {
       </header>
       <div className="workspace project-fixture__workspace">
         {view === 'conversation' ? (
-          <ConversationPreview onInspectTool={setInspected} />
+          <ConversationPreview />
         ) : view === 'settings' ? (
           <SettingsPreview />
         ) : (
           <KnowledgePreview />
         )}
       </div>
-      <span className="sr-only" role="status" aria-live="polite">
-        {inspected ? `Trace focus requested for ${inspected}` : ''}
-      </span>
     </div>
   );
 }
 
-function ConversationPreview({
-  onInspectTool,
-}: {
-  onInspectTool: (toolId: string) => void;
-}) {
+function ConversationPreview() {
   return (
     <main className="conversation-fixture" aria-labelledby="fixture-chat-title">
       <section className="persistent-chat live-chat">
@@ -208,7 +202,7 @@ function ConversationPreview({
               <div className="chat-bubble user">
                 Review the conversation renderer and show the execution process.
               </div>
-              <TurnProcess turn={runningTurn} onInspectTool={onInspectTool} />
+              <TurnProcess turn={runningTurn} />
               <div className="chat-bubble assistant">
                 <AssistantMarkdown text={answer} />
               </div>

@@ -264,6 +264,7 @@ export interface ClientEvent {
   blockId?: string;
   partIndex?: number;
   kind: string;
+  sourceType?: string;
   completeness: string;
   text?: string;
   reasoningVisibility?: string;
@@ -272,6 +273,12 @@ export interface ClientEvent {
   toolStatus?: string;
   toolSubject?: string;
   author?: string;
+  startedAt?: string;
+  endedAt?: string;
+  durationMs?: number;
+  safeCommandSummary?: SafeCommandSummary;
+  outputPreview?: string;
+  stderrPreview?: string;
   partial: boolean;
   terminal: boolean;
   error?: SafeError;
@@ -1149,14 +1156,12 @@ export interface MentionText {
   text: string;
 }
 
-/**
- * ModelCatalog contains only models advertised by the currently bound Runtime.
- * It never exposes the Agent Card's endpoints, credentials or unrelated metadata.
- */
 export interface ModelCatalog {
-  models: string[];
-  defaultModel: string;
-  supported: boolean;
+  models: ModelCatalogItem[];
+}
+
+export interface ModelCatalogItem {
+  id: string;
 }
 
 export interface ModelCatalogResult {
@@ -1383,6 +1388,12 @@ export interface PlatformState {
 export interface PlatformStateResult {
   ok: boolean;
   value?: PlatformState;
+  error?: SafeError;
+}
+
+export interface PrefetchResult {
+  ok: boolean;
+  value?: Empty;
   error?: SafeError;
 }
 
@@ -1735,6 +1746,19 @@ export interface RuntimeconfigUpdateRequest {
   confirm: boolean;
 }
 
+export interface SafeCommandParameter {
+  name: string;
+  value: string;
+}
+
+export interface SafeCommandSummary {
+  binary?: string;
+  commandPreview?: string;
+  argumentCount?: number;
+  redacted?: boolean;
+  parameters?: SafeCommandParameter[];
+}
+
 export interface SafeError {
   code: string;
   message: string;
@@ -1860,6 +1884,22 @@ export interface SessionList {
 export interface SessionListResult {
   ok: boolean;
   value?: SessionList;
+  error?: SafeError;
+}
+
+/**
+ * ModelCatalog contains only models advertised by the currently bound Runtime.
+ * It never exposes the Agent Card's endpoints, credentials or unrelated metadata.
+ */
+export interface SessionModelCatalog {
+  models: string[];
+  defaultModel: string;
+  supported: boolean;
+}
+
+export interface SessionModelCatalogResult {
+  ok: boolean;
+  value?: SessionModelCatalog;
   error?: SafeError;
 }
 
@@ -2229,6 +2269,7 @@ export interface TraceReadRequest {
   connectionEpoch: number;
   sessionId: string;
   invocationId: string;
+  forceRefresh?: boolean;
 }
 
 export interface UpdateRequest {
@@ -2504,11 +2545,14 @@ export const Session = {
   list(r: ScopeRequest): Promise<SessionListResult> {
     return call("Session.List", r);
   },
+  modelCatalog(r: SessionRequest): Promise<ModelCatalogResult> {
+    return call("Session.ModelCatalog", r);
+  },
   /**
    * Models follows the same model-selection extension consumed by AgentKit Studio.
    * A legacy Runtime without this capability has no client-invented fallback list.
    */
-  models(r: ScopeRequest): Promise<ModelCatalogResult> {
+  models(r: ScopeRequest): Promise<SessionModelCatalogResult> {
     return call("Session.Models", r);
   },
   pending(r: ScopeRequest): Promise<PendingListResult> {
@@ -2720,6 +2764,9 @@ export const Workspace = {
   patchSpace(req: PatchSpaceRequest): Promise<SpaceResult> {
     return call("Workspace.PatchSpace", req);
   },
+  safeClose(): Promise<boolean> {
+    return call("Workspace.SafeClose");
+  },
   saveDraft(req: SaveDraftRequest): Promise<DraftResult> {
     return call("Workspace.SaveDraft", req);
   },
@@ -2826,6 +2873,9 @@ export const RuntimeConfig = {
 } as const;
 
 export const Trace = {
+  prefetch(r: TraceReadRequest): Promise<PrefetchResult> {
+    return call("Trace.Prefetch", r);
+  },
   read(r: TraceReadRequest): Promise<ReadResult> {
     return call("Trace.Read", r);
   },

@@ -1,13 +1,13 @@
-import { useMessages } from './locale';
-import { Check, ChevronDown, Cpu, Search, X } from 'lucide-react';
-import { useEffect, useRef, useState } from 'react';
+import { Check, ChevronDown, Cpu, Search } from 'lucide-react';
+import { useEffect, useLayoutEffect, useId, useRef, useState } from 'react';
 import type { ExecutionConfigVM } from './models';
-import type { RuntimeModelCatalog } from './model-catalog';
-import { filterModels, isKnownModel } from './model-catalog';
 import {
-  modelSelectionLabel,
-  type ModelSelectionMode,
-} from './use-composer-model';
+  filterModels,
+  type RuntimeModelCatalog,
+  type ModelOption,
+} from './model-catalog';
+import { type ModelSelectionMode } from './use-composer-model';
+import { useMessages } from './locale';
 
 export function ComposerModelPicker({
   config,
@@ -15,37 +15,67 @@ export function ComposerModelPicker({
   needsInitialization,
   locked,
   onApply,
-  catalog = { models: [], defaultModel: '', supported: false },
-  catalogLoading = false,
+  modelCatalog = [],
+  catalog,
   catalogError = '',
   onRefreshCatalog,
+  placement = 'above',
+  catalogLoading = false,
+  catalogFailed = false,
+  onRetryCatalog,
+  unavailable = false,
 }: {
-  catalog?: RuntimeModelCatalog;
-  catalogLoading?: boolean;
-  catalogError?: string;
-  onRefreshCatalog?: () => void;
   config?: ExecutionConfigVM;
   busy: boolean;
   needsInitialization?: boolean;
   locked?: boolean;
+  modelCatalog?: ModelOption[];
+  catalog?: RuntimeModelCatalog;
+  catalogError?: string;
+  onRefreshCatalog?: () => void;
   onApply: (mode: ModelSelectionMode, model?: string) => Promise<boolean>;
+  placement?: 'above' | 'below';
+  catalogLoading?: boolean;
+  catalogFailed?: boolean;
+  onRetryCatalog?: () => void;
+  unavailable?: boolean;
 }) {
   const m = useMessages();
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState('');
   const root = useRef<HTMLDivElement>(null);
-  const canApply =
-    !busy && !locked && !catalogLoading && !catalogError && catalog.supported;
-  const selectionDisabled = !canApply;
-  const defaultModel = catalog.defaultModel || catalog.models[0]?.id || '';
-  const label = modelSelectionLabel(config, m, defaultModel);
+  const trigger = useRef<HTMLButtonElement>(null);
+  const search = useRef<HTMLInputElement>(null);
+  const menuId = useId();
+  modelCatalog = catalog?.models ?? modelCatalog;
+  const disabled =
+    busy ||
+    !!locked ||
+    unavailable ||
+    catalogLoading ||
+    catalogFailed ||
+    !!catalogError ||
+    catalog?.supported === false;
+  onRetryCatalog = onRetryCatalog ?? onRefreshCatalog;
+  catalogFailed = catalogFailed || !!catalogError;
+  const label =
+    config?.modelMode === 'clear'
+      ? m.noModelOverride()
+      : config?.model || m.runtimeDefaultModel();
   const invalidCurrent =
-    catalog.supported &&
+    !catalogLoading &&
+    !catalogFailed &&
+    config?.modelMode !== 'clear' &&
     !!config?.model &&
-    !isKnownModel(config.model, catalog.models);
-  const models = filterModels(query, catalog.models);
-  const currentModelLabel =
-    config?.model || defaultModel || m.desktopRuntimeDefault();
+    !modelCatalog.some(({ id }) => id === config?.model);
+  const models = filterModels(query, modelCatalog);
+  const inheritedTarget =
+    config?.modelMode === 'inherit' ? config.model : undefined;
+  const defaultBlocked =
+    !!inheritedTarget && !modelCatalog.some(({ id }) => id === inheritedTarget);
+  useLayoutEffect(() => {
+    if (open && !disabled) search.current?.focus({ preventScroll: true });
+  }, [open, disabled]);
   useEffect(() => {
     if (!open || typeof document === 'undefined') return;
     const close = (event: MouseEvent) => {
@@ -54,162 +84,193 @@ export function ComposerModelPicker({
     document.addEventListener('mousedown', close);
     return () => document.removeEventListener('mousedown', close);
   }, [open]);
-  const choose = (mode: ModelSelectionMode, model?: string) => {
-    void onApply(mode, model).then((saved) => {
-      if (saved) setOpen(false);
-    });
+  const choose = async (mode: ModelSelectionMode, id?: string) => {
+    if (mode === 'inherit' && defaultBlocked) return;
+    if (await onApply(mode, id)) {
+      setOpen(false);
+      trigger.current?.focus({ preventScroll: true });
+    }
   };
+  const options: { mode: ModelSelectionMode; id?: string; label: string }[] = [
+    { mode: 'inherit', label: m.runtimeDefaultModel() },
+    ...models.map(({ id }) => ({ mode: 'replace' as const, id, label: id })),
+    { mode: 'clear', label: m.noModelOverride() },
+  ];
   return (
     <div
       className="composer-model"
+      data-placement={placement}
       ref={root}
+      onBlur={(event) => {
+        if (
+          event.relatedTarget &&
+          !event.currentTarget.contains(event.relatedTarget)
+        )
+          setOpen(false);
+      }}
       onKeyDown={(event) => {
-        if (event.key === 'Escape') setOpen(false);
+        if (event.key === 'Escape' && open) {
+          event.preventDefault();
+          event.stopPropagation();
+          setOpen(false);
+          trigger.current?.focus({ preventScroll: true });
+        }
       }}
     >
       <button
+        ref={trigger}
         type="button"
         className="composer-model-trigger"
-        aria-haspopup="true"
+        aria-haspopup="dialog"
         aria-expanded={open}
+        aria-controls={open ? menuId : undefined}
         aria-label={m.chatModelLabel(label)}
-        title={
-          locked
-            ? m.modelWaitForTurn()
-            : canApply
-              ? m.modelChooseCatalog()
-              : m.modelLoadingConfiguration()
-        }
-        disabled={busy}
+        title={locked ? m.modelLocked() : label}
+        disabled={busy || unavailable}
         onClick={() => {
           setQuery('');
           setOpen((value) => !value);
         }}
       >
-        <Cpu size={13} />
+        <Cpu size={14} />
         <span>{label}</span>
         <ChevronDown size={12} />
       </button>
       {open && (
         <div
+          id={menuId}
           className="composer-model-menu"
-          role="group"
-          aria-label={m.desktopModelSelection()}
+          role="dialog"
+          aria-label={m.modelSelection()}
         >
-          <div className="composer-model-head">
-            <div>
-              <p className="composer-model-heading">
-                {m.runtimeModelSelectionTitle()}
-              </p>
-              <p className="composer-model-note">
-                {m.desktopAppliesOnlyToNewMessagesEarlierTurnsKeepThe()}
-              </p>
-            </div>
-            <button
-              type="button"
-              className="composer-model-close"
-              aria-label={m.desktopCloseModelSelector()}
-              onClick={() => setOpen(false)}
-            >
-              <X size={13} />
-            </button>
-          </div>
-          {catalogLoading && (
-            <p role="status" className="composer-model-note">
-              {m.modelCatalogLoading()}
+          <label className="composer-model-search">
+            <Search size={14} />
+            <input
+              ref={search}
+              value={query}
+              disabled={disabled}
+              placeholder={m.searchModelPlaceholder()}
+              aria-label={m.filterModels()}
+              onChange={(event) => setQuery(event.target.value)}
+              onKeyDown={(event) => {
+                if (event.key === 'Enter' && !event.nativeEvent?.isComposing) {
+                  event.preventDefault();
+                  event.stopPropagation();
+                }
+                if (event.key === 'ArrowDown') {
+                  event.preventDefault();
+                  root.current
+                    ?.querySelector<HTMLButtonElement>(
+                      '[role="radio"]:not(:disabled)',
+                    )
+                    ?.focus();
+                }
+              }}
+            />
+          </label>
+          {locked && (
+            <p className="composer-model-warning" role="status">
+              {m.modelLocked()}
             </p>
           )}
-          {!catalogLoading && catalogError && (
-            <div className="composer-model-warning" role="alert">
-              <p>{catalogError}</p>
-              {onRefreshCatalog && (
+          {invalidCurrent && (
+            <p className="composer-model-warning" role="status">
+              {catalog
+                ? m.chatCurrentModelInvalid(config?.model || '')
+                : m.modelNotListed(config?.model || '')}
+            </p>
+          )}
+          {defaultBlocked && (
+            <p className="composer-model-warning" role="status">
+              {m.chatModelInvalid(inheritedTarget || '')}
+            </p>
+          )}
+          {needsInitialization && (
+            <span className="sr-only">{m.modelInitialization()}</span>
+          )}
+          {catalogLoading && (
+            <p className="composer-model-empty" role="status">
+              {m.loadingModels()}
+            </p>
+          )}
+          {catalogFailed && (
+            <div className="composer-model-warning" role="status">
+              <span>{catalogError || m.modelCatalogReadFailed()}</span>
+              {onRetryCatalog && (
                 <button
                   type="button"
                   className="text-button"
-                  onClick={onRefreshCatalog}
+                  onClick={onRetryCatalog}
                 >
                   {m.modelCatalogRetry()}
                 </button>
               )}
             </div>
           )}
-          {!catalogLoading && !catalogError && !catalog.supported && (
-            <p role="status" className="composer-model-note">
-              {m.modelCatalogUnavailable()}
-            </p>
-          )}
-          {invalidCurrent && (
-            <p className="composer-model-warning" role="status">
-              {m.chatCurrentModelInvalid(config?.model || '')}
-            </p>
-          )}
-          {locked && (
-            <div className="composer-model-warning" role="status">
-              <span>
-                {m.desktopTheCurrentTurnIsStillRunningOrAwaitingOutcome()}
-              </span>
-            </div>
-          )}
-          {!locked && needsInitialization && (
-            <p className="composer-model-note" role="status">
-              {m.desktopThisLegacyConversationHasNotInitializedItsNextTurn()}
-            </p>
-          )}
-          <label className="composer-model-search">
-            <Search size={13} />
-            <input
-              autoFocus={!selectionDisabled}
-              value={query}
-              disabled={selectionDisabled}
-              placeholder={m.modelSearchRuntime()}
-              aria-label={m.desktopFilterModels()}
-              onChange={(event) => setQuery(event.target.value)}
-              onKeyDown={(event) => {
-                if (event.key === 'Enter') {
-                  event.preventDefault();
-                  event.stopPropagation();
-                }
-              }}
-            />
-          </label>
           <div
-            className={`composer-model-list ${
-              selectionDisabled ? 'is-disabled' : ''
-            }`}
+            className="composer-model-list"
             role="radiogroup"
-            aria-disabled={selectionDisabled || undefined}
+            aria-label={m.model()}
+            aria-disabled={disabled || undefined}
+            onKeyDown={(event) => {
+              if (!['ArrowDown', 'ArrowUp', 'Home', 'End'].includes(event.key))
+                return;
+              const buttons = [
+                ...event.currentTarget.querySelectorAll<HTMLButtonElement>(
+                  '[role="radio"]:not(:disabled)',
+                ),
+              ];
+              if (!buttons.length) return;
+              event.preventDefault();
+              const index = buttons.indexOf(event.target as HTMLButtonElement);
+              const next =
+                event.key === 'Home'
+                  ? 0
+                  : event.key === 'End'
+                    ? buttons.length - 1
+                    : (index +
+                        (event.key === 'ArrowUp' ? -1 : 1) +
+                        buttons.length) %
+                      buttons.length;
+              buttons[next]?.focus({ preventScroll: true });
+              buttons[next]?.scrollIntoView?.({ block: 'nearest' });
+            }}
           >
-            {models.map((model) => (
-              <button
-                key={model.id}
-                type="button"
-                role="radio"
-                aria-pressed={(config?.model || defaultModel) === model.id}
-                aria-checked={(config?.model || defaultModel) === model.id}
-                className="composer-model-option"
-                disabled={selectionDisabled}
-                onClick={() => choose('replace', model.id)}
-              >
-                <span className="composer-model-radio" aria-hidden="true" />
-                <span>
-                  <strong>{model.id}</strong>
-                  {model.id === defaultModel && (
-                    <small>{m.runtimeDefaultModelHint()}</small>
-                  )}
-                </span>
-                {config?.modelMode === 'replace' &&
-                  config.model === model.id && <Check size={13} />}
-              </button>
-            ))}
-            {!models.length && catalog.supported && !catalogLoading && (
+            {options.map((option) => {
+              const selected =
+                config?.modelMode === option.mode &&
+                (option.mode !== 'replace' || config?.model === option.id);
+              return (
+                <button
+                  key={option.id || option.mode}
+                  type="button"
+                  role="radio"
+                  aria-checked={selected}
+                  aria-pressed={selected}
+                  className="composer-model-option"
+                  disabled={
+                    disabled || (option.mode === 'inherit' && defaultBlocked)
+                  }
+                  onMouseDown={(event) => event.preventDefault()}
+                  onClick={() => void choose(option.mode, option.id)}
+                >
+                  <span>
+                    <strong>{option.label}</strong>
+                  </span>
+                  <Check
+                    size={14}
+                    aria-hidden="true"
+                    className={selected ? '' : 'model-check-hidden'}
+                  />
+                </button>
+              );
+            })}
+            {!models.length && !catalogLoading && !catalogFailed && (
               <p className="composer-model-empty">
-                {m.desktopNoModelsMatchTheFilter()}
+                {query.trim() ? m.noModelsMatch() : m.noAccountModels()}
               </p>
             )}
           </div>
-          <p className="composer-model-footnote">
-            {m.runtimeModelChoice(currentModelLabel)}
-          </p>
         </div>
       )}
     </div>

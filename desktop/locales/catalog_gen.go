@@ -510,11 +510,11 @@ func (msgs Messages) SwitchRuntime() string {
 	return Catalog.Format(msgs.locale, "switchRuntime", nil)
 }
 
-// RuntimeConnected says "Runtime 已连接。现在可以开始会话；显式业务身份是可选覆盖。"
+// RuntimeConnected says "Runtime 已连接。现在可以新建助手；显式业务身份是可选覆盖。"
 // in the language the app shows.
 func RuntimeConnected() string { return In(i18n.Locale()).RuntimeConnected() }
 
-// RuntimeConnected says "Runtime 已连接。现在可以开始会话；显式业务身份是可选覆盖。"
+// RuntimeConnected says "Runtime 已连接。现在可以新建助手；显式业务身份是可选覆盖。"
 // in the language of msgs.
 func (msgs Messages) RuntimeConnected() string {
 	return Catalog.Format(msgs.locale, "runtimeConnected", nil)
@@ -722,21 +722,21 @@ func (msgs Messages) SpaceName() string {
 	return Catalog.Format(msgs.locale, "spaceName", nil)
 }
 
-// RenameConversation says "重命名会话"
+// RenameConversation says "重命名助手"
 // in the language the app shows.
 func RenameConversation() string { return In(i18n.Locale()).RenameConversation() }
 
-// RenameConversation says "重命名会话"
+// RenameConversation says "重命名助手"
 // in the language of msgs.
 func (msgs Messages) RenameConversation() string {
 	return Catalog.Format(msgs.locale, "renameConversation", nil)
 }
 
-// ConversationTitle says "会话标题"
+// ConversationTitle says "助手名称"
 // in the language the app shows.
 func ConversationTitle() string { return In(i18n.Locale()).ConversationTitle() }
 
-// ConversationTitle says "会话标题"
+// ConversationTitle says "助手名称"
 // in the language of msgs.
 func (msgs Messages) ConversationTitle() string {
 	return Catalog.Format(msgs.locale, "conversationTitle", nil)
@@ -822,11 +822,11 @@ func (msgs Messages) ToggleNavigation() string {
 	return Catalog.Format(msgs.locale, "toggleNavigation", nil)
 }
 
-// NewConversation says "新建会话"
+// NewConversation says "新建助手"
 // in the language the app shows.
 func NewConversation() string { return In(i18n.Locale()).NewConversation() }
 
-// NewConversation says "新建会话"
+// NewConversation says "新建助手"
 // in the language of msgs.
 func (msgs Messages) NewConversation() string {
 	return Catalog.Format(msgs.locale, "newConversation", nil)
@@ -932,11 +932,11 @@ func (msgs Messages) WorkspaceNavigation() string {
 	return Catalog.Format(msgs.locale, "workspaceNavigation", nil)
 }
 
-// FindConversations says "查找会话"
+// FindConversations says "查找助手"
 // in the language the app shows.
 func FindConversations() string { return In(i18n.Locale()).FindConversations() }
 
-// FindConversations says "查找会话"
+// FindConversations says "查找助手"
 // in the language of msgs.
 func (msgs Messages) FindConversations() string {
 	return Catalog.Format(msgs.locale, "findConversations", nil)
@@ -972,11 +972,11 @@ func (msgs Messages) Spaces() string {
 	return Catalog.Format(msgs.locale, "spaces", nil)
 }
 
-// RecentChats says "最近会话"
+// RecentChats says "最近助手"
 // in the language the app shows.
 func RecentChats() string { return In(i18n.Locale()).RecentChats() }
 
-// RecentChats says "最近会话"
+// RecentChats says "最近助手"
 // in the language of msgs.
 func (msgs Messages) RecentChats() string {
 	return Catalog.Format(msgs.locale, "recentChats", nil)
@@ -1082,31 +1082,31 @@ func (msgs Messages) AuthenticationRequired() string {
 	return Catalog.Format(msgs.locale, "authenticationRequired", nil)
 }
 
-// Conversation says "会话"
+// Conversation says "助手"
 // in the language the app shows.
 func Conversation() string { return In(i18n.Locale()).Conversation() }
 
-// Conversation says "会话"
+// Conversation says "助手"
 // in the language of msgs.
 func (msgs Messages) Conversation() string {
 	return Catalog.Format(msgs.locale, "conversation", nil)
 }
 
-// ScheduleConversation says "为当前会话设置计划"
+// ScheduleConversation says "为当前助手设置计划"
 // in the language the app shows.
 func ScheduleConversation() string { return In(i18n.Locale()).ScheduleConversation() }
 
-// ScheduleConversation says "为当前会话设置计划"
+// ScheduleConversation says "为当前助手设置计划"
 // in the language of msgs.
 func (msgs Messages) ScheduleConversation() string {
 	return Catalog.Format(msgs.locale, "scheduleConversation", nil)
 }
 
-// ContinuingConversation says "一段可以持续的会话。"
+// ContinuingConversation says "一个可持续工作的助手。"
 // in the language the app shows.
 func ContinuingConversation() string { return In(i18n.Locale()).ContinuingConversation() }
 
-// ContinuingConversation says "一段可以持续的会话。"
+// ContinuingConversation says "一个可持续工作的助手。"
 // in the language of msgs.
 func (msgs Messages) ContinuingConversation() string {
 	return Catalog.Format(msgs.locale, "continuingConversation", nil)
@@ -1192,13 +1192,13 @@ func (msgs Messages) WorkspaceFollowThrough() string {
 	return Catalog.Format(msgs.locale, "workspaceFollowThrough", nil)
 }
 
-// ConnectRuntimeOpenConversation says "连接云账户、选择 MPA Runtime，然后开始一段持续会话。本地页面可随时使用。"
+// ConnectRuntimeOpenConversation says "连接云账户、选择 MPA Runtime，然后新建助手。本地页面可随时使用。"
 // in the language the app shows.
 func ConnectRuntimeOpenConversation() string {
 	return In(i18n.Locale()).ConnectRuntimeOpenConversation()
 }
 
-// ConnectRuntimeOpenConversation says "连接云账户、选择 MPA Runtime，然后开始一段持续会话。本地页面可随时使用。"
+// ConnectRuntimeOpenConversation says "连接云账户、选择 MPA Runtime，然后新建助手。本地页面可随时使用。"
 // in the language of msgs.
 func (msgs Messages) ConnectRuntimeOpenConversation() string {
 	return Catalog.Format(msgs.locale, "connectRuntimeOpenConversation", nil)
@@ -1314,11 +1314,11 @@ func (msgs Messages) EnterToSend() string {
 	return Catalog.Format(msgs.locale, "enterToSend", nil)
 }
 
-// StopCurrentSession says "停止当前会话"
+// StopCurrentSession says "停止当前助手任务"
 // in the language the app shows.
 func StopCurrentSession() string { return In(i18n.Locale()).StopCurrentSession() }
 
-// StopCurrentSession says "停止当前会话"
+// StopCurrentSession says "停止当前助手任务"
 // in the language of msgs.
 func (msgs Messages) StopCurrentSession() string {
 	return Catalog.Format(msgs.locale, "stopCurrentSession", nil)
@@ -1920,11 +1920,11 @@ func (msgs Messages) Assistant() string {
 	return Catalog.Format(msgs.locale, "assistant", nil)
 }
 
-// Conversations says "会话"
+// Conversations says "助手"
 // in the language the app shows.
 func Conversations() string { return In(i18n.Locale()).Conversations() }
 
-// Conversations says "会话"
+// Conversations says "助手"
 // in the language of msgs.
 func (msgs Messages) Conversations() string {
 	return Catalog.Format(msgs.locale, "conversations", nil)
@@ -1960,43 +1960,43 @@ func (msgs Messages) Theme() string {
 	return Catalog.Format(msgs.locale, "theme", nil)
 }
 
-// SearchConversations says "搜索会话"
+// SearchConversations says "搜索助手"
 // in the language the app shows.
 func SearchConversations() string { return In(i18n.Locale()).SearchConversations() }
 
-// SearchConversations says "搜索会话"
+// SearchConversations says "搜索助手"
 // in the language of msgs.
 func (msgs Messages) SearchConversations() string {
 	return Catalog.Format(msgs.locale, "searchConversations", nil)
 }
 
-// NoConversations says "暂无会话。"
+// NoConversations says "暂无助手。"
 // in the language the app shows.
 func NoConversations() string { return In(i18n.Locale()).NoConversations() }
 
-// NoConversations says "暂无会话。"
+// NoConversations says "暂无助手。"
 // in the language of msgs.
 func (msgs Messages) NoConversations() string {
 	return Catalog.Format(msgs.locale, "noConversations", nil)
 }
 
-// SelectConversationFirst says "请先选择一个会话。"
+// SelectConversationFirst says "请先选择一个助手。"
 // in the language the app shows.
 func SelectConversationFirst() string { return In(i18n.Locale()).SelectConversationFirst() }
 
-// SelectConversationFirst says "请先选择一个会话。"
+// SelectConversationFirst says "请先选择一个助手。"
 // in the language of msgs.
 func (msgs Messages) SelectConversationFirst() string {
 	return Catalog.Format(msgs.locale, "selectConversationFirst", nil)
 }
 
-// KnowledgeForConversation says "会话 {session} 的知识库"
+// KnowledgeForConversation says "助手 {session} 的知识库"
 // in the language the app shows.
 func KnowledgeForConversation(session string) string {
 	return In(i18n.Locale()).KnowledgeForConversation(session)
 }
 
-// KnowledgeForConversation says "会话 {session} 的知识库"
+// KnowledgeForConversation says "助手 {session} 的知识库"
 // in the language of msgs.
 func (msgs Messages) KnowledgeForConversation(session string) string {
 	return Catalog.Format(msgs.locale, "knowledgeForConversation", map[string]any{"session": session})
@@ -2012,13 +2012,13 @@ func (msgs Messages) ScheduledForAssistant() string {
 	return Catalog.Format(msgs.locale, "scheduledForAssistant", nil)
 }
 
-// SelectConversationForSchedules says "请选择一个会话，将定时任务限定到对应助手。"
+// SelectConversationForSchedules says "请选择一个助手，将定时任务限定到对应助手。"
 // in the language the app shows.
 func SelectConversationForSchedules() string {
 	return In(i18n.Locale()).SelectConversationForSchedules()
 }
 
-// SelectConversationForSchedules says "请选择一个会话，将定时任务限定到对应助手。"
+// SelectConversationForSchedules says "请选择一个助手，将定时任务限定到对应助手。"
 // in the language of msgs.
 func (msgs Messages) SelectConversationForSchedules() string {
 	return Catalog.Format(msgs.locale, "selectConversationForSchedules", nil)
@@ -2074,11 +2074,11 @@ func (msgs Messages) ThemeChanged() string {
 	return Catalog.Format(msgs.locale, "themeChanged", nil)
 }
 
-// SessionKnowledge says "会话知识库"
+// SessionKnowledge says "助手知识库"
 // in the language the app shows.
 func SessionKnowledge() string { return In(i18n.Locale()).SessionKnowledge() }
 
-// SessionKnowledge says "会话知识库"
+// SessionKnowledge says "助手知识库"
 // in the language of msgs.
 func (msgs Messages) SessionKnowledge() string {
 	return Catalog.Format(msgs.locale, "sessionKnowledge", nil)
@@ -10122,4 +10122,638 @@ func ChannelBindingRetained() string { return In(i18n.Locale()).ChannelBindingRe
 // in the language of msgs.
 func (msgs Messages) ChannelBindingRetained() string {
 	return Catalog.Format(msgs.locale, "channelBindingRetained", nil)
+}
+
+// AssistantSettingsTitle says "助手设置"
+// in the language the app shows.
+func AssistantSettingsTitle() string { return In(i18n.Locale()).AssistantSettingsTitle() }
+
+// AssistantSettingsTitle says "助手设置"
+// in the language of msgs.
+func (msgs Messages) AssistantSettingsTitle() string {
+	return Catalog.Format(msgs.locale, "assistantSettingsTitle", nil)
+}
+
+// NewAssistantDescription says "创建助手，设置名称、模型、AGENTS.md 和 Skills。"
+// in the language the app shows.
+func NewAssistantDescription() string { return In(i18n.Locale()).NewAssistantDescription() }
+
+// NewAssistantDescription says "创建助手，设置名称、模型、AGENTS.md 和 Skills。"
+// in the language of msgs.
+func (msgs Messages) NewAssistantDescription() string {
+	return Catalog.Format(msgs.locale, "newAssistantDescription", nil)
+}
+
+// AssistantSettingsDescription says "设置助手名称、模型、AGENTS.md 和 Skills；新回合会使用这些配置。"
+// in the language the app shows.
+func AssistantSettingsDescription() string { return In(i18n.Locale()).AssistantSettingsDescription() }
+
+// AssistantSettingsDescription says "设置助手名称、模型、AGENTS.md 和 Skills；新回合会使用这些配置。"
+// in the language of msgs.
+func (msgs Messages) AssistantSettingsDescription() string {
+	return Catalog.Format(msgs.locale, "assistantSettingsDescription", nil)
+}
+
+// CreateAssistant says "创建助手"
+// in the language the app shows.
+func CreateAssistant() string { return In(i18n.Locale()).CreateAssistant() }
+
+// CreateAssistant says "创建助手"
+// in the language of msgs.
+func (msgs Messages) CreateAssistant() string {
+	return Catalog.Format(msgs.locale, "createAssistant", nil)
+}
+
+// SaveAssistantSettings says "保存助手设置"
+// in the language the app shows.
+func SaveAssistantSettings() string { return In(i18n.Locale()).SaveAssistantSettings() }
+
+// SaveAssistantSettings says "保存助手设置"
+// in the language of msgs.
+func (msgs Messages) SaveAssistantSettings() string {
+	return Catalog.Format(msgs.locale, "saveAssistantSettings", nil)
+}
+
+// RuntimeDefaultModel says "Runtime 默认"
+// in the language the app shows.
+func RuntimeDefaultModel() string { return In(i18n.Locale()).RuntimeDefaultModel() }
+
+// RuntimeDefaultModel says "Runtime 默认"
+// in the language of msgs.
+func (msgs Messages) RuntimeDefaultModel() string {
+	return Catalog.Format(msgs.locale, "runtimeDefaultModel", nil)
+}
+
+// NoModelOverride says "不覆盖模型"
+// in the language the app shows.
+func NoModelOverride() string { return In(i18n.Locale()).NoModelOverride() }
+
+// NoModelOverride says "不覆盖模型"
+// in the language of msgs.
+func (msgs Messages) NoModelOverride() string {
+	return Catalog.Format(msgs.locale, "noModelOverride", nil)
+}
+
+// SearchModels says "搜索模型"
+// in the language the app shows.
+func SearchModels() string { return In(i18n.Locale()).SearchModels() }
+
+// SearchModels says "搜索模型"
+// in the language of msgs.
+func (msgs Messages) SearchModels() string {
+	return Catalog.Format(msgs.locale, "searchModels", nil)
+}
+
+// NoAccountModels says "当前账户没有可用的 Responses 模型。"
+// in the language the app shows.
+func NoAccountModels() string { return In(i18n.Locale()).NoAccountModels() }
+
+// NoAccountModels says "当前账户没有可用的 Responses 模型。"
+// in the language of msgs.
+func (msgs Messages) NoAccountModels() string {
+	return Catalog.Format(msgs.locale, "noAccountModels", nil)
+}
+
+// NoModelsMatch says "没有匹配的模型。"
+// in the language the app shows.
+func NoModelsMatch() string { return In(i18n.Locale()).NoModelsMatch() }
+
+// NoModelsMatch says "没有匹配的模型。"
+// in the language of msgs.
+func (msgs Messages) NoModelsMatch() string {
+	return Catalog.Format(msgs.locale, "noModelsMatch", nil)
+}
+
+// AssistantNameRequired says "助手名称不能为空。"
+// in the language the app shows.
+func AssistantNameRequired() string { return In(i18n.Locale()).AssistantNameRequired() }
+
+// AssistantNameRequired says "助手名称不能为空。"
+// in the language of msgs.
+func (msgs Messages) AssistantNameRequired() string {
+	return Catalog.Format(msgs.locale, "assistantNameRequired", nil)
+}
+
+// ChooseModelOrDefault says "请选择一个模型，或使用 Runtime 默认。"
+// in the language the app shows.
+func ChooseModelOrDefault() string { return In(i18n.Locale()).ChooseModelOrDefault() }
+
+// ChooseModelOrDefault says "请选择一个模型，或使用 Runtime 默认。"
+// in the language of msgs.
+func (msgs Messages) ChooseModelOrDefault() string {
+	return Catalog.Format(msgs.locale, "chooseModelOrDefault", nil)
+}
+
+// LoadAssistantSettingsFailed says "无法加载助手设置。"
+// in the language the app shows.
+func LoadAssistantSettingsFailed() string { return In(i18n.Locale()).LoadAssistantSettingsFailed() }
+
+// LoadAssistantSettingsFailed says "无法加载助手设置。"
+// in the language of msgs.
+func (msgs Messages) LoadAssistantSettingsFailed() string {
+	return Catalog.Format(msgs.locale, "loadAssistantSettingsFailed", nil)
+}
+
+// CreateAssistantFailed says "无法创建助手。"
+// in the language the app shows.
+func CreateAssistantFailed() string { return In(i18n.Locale()).CreateAssistantFailed() }
+
+// CreateAssistantFailed says "无法创建助手。"
+// in the language of msgs.
+func (msgs Messages) CreateAssistantFailed() string {
+	return Catalog.Format(msgs.locale, "createAssistantFailed", nil)
+}
+
+// SaveAssistantSettingsFailed says "无法保存助手设置。"
+// in the language the app shows.
+func SaveAssistantSettingsFailed() string { return In(i18n.Locale()).SaveAssistantSettingsFailed() }
+
+// SaveAssistantSettingsFailed says "无法保存助手设置。"
+// in the language of msgs.
+func (msgs Messages) SaveAssistantSettingsFailed() string {
+	return Catalog.Format(msgs.locale, "saveAssistantSettingsFailed", nil)
+}
+
+// LoadingAssistantSettings says "正在加载助手设置…"
+// in the language the app shows.
+func LoadingAssistantSettings() string { return In(i18n.Locale()).LoadingAssistantSettings() }
+
+// LoadingAssistantSettings says "正在加载助手设置…"
+// in the language of msgs.
+func (msgs Messages) LoadingAssistantSettings() string {
+	return Catalog.Format(msgs.locale, "loadingAssistantSettings", nil)
+}
+
+// AgentsMdHelp says "这些持久指令会附加到后续回合。已有历史不会被重写。"
+// in the language the app shows.
+func AgentsMdHelp() string { return In(i18n.Locale()).AgentsMdHelp() }
+
+// AgentsMdHelp says "这些持久指令会附加到后续回合。已有历史不会被重写。"
+// in the language of msgs.
+func (msgs Messages) AgentsMdHelp() string {
+	return Catalog.Format(msgs.locale, "agentsMdHelp", nil)
+}
+
+// SelectedSkills says "已选择 Skills"
+// in the language the app shows.
+func SelectedSkills() string { return In(i18n.Locale()).SelectedSkills() }
+
+// SelectedSkills says "已选择 Skills"
+// in the language of msgs.
+func (msgs Messages) SelectedSkills() string {
+	return Catalog.Format(msgs.locale, "selectedSkills", nil)
+}
+
+// NoSkillsSelected says "还没有选择 Skill。"
+// in the language the app shows.
+func NoSkillsSelected() string { return In(i18n.Locale()).NoSkillsSelected() }
+
+// NoSkillsSelected says "还没有选择 Skill。"
+// in the language of msgs.
+func (msgs Messages) NoSkillsSelected() string {
+	return Catalog.Format(msgs.locale, "noSkillsSelected", nil)
+}
+
+// ImportSkillText says "导入 Skill 文本"
+// in the language the app shows.
+func ImportSkillText() string { return In(i18n.Locale()).ImportSkillText() }
+
+// ImportSkillText says "导入 Skill 文本"
+// in the language of msgs.
+func (msgs Messages) ImportSkillText() string {
+	return Catalog.Format(msgs.locale, "importSkillText", nil)
+}
+
+// ImportSkillPlaceholder says "粘贴 skill 名称或简短 skill 指令。"
+// in the language the app shows.
+func ImportSkillPlaceholder() string { return In(i18n.Locale()).ImportSkillPlaceholder() }
+
+// ImportSkillPlaceholder says "粘贴 skill 名称或简短 skill 指令。"
+// in the language of msgs.
+func (msgs Messages) ImportSkillPlaceholder() string {
+	return Catalog.Format(msgs.locale, "importSkillPlaceholder", nil)
+}
+
+// ImportSkill says "导入 Skill"
+// in the language the app shows.
+func ImportSkill() string { return In(i18n.Locale()).ImportSkill() }
+
+// ImportSkill says "导入 Skill"
+// in the language of msgs.
+func (msgs Messages) ImportSkill() string {
+	return Catalog.Format(msgs.locale, "importSkill", nil)
+}
+
+// SkillSpace says "Skill Space"
+// in the language the app shows.
+func SkillSpace() string { return In(i18n.Locale()).SkillSpace() }
+
+// SkillSpace says "Skill Space"
+// in the language of msgs.
+func (msgs Messages) SkillSpace() string {
+	return Catalog.Format(msgs.locale, "skillSpace", nil)
+}
+
+// SearchSkills says "搜索 Skills"
+// in the language the app shows.
+func SearchSkills() string { return In(i18n.Locale()).SearchSkills() }
+
+// SearchSkills says "搜索 Skills"
+// in the language of msgs.
+func (msgs Messages) SearchSkills() string {
+	return Catalog.Format(msgs.locale, "searchSkills", nil)
+}
+
+// EditAssistant says "编辑"
+// in the language the app shows.
+func EditAssistant() string { return In(i18n.Locale()).EditAssistant() }
+
+// EditAssistant says "编辑"
+// in the language of msgs.
+func (msgs Messages) EditAssistant() string {
+	return Catalog.Format(msgs.locale, "editAssistant", nil)
+}
+
+// RetryLoading says "重试"
+// in the language the app shows.
+func RetryLoading() string { return In(i18n.Locale()).RetryLoading() }
+
+// RetryLoading says "重试"
+// in the language of msgs.
+func (msgs Messages) RetryLoading() string {
+	return Catalog.Format(msgs.locale, "retryLoading", nil)
+}
+
+// LoadingModels says "正在加载模型…"
+// in the language the app shows.
+func LoadingModels() string { return In(i18n.Locale()).LoadingModels() }
+
+// LoadingModels says "正在加载模型…"
+// in the language of msgs.
+func (msgs Messages) LoadingModels() string {
+	return Catalog.Format(msgs.locale, "loadingModels", nil)
+}
+
+// ModelsLoadFailed says "无法加载模型列表，可重试或使用 Runtime 默认模型。"
+// in the language the app shows.
+func ModelsLoadFailed() string { return In(i18n.Locale()).ModelsLoadFailed() }
+
+// ModelsLoadFailed says "无法加载模型列表，可重试或使用 Runtime 默认模型。"
+// in the language of msgs.
+func (msgs Messages) ModelsLoadFailed() string {
+	return Catalog.Format(msgs.locale, "modelsLoadFailed", nil)
+}
+
+// SkillsLoadFailed says "无法加载 Skills 目录，已选择的 Skills 会保留。"
+// in the language the app shows.
+func SkillsLoadFailed() string { return In(i18n.Locale()).SkillsLoadFailed() }
+
+// SkillsLoadFailed says "无法加载 Skills 目录，已选择的 Skills 会保留。"
+// in the language of msgs.
+func (msgs Messages) SkillsLoadFailed() string {
+	return Catalog.Format(msgs.locale, "skillsLoadFailed", nil)
+}
+
+// AssistantNamePlaceholder says "为助手命名"
+// in the language the app shows.
+func AssistantNamePlaceholder() string { return In(i18n.Locale()).AssistantNamePlaceholder() }
+
+// AssistantNamePlaceholder says "为助手命名"
+// in the language of msgs.
+func (msgs Messages) AssistantNamePlaceholder() string {
+	return Catalog.Format(msgs.locale, "assistantNamePlaceholder", nil)
+}
+
+// AgentsMdPlaceholder says "为此助手编写持久指令。"
+// in the language the app shows.
+func AgentsMdPlaceholder() string { return In(i18n.Locale()).AgentsMdPlaceholder() }
+
+// AgentsMdPlaceholder says "为此助手编写持久指令。"
+// in the language of msgs.
+func (msgs Messages) AgentsMdPlaceholder() string {
+	return Catalog.Format(msgs.locale, "agentsMdPlaceholder", nil)
+}
+
+// SearchSkillPlaceholder says "按名称或描述搜索"
+// in the language the app shows.
+func SearchSkillPlaceholder() string { return In(i18n.Locale()).SearchSkillPlaceholder() }
+
+// SearchSkillPlaceholder says "按名称或描述搜索"
+// in the language of msgs.
+func (msgs Messages) SearchSkillPlaceholder() string {
+	return Catalog.Format(msgs.locale, "searchSkillPlaceholder", nil)
+}
+
+// RemoveSkill says "移除 {name}"
+// in the language the app shows.
+func RemoveSkill(name string) string { return In(i18n.Locale()).RemoveSkill(name) }
+
+// RemoveSkill says "移除 {name}"
+// in the language of msgs.
+func (msgs Messages) RemoveSkill(name string) string {
+	return Catalog.Format(msgs.locale, "removeSkill", map[string]any{"name": name})
+}
+
+// ModelSelection says "选择模型"
+// in the language the app shows.
+func ModelSelection() string { return In(i18n.Locale()).ModelSelection() }
+
+// ModelSelection says "选择模型"
+// in the language of msgs.
+func (msgs Messages) ModelSelection() string {
+	return Catalog.Format(msgs.locale, "modelSelection", nil)
+}
+
+// FilterModels says "筛选模型"
+// in the language the app shows.
+func FilterModels() string { return In(i18n.Locale()).FilterModels() }
+
+// FilterModels says "筛选模型"
+// in the language of msgs.
+func (msgs Messages) FilterModels() string {
+	return Catalog.Format(msgs.locale, "filterModels", nil)
+}
+
+// SearchModelPlaceholder says "按名称或系列搜索"
+// in the language the app shows.
+func SearchModelPlaceholder() string { return In(i18n.Locale()).SearchModelPlaceholder() }
+
+// SearchModelPlaceholder says "按名称或系列搜索"
+// in the language of msgs.
+func (msgs Messages) SearchModelPlaceholder() string {
+	return Catalog.Format(msgs.locale, "searchModelPlaceholder", nil)
+}
+
+// ModelLocked says "当前回合仍在执行或等待结果核验，请在结束后更改模型。"
+// in the language the app shows.
+func ModelLocked() string { return In(i18n.Locale()).ModelLocked() }
+
+// ModelLocked says "当前回合仍在执行或等待结果核验，请在结束后更改模型。"
+// in the language of msgs.
+func (msgs Messages) ModelLocked() string {
+	return Catalog.Format(msgs.locale, "modelLocked", nil)
+}
+
+// ModelNotListed says "当前模型 {model} 不在账户可用列表中，请选择可用模型。"
+// in the language the app shows.
+func ModelNotListed(model string) string { return In(i18n.Locale()).ModelNotListed(model) }
+
+// ModelNotListed says "当前模型 {model} 不在账户可用列表中，请选择可用模型。"
+// in the language of msgs.
+func (msgs Messages) ModelNotListed(model string) string {
+	return Catalog.Format(msgs.locale, "modelNotListed", map[string]any{"model": model})
+}
+
+// ModelInitialization says "首次选择模型时初始化执行配置。"
+// in the language the app shows.
+func ModelInitialization() string { return In(i18n.Locale()).ModelInitialization() }
+
+// ModelInitialization says "首次选择模型时初始化执行配置。"
+// in the language of msgs.
+func (msgs Messages) ModelInitialization() string {
+	return Catalog.Format(msgs.locale, "modelInitialization", nil)
+}
+
+// AssistantActions says "助手操作"
+// in the language the app shows.
+func AssistantActions() string { return In(i18n.Locale()).AssistantActions() }
+
+// AssistantActions says "助手操作"
+// in the language of msgs.
+func (msgs Messages) AssistantActions() string {
+	return Catalog.Format(msgs.locale, "assistantActions", nil)
+}
+
+// DeleteAssistantConfirm says "删除助手「{name}」及其关联数据？"
+// in the language the app shows.
+func DeleteAssistantConfirm(name string) string {
+	return In(i18n.Locale()).DeleteAssistantConfirm(name)
+}
+
+// DeleteAssistantConfirm says "删除助手「{name}」及其关联数据？"
+// in the language of msgs.
+func (msgs Messages) DeleteAssistantConfirm(name string) string {
+	return Catalog.Format(msgs.locale, "deleteAssistantConfirm", map[string]any{"name": name})
+}
+
+// DiagnosticModelUnavailable says "这是诊断会话历史，使用 Runtime 的模型。新建助手支持选择模型。"
+// in the language the app shows.
+func DiagnosticModelUnavailable() string { return In(i18n.Locale()).DiagnosticModelUnavailable() }
+
+// DiagnosticModelUnavailable says "这是诊断会话历史，使用 Runtime 的模型。新建助手支持选择模型。"
+// in the language of msgs.
+func (msgs Messages) DiagnosticModelUnavailable() string {
+	return Catalog.Format(msgs.locale, "diagnosticModelUnavailable", nil)
+}
+
+// DesktopModelCall says "模型调用"
+// in the language the app shows.
+func DesktopModelCall() string { return In(i18n.Locale()).DesktopModelCall() }
+
+// DesktopModelCall says "模型调用"
+// in the language of msgs.
+func (msgs Messages) DesktopModelCall() string {
+	return Catalog.Format(msgs.locale, "desktopModelCall", nil)
+}
+
+// DesktopNoReasoningDetails says "暂无推理详情"
+// in the language the app shows.
+func DesktopNoReasoningDetails() string { return In(i18n.Locale()).DesktopNoReasoningDetails() }
+
+// DesktopNoReasoningDetails says "暂无推理详情"
+// in the language of msgs.
+func (msgs Messages) DesktopNoReasoningDetails() string {
+	return Catalog.Format(msgs.locale, "desktopNoReasoningDetails", nil)
+}
+
+// DesktopUsage says "用量"
+// in the language the app shows.
+func DesktopUsage() string { return In(i18n.Locale()).DesktopUsage() }
+
+// DesktopUsage says "用量"
+// in the language of msgs.
+func (msgs Messages) DesktopUsage() string {
+	return Catalog.Format(msgs.locale, "desktopUsage", nil)
+}
+
+// DesktopTokenUsageUpdated says "Token 用量已更新"
+// in the language the app shows.
+func DesktopTokenUsageUpdated() string { return In(i18n.Locale()).DesktopTokenUsageUpdated() }
+
+// DesktopTokenUsageUpdated says "Token 用量已更新"
+// in the language of msgs.
+func (msgs Messages) DesktopTokenUsageUpdated() string {
+	return Catalog.Format(msgs.locale, "desktopTokenUsageUpdated", nil)
+}
+
+// TraceLocalArchiveIncomplete says "本地执行历史未能完整保存，当前可用步骤可能不完整。"
+// in the language the app shows.
+func TraceLocalArchiveIncomplete() string { return In(i18n.Locale()).TraceLocalArchiveIncomplete() }
+
+// TraceLocalArchiveIncomplete says "本地执行历史未能完整保存，当前可用步骤可能不完整。"
+// in the language of msgs.
+func (msgs Messages) TraceLocalArchiveIncomplete() string {
+	return Catalog.Format(msgs.locale, "traceLocalArchiveIncomplete", nil)
+}
+
+// TraceRecordedModelCalls says "已记录的模型调用"
+// in the language the app shows.
+func TraceRecordedModelCalls() string { return In(i18n.Locale()).TraceRecordedModelCalls() }
+
+// TraceRecordedModelCalls says "已记录的模型调用"
+// in the language of msgs.
+func (msgs Messages) TraceRecordedModelCalls() string {
+	return Catalog.Format(msgs.locale, "traceRecordedModelCalls", nil)
+}
+
+// TraceRecordedToolCalls says "已记录的工具调用"
+// in the language the app shows.
+func TraceRecordedToolCalls() string { return In(i18n.Locale()).TraceRecordedToolCalls() }
+
+// TraceRecordedToolCalls says "已记录的工具调用"
+// in the language of msgs.
+func (msgs Messages) TraceRecordedToolCalls() string {
+	return Catalog.Format(msgs.locale, "traceRecordedToolCalls", nil)
+}
+
+// TraceWorkerExecution says "Worker 执行"
+// in the language the app shows.
+func TraceWorkerExecution() string { return In(i18n.Locale()).TraceWorkerExecution() }
+
+// TraceWorkerExecution says "Worker 执行"
+// in the language of msgs.
+func (msgs Messages) TraceWorkerExecution() string {
+	return Catalog.Format(msgs.locale, "traceWorkerExecution", nil)
+}
+
+// TraceWorkerStepsObserved says "已观测到 {count} 个步骤"
+// in the language the app shows.
+func TraceWorkerStepsObserved(count string) string {
+	return In(i18n.Locale()).TraceWorkerStepsObserved(count)
+}
+
+// TraceWorkerStepsObserved says "已观测到 {count} 个步骤"
+// in the language of msgs.
+func (msgs Messages) TraceWorkerStepsObserved(count string) string {
+	return Catalog.Format(msgs.locale, "traceWorkerStepsObserved", map[string]any{"count": count})
+}
+
+// TraceNoWorkerSteps says "暂无 Worker 步骤"
+// in the language the app shows.
+func TraceNoWorkerSteps() string { return In(i18n.Locale()).TraceNoWorkerSteps() }
+
+// TraceNoWorkerSteps says "暂无 Worker 步骤"
+// in the language of msgs.
+func (msgs Messages) TraceNoWorkerSteps() string {
+	return Catalog.Format(msgs.locale, "traceNoWorkerSteps", nil)
+}
+
+// TraceViewWorkerSteps says "查看 Worker 步骤"
+// in the language the app shows.
+func TraceViewWorkerSteps() string { return In(i18n.Locale()).TraceViewWorkerSteps() }
+
+// TraceViewWorkerSteps says "查看 Worker 步骤"
+// in the language of msgs.
+func (msgs Messages) TraceViewWorkerSteps() string {
+	return Catalog.Format(msgs.locale, "traceViewWorkerSteps", nil)
+}
+
+// TraceNoWorkerLifecycleSteps says "未返回 Worker 生命周期或绑定步骤。"
+// in the language the app shows.
+func TraceNoWorkerLifecycleSteps() string { return In(i18n.Locale()).TraceNoWorkerLifecycleSteps() }
+
+// TraceNoWorkerLifecycleSteps says "未返回 Worker 生命周期或绑定步骤。"
+// in the language of msgs.
+func (msgs Messages) TraceNoWorkerLifecycleSteps() string {
+	return Catalog.Format(msgs.locale, "traceNoWorkerLifecycleSteps", nil)
+}
+
+// TraceEvent says "事件"
+// in the language the app shows.
+func TraceEvent() string { return In(i18n.Locale()).TraceEvent() }
+
+// TraceEvent says "事件"
+// in the language of msgs.
+func (msgs Messages) TraceEvent() string {
+	return Catalog.Format(msgs.locale, "traceEvent", nil)
+}
+
+// TraceEventAt says "事件时间：{time}"
+// in the language the app shows.
+func TraceEventAt(time_ string) string { return In(i18n.Locale()).TraceEventAt(time_) }
+
+// TraceEventAt says "事件时间：{time}"
+// in the language of msgs.
+func (msgs Messages) TraceEventAt(time_ string) string {
+	return Catalog.Format(msgs.locale, "traceEventAt", map[string]any{"time": time_})
+}
+
+// TraceSource says "来源"
+// in the language the app shows.
+func TraceSource() string { return In(i18n.Locale()).TraceSource() }
+
+// TraceSource says "来源"
+// in the language of msgs.
+func (msgs Messages) TraceSource() string {
+	return Catalog.Format(msgs.locale, "traceSource", nil)
+}
+
+// TraceRecordedLocally says "本地记录"
+// in the language the app shows.
+func TraceRecordedLocally() string { return In(i18n.Locale()).TraceRecordedLocally() }
+
+// TraceRecordedLocally says "本地记录"
+// in the language of msgs.
+func (msgs Messages) TraceRecordedLocally() string {
+	return Catalog.Format(msgs.locale, "traceRecordedLocally", nil)
+}
+
+// TraceWorkerReasoning says "Worker 推理"
+// in the language the app shows.
+func TraceWorkerReasoning() string { return In(i18n.Locale()).TraceWorkerReasoning() }
+
+// TraceWorkerReasoning says "Worker 推理"
+// in the language of msgs.
+func (msgs Messages) TraceWorkerReasoning() string {
+	return Catalog.Format(msgs.locale, "traceWorkerReasoning", nil)
+}
+
+// TraceWorkerResponse says "Worker 回复"
+// in the language the app shows.
+func TraceWorkerResponse() string { return In(i18n.Locale()).TraceWorkerResponse() }
+
+// TraceWorkerResponse says "Worker 回复"
+// in the language of msgs.
+func (msgs Messages) TraceWorkerResponse() string {
+	return Catalog.Format(msgs.locale, "traceWorkerResponse", nil)
+}
+
+// TraceWorkerUsage says "Worker 用量"
+// in the language the app shows.
+func TraceWorkerUsage() string { return In(i18n.Locale()).TraceWorkerUsage() }
+
+// TraceWorkerUsage says "Worker 用量"
+// in the language of msgs.
+func (msgs Messages) TraceWorkerUsage() string {
+	return Catalog.Format(msgs.locale, "traceWorkerUsage", nil)
+}
+
+// TraceWorkerCompleted says "Worker 已完成"
+// in the language the app shows.
+func TraceWorkerCompleted() string { return In(i18n.Locale()).TraceWorkerCompleted() }
+
+// TraceWorkerCompleted says "Worker 已完成"
+// in the language of msgs.
+func (msgs Messages) TraceWorkerCompleted() string {
+	return Catalog.Format(msgs.locale, "traceWorkerCompleted", nil)
+}
+
+// TraceRunCommand says "执行 {command}"
+// in the language the app shows.
+func TraceRunCommand(command string) string { return In(i18n.Locale()).TraceRunCommand(command) }
+
+// TraceRunCommand says "执行 {command}"
+// in the language of msgs.
+func (msgs Messages) TraceRunCommand(command string) string {
+	return Catalog.Format(msgs.locale, "traceRunCommand", map[string]any{"command": command})
 }

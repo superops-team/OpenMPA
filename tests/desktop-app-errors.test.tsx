@@ -31,7 +31,14 @@ it('clears an old conversation-load error after the same connection refresh succ
         status: 'connected',
       }),
     },
-    sessions: { list },
+    sessions: {
+      list,
+      read: async () => ({
+        session: { id: 's', title: 'A conversation' },
+        messages: [],
+      }),
+      pending: async () => [],
+    },
   } as unknown as DesktopServices;
   let renderer!: ReactTestRenderer;
   await act(async () => {
@@ -43,6 +50,7 @@ it('clears an old conversation-load error after the same connection refresh succ
   await act(async () => {
     navigation('refreshSessions');
   });
+  await act(async () => {});
   expect(renderer.root.findAllByProps({ role: 'alert' })).toHaveLength(0);
   expect(setShellState).toHaveBeenLastCalledWith(
     expect.objectContaining({

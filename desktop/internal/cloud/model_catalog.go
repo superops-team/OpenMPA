@@ -53,7 +53,7 @@ func (key modelAPIKey) permits(id, name string) bool {
 // AvailableModelIDs follows Studio's account activation, exact model-version and
 // default Ark API Key rules. Credentials and raw keys remain in the host process.
 // Reading a catalog never creates a key or activates a model.
-func (c *Client) AvailableModelIDs(ctx context.Context) (map[string]bool, *dto.SafeError) {
+func (c *Client) accountModelVersions(ctx context.Context) ([]arkModelVersion, *dto.SafeError) {
 	cred, epoch, err := c.snapshot()
 	if err != nil {
 		return nil, err
@@ -160,19 +160,23 @@ func (c *Client) AvailableModelIDs(ctx context.Context) (map[string]bool, *dto.S
 		if err := action("ListModelActivations", map[string]any{"PageNumber": page, "PageSize": 100, "WithPrice": false, "WithFreeUsage": false, "Filter": map[string]string{"FoundationModelDomain": "LLM"}}, &result); err != nil {
 			return nil, err
 		}
+		previousCount := len(activated)
 		for _, item := range result.Items {
 			activated[strings.TrimSpace(item.Name)] = strings.TrimSpace(item.State) == "Available"
 		}
-		activationCount += len(result.Items)
-		if len(result.Items) == 0 || result.Total == nil || activationCount >= *result.Total {
+		activationCount = len(activated)
+		if (result.Total != nil && activationCount >= *result.Total) || (result.Total == nil && len(result.Items) < 100) {
 			break
 		}
+		if activationCount == previousCount {
+			return nil, modelCatalogInvalid()
+		}
 	}
-	available := map[string]bool{}
+	available := []arkModelVersion{}
 	for _, model := range models {
 		id, name := strings.TrimSpace(model.ID), strings.TrimSpace(model.Name)
 		if id != "" && name != "" && activated[name] && model.supportsAgent() && selected.permits(id, name) {
-			available[id] = true
+			available = append(available, model)
 		}
 	}
 	return available, nil
@@ -232,4 +236,30 @@ func modelCatalogInvalid() *dto.SafeError {
 }
 func modelCatalogStale() *dto.SafeError {
 	return dto.Failure("staleConnection", "platform", "reload", 0)
+}
+
+// AvailableModelIDs is the Studio-compatible view of the cached eligibility
+// catalog. Every returned ID has exact Responses support evidence.
+func (c *Client) AvailableModelIDs(ctx context.Context) (map[string]bool, *dto.SafeError) {
+	catalog, err := c.ModelCatalog(ctx)
+	if err != nil {
+		return nil, err
+	}
+	out := map[string]bool{}
+	for _, model := range catalog.Models {
+		out[model.ID] = true
+	}
+	return out, nil
+}
+
+func (c *Client) accountModelIDs(ctx context.Context) (map[string]bool, *dto.SafeError) {
+	models, err := c.accountModelVersions(ctx)
+	if err != nil {
+		return nil, err
+	}
+	out := map[string]bool{}
+	for _, model := range models {
+		out[model.ID] = true
+	}
+	return out, nil
 }

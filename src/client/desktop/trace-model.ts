@@ -41,6 +41,7 @@ export interface TraceModel {
   summary: TraceSummary;
   roots: TraceStep[];
   steps: TraceStep[];
+  workerSteps: TraceStep[];
 }
 
 export interface TraceFilters {
@@ -131,23 +132,67 @@ export function traceCategoryLabel(category: string, m?: Messages) {
 export function traceStepCategory(step: TraceStepVM) {
   if (step.category) return step.category;
   const kind = step.kind.toLowerCase();
-  if (kind.includes('model')) return 'model';
-  if (kind.includes('tool')) return 'tool';
+  if (kind.includes('usage') || kind.includes('model')) return 'model';
+  if (
+    kind.includes('worker') ||
+    kind.includes('sandbox') ||
+    kind.startsWith('codex.')
+  )
+    return 'worker';
+  if (/^tool[._]/.test(kind) || kind.includes('command')) return 'tool';
   if (kind.includes('file')) return 'file';
   if (kind.includes('queue') || kind.includes('request')) return 'request';
-  if (kind.includes('worker') || kind.includes('sandbox')) return 'worker';
   if (kind.includes('terminal') || kind.includes('run.total'))
     return 'terminal';
   if (kind.includes('error') || step.status === 'failed') return 'error';
   return 'runtime';
 }
 
-export function traceStepTitle(step: TraceStepVM) {
+export function traceStepTitle(step: TraceStepVM, m?: Messages) {
+  const workerTitles: Record<string, { title: string; defaults: string[] }> = {
+    'codex.turn.reasoning_delta': {
+      title: m?.traceWorkerReasoning() ?? 'Worker reasoning',
+      defaults: ['Worker reasoning', 'Worker turn'],
+    },
+    'codex.turn.message_delta': {
+      title: m?.traceWorkerResponse() ?? 'Worker response',
+      defaults: ['Worker response', 'Worker response output'],
+    },
+    'codex.usage.updated': {
+      title: m?.traceWorkerUsage() ?? 'Worker usage',
+      defaults: ['Worker usage', 'Worker model usage'],
+    },
+    'codex.turn.completed': {
+      title: m?.traceWorkerCompleted() ?? 'Worker completed',
+      defaults: ['Worker completed', 'Worker turn completed'],
+    },
+  };
+  if (Object.hasOwn(workerTitles, step.kind)) {
+    const worker = workerTitles[step.kind];
+    if (
+      !step.title ||
+      step.title === step.kind ||
+      worker.defaults.includes(step.title)
+    )
+      return worker.title;
+  }
+  if (
+    /^(commandExecution|exec_command|run_command|bash|shell)$/i.test(step.title)
+  ) {
+    const details = objectValue(step.details);
+    const command =
+      stringValue(details.toolSubject) ||
+      stringValue(objectValue(details.safeCommandSummary).commandPreview);
+    return command
+      ? (m?.traceRunCommand(command) ?? `Run ${command}`)
+      : (m?.desktopRunCommand() ?? 'Run command');
+  }
   if (step.title) return step.title;
   return step.kind || step.stepId;
 }
 
 function stepDuration(step: TraceStepVM, now: number) {
+  if (step.timing?.kind === 'milestone') return undefined;
   if (step.durationMs !== undefined && Number.isFinite(step.durationMs))
     return Math.max(0, step.durationMs);
   const start = Date.parse(step.startedAt);
@@ -167,15 +212,115 @@ function buildStep(step: TraceStepVM, now: number, depth: number): TraceStep {
   };
 }
 
+function numberFromObject(value: unknown, keys: string[]): number | undefined {
+  const object = objectValue(value);
+  for (const key of keys) {
+    const number = numberValue(object[key]);
+    if (number !== undefined) return number;
+  }
+  return undefined;
+}
+
 function usageTotal(value: unknown): number | undefined {
   const usage = objectValue(value);
-  const total = numberValue(usage.totalTokens);
+  const total = numberFromObject(usage, [
+    'totalTokens',
+    'total_tokens',
+    'totalTokenCount',
+    'total_token_count',
+  ]);
   if (total !== undefined) return total;
-  const input = numberValue(usage.inputTokens);
-  const output = numberValue(usage.outputTokens);
+  const input = numberFromObject(usage, [
+    'inputTokens',
+    'input_tokens',
+    'promptTokens',
+    'prompt_tokens',
+    'inputTokenCount',
+    'input_token_count',
+  ]);
+  const output = numberFromObject(usage, [
+    'outputTokens',
+    'output_tokens',
+    'completionTokens',
+    'completion_tokens',
+    'outputTokenCount',
+    'output_token_count',
+  ]);
   return input !== undefined && output !== undefined
     ? input + output
     : undefined;
+}
+
+function detailObjects(step: TraceStepVM): Record<string, unknown>[] {
+  const details = objectValue(step.details);
+  return [
+    details,
+    objectValue(details.usage),
+    objectValue(details.payload),
+    objectValue(details.metrics),
+    objectValue(step.timing),
+  ].filter((item) => Object.keys(item).length > 0);
+}
+
+function stepMetric(step: TraceStepVM, keys: string[]): number | undefined {
+  for (const object of detailObjects(step)) {
+    const value = numberFromObject(object, keys);
+    if (value !== undefined) return value;
+  }
+  return undefined;
+}
+
+function stepUsageTotal(step: TraceStepVM): number | undefined {
+  for (const object of detailObjects(step)) {
+    const total = usageTotal(object);
+    if (total !== undefined) return total;
+  }
+  return undefined;
+}
+
+function isModelStep(step: TraceStepVM) {
+  if (step.kind === 'run.total' || step.kind === 'trace.phase') return false;
+  const kind = step.kind.toLowerCase();
+  if (traceStepCategory(step) === 'model') return true;
+  return (
+    kind.includes('usage') ||
+    kind.includes('model_proxy') ||
+    stepUsageTotal(step) !== undefined
+  );
+}
+
+function isToolStep(step: TraceStepVM) {
+  if (step.kind === 'run.total' || step.kind === 'trace.phase') return false;
+  const kind = step.kind.toLowerCase();
+  const category = traceStepCategory(step);
+  return (
+    category === 'tool' ||
+    /(?:^|\.)tool[._]/.test(kind) ||
+    kind.includes('commandexecution') ||
+    kind.includes('exec_command')
+  );
+}
+
+function isWorkerStep(step: TraceStepVM) {
+  const category = traceStepCategory(step);
+  return category === 'worker' || category === 'sandbox';
+}
+
+function meaningfulCount(
+  reported: number | undefined,
+  observed: number,
+  complete: boolean,
+) {
+  if (reported !== undefined) return reported;
+  if (observed > 0) return observed;
+  return complete ? observed : undefined;
+}
+
+function minDefined(values: Array<number | undefined>) {
+  const numbers = values.filter(
+    (value): value is number => value !== undefined,
+  );
+  return numbers.length ? Math.min(...numbers) : undefined;
 }
 
 function deriveSummary(
@@ -185,15 +330,54 @@ function deriveSummary(
   now: number,
 ) {
   const root = steps.find((step) => step.kind === 'run.total');
-  const modelSteps = steps.filter((step) => step.kind === 'model.request');
-  const toolSteps = steps.filter((step) => step.kind === 'tool.call');
-  const retrySteps = steps.filter((step) => step.kind.endsWith('.retry'));
+  const modelSteps = steps.filter(isModelStep);
+  const toolSteps = steps.filter(isToolStep);
+  const retrySteps = steps.filter((step) =>
+    step.kind.toLowerCase().includes('retry'),
+  );
   let totalTokens = numberValue(run.totalTokens) ?? usageTotal(run.usage);
-  if (totalTokens === undefined && complete && modelSteps.length > 0) {
-    const totals = modelSteps.map((step) => usageTotal(step.details?.usage));
-    if (totals.every((count): count is number => count !== undefined))
-      totalTokens = totals.reduce((sum, count) => sum + count, 0);
+  if (totalTokens === undefined && modelSteps.length > 0) {
+    const totals = modelSteps
+      .map(stepUsageTotal)
+      .filter((count): count is number => count !== undefined);
+    // A usage.updated event may be a cumulative snapshot. Multiple snapshots
+    // cannot be added without a request-level accounting contract.
+    if (totals.length === 1) totalTokens = totals[0];
   }
+  const firstModelContent =
+    numberValue(run.firstModelContentMs) ??
+    numberValue(run.firstContentMs) ??
+    minDefined(
+      modelSteps.map((step) =>
+        stepMetric(step, [
+          'firstModelContentMs',
+          'firstContentMs',
+          'firstContentFrameMs',
+          'first_content_frame_ms',
+        ]),
+      ),
+    );
+  const traceStart = Date.parse(
+    stringValue(run.startedAt) || root?.startedAt || steps[0]?.startedAt || '',
+  );
+  const firstAnswerOffset = minDefined(
+    steps
+      .filter((step) => {
+        const kind = step.kind.toLowerCase();
+        return (
+          kind.includes('message_delta') ||
+          kind.includes('answer') ||
+          kind.includes('visible_answer') ||
+          kind.includes('reply')
+        );
+      })
+      .map((step) => {
+        const started = Date.parse(step.startedAt);
+        return Number.isFinite(traceStart) && Number.isFinite(started)
+          ? Math.max(0, started - traceStart)
+          : undefined;
+      }),
+  );
   const slowest = steps
     .filter(
       (step) =>
@@ -225,21 +409,30 @@ function deriveSummary(
       numberValue(run.wallDurationMs) ??
       (root ? stepDuration(root, now) : undefined),
     queueDurationMs: numberValue(run.queueDurationMs),
-    firstModelContentMs:
-      numberValue(run.firstModelContentMs) ?? numberValue(run.firstContentMs),
-    firstVisibleAnswerMs: numberValue(run.firstVisibleAnswerMs),
-    modelRequestCount:
-      numberValue(run.modelRequestCount) ??
-      (complete ? modelSteps.length : undefined),
-    toolCount:
-      numberValue(run.toolCount) ?? (complete ? toolSteps.length : undefined),
-    failedToolCount:
-      numberValue(run.failedToolCount) ??
-      (complete
-        ? toolSteps.filter((step) => step.status === 'failed').length
-        : undefined),
-    retryCount:
-      numberValue(run.retryCount) ?? (complete ? retrySteps.length : undefined),
+    firstModelContentMs: firstModelContent,
+    firstVisibleAnswerMs:
+      numberValue(run.firstVisibleAnswerMs) ?? firstAnswerOffset,
+    modelRequestCount: meaningfulCount(
+      numberValue(run.modelRequestCount),
+      modelSteps.filter((step) => !step.kind.toLowerCase().includes('usage'))
+        .length,
+      complete,
+    ),
+    toolCount: meaningfulCount(
+      numberValue(run.toolCount),
+      toolSteps.length,
+      complete,
+    ),
+    failedToolCount: meaningfulCount(
+      numberValue(run.failedToolCount),
+      toolSteps.filter((step) => step.status === 'failed').length,
+      complete,
+    ),
+    retryCount: meaningfulCount(
+      numberValue(run.retryCount),
+      retrySteps.length,
+      complete,
+    ),
     totalTokens,
     slowestStep:
       (objectValue(run.slowestStep).stepId &&
@@ -265,7 +458,10 @@ function deriveCoverage(
     ]),
   );
   return {
-    complete: booleanValue(raw.complete) ?? false,
+    complete:
+      raw.aggregateComplete !== undefined
+        ? raw.aggregateComplete === true
+        : (booleanValue(raw.complete) ?? false),
     active:
       booleanValue(raw.active) ??
       steps.some((step) => step.status === 'running'),
@@ -337,6 +533,7 @@ export function buildTraceModel(trace: TraceVM, now = Date.now()): TraceModel {
     summary,
     roots,
     steps: all,
+    workerSteps: all.filter(isWorkerStep),
   };
 }
 

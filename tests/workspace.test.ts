@@ -25,7 +25,7 @@ it('rejects a dot in a nonexistent space and does not rebind an existing thread'
 });
 
 it('migrates legacy Space ownership once and never restores revoked access on restart', () => {
-  const dir = mkdtempSync(join(tmpdir(), 'opendots-access-'));
+  const dir = mkdtempSync(join(tmpdir(), 'openmpa-access-'));
   const path = join(dir, 'workspace.sqlite');
   try {
     const legacy = new DatabaseSync(path);

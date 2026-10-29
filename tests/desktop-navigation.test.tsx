@@ -66,6 +66,7 @@ it('projects navigation into the native shell and handles native selection and c
       connectionEpoch: 2,
       view: 'chat',
       collapsed: false,
+      selectedSession: 's',
       sessions: [{ id: 's', title: 'My assistant', agentId: '' }],
       spaces: [],
       selectedAssistant: 'r',
@@ -74,6 +75,7 @@ it('projects navigation into the native shell and handles native selection and c
     }),
   );
   const revision = setShellState.mock.calls.at(-1)![0].revision;
+  expect(JSON.stringify(renderer.toJSON())).toContain('Message');
   await act(async () => {
     navigation('toggleSidebar');
   });
@@ -109,7 +111,7 @@ it('projects navigation into the native shell and handles native selection and c
     navigation('selectSettingsSection', 'Assistant');
   });
   expect(JSON.stringify(renderer.toJSON())).toContain(
-    messages.settingsOpenAssistantSettings(),
+    messages.openBotSettings(),
   );
   expect(renderer.root.findAllByProps({ role: 'dialog' })).toHaveLength(0);
   await act(async () => renderer.unmount());
@@ -378,12 +380,10 @@ it('ignores the native trace action without a selected Runtime conversation', as
 
 it('enables Runtime terminal and trace only when a Runtime conversation is selected', async () => {
   vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true);
-  let navigation!: (action: string, id?: string) => void;
   const terminalOpen = vi.fn(async () => {});
   const services = {
     host: {
-      onNavigation: (listener: typeof navigation) => {
-        navigation = listener;
+      onNavigation: () => {
         return () => {};
       },
       setShellState: async () => {},
@@ -424,19 +424,10 @@ it('enables Runtime terminal and trace only when a Runtime conversation is selec
     renderer = create(<DesktopApp services={services} />);
   });
   await act(async () => {});
-  let terminal = renderer.root.findByProps({
+  const terminal = renderer.root.findByProps({
     'aria-label': 'Open Runtime terminal',
   });
-  let trace = renderer.root.findByProps({ 'aria-label': 'Open turn trace' });
-  expect(terminal.props.disabled).toBe(true);
-  expect(trace.props.disabled).toBe(true);
-
-  await act(async () => navigation('selectSession', 's'));
-  await act(async () => {});
-  terminal = renderer.root.findByProps({
-    'aria-label': 'Open Runtime terminal',
-  });
-  trace = renderer.root.findByProps({ 'aria-label': 'Open turn trace' });
+  const trace = renderer.root.findByProps({ 'aria-label': 'Open turn trace' });
   expect(terminal.props.disabled).toBe(false);
   expect(trace.props.disabled).toBe(false);
   await act(async () => terminal.props.onClick());

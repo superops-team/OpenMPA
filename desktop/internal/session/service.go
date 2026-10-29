@@ -24,6 +24,8 @@ type Service struct {
 	platform    *cloud.Client
 	pending     *PendingStore
 	cache       *configstore.Store
+	deleteHook  func(string)
+	eventHook   func(dto.ClientEvent)
 	traceMu     sync.Mutex
 	traceIDs    map[string]bool
 	traceTitles map[string]string
@@ -47,7 +49,10 @@ func NewWithCache(c *connection.Client, p *PendingStore, cache *configstore.Stor
 	}
 	return service
 }
-func path(id, suffix string) string { return "/api/v1/sessions/" + url.PathEscape(id) + suffix }
+func SetCloud(s *Service, cloudClient *cloud.Client)           { s.platform = cloudClient }
+func SetDeleteHook(s *Service, deleteHook func(string))        { s.deleteHook = deleteHook }
+func SetEventHook(s *Service, eventHook func(dto.ClientEvent)) { s.eventHook = eventHook }
+func path(id, suffix string) string                            { return "/api/v1/sessions/" + url.PathEscape(id) + suffix }
 func adminPath(id, suffix string) string {
 	return "/api/v1/runtime-console/admin/sessions/" + url.PathEscape(id) + suffix
 }
@@ -340,6 +345,9 @@ func (s *Service) Delete(ctx context.Context, r dto.SessionRequest) dto.DeleteRe
 		deletePath = adminPath(r.SessionID, "")
 	}
 	e := s.conn.JSON(ctx, r.ConnectionEpoch, "DELETE", deletePath, nil, &out)
+	if e == nil && s.deleteHook != nil {
+		s.deleteHook(r.SessionID)
+	}
 	return dto.DeleteReceiptResult{OK: e == nil, Value: only(&out, e), Error: e}
 }
 func (s *Service) Submit(ctx context.Context, r dto.SubmitRequest) dto.RunReceiptResult {
@@ -434,6 +442,9 @@ func (s *Service) stream(ctx context.Context, r dto.SubscribeRequest, send func(
 		if !s.conn.Current(r.ConnectionEpoch) {
 			return context.Canceled
 		}
+		if s.eventHook != nil && event.SessionID == r.SessionID && event.InvocationID == r.InvocationID {
+			s.eventHook(event)
+		}
 		if event.Terminal && (event.Kind == "done" || event.Kind == "error") && event.InvocationID == r.InvocationID {
 			s.observeTerminal(ctx, r)
 		}
@@ -458,6 +469,18 @@ func (s *Service) Abort(ctx context.Context, r dto.SessionRequest) dto.AbortRece
 func (s *Service) ExecutionConfig(ctx context.Context, r dto.SessionRequest) dto.ExecutionConfigResult {
 	resp, e := s.conn.Request(ctx, r.ConnectionEpoch, "GET", path(r.SessionID, "/execution-config"), nil, nil)
 	if e != nil {
+		if e.HTTPStatus == http.StatusNotFound && s.traceSession(r.SessionID) {
+			// Trace collection alone does not imply admin_debug. Confirm the
+			// diagnostic-only route before claiming model configuration is unsupported.
+			var diagnostic struct {
+				SessionID string `json:"sessionId"`
+			}
+			if verified := s.conn.JSON(ctx, r.ConnectionEpoch, http.MethodGet, adminPath(r.SessionID, "/runs"), nil, &diagnostic); verified == nil && diagnostic.SessionID == r.SessionID {
+				failure := dto.Failure("diagnosticModelUnsupported", "runtimeIngress", "never", http.StatusNotFound)
+				failure.Message = "This diagnostic conversation uses the Runtime model and does not support per-assistant model configuration."
+				return dto.ExecutionConfigResult{Error: failure}
+			}
+		}
 		return dto.ExecutionConfigResult{Error: e}
 	}
 	return decodeExecutionConfig(resp)

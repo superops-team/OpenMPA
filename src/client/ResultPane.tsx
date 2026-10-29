@@ -105,7 +105,7 @@ export function ResultPane({
                 const url = URL.createObjectURL(blob);
                 const anchor = document.createElement('a');
                 anchor.href = url;
-                anchor.download = 'opendots-brief.txt';
+                anchor.download = 'openmpa-brief.txt';
                 anchor.click();
                 URL.revokeObjectURL(url);
               }}

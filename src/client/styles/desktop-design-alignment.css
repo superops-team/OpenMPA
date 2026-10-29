@@ -184,6 +184,31 @@
   border-bottom: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
 }
+.desktop-app .desktop-runtime > div {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.desktop-app .desktop-runtime-action {
+  display: inline-grid;
+  flex: none;
+}
+.desktop-app .desktop-runtime-action > span {
+  grid-area: 1 / 1;
+}
+.desktop-app .desktop-runtime-action > span[data-visible='false'] {
+  visibility: hidden;
+}
+.desktop-app .desktop-runtime-feedback {
+  block-size: 2lh;
+  overflow-y: auto;
+  overflow-wrap: anywhere;
+  color: var(--color-foreground-subtle);
+  font-size: var(--text-ui-sm);
+  line-height: var(--line-body);
+}
+.desktop-app .desktop-runtime-error {
+  color: var(--color-destructive);
+}
 .desktop-app .desktop-runtime[data-selected='true'] {
   background: var(--color-card-selected);
 }
@@ -348,6 +373,63 @@
 .desktop-app .assistant-settings > form {
   gap: var(--space-4);
 }
+.assistant-dialog.ui-modal-dialog[data-size='wide'] {
+  width: min(100%, var(--layout-assistant-dialog-width));
+}
+.assistant-dialog .ui-modal-card {
+  height: min(
+    var(--layout-assistant-dialog-height),
+    calc(100dvh - var(--space-4) * 2)
+  );
+}
+.assistant-dialog .ui-modal-body {
+  flex: 1;
+  scrollbar-gutter: stable;
+}
+.assistant-dialog .assistant-settings-fields {
+  display: grid;
+  min-width: 0;
+  gap: var(--space-4);
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+.desktop-app .assistant-settings-error {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-lg);
+  color: var(--color-destructive-surface-foreground);
+  background: var(--color-destructive-surface);
+  font-size: var(--text-ui-sm);
+}
+.desktop-app .assistant-model-picker .composer-model-trigger {
+  display: flex;
+  width: 100%;
+  max-width: none;
+  height: var(--control-input);
+  padding-inline: var(--space-3);
+  border: var(--border-default) solid var(--color-input-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-input);
+  color: var(--color-foreground);
+  font-size: var(--text-ui-base);
+}
+.desktop-app .assistant-model-picker .composer-model-trigger span {
+  flex: 1;
+  text-align: start;
+}
+.desktop-app .composer-model[data-placement='below'] .composer-model-menu {
+  top: calc(100% + var(--space-1));
+  bottom: auto;
+  width: 100%;
+}
+.desktop-app .composer-model-option strong {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 .desktop-app .assistant-settings .ui-tabs {
   justify-self: start;
 }
@@ -363,7 +445,7 @@
   line-height: var(--line-body);
 }
 .desktop-app .assistant-instructions-panel .assistant-agents-editor {
-  min-height: 260px;
+  min-height: 180px;
 }
 .desktop-app .assistant-settings-grid > section {
   display: grid;
@@ -407,9 +489,33 @@
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
 }
+.template-app.desktop-app .composer-model-search input:not(.call-view *),
+.desktop-app .trace-search input {
+  appearance: none;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+.template-app.desktop-app .composer-model-search input:not(.call-view *) {
+  width: 0;
+  min-height: 0;
+  height: 100%;
+  padding: 0;
+}
+.desktop-app .desktop-form .composer-model-search {
+  display: flex;
+}
 .desktop-app .composer-model-search input:focus,
-.desktop-app .composer-model-search input:focus-visible {
+.desktop-app .composer-model-search input:focus-visible,
+.template-app.desktop-app
+  .composer-model-search
+  input:not(.call-view *):focus-visible,
+.desktop-app .trace-search input:focus,
+.desktop-app .trace-search input:focus-visible,
+.template-app.desktop-app .trace-search input:not(.call-view *):focus-visible {
   outline: none;
+  outline-offset: 0;
   box-shadow: none;
 }
 .desktop-app .assistant-skill-list {
@@ -444,6 +550,13 @@
 .desktop-app .composer-context {
   gap: var(--space-3);
 }
+.app.template-app.desktop-app .chat-composer {
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
 .desktop-app .composer-context-identity {
   gap: var(--space-2);
 }
@@ -476,6 +589,17 @@
   border-radius: var(--radius-2xl);
   background: var(--color-input);
   box-shadow: none;
+  transition: border-color var(--motion-state-duration) var(--motion-ease-out);
+}
+.desktop-app .composer-action:is(.is-submitting, .is-running)::after {
+  content: none;
+  animation: none;
+}
+.desktop-app .composer-action.is-running svg {
+  animation: none;
+}
+.desktop-app .composer-action.send:hover:not(:disabled) {
+  transform: none;
 }
 .desktop-app .composer-field:focus-within {
   border-color: var(--color-focus);
@@ -483,6 +607,12 @@
 }
 .desktop-app .composer-field textarea {
   caret-color: var(--color-primary);
+}
+.template-app.desktop-app .composer-field textarea::placeholder,
+.template-app.desktop-app .desktop-form :is(input, textarea)::placeholder,
+.template-app.desktop-app .composer-model-search input::placeholder {
+  color: var(--color-foreground-subtlest);
+  opacity: 1;
 }
 .desktop-app .ui-composer-shell.composer-field textarea:focus,
 .desktop-app .ui-composer-shell.composer-field textarea:focus-visible {
@@ -513,31 +643,12 @@
   color: var(--color-foreground);
   box-shadow: var(--shadow-overlay);
 }
-.desktop-app .composer-model-heading {
-  color: var(--color-foreground);
-}
-.desktop-app .composer-model-close {
-  color: var(--color-foreground-subtle);
-}
-.desktop-app .composer-model-close:hover {
-  background: var(--color-menu-hover);
-  color: var(--color-foreground);
-}
 .desktop-app .composer-model-option {
   border-radius: var(--radius-lg);
   color: var(--color-foreground);
 }
 .desktop-app .composer-model-option:hover:not(:disabled) {
   background: var(--color-menu-hover);
-}
-.desktop-app .composer-model-radio {
-  border-color: var(--color-border-hover);
-  background: var(--color-input);
-  box-shadow: none;
-}
-.desktop-app .composer-model-option[aria-checked='true'] .composer-model-radio {
-  border-color: var(--color-primary);
-  background: var(--color-primary);
 }
 .desktop-app .composer-model-option small,
 .desktop-app .composer-model-meta,
@@ -603,9 +714,6 @@
   }
   .ui-modal-dialog.desktop-app.template-app .assistant-settings-grid {
     grid-template-columns: minmax(0, 1fr);
-  }
-  .desktop-app .assistant-instructions-panel .assistant-agents-editor {
-    min-height: 200px;
   }
   .desktop-app .desktop-segmented {
     display: grid;

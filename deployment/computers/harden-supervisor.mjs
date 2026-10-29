@@ -14,7 +14,7 @@ export function hardenSupervisorEnvironment(source) {
     before,
     `const master = env.COMPUTER_TOKEN?.trim();
   if (!master || master.length < 24) throw new Error("COMPUTER_TOKEN must contain at least 24 characters.");
-  const computerToken = createHmac("sha256", master).update("opendots-computer:" + botId).digest("hex");`,
+  const computerToken = createHmac("sha256", master).update("openmpa-computer:" + botId).digest("hex");`,
   )}`;
 }
 if (

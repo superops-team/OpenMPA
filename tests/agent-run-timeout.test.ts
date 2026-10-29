@@ -20,7 +20,7 @@ vi.mock('../src/server/composio.js', () => ({
 
 const resources: Array<{ close(): void }> = [];
 function sharedStores() {
-  const dir = mkdtempSync(join(tmpdir(), 'opendots-timeout-'));
+  const dir = mkdtempSync(join(tmpdir(), 'openmpa-timeout-'));
   const path = join(dir, 'test.sqlite');
   const first = new Store(path);
   const second = new Store(path);

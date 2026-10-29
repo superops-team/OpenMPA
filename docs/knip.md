@@ -7,7 +7,7 @@ npm run knip
 npm run knip:production
 ```
 
-The default run includes application code, tests and development tooling. Production mode checks runtime sources without treating development-only consumers as production usage. CI initially uses `--no-exit-code` while existing findings are triaged in [issue #147](https://github.com/CopilotKit/OpenDots/issues/147). Configuration and execution failures still fail CI.
+The default run includes application code, tests and development tooling. Production mode checks runtime sources without treating development-only consumers as production usage. CI initially uses `--no-exit-code` while existing findings are triaged in [issue #147](https://github.com/superops-team/OpenMPA/issues/147). Configuration and execution failures still fail CI.
 
 ## Discovery and entrypoints
 

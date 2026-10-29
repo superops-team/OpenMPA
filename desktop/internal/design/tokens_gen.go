@@ -232,6 +232,10 @@ const (
 	LayoutFixtureColumn            = 920
 	LayoutSettingsColumn           = 800
 	LayoutAssistantSkillListHeight = 320
+	LayoutAssistantDialogWidth     = 640
+	LayoutAssistantDialogHeight    = 640
+	LayoutModelMenuWidth           = 360
+	LayoutModelMenuHeight          = 280
 	IconSm                         = 14
 	IconMd                         = 16
 	IconLg                         = 18
@@ -239,4 +243,5 @@ const (
 	BorderDefault                  = 1
 	BorderFocus                    = 2
 	PressDurationMs                = 120
+	SidebarDurationMs              = 220
 )

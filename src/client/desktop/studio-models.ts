@@ -16,6 +16,7 @@ export interface ComposerDraft {
   setValue: Dispatch<SetStateAction<string | undefined>>;
   snapshot(): DraftSnapshot;
   accept(snapshot: DraftSnapshot): void;
+  restore(snapshot: DraftSnapshot, cleared: DraftSnapshot): void;
 }
 export interface AgentsMDDocumentVM {
   content: string;

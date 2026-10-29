@@ -1,7 +1,7 @@
--- Signup accounts with OpenDots requests in the same 30-day window.
+-- Signup accounts with OpenMPA requests in the same 30-day window.
 -- Resolve a missing request Clerk ID from boot/runtime events with the same
 -- telemetry identity. Validation probes are excluded from both sides.
-SELECT count(DISTINCT signup.distinct_id) AS signups_with_opendots_usage
+SELECT count(DISTINCT signup.distinct_id) AS signups_with_openmpa_usage
 FROM events AS signup
 INNER JOIN (
   SELECT DISTINCT clerk_user_id FROM (
@@ -13,7 +13,7 @@ INNER JOIN (
            toString(properties.clerk_user_id) AS clerk_user_id
     FROM events
     WHERE event = 'oss.runtime.copilot_request_created'
-      AND properties.accessibility_title = 'OpenDots'
+      AND properties.accessibility_title = 'OpenMPA'
       AND timestamp >= now() - INTERVAL 30 DAY
       AND empty(toString(properties.validation_run_id))
   ) AS request
@@ -22,7 +22,7 @@ INNER JOIN (
            argMax(toString(properties.clerk_user_id), timestamp) AS clerk_user_id
     FROM events
     WHERE event IN ('oss.runtime.instance_created', 'oss.runtime.copilot_request_created')
-      AND properties.accessibility_title = 'OpenDots'
+      AND properties.accessibility_title = 'OpenMPA'
       AND timestamp >= now() - INTERVAL 30 DAY
       AND empty(toString(properties.validation_run_id))
       AND notEmpty(toString(properties.telemetry_id))

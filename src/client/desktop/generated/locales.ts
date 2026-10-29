@@ -192,7 +192,7 @@ export interface Messages {
    */
   switchRuntime(): string;
   /**
-   * `Runtime 已连接。现在可以开始会话；显式业务身份是可选覆盖。`
+   * `Runtime 已连接。现在可以新建助手；显式业务身份是可选覆盖。`
    */
   runtimeConnected(): string;
   /**
@@ -276,11 +276,11 @@ export interface Messages {
    */
   spaceName(): string;
   /**
-   * `重命名会话`
+   * `重命名助手`
    */
   renameConversation(): string;
   /**
-   * `会话标题`
+   * `助手名称`
    */
   conversationTitle(): string;
   /**
@@ -316,7 +316,7 @@ export interface Messages {
    */
   toggleNavigation(): string;
   /**
-   * `新建会话`
+   * `新建助手`
    */
   newConversation(): string;
   /**
@@ -360,7 +360,7 @@ export interface Messages {
    */
   workspaceNavigation(): string;
   /**
-   * `查找会话`
+   * `查找助手`
    */
   findConversations(): string;
   /**
@@ -376,7 +376,7 @@ export interface Messages {
    */
   spaces(): string;
   /**
-   * `最近会话`
+   * `最近助手`
    */
   recentChats(): string;
   /**
@@ -420,15 +420,15 @@ export interface Messages {
    */
   authenticationRequired(): string;
   /**
-   * `会话`
+   * `助手`
    */
   conversation(): string;
   /**
-   * `为当前会话设置计划`
+   * `为当前助手设置计划`
    */
   scheduleConversation(): string;
   /**
-   * `一段可以持续的会话。`
+   * `一个可持续工作的助手。`
    */
   continuingConversation(): string;
   /**
@@ -464,7 +464,7 @@ export interface Messages {
    */
   workspaceFollowThrough(): string;
   /**
-   * `连接云账户、选择 MPA Runtime，然后开始一段持续会话。本地页面可随时使用。`
+   * `连接云账户、选择 MPA Runtime，然后新建助手。本地页面可随时使用。`
    */
   connectRuntimeOpenConversation(): string;
   /**
@@ -512,7 +512,7 @@ export interface Messages {
    */
   enterToSend(): string;
   /**
-   * `停止当前会话`
+   * `停止当前助手任务`
    */
   stopCurrentSession(): string;
   /**
@@ -752,7 +752,7 @@ export interface Messages {
    */
   assistant(): string;
   /**
-   * `会话`
+   * `助手`
    */
   conversations(): string;
   /**
@@ -768,19 +768,19 @@ export interface Messages {
    */
   theme(): string;
   /**
-   * `搜索会话`
+   * `搜索助手`
    */
   searchConversations(): string;
   /**
-   * `暂无会话。`
+   * `暂无助手。`
    */
   noConversations(): string;
   /**
-   * `请先选择一个会话。`
+   * `请先选择一个助手。`
    */
   selectConversationFirst(): string;
   /**
-   * `会话 {session} 的知识库`
+   * `助手 {session} 的知识库`
    */
   knowledgeForConversation(session: string): string;
   /**
@@ -788,7 +788,7 @@ export interface Messages {
    */
   scheduledForAssistant(): string;
   /**
-   * `请选择一个会话，将定时任务限定到对应助手。`
+   * `请选择一个助手，将定时任务限定到对应助手。`
    */
   selectConversationForSchedules(): string;
   /**
@@ -812,7 +812,7 @@ export interface Messages {
    */
   themeChanged(): string;
   /**
-   * `会话知识库`
+   * `助手知识库`
    */
   sessionKnowledge(): string;
   /**
@@ -3907,6 +3907,258 @@ export interface Messages {
    * `可以关闭此界面或切换渠道。原绑定请求会保留，不会取消服务端的绑定操作。`
    */
   channelBindingRetained(): string;
+  /**
+   * `助手设置`
+   */
+  assistantSettingsTitle(): string;
+  /**
+   * `创建助手，设置名称、模型、AGENTS.md 和 Skills。`
+   */
+  newAssistantDescription(): string;
+  /**
+   * `设置助手名称、模型、AGENTS.md 和 Skills；新回合会使用这些配置。`
+   */
+  assistantSettingsDescription(): string;
+  /**
+   * `创建助手`
+   */
+  createAssistant(): string;
+  /**
+   * `保存助手设置`
+   */
+  saveAssistantSettings(): string;
+  /**
+   * `Runtime 默认`
+   */
+  runtimeDefaultModel(): string;
+  /**
+   * `不覆盖模型`
+   */
+  noModelOverride(): string;
+  /**
+   * `搜索模型`
+   */
+  searchModels(): string;
+  /**
+   * `当前账户没有可用的 Responses 模型。`
+   */
+  noAccountModels(): string;
+  /**
+   * `没有匹配的模型。`
+   */
+  noModelsMatch(): string;
+  /**
+   * `助手名称不能为空。`
+   */
+  assistantNameRequired(): string;
+  /**
+   * `请选择一个模型，或使用 Runtime 默认。`
+   */
+  chooseModelOrDefault(): string;
+  /**
+   * `无法加载助手设置。`
+   */
+  loadAssistantSettingsFailed(): string;
+  /**
+   * `无法创建助手。`
+   */
+  createAssistantFailed(): string;
+  /**
+   * `无法保存助手设置。`
+   */
+  saveAssistantSettingsFailed(): string;
+  /**
+   * `正在加载助手设置…`
+   */
+  loadingAssistantSettings(): string;
+  /**
+   * `这些持久指令会附加到后续回合。已有历史不会被重写。`
+   */
+  agentsMdHelp(): string;
+  /**
+   * `已选择 Skills`
+   */
+  selectedSkills(): string;
+  /**
+   * `还没有选择 Skill。`
+   */
+  noSkillsSelected(): string;
+  /**
+   * `导入 Skill 文本`
+   */
+  importSkillText(): string;
+  /**
+   * `粘贴 skill 名称或简短 skill 指令。`
+   */
+  importSkillPlaceholder(): string;
+  /**
+   * `导入 Skill`
+   */
+  importSkill(): string;
+  /**
+   * `Skill Space`
+   */
+  skillSpace(): string;
+  /**
+   * `搜索 Skills`
+   */
+  searchSkills(): string;
+  /**
+   * `编辑`
+   */
+  editAssistant(): string;
+  /**
+   * `重试`
+   */
+  retryLoading(): string;
+  /**
+   * `正在加载模型…`
+   */
+  loadingModels(): string;
+  /**
+   * `无法加载模型列表，可重试或使用 Runtime 默认模型。`
+   */
+  modelsLoadFailed(): string;
+  /**
+   * `无法加载 Skills 目录，已选择的 Skills 会保留。`
+   */
+  skillsLoadFailed(): string;
+  /**
+   * `为助手命名`
+   */
+  assistantNamePlaceholder(): string;
+  /**
+   * `为此助手编写持久指令。`
+   */
+  agentsMdPlaceholder(): string;
+  /**
+   * `按名称或描述搜索`
+   */
+  searchSkillPlaceholder(): string;
+  /**
+   * `移除 {name}`
+   */
+  removeSkill(name: string): string;
+  /**
+   * `选择模型`
+   */
+  modelSelection(): string;
+  /**
+   * `筛选模型`
+   */
+  filterModels(): string;
+  /**
+   * `按名称或系列搜索`
+   */
+  searchModelPlaceholder(): string;
+  /**
+   * `当前回合仍在执行或等待结果核验，请在结束后更改模型。`
+   */
+  modelLocked(): string;
+  /**
+   * `当前模型 {model} 不在账户可用列表中，请选择可用模型。`
+   */
+  modelNotListed(model: string): string;
+  /**
+   * `首次选择模型时初始化执行配置。`
+   */
+  modelInitialization(): string;
+  /**
+   * `助手操作`
+   */
+  assistantActions(): string;
+  /**
+   * `删除助手「{name}」及其关联数据？`
+   */
+  deleteAssistantConfirm(name: string): string;
+  /**
+   * `这是诊断会话历史，使用 Runtime 的模型。新建助手支持选择模型。`
+   */
+  diagnosticModelUnavailable(): string;
+  /**
+   * `模型调用`
+   */
+  desktopModelCall(): string;
+  /**
+   * `暂无推理详情`
+   */
+  desktopNoReasoningDetails(): string;
+  /**
+   * `用量`
+   */
+  desktopUsage(): string;
+  /**
+   * `Token 用量已更新`
+   */
+  desktopTokenUsageUpdated(): string;
+  /**
+   * `本地执行历史未能完整保存，当前可用步骤可能不完整。`
+   */
+  traceLocalArchiveIncomplete(): string;
+  /**
+   * `已记录的模型调用`
+   */
+  traceRecordedModelCalls(): string;
+  /**
+   * `已记录的工具调用`
+   */
+  traceRecordedToolCalls(): string;
+  /**
+   * `Worker 执行`
+   */
+  traceWorkerExecution(): string;
+  /**
+   * `已观测到 {count} 个步骤`
+   */
+  traceWorkerStepsObserved(count: string): string;
+  /**
+   * `暂无 Worker 步骤`
+   */
+  traceNoWorkerSteps(): string;
+  /**
+   * `查看 Worker 步骤`
+   */
+  traceViewWorkerSteps(): string;
+  /**
+   * `未返回 Worker 生命周期或绑定步骤。`
+   */
+  traceNoWorkerLifecycleSteps(): string;
+  /**
+   * `事件`
+   */
+  traceEvent(): string;
+  /**
+   * `事件时间：{time}`
+   */
+  traceEventAt(time: string): string;
+  /**
+   * `来源`
+   */
+  traceSource(): string;
+  /**
+   * `本地记录`
+   */
+  traceRecordedLocally(): string;
+  /**
+   * `Worker 推理`
+   */
+  traceWorkerReasoning(): string;
+  /**
+   * `Worker 回复`
+   */
+  traceWorkerResponse(): string;
+  /**
+   * `Worker 用量`
+   */
+  traceWorkerUsage(): string;
+  /**
+   * `Worker 已完成`
+   */
+  traceWorkerCompleted(): string;
+  /**
+   * `执行 {command}`
+   */
+  traceRunCommand(command: string): string;
 }
 
 const catalog = createCatalog<Messages>({
@@ -4893,6 +5145,69 @@ const catalog = createCatalog<Messages>({
     "channelDeliveryNotObserved": [],
     "channelMissingConfiguration": [],
     "channelBindingRetained": [],
+    "assistantSettingsTitle": [],
+    "newAssistantDescription": [],
+    "assistantSettingsDescription": [],
+    "createAssistant": [],
+    "saveAssistantSettings": [],
+    "runtimeDefaultModel": [],
+    "noModelOverride": [],
+    "searchModels": [],
+    "noAccountModels": [],
+    "noModelsMatch": [],
+    "assistantNameRequired": [],
+    "chooseModelOrDefault": [],
+    "loadAssistantSettingsFailed": [],
+    "createAssistantFailed": [],
+    "saveAssistantSettingsFailed": [],
+    "loadingAssistantSettings": [],
+    "agentsMdHelp": [],
+    "selectedSkills": [],
+    "noSkillsSelected": [],
+    "importSkillText": [],
+    "importSkillPlaceholder": [],
+    "importSkill": [],
+    "skillSpace": [],
+    "searchSkills": [],
+    "editAssistant": [],
+    "retryLoading": [],
+    "loadingModels": [],
+    "modelsLoadFailed": [],
+    "skillsLoadFailed": [],
+    "assistantNamePlaceholder": [],
+    "agentsMdPlaceholder": [],
+    "searchSkillPlaceholder": [],
+    "removeSkill": ["name"],
+    "modelSelection": [],
+    "filterModels": [],
+    "searchModelPlaceholder": [],
+    "modelLocked": [],
+    "modelNotListed": ["model"],
+    "modelInitialization": [],
+    "assistantActions": [],
+    "deleteAssistantConfirm": ["name"],
+    "diagnosticModelUnavailable": [],
+    "desktopModelCall": [],
+    "desktopNoReasoningDetails": [],
+    "desktopUsage": [],
+    "desktopTokenUsageUpdated": [],
+    "traceLocalArchiveIncomplete": [],
+    "traceRecordedModelCalls": [],
+    "traceRecordedToolCalls": [],
+    "traceWorkerExecution": [],
+    "traceWorkerStepsObserved": ["count"],
+    "traceNoWorkerSteps": [],
+    "traceViewWorkerSteps": [],
+    "traceNoWorkerLifecycleSteps": [],
+    "traceEvent": [],
+    "traceEventAt": ["time"],
+    "traceSource": [],
+    "traceRecordedLocally": [],
+    "traceWorkerReasoning": [],
+    "traceWorkerResponse": [],
+    "traceWorkerUsage": [],
+    "traceWorkerCompleted": [],
+    "traceRunCommand": ["command"],
   },
   messages: {
     "zh-Hans": {
@@ -4943,7 +5258,7 @@ const catalog = createCatalog<Messages>({
       "connectRuntime": "连接所选 Runtime",
       "runtimeAlreadyConnected": "已连接",
       "switchRuntime": "切换 Runtime",
-      "runtimeConnected": "Runtime 已连接。现在可以开始会话；显式业务身份是可选覆盖。",
+      "runtimeConnected": "Runtime 已连接。现在可以新建助手；显式业务身份是可选覆盖。",
       "connectedRuntime": "已连接 Runtime：{runtime} · {host}",
       "runtimeKeyIdentity": "Session 身份：Runtime Key 默认主体 · 可在身份认证中覆盖",
       "explicitIdentity": "Session 身份：显式业务身份",
@@ -4964,8 +5279,8 @@ const catalog = createCatalog<Messages>({
       "assistantName": "助手名称",
       "newSpace": "新建 Space",
       "spaceName": "Space 名称",
-      "renameConversation": "重命名会话",
-      "conversationTitle": "会话标题",
+      "renameConversation": "重命名助手",
+      "conversationTitle": "助手名称",
       "cancel": "取消",
       "create": "创建",
       "saveTitle": "保存标题",
@@ -4974,7 +5289,7 @@ const catalog = createCatalog<Messages>({
       "openMpaHome": "OpenMPA 首页",
       "toggleSidebar": "展开或折叠侧栏",
       "toggleNavigation": "展开或折叠导航",
-      "newConversation": "新建会话",
+      "newConversation": "新建助手",
       "openSpaces": "打开 Spaces",
       "openScheduledActivity": "打开定时任务与活动",
       "openSettings": "打开设置",
@@ -4985,11 +5300,11 @@ const catalog = createCatalog<Messages>({
       "yourWorkspace": "你的工作区",
       "chat": "对话",
       "workspaceNavigation": "工作区导航",
-      "findConversations": "查找会话",
+      "findConversations": "查找助手",
       "searchAssistantsSpaces": "搜索助手和 Spaces",
       "assistants": "助手",
       "spaces": "Spaces",
-      "recentChats": "最近会话",
+      "recentChats": "最近助手",
       "session": "Session",
       "chooseRuntimeSettings": "请在设置中选择 Runtime。",
       "scheduledActivity": "定时任务与活动",
@@ -5000,9 +5315,9 @@ const catalog = createCatalog<Messages>({
       "runtimeKeyStatus": "Runtime Key 身份",
       "explicitIdentityStatus": "显式业务身份",
       "authenticationRequired": "需要认证",
-      "conversation": "会话",
-      "scheduleConversation": "为当前会话设置计划",
-      "continuingConversation": "一段可以持续的会话。",
+      "conversation": "助手",
+      "scheduleConversation": "为当前助手设置计划",
+      "continuingConversation": "一个可持续工作的助手。",
       "messagesFromRuntime": "消息和执行历史来自所选 Runtime。",
       "sendMessage": "发送消息",
       "stop": "停止",
@@ -5011,7 +5326,7 @@ const catalog = createCatalog<Messages>({
       "rename": "重命名",
       "delete": "删除",
       "workspaceFollowThrough": "你的工作区，持续把事情做完。",
-      "connectRuntimeOpenConversation": "连接云账户、选择 MPA Runtime，然后开始一段持续会话。本地页面可随时使用。",
+      "connectRuntimeOpenConversation": "连接云账户、选择 MPA Runtime，然后新建助手。本地页面可随时使用。",
       "pages": "页面",
       "settingsActionFailed": "设置操作失败。",
       "notConnected": "请先选择并连接 Runtime。",
@@ -5023,7 +5338,7 @@ const catalog = createCatalog<Messages>({
       "messageAssistant": "给助手发送消息…",
       "submittingReceiving": "正在提交 / 接收",
       "enterToSend": "Enter 发送 · Shift Enter 换行",
-      "stopCurrentSession": "停止当前会话",
+      "stopCurrentSession": "停止当前助手任务",
       "verifyingOutcome": "已确认停止 · 正在核验结果",
       "space": "SPACE",
       "newPage": "新建页面",
@@ -5083,22 +5398,22 @@ const catalog = createCatalog<Messages>({
       "saveCredentials": "保存凭据",
       "forgetVaultConfirm": "删除这台 Mac 上的加密凭据？之后需要重新输入 AK/SK。",
       "assistant": "助手",
-      "conversations": "会话",
+      "conversations": "助手",
       "settingsSectionsTitle": "设置",
       "home": "主页",
       "theme": "主题",
-      "searchConversations": "搜索会话",
-      "noConversations": "暂无会话。",
-      "selectConversationFirst": "请先选择一个会话。",
-      "knowledgeForConversation": "会话 {session} 的知识库",
+      "searchConversations": "搜索助手",
+      "noConversations": "暂无助手。",
+      "selectConversationFirst": "请先选择一个助手。",
+      "knowledgeForConversation": "助手 {session} 的知识库",
       "scheduledForAssistant": "当前助手的定时任务。",
-      "selectConversationForSchedules": "请选择一个会话，将定时任务限定到对应助手。",
+      "selectConversationForSchedules": "请选择一个助手，将定时任务限定到对应助手。",
       "displayTheme": "显示主题",
       "themeDescription": "主题会应用到桌面外壳和对话内容。",
       "light": "浅色",
       "dark": "深色",
       "themeChanged": "显示主题已更新。",
-      "sessionKnowledge": "会话知识库",
+      "sessionKnowledge": "助手知识库",
       "selectAssistant": "选择助手",
       "assistantConfiguration": "助手配置",
       "assistantSkillScope": "这里只显示已配置的 skills。浏览 AgentKit skill space 需要当前客户端没有的目录 API。",
@@ -5872,6 +6187,69 @@ const catalog = createCatalog<Messages>({
       "channelDeliveryNotObserved": "尚未观测到",
       "channelMissingConfiguration": "未配置",
       "channelBindingRetained": "可以关闭此界面或切换渠道。原绑定请求会保留，不会取消服务端的绑定操作。",
+      "assistantSettingsTitle": "助手设置",
+      "newAssistantDescription": "创建助手，设置名称、模型、AGENTS.md 和 Skills。",
+      "assistantSettingsDescription": "设置助手名称、模型、AGENTS.md 和 Skills；新回合会使用这些配置。",
+      "createAssistant": "创建助手",
+      "saveAssistantSettings": "保存助手设置",
+      "runtimeDefaultModel": "Runtime 默认",
+      "noModelOverride": "不覆盖模型",
+      "searchModels": "搜索模型",
+      "noAccountModels": "当前账户没有可用的 Responses 模型。",
+      "noModelsMatch": "没有匹配的模型。",
+      "assistantNameRequired": "助手名称不能为空。",
+      "chooseModelOrDefault": "请选择一个模型，或使用 Runtime 默认。",
+      "loadAssistantSettingsFailed": "无法加载助手设置。",
+      "createAssistantFailed": "无法创建助手。",
+      "saveAssistantSettingsFailed": "无法保存助手设置。",
+      "loadingAssistantSettings": "正在加载助手设置…",
+      "agentsMdHelp": "这些持久指令会附加到后续回合。已有历史不会被重写。",
+      "selectedSkills": "已选择 Skills",
+      "noSkillsSelected": "还没有选择 Skill。",
+      "importSkillText": "导入 Skill 文本",
+      "importSkillPlaceholder": "粘贴 skill 名称或简短 skill 指令。",
+      "importSkill": "导入 Skill",
+      "skillSpace": "Skill Space",
+      "searchSkills": "搜索 Skills",
+      "editAssistant": "编辑",
+      "retryLoading": "重试",
+      "loadingModels": "正在加载模型…",
+      "modelsLoadFailed": "无法加载模型列表，可重试或使用 Runtime 默认模型。",
+      "skillsLoadFailed": "无法加载 Skills 目录，已选择的 Skills 会保留。",
+      "assistantNamePlaceholder": "为助手命名",
+      "agentsMdPlaceholder": "为此助手编写持久指令。",
+      "searchSkillPlaceholder": "按名称或描述搜索",
+      "removeSkill": "移除 {name}",
+      "modelSelection": "选择模型",
+      "filterModels": "筛选模型",
+      "searchModelPlaceholder": "按名称或系列搜索",
+      "modelLocked": "当前回合仍在执行或等待结果核验，请在结束后更改模型。",
+      "modelNotListed": "当前模型 {model} 不在账户可用列表中，请选择可用模型。",
+      "modelInitialization": "首次选择模型时初始化执行配置。",
+      "assistantActions": "助手操作",
+      "deleteAssistantConfirm": "删除助手「{name}」及其关联数据？",
+      "diagnosticModelUnavailable": "这是诊断会话历史，使用 Runtime 的模型。新建助手支持选择模型。",
+      "desktopModelCall": "模型调用",
+      "desktopNoReasoningDetails": "暂无推理详情",
+      "desktopUsage": "用量",
+      "desktopTokenUsageUpdated": "Token 用量已更新",
+      "traceLocalArchiveIncomplete": "本地执行历史未能完整保存，当前可用步骤可能不完整。",
+      "traceRecordedModelCalls": "已记录的模型调用",
+      "traceRecordedToolCalls": "已记录的工具调用",
+      "traceWorkerExecution": "Worker 执行",
+      "traceWorkerStepsObserved": "已观测到 {count} 个步骤",
+      "traceNoWorkerSteps": "暂无 Worker 步骤",
+      "traceViewWorkerSteps": "查看 Worker 步骤",
+      "traceNoWorkerLifecycleSteps": "未返回 Worker 生命周期或绑定步骤。",
+      "traceEvent": "事件",
+      "traceEventAt": "事件时间：{time}",
+      "traceSource": "来源",
+      "traceRecordedLocally": "本地记录",
+      "traceWorkerReasoning": "Worker 推理",
+      "traceWorkerResponse": "Worker 回复",
+      "traceWorkerUsage": "Worker 用量",
+      "traceWorkerCompleted": "Worker 已完成",
+      "traceRunCommand": "执行 {command}",
     },
     "en": {
       "settings": "Settings",
@@ -5921,7 +6299,7 @@ const catalog = createCatalog<Messages>({
       "connectRuntime": "Connect selected Runtime",
       "runtimeAlreadyConnected": "Connected",
       "switchRuntime": "Switch Runtime",
-      "runtimeConnected": "Runtime connected. You can start conversations now; an explicit business identity is optional.",
+      "runtimeConnected": "Runtime connected. You can create assistants now; an explicit business identity is optional.",
       "connectedRuntime": "Connected Runtime: {runtime} · {host}",
       "runtimeKeyIdentity": "Session identity: Runtime key default · optional override in Authentication",
       "explicitIdentity": "Session identity: explicit business identity",
@@ -5942,8 +6320,8 @@ const catalog = createCatalog<Messages>({
       "assistantName": "Assistant name",
       "newSpace": "New Space",
       "spaceName": "Space name",
-      "renameConversation": "Rename conversation",
-      "conversationTitle": "Conversation title",
+      "renameConversation": "Rename assistant",
+      "conversationTitle": "Assistant name",
       "cancel": "Cancel",
       "create": "Create",
       "saveTitle": "Save title",
@@ -5952,7 +6330,7 @@ const catalog = createCatalog<Messages>({
       "openMpaHome": "OpenMPA home",
       "toggleSidebar": "Toggle sidebar",
       "toggleNavigation": "Toggle navigation",
-      "newConversation": "New conversation",
+      "newConversation": "New assistant",
       "openSpaces": "Open Spaces",
       "openScheduledActivity": "Open scheduled activity",
       "openSettings": "Open settings",
@@ -5963,11 +6341,11 @@ const catalog = createCatalog<Messages>({
       "yourWorkspace": "Your workspace",
       "chat": "chat",
       "workspaceNavigation": "Workspace navigation",
-      "findConversations": "Find conversations",
+      "findConversations": "Find assistants",
       "searchAssistantsSpaces": "Search assistants and Spaces",
       "assistants": "ASSISTANTS",
       "spaces": "SPACES",
-      "recentChats": "RECENT CHATS",
+      "recentChats": "Recent assistants",
       "session": "Session",
       "chooseRuntimeSettings": "Choose your Runtime in Settings.",
       "scheduledActivity": "Scheduled & activity",
@@ -5978,18 +6356,18 @@ const catalog = createCatalog<Messages>({
       "runtimeKeyStatus": "Runtime key identity",
       "explicitIdentityStatus": "Explicit business identity",
       "authenticationRequired": "Authentication required",
-      "conversation": "Conversation",
-      "scheduleConversation": "Schedule this conversation",
-      "continuingConversation": "A continuing conversation.",
+      "conversation": "Assistant",
+      "scheduleConversation": "Schedule this assistant",
+      "continuingConversation": "A continuing assistant.",
       "messagesFromRuntime": "Messages and execution history come from your selected Runtime.",
       "sendMessage": "Send message",
       "stop": "Stop",
       "saveAsPage": "Save as page",
-      "openBotSettings": "Bot settings",
+      "openBotSettings": "Assistant settings",
       "rename": "Rename",
       "delete": "Delete",
       "workspaceFollowThrough": "Your workspace, with follow-through.",
-      "connectRuntimeOpenConversation": "Connect your cloud account, choose an MPA Runtime and open a continuing conversation. Local pages are available at any time.",
+      "connectRuntimeOpenConversation": "Connect your cloud account, choose an MPA Runtime and create an assistant. Local pages are available at any time.",
       "pages": "Pages",
       "settingsActionFailed": "Settings action failed.",
       "notConnected": "Choose and connect a Runtime first.",
@@ -6001,7 +6379,7 @@ const catalog = createCatalog<Messages>({
       "messageAssistant": "Message your assistant…",
       "submittingReceiving": "Submitting / receiving",
       "enterToSend": "Enter to send · Shift Enter for a new line",
-      "stopCurrentSession": "Stop current session",
+      "stopCurrentSession": "Stop current assistant task",
       "verifyingOutcome": "Stop acknowledged · verifying outcome",
       "space": "SPACE",
       "newPage": "New page",
@@ -6061,22 +6439,22 @@ const catalog = createCatalog<Messages>({
       "saveCredentials": "Save credentials",
       "forgetVaultConfirm": "Delete the encrypted credential from this Mac? You will need to enter AK/SK again.",
       "assistant": "Assistant",
-      "conversations": "CONVERSATIONS",
+      "conversations": "ASSISTANTS",
       "settingsSectionsTitle": "SETTINGS",
       "home": "Home",
       "theme": "Theme",
-      "searchConversations": "Search conversations",
-      "noConversations": "No conversations yet.",
-      "selectConversationFirst": "Select a conversation first.",
-      "knowledgeForConversation": "Knowledge for conversation {session}",
+      "searchConversations": "Search assistants",
+      "noConversations": "No assistants yet.",
+      "selectConversationFirst": "Select an assistant first.",
+      "knowledgeForConversation": "Knowledge for assistant {session}",
       "scheduledForAssistant": "Scheduled tasks for this assistant.",
-      "selectConversationForSchedules": "Select a conversation to scope scheduled tasks to its assistant.",
+      "selectConversationForSchedules": "Select an assistant to scope scheduled tasks.",
       "displayTheme": "Display theme",
       "themeDescription": "The theme applies to the desktop shell and the conversation content.",
       "light": "Light",
       "dark": "Dark",
       "themeChanged": "Display theme updated.",
-      "sessionKnowledge": "Session knowledge",
+      "sessionKnowledge": "Assistant knowledge",
       "selectAssistant": "Select an assistant",
       "assistantConfiguration": "Assistant configuration",
       "assistantSkillScope": "Configured skills only. Browsing the AgentKit skill space needs a catalog API this client does not have.",
@@ -6850,6 +7228,69 @@ const catalog = createCatalog<Messages>({
       "channelDeliveryNotObserved": "Not observed yet",
       "channelMissingConfiguration": "Not configured",
       "channelBindingRetained": "You can close this view or switch channels. This keeps the original binding request; it does not cancel it on the server.",
+      "assistantSettingsTitle": "Assistant settings",
+      "newAssistantDescription": "Create an assistant with its name, model, AGENTS.md and Skills.",
+      "assistantSettingsDescription": "Set the assistant name, model, AGENTS.md and Skills. Future turns use this configuration.",
+      "createAssistant": "Create assistant",
+      "saveAssistantSettings": "Save assistant settings",
+      "runtimeDefaultModel": "Runtime default",
+      "noModelOverride": "No model override",
+      "searchModels": "Search models",
+      "noAccountModels": "No account-enabled Responses models are available.",
+      "noModelsMatch": "No models match the filter.",
+      "assistantNameRequired": "Assistant name is required.",
+      "chooseModelOrDefault": "Choose a model or use Runtime default.",
+      "loadAssistantSettingsFailed": "Could not load assistant settings.",
+      "createAssistantFailed": "Could not create assistant.",
+      "saveAssistantSettingsFailed": "Could not save assistant settings.",
+      "loadingAssistantSettings": "Loading assistant settings…",
+      "agentsMdHelp": "These persistent instructions are attached to future turns. Existing history is unchanged.",
+      "selectedSkills": "Selected Skills",
+      "noSkillsSelected": "No skills selected.",
+      "importSkillText": "Import skill text",
+      "importSkillPlaceholder": "Paste a skill name or short skill instruction.",
+      "importSkill": "Import skill",
+      "skillSpace": "Skill Space",
+      "searchSkills": "Search Skills",
+      "editAssistant": "Edit",
+      "retryLoading": "Retry",
+      "loadingModels": "Loading models…",
+      "modelsLoadFailed": "Could not load models. Retry or use Runtime default.",
+      "skillsLoadFailed": "Could not load the Skills catalog. Existing selections are preserved.",
+      "assistantNamePlaceholder": "Name this assistant",
+      "agentsMdPlaceholder": "Write persistent instructions for this assistant.",
+      "searchSkillPlaceholder": "Search by name or description",
+      "removeSkill": "Remove {name}",
+      "modelSelection": "Model selection",
+      "filterModels": "Filter models",
+      "searchModelPlaceholder": "Search by name or family",
+      "modelLocked": "The current turn is still running or awaiting outcome verification. Finish it before changing the model.",
+      "modelNotListed": "Current model {model} is not in the account catalog. Choose an available model.",
+      "modelInitialization": "First model selection initializes the next-turn configuration.",
+      "assistantActions": "Assistant actions",
+      "deleteAssistantConfirm": "Delete assistant “{name}” and its associated data?",
+      "diagnosticModelUnavailable": "This history is a diagnostic conversation and uses the Runtime model. New assistants support model selection.",
+      "desktopModelCall": "Model call",
+      "desktopNoReasoningDetails": "No reasoning details",
+      "desktopUsage": "Usage",
+      "desktopTokenUsageUpdated": "Token usage updated",
+      "traceLocalArchiveIncomplete": "Local execution history could not be fully saved. Available steps may be incomplete.",
+      "traceRecordedModelCalls": "Recorded model calls",
+      "traceRecordedToolCalls": "Recorded tool calls",
+      "traceWorkerExecution": "Worker execution",
+      "traceWorkerStepsObserved": "{count} observed",
+      "traceNoWorkerSteps": "No worker steps",
+      "traceViewWorkerSteps": "View worker steps",
+      "traceNoWorkerLifecycleSteps": "No worker lifecycle or binding steps were returned.",
+      "traceEvent": "Event",
+      "traceEventAt": "Event at {time}",
+      "traceSource": "Source",
+      "traceRecordedLocally": "Recorded locally",
+      "traceWorkerReasoning": "Worker reasoning",
+      "traceWorkerResponse": "Worker response",
+      "traceWorkerUsage": "Worker usage",
+      "traceWorkerCompleted": "Worker completed",
+      "traceRunCommand": "Run {command}",
     },
   },
 });

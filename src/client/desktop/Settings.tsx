@@ -22,6 +22,7 @@ export function DesktopSettings({
   session,
   theme,
   onThemeChange,
+  onSessionSaved,
 }: {
   services: DesktopServices;
   connection?: ConnectionVM;
@@ -31,6 +32,7 @@ export function DesktopSettings({
   session?: SessionVM;
   theme?: ThemePreference;
   onThemeChange?: (theme: ThemePreference) => void;
+  onSessionSaved?: (session: SessionVM) => void;
 }) {
   const m = useMessages();
   const state = useDesktopSettingsState({ services, connection, onConnection });
@@ -92,12 +94,12 @@ export function DesktopSettings({
           <h1>{sectionLabel}</h1>
         </div>
       </div>
-      {error && (
+      {section !== 'Runtime' && error && (
         <div className="error-banner" role="alert">
           {error}
         </div>
       )}
-      {notice && (
+      {section !== 'Runtime' && notice && (
         <div className="notice" role="status">
           {notice}
         </div>
@@ -271,13 +273,13 @@ export function DesktopSettings({
         (connection && session ? (
           <>
             <section className="task-detail-card desktop-form assistant-settings-launcher">
-              <h2>{m.settingsAssistantTitle()}</h2>
-              <p>{m.settingsAssistantPersistenceHint()}</p>
+              <h2>{m.assistantSettingsTitle()}</h2>
+              <p>{m.assistantSettingsDescription()}</p>
               <Button
                 variant="primary"
                 onClick={() => setAssistantSettingsOpen(true)}
               >
-                {m.settingsOpenAssistantSettings()}
+                {m.openBotSettings()}
               </Button>
             </section>
             {assistantSettingsOpen && (
@@ -285,9 +287,11 @@ export function DesktopSettings({
                 services={services}
                 connection={connection}
                 session={session}
-                onSaved={() =>
-                  setNotice(localized((m) => m.settingsAssistantSaved()))
-                }
+                onSaved={(updated) => {
+                  onSessionSaved?.(updated);
+                  setNotice(localized((m) => m.settingsAssistantSaved()));
+                  setAssistantSettingsOpen(false);
+                }}
                 onClose={() => setAssistantSettingsOpen(false)}
               />
             )}

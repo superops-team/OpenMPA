@@ -119,6 +119,9 @@ export function TracePanel({
     () => model?.steps.find((step) => step.stepId === selectedStep),
     [model, selectedStep],
   );
+  const slowestStepData = model?.steps.find(
+    (step) => step.stepId === model.summary.slowestStep?.stepId,
+  );
 
   useEffect(() => {
     const next =
@@ -317,8 +320,8 @@ export function TracePanel({
               : model.coverage.active
                 ? m.desktopTraceCollectingTheCurrentTurnIsStillRunning()
                 : model.coverage.complete
-                  ? m.traceComplete(model.coverage.recordCount)
-                  : m.tracePartial(model.coverage.recordCount)}
+                  ? m.traceComplete(model.steps.length)
+                  : m.tracePartial(model.steps.length)}
             {model.coverage.missingKinds.length
               ? m.traceMissingKinds(model.coverage.missingKinds.join(', '))
               : ''}
@@ -327,7 +330,13 @@ export function TracePanel({
         </div>
       )}
 
-      {!error && model && model.steps.length > 0 && (
+      {Boolean(model?.trace.coverage?.localArchiveStatus) && (
+        <p className="trace-banner trace-banner--warning" role="status">
+          {m.traceLocalArchiveIncomplete()}
+        </p>
+      )}
+
+      {model && model.steps.length > 0 && (
         <>
           <div className="trace-summary" aria-label={m.desktopTraceSummary()}>
             {[
@@ -348,10 +357,13 @@ export function TracePanel({
                 formatTraceDuration(model.summary.firstVisibleAnswerMs, m),
               ],
               [
-                m.desktopModelCalls(),
+                m.traceRecordedModelCalls(),
                 formatTraceCount(model.summary.modelRequestCount, m),
               ],
-              [m.traceTools(), formatTraceCount(model.summary.toolCount, m)],
+              [
+                m.traceRecordedToolCalls(),
+                formatTraceCount(model.summary.toolCount, m),
+              ],
               [m.traceTokens(), formatTraceCount(model.summary.totalTokens, m)],
               [m.traceRetries(), formatTraceCount(model.summary.retryCount, m)],
             ].map(([label, value]) => (
@@ -379,13 +391,45 @@ export function TracePanel({
                   model.run.slowestStep.title
                 )
                   ? m.traceStep()
-                  : model.summary.slowestStep.title}
+                  : typeof model.run.slowestStep === 'object' &&
+                      model.run.slowestStep !== null &&
+                      'title' in model.run.slowestStep &&
+                      model.run.slowestStep.title
+                    ? model.summary.slowestStep.title
+                    : slowestStepData
+                      ? traceStepTitle(slowestStepData, m)
+                      : model.summary.slowestStep.title}
               </strong>
               <em>
                 {formatTraceDuration(model.summary.slowestStep.durationMs, m)}
               </em>
             </div>
           )}
+          <section
+            className="trace-worker"
+            aria-label={m.traceWorkerExecution()}
+          >
+            <header>
+              <span>{m.traceWorkerExecution()}</span>
+              <strong>
+                {model.workerSteps.length
+                  ? m.traceWorkerStepsObserved(String(model.workerSteps.length))
+                  : m.traceNoWorkerSteps()}
+              </strong>
+              {model.workerSteps.length > 0 && (
+                <button
+                  type="button"
+                  className="text-button"
+                  onClick={() => setCategory('worker')}
+                >
+                  {m.traceViewWorkerSteps()}
+                </button>
+              )}
+            </header>
+            {model.workerSteps.length === 0 && (
+              <p>{m.traceNoWorkerLifecycleSteps()}</p>
+            )}
+          </section>
           <div className="trace-toolbar">
             <label className="trace-search">
               <Search size={14} />
@@ -477,15 +521,25 @@ export function TracePanel({
                             className="trace-row__name"
                             style={{ paddingLeft: step.depth * 10 }}
                           >
-                            <strong title={traceStepTitle(step)}>
-                              {traceStepTitle(step)}
+                            <strong title={traceStepTitle(step, m)}>
+                              {traceStepTitle(step, m)}
                             </strong>
                             <small>{step.kind}</small>
                           </span>
                           <span className="trace-row__track">
-                            {step.offsetMs !== undefined &&
-                            step.widthPercent !== undefined &&
+                            {step.timing?.kind === 'milestone' &&
+                            step.offsetMs !== undefined &&
                             model.summary.wallDurationMs ? (
+                              <i
+                                className="trace-milestone"
+                                title={m.traceEventAt(step.startedAt)}
+                                style={{
+                                  left: `${Math.min(100, (step.offsetMs / model.summary.wallDurationMs) * 100)}%`,
+                                }}
+                              />
+                            ) : step.offsetMs !== undefined &&
+                              step.widthPercent !== undefined &&
+                              model.summary.wallDurationMs ? (
                               <i
                                 style={{
                                   left: `${Math.min(100, (step.offsetMs / model.summary.wallDurationMs) * 100)}%`,
@@ -500,7 +554,9 @@ export function TracePanel({
                             {traceStatusLabel(step.status, m)}
                           </span>
                           <span className="trace-row__duration">
-                            {formatTraceDuration(step.duration, m)}
+                            {step.timing?.kind === 'milestone'
+                              ? m.traceEvent()
+                              : formatTraceDuration(step.duration, m)}
                           </span>
                         </button>
                       ))}
@@ -555,14 +611,16 @@ export function TracePanel({
                       aria-pressed={selectedStep === step.stepId}
                     >
                       <span className="trace-tree-row__name">
-                        <strong>{traceStepTitle(step)}</strong>
+                        <strong>{traceStepTitle(step, m)}</strong>
                         <small>{step.kind}</small>
                       </span>
                       <span className={`trace-status ${step.status}`}>
                         {traceStatusLabel(step.status, m)}
                       </span>
                       <span className="trace-row__duration">
-                        {formatTraceDuration(step.duration, m)}
+                        {step.timing?.kind === 'milestone'
+                          ? m.traceEvent()
+                          : formatTraceDuration(step.duration, m)}
                       </span>
                     </button>
                   </div>

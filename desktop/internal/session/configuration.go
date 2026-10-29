@@ -24,6 +24,18 @@ func validResourceID(id string) bool {
 	return len(id) > 0 && len(id) <= 256 && !strings.ContainsAny(id, "\r\n\x00")
 }
 
+func (s *Service) ModelCatalog(ctx context.Context, r dto.SessionRequest) dto.ModelCatalogResult {
+	result := s.Models(ctx, dto.ScopeRequest{ConnectionEpoch: r.ConnectionEpoch})
+	if !result.OK {
+		return dto.ModelCatalogResult{Error: result.Error}
+	}
+	catalog := dto.ModelCatalog{Models: []dto.ModelCatalogItem{}}
+	for _, id := range result.Value.Models {
+		catalog.Models = append(catalog.Models, dto.ModelCatalogItem{ID: id})
+	}
+	return dto.ModelCatalogResult{OK: true, Value: &catalog}
+}
+
 func (s *Service) UpdateExecutionConfig(ctx context.Context, r dto.ExecutionConfigUpdateRequest) dto.ExecutionConfigResult {
 	if r.SessionID == "" || r.ETag == "" || len(r.ETag) > 256 || strings.ContainsAny(r.ETag, "\r\n") || !validConfigMode(r.ModelMode) || !validConfigMode(r.MCPMode) || len(r.MCPServers) > 200 {
 		return dto.ExecutionConfigResult{Error: dto.Failure("invalidInput", "mpa", "never", 0)}
@@ -62,6 +74,9 @@ func (s *Service) UpdateExecutionConfig(ctx context.Context, r dto.ExecutionConf
 // Turn's immutable execution snapshot.
 func (s *Service) EnsureExecutionConfig(ctx context.Context, r dto.SessionRequest) dto.ExecutionConfigResult {
 	current := s.ExecutionConfig(ctx, r)
+	if current.Error != nil && current.Error.Code == "diagnosticModelUnsupported" {
+		return current
+	}
 	if current.OK || current.Error == nil || current.Error.HTTPStatus != http.StatusNotFound {
 		return current
 	}

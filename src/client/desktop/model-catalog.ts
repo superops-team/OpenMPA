@@ -25,3 +25,6 @@ export function filterModels(
     ? models.filter((model) => model.id.toLowerCase().includes(value))
     : models;
 }
+
+// Compatibility export contains no client-invented models.
+export const runtimeModelCatalog: ModelOption[] = [];

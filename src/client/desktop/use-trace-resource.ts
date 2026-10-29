@@ -50,13 +50,13 @@ export function useTraceResource({
     loading: false,
     error: '',
   });
-  const [refresh, setRefresh] = useState(0);
+  const [refresh, setRefresh] = useState({ key: '', attempt: 0 });
 
   useEffect(() => {
     if (epoch === undefined || !sessionId || !invocationId) return;
     let cancelled = false;
     let timer: ReturnType<typeof setTimeout> | undefined;
-    const load = async () => {
+    const load = async (force = false) => {
       setResource((previous) => ({
         key,
         trace: previous.key === key ? previous.trace : undefined,
@@ -64,7 +64,9 @@ export function useTraceResource({
         error: '',
       }));
       try {
-        const trace = await read(epoch, sessionId, invocationId);
+        const trace = force
+          ? await read(epoch, sessionId, invocationId, true)
+          : await read(epoch, sessionId, invocationId);
         if (cancelled) return;
         setResource({ key, trace, loading: false, error: '' });
         if (trace.coverage?.active === true || trace.run?.status === 'running')
@@ -73,10 +75,15 @@ export function useTraceResource({
           }, 2000);
       } catch (failure) {
         if (!cancelled)
-          setResource({ key, loading: false, error: failureMessage(failure) });
+          setResource((previous) => ({
+            key,
+            trace: previous.key === key ? previous.trace : undefined,
+            loading: false,
+            error: failureMessage(failure),
+          }));
       }
     };
-    void load();
+    void load(refresh.key === key);
     return () => {
       cancelled = true;
       clearTimeout(timer);
@@ -90,6 +97,6 @@ export function useTraceResource({
   return {
     ...visible,
     error: renderMessage(visible.error, m),
-    reload: () => setRefresh((value) => value + 1),
+    reload: () => setRefresh((value) => ({ key, attempt: value.attempt + 1 })),
   };
 }

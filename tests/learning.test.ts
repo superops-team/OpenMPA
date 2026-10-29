@@ -57,7 +57,7 @@ it('freezes container assignments, including disabled conversations, when a Dot 
 });
 
 it('migrates legacy threads without enrolling them and persists configuration across restart', () => {
-  const dir = mkdtempSync(join(tmpdir(), 'opendots-learning-'));
+  const dir = mkdtempSync(join(tmpdir(), 'openmpa-learning-'));
   cleanup.push(() => rmSync(dir, { recursive: true, force: true }));
   const path = join(dir, 'workspace.sqlite');
   const legacy = new DatabaseSync(path);

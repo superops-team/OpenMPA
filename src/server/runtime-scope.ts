@@ -7,7 +7,7 @@ export function validateRuntimeScope(
   const url = new URL(request.url);
   const prefix = '/api/copilotkit/';
   const deny = () => {
-    throw new Error('This runtime route is not enabled in OpenDots.');
+    throw new Error('This runtime route is not enabled in OpenMPA.');
   };
   if (!url.pathname.startsWith(prefix)) return deny();
   const path = url.pathname.slice(prefix.length);

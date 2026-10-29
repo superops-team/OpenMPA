@@ -1,5 +1,5 @@
 import { ArrowDown, ArrowUp, FileText, Square } from 'lucide-react';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { submitComposerOnEnter } from '../chat-composer';
 import { Mascot } from '../Mascot';
 import { type DisplayMessage } from './projection';
@@ -30,7 +30,6 @@ export function DesktopChat({
   onSaveReply,
   traceOpen,
   onCloseTrace,
-  onOpenTrace,
   composerDraft,
 }: {
   services: DesktopServices;
@@ -81,10 +80,7 @@ export function DesktopChat({
     cancelSubscription,
   } = state;
   const [stopping, setStopping] = useState(false);
-  const [traceFocus, setTraceFocus] = useState<{
-    invocationId: string;
-    toolId?: string;
-  }>();
+  const prefetchedTrace = useRef(new Set<string>());
   const model = useComposerModel({
     services,
     connection,
@@ -120,15 +116,37 @@ export function DesktopChat({
     }
     if (activeInvocation.current && !ids.includes(activeInvocation.current))
       ids.push(activeInvocation.current);
-    return ids.slice(-5);
+    return ids;
   }, [projection.messages, activeInvocation, completedInvocationIds]);
+  useEffect(() => {
+    if (!services.trace?.prefetch) return;
+    for (const invocationId of completedInvocationIds) {
+      const key = `${connection.epoch}:${session.id}:${invocationId}`;
+      if (prefetchedTrace.current.has(key)) continue;
+      prefetchedTrace.current.add(key);
+      void services.trace
+        .prefetch(connection.epoch, session.id, invocationId)
+        .catch(() => {
+          prefetchedTrace.current.delete(key);
+        });
+    }
+  }, [completedInvocationIds, connection.epoch, services.trace, session.id]);
+  const liveInvocationId = activeInvocation.current;
+  useEffect(() => {
+    if (!liveInvocationId || !services.trace?.prefetch) return;
+    // Native prefetch follows the running trace until terminal, including when
+    // the user navigates away from Chat. Capture worker evidence before teardown.
+    void services.trace
+      .prefetch(connection.epoch, session.id, liveInvocationId)
+      .catch(() => {});
+  }, [liveInvocationId, connection.epoch, services.trace, session.id]);
   const currentInvocationId = activeInvocation.current || invocationIds.at(-1);
   const turns = useMemo(
-    () => buildConversationTurns(projection.messages),
-    [projection.messages],
+    () => buildConversationTurns(projection.messages, completedInvocationIds),
+    [projection.messages, completedInvocationIds],
   );
   const textarea = useRef<HTMLTextAreaElement>(null);
-  useEffect(() => {
+  useLayoutEffect(() => {
     const element = textarea.current;
     if (!element) return;
     element.style.height = 'auto';
@@ -280,20 +298,7 @@ export function DesktopChat({
                     <AssistantMarkdown text={message.content} />
                   </div>
                 ))}
-                <TurnProcess
-                  turn={turn}
-                  onInspectTool={
-                    onOpenTrace
-                      ? (toolId) => {
-                          setTraceFocus({
-                            invocationId: turn.invocationId,
-                            toolId,
-                          });
-                          onOpenTrace();
-                        }
-                      : undefined
-                  }
-                />
+                <TurnProcess turn={turn} />
                 {answer &&
                   [answer].map((message) => {
                     const source = projection.messages.find(
@@ -399,14 +404,17 @@ export function DesktopChat({
           />
           <ComposerFooter className="composer-bar">
             <ComposerModelPicker
-              catalog={model.catalog}
-              catalogLoading={model.catalogLoading}
-              catalogError={model.catalogError}
-              onRefreshCatalog={model.refreshCatalog}
               config={model.config}
               busy={model.busy}
+              unavailable={model.unavailable}
               needsInitialization={model.needsInitialization}
               locked={model.locked}
+              modelCatalog={model.modelCatalog}
+              catalog={model.catalog}
+              catalogError={model.catalogError}
+              catalogLoading={model.catalogLoading}
+              catalogFailed={model.catalogFailed}
+              onRetryCatalog={model.retryCatalog}
               onApply={model.apply}
             />
             <span className="composer-hint">
@@ -476,11 +484,7 @@ export function DesktopChat({
           session={session}
           invocationIds={invocationIds}
           currentInvocationId={currentInvocationId}
-          focus={traceFocus}
-          onClose={() => {
-            setTraceFocus(undefined);
-            onCloseTrace?.();
-          }}
+          onClose={() => onCloseTrace?.()}
         />
       )}
     </section>

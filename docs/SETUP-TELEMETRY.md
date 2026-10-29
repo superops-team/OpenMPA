@@ -1,6 +1,6 @@
 # Browser setup telemetry
 
-OpenDots tracks its existing browser setup flow through the server's CopilotKit ingest contract. This is the web distribution; OpenDots has no native installer, engine installation, Windows prerequisite, image-pull wizard, or model/harness picker. Those desktop events are not applicable.
+OpenMPA tracks its existing browser setup flow through the server's CopilotKit ingest contract. This is the web distribution; OpenMPA has no native installer, engine installation, Windows prerequisite, image-pull wizard, or model/harness picker. Those desktop events are not applicable.
 
 Telemetry is enabled by default. Either `DO_NOT_TRACK=true|1` or `COPILOTKIT_TELEMETRY_DISABLED=true|1` disables the setup emitter and runtime. Restart after changing the server environment. Opt-out deletes the setup tracking row, including its pending queue and fallback installation identity. It does not change the owner, conversations, or application settings. Sampling rate zero also suppresses setup events.
 
@@ -15,7 +15,7 @@ Telemetry is enabled by default. Either `DO_NOT_TRACK=true|1` or `COPILOTKIT_TEL
 
 The authenticated `/api/setup-telemetry` route accepts only strict step-view and abandonment objects. It rejects unknown keys, invalid steps, arbitrary properties, client-forged activation/failure, and readiness inconsistent with server state. Existing owner-token, origin, cross-site, content-type, and body-size guards apply. Settings visibility does not expose environment configuration values.
 
-Metadata names OpenDots, `opendots_distribution=web`, numeric release `opendots_version=0.1.4`, `runtime_env=node`, server platform (`macos|windows|linux|other`) and architecture (`aarch64|x86_64|other`), and a random persistent `installation_id`. Server platform identifies the server, including its container; it does not infer the browser OS. There are no prompts, answers, raw errors, keys, URLs, file paths, model names, emails, owner IDs, browser user agents, or machine-derived identifiers in setup events.
+Metadata names OpenMPA, `openmpa_distribution=web`, numeric release `openmpa_version=0.1.5`, `runtime_env=node`, server platform (`macos|windows|linux|other`) and architecture (`aarch64|x86_64|other`), and a random persistent `installation_id`. Server platform identifies the server, including its container; it does not infer the browser OS. There are no prompts, answers, raw errors, keys, URLs, file paths, model names, emails, owner IDs, browser user agents, or machine-derived identifiers in setup events.
 
 The current nonblank `CPK_TELEMETRY_ID` takes precedence as the ingest header and runtime `telemetryId`, preserving the CLI project/account identity. If absent, both use the persistent random installation UUID. The installation UUID remains separate metadata even when the CLI identity is present. Removing the CLI variable returns to the installation fallback. The runtime receives matching metadata through `telemetryProperties`; no PostHog SDK, public capture key, or separate signup event is added.
 
