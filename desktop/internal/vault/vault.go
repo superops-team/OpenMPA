@@ -66,6 +66,7 @@ type Status struct {
 // memory only long enough to call Runtime identity APIs.
 type UserToken struct {
 	RuntimeID    string `json:"runtimeId"`
+	UserPoolID   string `json:"userPoolId"`
 	Issuer       string `json:"issuer"`
 	ClientID     string `json:"clientId"`
 	Subject      string `json:"subject"`
@@ -78,15 +79,16 @@ type UserToken struct {
 
 // UserTokenStatus is safe to project to the UI; it contains no tokens.
 type UserTokenStatus struct {
-	Exists    bool
-	RuntimeID string
-	Issuer    string
-	ClientID  string
-	Subject   string
-	MPAID     string
-	SpaceID   string
-	ExpiresAt string
-	UpdatedAt int64
+	Exists     bool
+	RuntimeID  string
+	UserPoolID string
+	Issuer     string
+	ClientID   string
+	Subject    string
+	MPAID      string
+	SpaceID    string
+	ExpiresAt  string
+	UpdatedAt  int64
 }
 
 type Service struct {
@@ -204,6 +206,7 @@ func validUserTokenText(value string, limit int) bool {
 
 func validUserToken(token UserToken) bool {
 	return validRuntimeID(token.RuntimeID) &&
+		validUserTokenText(token.UserPoolID, 128) &&
 		validUserTokenText(token.Issuer, 1024) &&
 		validUserTokenText(token.ClientID, 512) &&
 		validUserTokenText(token.Subject, 512) &&
@@ -214,8 +217,8 @@ func validUserToken(token UserToken) bool {
 		validUserTokenText(token.ExpiresAt, 64)
 }
 
-func userTokenAAD(runtimeID, issuer, clientID, subject, mpaID, spaceID, expiresAt string) []byte {
-	return []byte("openmpa-user-token-vault-v1\x00" + runtimeID + "\x00" + issuer + "\x00" + clientID + "\x00" + subject + "\x00" + mpaID + "\x00" + spaceID + "\x00" + expiresAt)
+func userTokenAAD(runtimeID, userPoolID, issuer, clientID, subject, mpaID, spaceID, expiresAt string) []byte {
+	return []byte("openmpa-user-token-vault-v1\x00" + runtimeID + "\x00" + userPoolID + "\x00" + issuer + "\x00" + clientID + "\x00" + subject + "\x00" + mpaID + "\x00" + spaceID + "\x00" + expiresAt)
 }
 
 func seal(passphrase []byte, payload Payload, accountID, region string, iterations int, now int64) (configstore.VaultRecord, error) {
@@ -309,7 +312,7 @@ func sealUserToken(passphrase []byte, token UserToken, iterations int, now int64
 	if err != nil {
 		return configstore.UserTokenVaultRecord{}, err
 	}
-	ciphertext := gcm.Seal(nil, nonce, plaintext, userTokenAAD(token.RuntimeID, token.Issuer, token.ClientID, token.Subject, token.MPAID, token.SpaceID, token.ExpiresAt))
+	ciphertext := gcm.Seal(nil, nonce, plaintext, userTokenAAD(token.RuntimeID, token.UserPoolID, token.Issuer, token.ClientID, token.Subject, token.MPAID, token.SpaceID, token.ExpiresAt))
 	if len(ciphertext) > MaxUserTokenCiphertext {
 		return configstore.UserTokenVaultRecord{}, ErrInvalid
 	}
@@ -321,6 +324,7 @@ func sealUserToken(passphrase []byte, token UserToken, iterations int, now int64
 		Salt:       salt,
 		Nonce:      nonce,
 		Ciphertext: ciphertext,
+		UserPoolID: token.UserPoolID,
 		Issuer:     token.Issuer,
 		ClientID:   token.ClientID,
 		Subject:    token.Subject,
@@ -379,7 +383,7 @@ func openUserToken(passphrase []byte, record configstore.UserTokenVaultRecord) (
 	if err != nil {
 		return UserToken{}, ErrWrongPassphrase
 	}
-	plaintext, err := gcm.Open(nil, record.Nonce, record.Ciphertext, userTokenAAD(record.RuntimeID, record.Issuer, record.ClientID, record.Subject, record.MPAID, record.SpaceID, record.ExpiresAt))
+	plaintext, err := gcm.Open(nil, record.Nonce, record.Ciphertext, userTokenAAD(record.RuntimeID, record.UserPoolID, record.Issuer, record.ClientID, record.Subject, record.MPAID, record.SpaceID, record.ExpiresAt))
 	if err != nil {
 		return UserToken{}, ErrWrongPassphrase
 	}
@@ -395,6 +399,7 @@ func openUserToken(passphrase []byte, record configstore.UserTokenVaultRecord) (
 	}
 	token := UserToken{
 		RuntimeID:    record.RuntimeID,
+		UserPoolID:   record.UserPoolID,
 		Issuer:       record.Issuer,
 		ClientID:     record.ClientID,
 		Subject:      record.Subject,
@@ -426,6 +431,7 @@ func validUserTokenRecord(record configstore.UserTokenVaultRecord) bool {
 		len(record.Salt) == SaltSize && len(record.Nonce) == NonceSize &&
 		len(record.Ciphertext) > 0 && len(record.Ciphertext) <= MaxUserTokenCiphertext &&
 		validRuntimeID(record.RuntimeID) &&
+		validUserTokenText(record.UserPoolID, 128) &&
 		validUserTokenText(record.Issuer, 1024) &&
 		validUserTokenText(record.ClientID, 512) &&
 		validUserTokenText(record.Subject, 512) &&
@@ -436,14 +442,15 @@ func validUserTokenRecord(record configstore.UserTokenVaultRecord) bool {
 
 func userTokenStatus(record configstore.UserTokenVaultRecord) UserTokenStatus {
 	return UserTokenStatus{
-		Exists:    true,
-		RuntimeID: record.RuntimeID,
-		Issuer:    record.Issuer,
-		ClientID:  record.ClientID,
-		Subject:   record.Subject,
-		MPAID:     record.MPAID,
-		SpaceID:   record.SpaceID,
-		ExpiresAt: record.ExpiresAt,
-		UpdatedAt: record.UpdatedAt,
+		Exists:     true,
+		RuntimeID:  record.RuntimeID,
+		UserPoolID: record.UserPoolID,
+		Issuer:     record.Issuer,
+		ClientID:   record.ClientID,
+		Subject:    record.Subject,
+		MPAID:      record.MPAID,
+		SpaceID:    record.SpaceID,
+		ExpiresAt:  record.ExpiresAt,
+		UpdatedAt:  record.UpdatedAt,
 	}
 }

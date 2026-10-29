@@ -49,6 +49,9 @@ export function useDesktopSettingsState({
     useState<UserTokenVaultStatusVM>({
       exists: false,
     });
+  const [agentIdentityUserPoolId, setAgentIdentityUserPoolId] = useState('');
+  const [suggestedAgentIdentityUserPoolId, setSuggestedAgentIdentityUserPoolId] =
+    useState('');
   const [vaultPassphrase, setVaultPassphrase] = useState('');
   const [vaultConfirm, setVaultConfirm] = useState('');
   const [vaultUnlockPassphrase, setVaultUnlockPassphrase] = useState('');
@@ -130,6 +133,18 @@ export function useDesktopSettingsState({
         .vaultStatus()
         .then((value) => {
           if (generation.current === current) setVaultStatus(value);
+        })
+        .catch(() => {});
+    }
+    if (services.platform.agentIdentityConfig) {
+      void services.platform
+        .agentIdentityConfig()
+        .then((value) => {
+          if (generation.current !== current) return;
+          setAgentIdentityUserPoolId(
+            value.userPoolId || value.suggestedUserPoolId || '',
+          );
+          setSuggestedAgentIdentityUserPoolId(value.suggestedUserPoolId || '');
         })
         .catch(() => {});
     }
@@ -302,6 +317,10 @@ export function useDesktopSettingsState({
     setVaultStatus,
     userTokenVaultStatus,
     setUserTokenVaultStatus,
+    agentIdentityUserPoolId,
+    setAgentIdentityUserPoolId,
+    suggestedAgentIdentityUserPoolId,
+    setSuggestedAgentIdentityUserPoolId,
     vaultPassphrase,
     setVaultPassphrase,
     vaultConfirm,

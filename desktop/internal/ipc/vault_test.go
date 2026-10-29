@@ -33,7 +33,7 @@ func vaultPlatform(t *testing.T) (*Platform, *vault.Service, *configstore.Store,
 	t.Cleanup(func() { store.Close() })
 	service := vault.NewWithIterations(store, vault.MinIterations)
 	transport := &vaultTransport{account: "account-one"}
-	p := NewPlatformWithVault(cloud.NewWithTransport(transport), connection.New(), service)
+	p := NewPlatformWithStore(cloud.NewWithTransport(transport), connection.New(), service, store)
 	return p, service, store, transport
 }
 

@@ -5,7 +5,9 @@ const connection = vi.hoisted(() => ({
   status: vi.fn(),
 }));
 const platform = vi.hoisted(() => ({
+  agentIdentityConfig: vi.fn(),
   forgetUserTokenVault: vi.fn(),
+  saveAgentIdentityConfig: vi.fn(),
   saveUserTokenVault: vi.fn(),
   unlockUserTokenVault: vi.fn(),
   userTokenVaultStatus: vi.fn(),
@@ -125,12 +127,27 @@ it('exposes Runtime user token vault APIs without projecting token material', as
     value: {
       exists: true,
       runtimeId: 'runtime-1',
+      userPoolId: '3ea6c536-152c-435d-8040-9fcb3597476a',
       issuer: 'https://issuer.example',
       clientId: 'client-1',
       subject: 'user-1',
       mpaId: 'mi-1',
       spaceId: 'space-1',
       expiresAt: '2026-10-29T12:00:00Z',
+    },
+  });
+  platform.agentIdentityConfig.mockResolvedValueOnce({
+    ok: true,
+    value: {
+      userPoolId: '3ea6c536-152c-435d-8040-9fcb3597476a',
+      suggestedUserPoolId: '3ea6c536-152c-435d-8040-9fcb3597476a',
+    },
+  });
+  platform.saveAgentIdentityConfig.mockResolvedValueOnce({
+    ok: true,
+    value: {
+      userPoolId: '3ea6c536-152c-435d-8040-9fcb3597476a',
+      suggestedUserPoolId: '3ea6c536-152c-435d-8040-9fcb3597476a',
     },
   });
   platform.userTokenVaultStatus.mockResolvedValueOnce({
@@ -166,6 +183,7 @@ it('exposes Runtime user token vault APIs without projecting token material', as
   const input = {
     passphrase: 'correct horse battery',
     runtimeId: 'runtime-1',
+    userPoolId: '3ea6c536-152c-435d-8040-9fcb3597476a',
     issuer: 'https://issuer.example',
     clientId: 'client-1',
     subject: 'user-1',
@@ -183,6 +201,23 @@ it('exposes Runtime user token vault APIs without projecting token material', as
     }),
   );
   expect(platform.saveUserTokenVault).toHaveBeenCalledWith(input);
+  await expect(services.platform.agentIdentityConfig!()).resolves.toEqual(
+    expect.objectContaining({
+      userPoolId: '3ea6c536-152c-435d-8040-9fcb3597476a',
+    }),
+  );
+  await expect(
+    services.platform.saveAgentIdentityConfig!(
+      '3ea6c536-152c-435d-8040-9fcb3597476a',
+    ),
+  ).resolves.toEqual(
+    expect.objectContaining({
+      userPoolId: '3ea6c536-152c-435d-8040-9fcb3597476a',
+    }),
+  );
+  expect(platform.saveAgentIdentityConfig).toHaveBeenCalledWith({
+    userPoolId: '3ea6c536-152c-435d-8040-9fcb3597476a',
+  });
   await expect(
     services.platform.userTokenVaultStatus!('runtime-1'),
   ).resolves.toEqual(

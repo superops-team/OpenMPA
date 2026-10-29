@@ -6,9 +6,33 @@ import (
 	"strings"
 	"time"
 
+	"github.com/superops-team/OpenMPA/desktop/internal/configstore"
 	"github.com/superops-team/OpenMPA/desktop/internal/dto"
 	"github.com/superops-team/OpenMPA/desktop/internal/vault"
 )
+
+func (p *Platform) AgentIdentityConfig(ctx context.Context) dto.AgentIdentityConfigResult {
+	out := dto.AgentIdentityConfig{SuggestedUserPoolID: configstore.DefaultAgentIdentityUserPoolID}
+	if p.Settings == nil {
+		return dto.AgentIdentityConfigResult{OK: true, Value: &out}
+	}
+	userPoolID, err := p.Settings.LoadAgentIdentityUserPool(ctx)
+	if err != nil {
+		return dto.AgentIdentityConfigResult{Error: dto.Failure("localConfigUnavailable", "desktop", "readOnly", 0)}
+	}
+	out.UserPoolID = userPoolID
+	return dto.AgentIdentityConfigResult{OK: true, Value: &out}
+}
+
+func (p *Platform) SaveAgentIdentityConfig(ctx context.Context, r dto.AgentIdentityConfigRequest) dto.AgentIdentityConfigResult {
+	if p.Settings == nil {
+		return dto.AgentIdentityConfigResult{Error: dto.Failure("localConfigUnavailable", "desktop", "readOnly", 0)}
+	}
+	if err := p.Settings.SaveAgentIdentityUserPool(ctx, r.UserPoolID); err != nil {
+		return dto.AgentIdentityConfigResult{Error: dto.Failure("invalidInput", "desktop", "never", 0)}
+	}
+	return p.AgentIdentityConfig(ctx)
+}
 
 // UserTokenVaultStatus is a local read; it never returns idToken or refreshToken.
 func (p *Platform) UserTokenVaultStatus(r dto.UserTokenVaultRequest) dto.UserTokenVaultStatusResult {
@@ -34,9 +58,14 @@ func (p *Platform) SaveUserTokenVault(ctx context.Context, r dto.UserTokenVaultS
 	if p.Vault == nil {
 		return dto.UserTokenVaultStatusResult{Error: dto.Failure("vaultUnavailable", "desktop", "never", 0)}
 	}
+	userPoolID, failure := p.resolveAgentIdentityUserPool(ctx, r.UserPoolID)
+	if failure != nil {
+		return dto.UserTokenVaultStatusResult{Error: failure}
+	}
 	passphrase := []byte(r.Passphrase)
 	token := vault.UserToken{
 		RuntimeID:    r.RuntimeID,
+		UserPoolID:   userPoolID,
 		Issuer:       r.Issuer,
 		ClientID:     r.ClientID,
 		Subject:      r.Subject,
@@ -81,6 +110,13 @@ func (p *Platform) UnlockUserTokenVault(ctx context.Context, r dto.UserTokenVaul
 			return dto.UserTokenVaultStatusResult{Error: dto.Failure("vaultUnavailable", "desktop", "readOnly", 0)}
 		}
 	}
+	configured, failure := p.resolveAgentIdentityUserPool(ctx, "")
+	if failure != nil {
+		return dto.UserTokenVaultStatusResult{Error: failure}
+	}
+	if token.UserPoolID != configured {
+		return dto.UserTokenVaultStatusResult{Error: dto.Failure("agentIdentityUserPoolMismatch", "desktop", "never", 0)}
+	}
 	if r.ConnectionEpoch != 0 {
 		state := p.Connection.State()
 		if !state.Connected || state.ConnectionEpoch != r.ConnectionEpoch {
@@ -117,16 +153,50 @@ func validUserTokenVaultRuntimeID(value string) bool {
 		value != "." && value != ".."
 }
 
+func (p *Platform) resolveAgentIdentityUserPool(ctx context.Context, candidate string) (string, *dto.SafeError) {
+	if candidate != "" {
+		normalized, err := configstore.NormalizeAgentIdentityUserPoolID(candidate)
+		if err != nil {
+			return "", dto.Failure("invalidInput", "desktop", "never", 0)
+		}
+		if p.Settings != nil {
+			current, err := p.Settings.LoadAgentIdentityUserPool(ctx)
+			if err != nil {
+				return "", dto.Failure("localConfigUnavailable", "desktop", "readOnly", 0)
+			}
+			if current != "" && current != normalized {
+				return "", dto.Failure("agentIdentityUserPoolMismatch", "desktop", "never", 0)
+			}
+			if err := p.Settings.SaveAgentIdentityUserPool(ctx, normalized); err != nil {
+				return "", dto.Failure("localConfigUnavailable", "desktop", "readOnly", 0)
+			}
+		}
+		return normalized, nil
+	}
+	if p.Settings == nil {
+		return "", dto.Failure("agentIdentityUserPoolRequired", "desktop", "never", 0)
+	}
+	userPoolID, err := p.Settings.LoadAgentIdentityUserPool(ctx)
+	if err != nil {
+		return "", dto.Failure("localConfigUnavailable", "desktop", "readOnly", 0)
+	}
+	if userPoolID == "" {
+		return "", dto.Failure("agentIdentityUserPoolRequired", "desktop", "never", 0)
+	}
+	return userPoolID, nil
+}
+
 func userTokenVaultStatus(status vault.UserTokenStatus) dto.UserTokenVaultStatus {
 	out := dto.UserTokenVaultStatus{
-		Exists:    status.Exists,
-		RuntimeID: status.RuntimeID,
-		Issuer:    status.Issuer,
-		ClientID:  status.ClientID,
-		Subject:   status.Subject,
-		MPAID:     status.MPAID,
-		SpaceID:   status.SpaceID,
-		ExpiresAt: status.ExpiresAt,
+		Exists:     status.Exists,
+		RuntimeID:  status.RuntimeID,
+		UserPoolID: status.UserPoolID,
+		Issuer:     status.Issuer,
+		ClientID:   status.ClientID,
+		Subject:    status.Subject,
+		MPAID:      status.MPAID,
+		SpaceID:    status.SpaceID,
+		ExpiresAt:  status.ExpiresAt,
 	}
 	if status.UpdatedAt > 0 {
 		out.UpdatedAt = time.UnixMilli(status.UpdatedAt).UTC().Format(time.RFC3339)

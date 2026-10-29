@@ -207,6 +207,53 @@ it('forces a remote session refresh from the shell refresh action', async () => 
   await act(async () => renderer.unmount());
 });
 
+it('does not load sessions before Runtime business JWT is restored', async () => {
+  vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true);
+  let navigation!: (action: string, id?: string) => void;
+  const list = vi.fn(async () => []);
+  const services = {
+    host: {
+      onNavigation: (listener: typeof navigation) => {
+        navigation = listener;
+        return () => {};
+      },
+      setShellState: async () => {},
+      onClose: () => () => {},
+      closeState: async () => ({ pending: false, requestId: 0 }),
+    },
+    connection: {
+      status: async () => ({
+        epoch: 2,
+        scope: 'a',
+        runtimeId: 'r',
+        status: 'connected',
+        businessIdentity: 'missing',
+      }),
+    },
+    platform: {
+      status: async () => ({ signedIn: false, accountId: '', region: '' }),
+    },
+    sessions: { list },
+  } as unknown as DesktopServices;
+  let renderer!: ReactTestRenderer;
+  await act(async () => {
+    renderer = create(<DesktopApp services={services} />);
+  });
+  await act(async () => {});
+  expect(list).not.toHaveBeenCalled();
+  expect(JSON.stringify(renderer.toJSON())).toContain(
+    messages.businessJWTRequired(),
+  );
+  await act(async () => navigation('refreshSessions'));
+  expect(list).not.toHaveBeenCalled();
+  await act(async () => navigation('newConversation'));
+  expect(JSON.stringify(renderer.toJSON())).toContain(
+    messages.authentication(),
+  );
+  expect(list).not.toHaveBeenCalled();
+  await act(async () => renderer.unmount());
+});
+
 it('contains desktop scroll containment rules for trackpad scrolling', () => {
   const foundation = readFileSync(
     new URL('../src/client/styles/foundation.css', import.meta.url),

@@ -240,6 +240,7 @@ func testUserTokenVaultRecord(runtimeID string) UserTokenVaultRecord {
 		Salt:       make([]byte, 16),
 		Nonce:      make([]byte, 12),
 		Ciphertext: []byte("ciphertext-only"),
+		UserPoolID: DefaultAgentIdentityUserPoolID,
 		Issuer:     "https://issuer.example",
 		ClientID:   "client-1",
 		Subject:    "user-1",
@@ -332,6 +333,23 @@ func TestUserTokenVaultRecordRoundTripAndReplacement(t *testing.T) {
 	}
 }
 
+func TestAgentIdentityUserPoolRoundTrip(t *testing.T) {
+	store := openTest(t)
+	ctx := context.Background()
+	if got, err := store.LoadAgentIdentityUserPool(ctx); err != nil || got != "" {
+		t.Fatalf("unexpected initial user pool: %q %v", got, err)
+	}
+	if err := store.SaveAgentIdentityUserPool(ctx, DefaultAgentIdentityUserPoolID); err != nil {
+		t.Fatal(err)
+	}
+	if got, err := store.LoadAgentIdentityUserPool(ctx); err != nil || got != DefaultAgentIdentityUserPoolID {
+		t.Fatalf("user pool did not persist: %q %v", got, err)
+	}
+	if err := store.SaveAgentIdentityUserPool(ctx, "not-a-user-pool"); err == nil {
+		t.Fatal("invalid user pool accepted")
+	}
+}
+
 func TestVaultTableMigratesFromVersionOne(t *testing.T) {
 	dir := t.TempDir()
 	path := filepath.Join(dir, "openmpa.db")
@@ -377,6 +395,42 @@ func TestVaultTableMigratesFromVersionOne(t *testing.T) {
 	}
 	if _, err := reopened.LoadUserTokenVault(context.Background(), "runtime-1"); !errors.Is(err, ErrNoVault) {
 		t.Fatalf("migrated user token vault table not empty: %v", err)
+	}
+}
+
+func TestUserTokenVaultTableMigratesFromVersionThree(t *testing.T) {
+	dir := t.TempDir()
+	path := filepath.Join(dir, "openmpa.db")
+	store, err := Open(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	store.Close()
+
+	raw, err := sql.Open("sqlite", path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := raw.Exec("ALTER TABLE user_token_vault DROP COLUMN user_pool_id"); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := raw.Exec("PRAGMA user_version = 3"); err != nil {
+		t.Fatal(err)
+	}
+	raw.Close()
+
+	reopened, err := Open(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer reopened.Close()
+	record := testUserTokenVaultRecord("runtime-1")
+	if err := reopened.SaveUserTokenVault(context.Background(), record); err != nil {
+		t.Fatal(err)
+	}
+	loaded, err := reopened.LoadUserTokenVault(context.Background(), "runtime-1")
+	if err != nil || loaded.UserPoolID != DefaultAgentIdentityUserPoolID {
+		t.Fatalf("migrated user pool column unavailable: %+v %v", loaded, err)
 	}
 }
 

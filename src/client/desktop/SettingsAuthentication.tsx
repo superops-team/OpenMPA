@@ -19,12 +19,14 @@ export function SettingsAuthentication({
   const m = useMessages();
   const {
     act,
+    agentIdentityUserPoolId,
     busy,
     channelAuth,
     generation,
     identity,
     loadUserTokenVaultStatus,
     setChannelAuth,
+    setAgentIdentityUserPoolId,
     setIdentity,
     setNotice,
     setUserTokenVaultPassphrase,
@@ -54,20 +56,50 @@ export function SettingsAuthentication({
         >
           {m.testConnection()}
         </button>
-        {services.platform.userTokenVaultStatus && (
+        {services.platform?.userTokenVaultStatus && (
           <div className="desktop-form">
             <h3>{m.businessIdentity()}</h3>
+            {services.platform.saveAgentIdentityConfig && (
+              <label>
+                {m.businessIdentity()} UserPool ID
+                <input
+                  value={agentIdentityUserPoolId}
+                  onChange={(event) =>
+                    setAgentIdentityUserPoolId(event.target.value)
+                  }
+                />
+              </label>
+            )}
+            {services.platform.saveAgentIdentityConfig && (
+              <Button
+                variant="outline"
+                disabled={busy || !agentIdentityUserPoolId.trim()}
+                onClick={() =>
+                  void act(async () => {
+                    const saved = await services.platform
+                      .saveAgentIdentityConfig!(agentIdentityUserPoolId);
+                    setAgentIdentityUserPoolId(saved.userPoolId || '');
+                    await loadUserTokenVaultStatus(connection.runtimeId);
+                    setNotice(
+                      localized((m) => m.settingsBusinessIdentitySaved()),
+                    );
+                  })
+                }
+              >
+                {m.saveBusinessIdentity()}
+              </Button>
+            )}
             <p>
               {userTokenVaultStatus.exists
                 ? m.settingsConnectionSummary(
-                    userTokenVaultStatus.subject || connection.runtimeId,
+                    `${userTokenVaultStatus.subject || connection.runtimeId} · ${userTokenVaultStatus.userPoolId || m.settingsUnknown()}`,
                     m.settingsLegacyJwtAuthenticated(),
                     userTokenVaultStatus.expiresAt || m.settingsUnknown(),
                   )
                 : m.businessJWTRequired()}
             </p>
             {userTokenVaultStatus.exists &&
-              services.platform.unlockUserTokenVault && (
+              services.platform?.unlockUserTokenVault && (
                 <label>
                   {m.vaultUnlockHint()}
                   <input
@@ -83,7 +115,7 @@ export function SettingsAuthentication({
               )}
             {userTokenVaultStatus.exists && (
               <div className="desktop-inline">
-                {services.platform.unlockUserTokenVault && (
+                {services.platform?.unlockUserTokenVault && (
                   <Button
                     variant="primary"
                     disabled={busy || !userTokenVaultPassphrase.trim()}
@@ -109,7 +141,7 @@ export function SettingsAuthentication({
                     {m.unlockAndSignIn()}
                   </Button>
                 )}
-                {services.platform.forgetUserTokenVault && (
+                {services.platform?.forgetUserTokenVault && (
                   <button
                     className="text-button"
                     disabled={busy}
@@ -120,9 +152,7 @@ export function SettingsAuthentication({
                         );
                         setUserTokenVaultStatus({ exists: false });
                         setUserTokenVaultPassphrase('');
-                        setNotice(
-                          localized((m) => m.forgetSavedCredentials()),
-                        );
+                        setNotice(localized((m) => m.forgetSavedCredentials()));
                       })
                     }
                   >
@@ -228,7 +258,9 @@ export function SettingsAuthentication({
                 setChannelAuth({ mode: event.target.value, secret: '' })
               }
             >
-              <option value="runtimeKey">{m.settingsRuntimeChannelKey()}</option>
+              <option value="runtimeKey">
+                {m.settingsRuntimeChannelKey()}
+              </option>
               <option value="legacyJwt">{m.legacyJwt()}</option>
               <option value="none">{m.channelUseRuntimeIdentity()}</option>
             </select>

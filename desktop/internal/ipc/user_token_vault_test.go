@@ -10,6 +10,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/superops-team/OpenMPA/desktop/internal/configstore"
 	"github.com/superops-team/OpenMPA/desktop/internal/connection"
 	"github.com/superops-team/OpenMPA/desktop/internal/dto"
 )
@@ -18,6 +19,7 @@ func testUserTokenVaultSaveRequest() dto.UserTokenVaultSaveRequest {
 	return dto.UserTokenVaultSaveRequest{
 		Passphrase:   "correct horse battery",
 		RuntimeID:    "runtime-1",
+		UserPoolID:   configstore.DefaultAgentIdentityUserPoolID,
 		Issuer:       "https://issuer.example",
 		ClientID:     "client-1",
 		Subject:      "user-1",
@@ -29,15 +31,30 @@ func testUserTokenVaultSaveRequest() dto.UserTokenVaultSaveRequest {
 	}
 }
 
+func TestAgentIdentityConfigRequiresValidUserPool(t *testing.T) {
+	p, _, _, _ := vaultPlatform(t)
+	ctx := context.Background()
+	config := p.AgentIdentityConfig(ctx)
+	if !config.OK || config.Value == nil || config.Value.UserPoolID != "" || config.Value.SuggestedUserPoolID != configstore.DefaultAgentIdentityUserPoolID {
+		t.Fatalf("unexpected initial config: %+v", config)
+	}
+	if result := p.SaveAgentIdentityConfig(ctx, dto.AgentIdentityConfigRequest{UserPoolID: "not-a-user-pool"}); result.OK || result.Error == nil || result.Error.Code != "invalidInput" {
+		t.Fatalf("invalid user pool accepted: %+v", result)
+	}
+	if result := p.SaveAgentIdentityConfig(ctx, dto.AgentIdentityConfigRequest{UserPoolID: configstore.DefaultAgentIdentityUserPoolID}); !result.OK || result.Value == nil || result.Value.UserPoolID != configstore.DefaultAgentIdentityUserPoolID {
+		t.Fatalf("save config failed: %+v", result)
+	}
+}
+
 func TestUserTokenVaultSaveStatusUnlockAndForget(t *testing.T) {
 	p, _, store, _ := vaultPlatform(t)
 	ctx := context.Background()
 	request := testUserTokenVaultSaveRequest()
 
-	if result := p.SaveUserTokenVault(ctx, dto.UserTokenVaultSaveRequest{Passphrase: "short", RuntimeID: "runtime-1"}); result.OK || result.Error == nil || result.Error.Code != "invalidInput" {
+	if result := p.SaveUserTokenVault(ctx, dto.UserTokenVaultSaveRequest{Passphrase: "short", RuntimeID: "runtime-1", UserPoolID: configstore.DefaultAgentIdentityUserPoolID}); result.OK || result.Error == nil || result.Error.Code != "invalidInput" {
 		t.Fatalf("weak token vault passphrase accepted: %+v", result)
 	}
-	if result := p.SaveUserTokenVault(ctx, request); !result.OK || result.Value == nil || !result.Value.Exists || result.Value.Subject != "user-1" || result.Value.ExpiresAt != request.ExpiresAt {
+	if result := p.SaveUserTokenVault(ctx, request); !result.OK || result.Value == nil || !result.Value.Exists || result.Value.UserPoolID != request.UserPoolID || result.Value.Subject != "user-1" || result.Value.ExpiresAt != request.ExpiresAt {
 		t.Fatalf("save failed: %+v", result)
 	}
 	if result := p.UserTokenVaultStatus(dto.UserTokenVaultRequest{RuntimeID: request.RuntimeID}); !result.OK || result.Value == nil || !result.Value.Exists || result.Value.RuntimeID != request.RuntimeID {
@@ -68,6 +85,44 @@ func TestUserTokenVaultSaveStatusUnlockAndForget(t *testing.T) {
 	}
 	if result := p.UnlockUserTokenVault(ctx, dto.UserTokenVaultUnlockRequest{RuntimeID: request.RuntimeID, Passphrase: request.Passphrase}); result.Error == nil || result.Error.Code != "vaultMissing" {
 		t.Fatalf("missing token vault not reported: %+v", result)
+	}
+}
+
+func TestUserTokenVaultRequiresConfiguredUserPool(t *testing.T) {
+	p, _, _, _ := vaultPlatform(t)
+	ctx := context.Background()
+	request := testUserTokenVaultSaveRequest()
+	request.UserPoolID = ""
+	if result := p.SaveUserTokenVault(ctx, request); result.OK || result.Error == nil || result.Error.Code != "agentIdentityUserPoolRequired" {
+		t.Fatalf("missing user pool accepted: %+v", result)
+	}
+}
+
+func TestUserTokenVaultSaveCannotChangeConfiguredUserPool(t *testing.T) {
+	p, _, _, _ := vaultPlatform(t)
+	ctx := context.Background()
+	if result := p.SaveAgentIdentityConfig(ctx, dto.AgentIdentityConfigRequest{UserPoolID: configstore.DefaultAgentIdentityUserPoolID}); !result.OK {
+		t.Fatal(result.Error)
+	}
+	request := testUserTokenVaultSaveRequest()
+	request.UserPoolID = "00000000-0000-0000-0000-000000000000"
+	if result := p.SaveUserTokenVault(ctx, request); result.OK || result.Error == nil || result.Error.Code != "agentIdentityUserPoolMismatch" {
+		t.Fatalf("mismatched user pool accepted: %+v", result)
+	}
+}
+
+func TestUserTokenVaultRejectsMismatchedConfiguredUserPool(t *testing.T) {
+	p, _, _, _ := vaultPlatform(t)
+	ctx := context.Background()
+	request := testUserTokenVaultSaveRequest()
+	if result := p.SaveUserTokenVault(ctx, request); !result.OK {
+		t.Fatal(result.Error)
+	}
+	if result := p.SaveAgentIdentityConfig(ctx, dto.AgentIdentityConfigRequest{UserPoolID: "00000000-0000-0000-0000-000000000000"}); !result.OK {
+		t.Fatal(result.Error)
+	}
+	if result := p.UnlockUserTokenVault(ctx, dto.UserTokenVaultUnlockRequest{RuntimeID: request.RuntimeID, Passphrase: request.Passphrase}); result.OK || result.Error == nil || result.Error.Code != "agentIdentityUserPoolMismatch" {
+		t.Fatalf("mismatched user pool accepted: %+v", result)
 	}
 }
 

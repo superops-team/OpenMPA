@@ -21,6 +21,7 @@ func TestUserTokenSaveStatusUnlockAndForget(t *testing.T) {
 	ctx := context.Background()
 	token := UserToken{
 		RuntimeID:    "runtime-1",
+		UserPoolID:   configstore.DefaultAgentIdentityUserPoolID,
 		Issuer:       "https://issuer.example",
 		ClientID:     "client-1",
 		Subject:      "user-1",
@@ -59,6 +60,7 @@ func TestUserTokenStoredRecordContainsNoPlaintext(t *testing.T) {
 	service := NewWithIterations(store, testIterations)
 	token := UserToken{
 		RuntimeID:    "runtime-1",
+		UserPoolID:   configstore.DefaultAgentIdentityUserPoolID,
 		Issuer:       "https://issuer.example",
 		ClientID:     "client-1",
 		Subject:      "user-1",
@@ -96,6 +98,7 @@ func TestUserTokenWrongPassphraseAndTamperingFailClosed(t *testing.T) {
 	ctx := context.Background()
 	token := UserToken{
 		RuntimeID:    "runtime-1",
+		UserPoolID:   configstore.DefaultAgentIdentityUserPoolID,
 		Issuer:       "https://issuer.example",
 		ClientID:     "client-1",
 		Subject:      "user-1",
@@ -118,5 +121,13 @@ func TestUserTokenWrongPassphraseAndTamperingFailClosed(t *testing.T) {
 	record.Subject = "user-2"
 	if _, err := openUserToken([]byte("correct horse battery"), record); !errors.Is(err, ErrWrongPassphrase) {
 		t.Fatalf("tampered metadata accepted: %v", err)
+	}
+	record, err = store.LoadUserTokenVault(ctx, token.RuntimeID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	record.UserPoolID = "00000000-0000-0000-0000-000000000000"
+	if _, err := openUserToken([]byte("correct horse battery"), record); !errors.Is(err, ErrWrongPassphrase) {
+		t.Fatalf("tampered user pool accepted: %v", err)
 	}
 }

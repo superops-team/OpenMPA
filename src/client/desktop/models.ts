@@ -121,6 +121,7 @@ export interface VaultStatusVM {
 export interface UserTokenVaultStatusVM {
   exists: boolean;
   runtimeId?: string;
+  userPoolId?: string;
   issuer?: string;
   clientId?: string;
   subject?: string;
@@ -132,6 +133,7 @@ export interface UserTokenVaultStatusVM {
 export interface UserTokenVaultSaveInput {
   passphrase: string;
   runtimeId: string;
+  userPoolId?: string;
   issuer: string;
   clientId: string;
   subject: string;
@@ -140,6 +142,10 @@ export interface UserTokenVaultSaveInput {
   idToken: string;
   refreshToken: string;
   expiresAt: string;
+}
+export interface AgentIdentityConfigVM {
+  userPoolId?: string;
+  suggestedUserPoolId?: string;
 }
 export interface RegionVM {
   id: string;
@@ -271,6 +277,10 @@ export interface DesktopServices {
     saveVault?(passphrase: string): Promise<VaultStatusVM>;
     unlockVault?(passphrase: string): Promise<PlatformVM>;
     forgetVault?(): Promise<void>;
+    agentIdentityConfig?(): Promise<AgentIdentityConfigVM>;
+    saveAgentIdentityConfig?(
+      userPoolId: string,
+    ): Promise<AgentIdentityConfigVM>;
     userTokenVaultStatus?(
       runtimeId: string,
     ): Promise<UserTokenVaultStatusVM>;

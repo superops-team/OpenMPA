@@ -16,20 +16,22 @@ import (
 )
 
 const (
-	LanguageKey       = "display.language"
-	ThemeKey          = "display.theme"
-	RegionKey         = "platform.region"
-	ProjectKey        = "platform.project"
-	RuntimeKey        = "platform.runtime_id"
-	PrincipalScopeKey = "platform.principal_scope"
-	RuntimeBindingKey = "platform.runtime_binding"
+	LanguageKey              = "display.language"
+	ThemeKey                 = "display.theme"
+	RegionKey                = "platform.region"
+	ProjectKey               = "platform.project"
+	RuntimeKey               = "platform.runtime_id"
+	PrincipalScopeKey        = "platform.principal_scope"
+	RuntimeBindingKey        = "platform.runtime_binding"
+	AgentIdentityUserPoolKey = "identity.user_pool_id"
 
-	DefaultLanguage = "system"
-	DefaultTheme    = "system"
-	DefaultRegion   = "cn-beijing"
-	DefaultProject  = "default"
+	DefaultLanguage                = "system"
+	DefaultTheme                   = "system"
+	DefaultRegion                  = "cn-beijing"
+	DefaultProject                 = "default"
+	DefaultAgentIdentityUserPoolID = "3ea6c536-152c-435d-8040-9fcb3597476a"
 
-	SchemaVersion = 3
+	SchemaVersion = 4
 )
 
 // ErrNoVault reports that no encrypted credential record is stored.
@@ -57,6 +59,7 @@ type UserTokenVaultRecord struct {
 	Salt       []byte
 	Nonce      []byte
 	Ciphertext []byte
+	UserPoolID string
 	Issuer     string
 	ClientID   string
 	Subject    string
@@ -212,6 +215,7 @@ func (s *Store) migrate(ctx context.Context) error {
         salt BLOB NOT NULL,
         nonce BLOB NOT NULL,
         ciphertext BLOB NOT NULL,
+        user_pool_id TEXT NOT NULL,
         issuer TEXT NOT NULL,
         client_id TEXT NOT NULL,
         subject TEXT NOT NULL,
@@ -223,7 +227,12 @@ func (s *Store) migrate(ctx context.Context) error {
 			return err
 		}
 	}
-	if _, err := tx.ExecContext(ctx, "PRAGMA user_version = 3"); err != nil {
+	if version >= 3 && version < 4 {
+		if _, err := tx.ExecContext(ctx, `ALTER TABLE user_token_vault ADD COLUMN user_pool_id TEXT NOT NULL DEFAULT '`+DefaultAgentIdentityUserPoolID+`'`); err != nil {
+			return err
+		}
+	}
+	if _, err := tx.ExecContext(ctx, "PRAGMA user_version = 4"); err != nil {
 		return err
 	}
 	return tx.Commit()
@@ -436,6 +445,7 @@ func validUserTokenVaultRecord(r UserTokenVaultRecord) bool {
 		r.Iterations >= 100000 && r.Iterations <= 2000000 &&
 		len(r.Salt) == 16 && len(r.Nonce) == 12 &&
 		len(r.Ciphertext) > 0 && len(r.Ciphertext) <= 32768 &&
+		validAgentIdentityUserPoolID(r.UserPoolID) &&
 		validUserTokenVaultText(r.Issuer, 1024) &&
 		validUserTokenVaultText(r.ClientID, 512) &&
 		validUserTokenVaultText(r.Subject, 512) &&
@@ -494,16 +504,16 @@ func (s *Store) SaveUserTokenVault(ctx context.Context, r UserTokenVaultRecord) 
 		return errors.New("invalid user token vault record")
 	}
 	_, err := s.db.ExecContext(ctx, `INSERT INTO user_token_vault
-        (runtime_id, version, kdf, iterations, salt, nonce, ciphertext, issuer, client_id, subject, mpa_id, space_id, expires_at, updated_at)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        (runtime_id, version, kdf, iterations, salt, nonce, ciphertext, user_pool_id, issuer, client_id, subject, mpa_id, space_id, expires_at, updated_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         ON CONFLICT(runtime_id) DO UPDATE SET
             version=excluded.version, kdf=excluded.kdf, iterations=excluded.iterations,
             salt=excluded.salt, nonce=excluded.nonce, ciphertext=excluded.ciphertext,
-            issuer=excluded.issuer, client_id=excluded.client_id, subject=excluded.subject,
+            user_pool_id=excluded.user_pool_id, issuer=excluded.issuer, client_id=excluded.client_id, subject=excluded.subject,
             mpa_id=excluded.mpa_id, space_id=excluded.space_id, expires_at=excluded.expires_at,
             updated_at=excluded.updated_at`,
 		r.RuntimeID, r.Version, r.KDF, r.Iterations, r.Salt, r.Nonce, r.Ciphertext,
-		r.Issuer, r.ClientID, r.Subject, r.MPAID, r.SpaceID, r.ExpiresAt, r.UpdatedAt)
+		r.UserPoolID, r.Issuer, r.ClientID, r.Subject, r.MPAID, r.SpaceID, r.ExpiresAt, r.UpdatedAt)
 	return err
 }
 
@@ -512,9 +522,9 @@ func (s *Store) LoadUserTokenVault(ctx context.Context, runtimeID string) (UserT
 		return UserTokenVaultRecord{}, errors.New("invalid Runtime identity")
 	}
 	var r UserTokenVaultRecord
-	err := s.db.QueryRowContext(ctx, `SELECT runtime_id, version, kdf, iterations, salt, nonce, ciphertext, issuer, client_id, subject, mpa_id, space_id, expires_at, updated_at
+	err := s.db.QueryRowContext(ctx, `SELECT runtime_id, version, kdf, iterations, salt, nonce, ciphertext, user_pool_id, issuer, client_id, subject, mpa_id, space_id, expires_at, updated_at
         FROM user_token_vault WHERE runtime_id = ?`, runtimeID).Scan(
-		&r.RuntimeID, &r.Version, &r.KDF, &r.Iterations, &r.Salt, &r.Nonce, &r.Ciphertext,
+		&r.RuntimeID, &r.Version, &r.KDF, &r.Iterations, &r.Salt, &r.Nonce, &r.Ciphertext, &r.UserPoolID,
 		&r.Issuer, &r.ClientID, &r.Subject, &r.MPAID, &r.SpaceID, &r.ExpiresAt, &r.UpdatedAt,
 	)
 	if errors.Is(err, sql.ErrNoRows) {

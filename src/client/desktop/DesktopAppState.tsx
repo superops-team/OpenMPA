@@ -1,11 +1,4 @@
-import {
-  errorMessage,
-  localized,
-  LocalizedError,
-  renderMessage,
-  useMessages,
-  useMessageState,
-} from './locale';
+import { localized, useMessages, useMessageState } from './locale';
 import {
   useCallback,
   useEffect,
@@ -20,27 +13,23 @@ import type {
   DesktopServices,
   DesktopSettingsSection,
   AssistantSetupInput,
-  RecoveryDraftVM,
   RuntimeVM,
   SessionVM,
   PlatformVM,
 } from './models';
 import { ComposerDraftStore } from './composer-drafts';
 import type { ComposerDraft, ConversationTarget } from './studio-models';
+import { desktopFailureMessage } from './desktop-app-errors';
+import {
+  desktopPageTitle,
+  type DesktopView as View,
+} from './desktop-shell-state';
+import { useDesktopCloseProtocol } from './use-desktop-close-protocol';
 import {
   setThemePreference,
   themePreference,
   type ThemePreference,
 } from '../theme';
-type View =
-  | 'chat'
-  | 'tasks'
-  | 'channels'
-  | 'settings'
-  | 'knowledge'
-  | 'resources'
-  | 'collaboration'
-  | 'runtimes';
 export function useDesktopAppState({
   services,
 }: {
@@ -85,43 +74,10 @@ export function useDesktopAppState({
   const platformSignedIn = useRef(false);
   const [platform, setPlatform] = useState<PlatformVM>();
   const [error, setError] = useMessageState();
-  const [closeDrafts, setCloseDrafts] = useState<RecoveryDraftVM[]>([]);
   const errorSource = useRef('');
   const reportFailure = useCallback((failure: unknown, source: string) => {
     errorSource.current = source;
-    const status =
-      failure && typeof failure === 'object' && 'httpStatus' in failure
-        ? failure.httpStatus
-        : undefined;
-    const remoteMessage =
-      failure instanceof LocalizedError
-        ? failure.text
-        : failure instanceof Error
-          ? failure.message
-          : failure &&
-              typeof failure === 'object' &&
-              'message' in failure &&
-              typeof failure.message === 'string'
-            ? failure.message
-            : undefined;
-    setError(
-      localized((m) => {
-        const message =
-          (remoteMessage === undefined
-            ? undefined
-            : renderMessage(remoteMessage, m)) ??
-          (status === 404 && source === 'bots'
-            ? m.desktopThisRuntimeDoesNotYetSupportDesktopBotCreation()
-            : m.desktopTheOperationFailed());
-        const labels: Record<string, string> = {
-          sessions: m.desktopLoadConversations(),
-          bots: m.desktopCreateDesktopBot(),
-          workspace: m.desktopOpenLocalWorkspace(),
-          connection: m.desktopReadConnection(),
-        };
-        return `${labels[source] || source}${status ? ` (HTTP ${status})` : ''}: ${message}`;
-      }),
-    );
+    setError(localized((m) => desktopFailureMessage(m, failure, source)));
   }, []);
   const dirty = useRef(false);
   const epoch = useRef(connection?.epoch);
@@ -138,57 +94,10 @@ export function useDesktopAppState({
   const sessionsRef = useRef(sessions);
   sessionsRef.current = sessions;
   const lifecycle = useRef(0);
-  useEffect(() => {
-    if (!services.host) return;
-    let active = true;
-    const handled = new Set<number>();
-    const close = async (requestId: number) => {
-      if (!active || handled.has(requestId)) return;
-      handled.add(requestId);
-      try {
-        await services.workspace.flush();
-        if (active) await services.host!.resolveClose(requestId, true);
-      } catch (error) {
-        if (active) {
-          if (error && typeof error === 'object' && 'closeState' in error) {
-            const state = error.closeState as {
-              unsavedDrafts?: RecoveryDraftVM[];
-            };
-            if (Array.isArray(state.unsavedDrafts))
-              setCloseDrafts(state.unsavedDrafts);
-          }
-          setError(
-            errorMessage(
-              error,
-              localized((m) =>
-                m.desktopDraftRecoveryCouldNotBeSavedContinueEditingOr(),
-              ),
-            ),
-          );
-          await services.host!.resolveClose(requestId, false);
-        }
-      }
-    };
-    const remove = services.host.onClose((id) => void close(id));
-    void services.host
-      .closeState()
-      .then((state) => {
-        if (active && state.pending) void close(state.requestId);
-      })
-      .catch((error: unknown) => {
-        if (active)
-          setError(
-            errorMessage(
-              error,
-              localized((m) => m.desktopCouldNotRegisterTheCloseProtocol()),
-            ),
-          );
-      });
-    return () => {
-      active = false;
-      remove();
-    };
-  }, [services]);
+  const { closeDrafts, setCloseDrafts } = useDesktopCloseProtocol({
+    services,
+    setError,
+  });
   useEffect(() => {
     void services.host
       ?.theme?.()
@@ -260,6 +169,10 @@ export function useDesktopAppState({
       if (!connection) return;
       const current = connection.epoch;
       const scope = connection.scope;
+      if (connection.businessIdentity === 'missing') {
+        blockMissingBusinessJWT();
+        return;
+      }
       const list = await services.sessions.list(current, forceRefresh);
       if (epoch.current === current && connectionScope.current === scope) {
         setSessions(list);
@@ -318,9 +231,22 @@ export function useDesktopAppState({
       ),
     );
   }, []);
+  const blockMissingBusinessJWT = useCallback(() => {
+    errorSource.current = 'sessions';
+    setSessions([]);
+    setSessionEpoch(0);
+    setSelected(undefined);
+    setError(localized((m) => m.businessJWTRequired()));
+  }, [setSelected]);
   const createSession = async () => {
     if (!connection) {
       navigate('settings');
+      return;
+    }
+    if (connection.businessIdentity === 'missing') {
+      setSettingsSection('Authentication');
+      navigate('settings');
+      blockMissingBusinessJWT();
       return;
     }
     if (creatingAssistant) return;
@@ -504,6 +430,10 @@ export function useDesktopAppState({
       id &&
       connection
     ) {
+      if (connection.businessIdentity === 'missing') {
+        blockMissingBusinessJWT();
+        return;
+      }
       const current = connection.epoch;
       const scope = connection.scope;
       void services.sessions
@@ -638,22 +568,7 @@ export function useDesktopAppState({
         collapsed,
         traceOpen,
         location: connection?.runtimeId ?? m.yourWorkspace(),
-        pageTitle:
-          view === 'runtimes'
-            ? m.manageRuntimes()
-            : view === 'resources'
-              ? m.resources()
-              : view === 'collaboration'
-                ? m.collaboration()
-                : view === 'settings'
-                  ? m.settings()
-                  : view === 'channels'
-                    ? m.channels()
-                    : view === 'knowledge'
-                      ? m.knowledge()
-                      : view === 'tasks'
-                        ? m.scheduledTasks()
-                        : m.conversations(),
+        pageTitle: desktopPageTitle(m, view),
         selectedSession: selected ?? '',
         selectedSpace: '',
         selectedAssistant: connection?.runtimeId ?? '',

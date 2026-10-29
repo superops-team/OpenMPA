@@ -28,20 +28,9 @@ import { displayEvent, historyMessages } from './service-events';
 import { createStudioServices } from './studio-services';
 import { createLifecycleServices } from './lifecycle-services';
 import { connectionVM } from './connection-view-model';
+import { platformVM } from './platform-view-model';
 export { displayEvent } from './service-events';
 
-const platformVM = (state: {
-  signedIn: boolean;
-  principal?: { accountId?: string; scope?: string } | null;
-  region?: string;
-  epoch?: number;
-}) => ({
-  signedIn: state.signedIn,
-  accountId: state.principal?.accountId || '',
-  region: state.region || 'cn-beijing',
-  epoch: state.epoch,
-  scope: state.principal?.scope,
-});
 const pageVM = (page: NativePage): Page => ({ ...page, sourceThreadId: null });
 const sessionVM = (session: SessionSummary) => ({
   id: session.sessionId || session.id,
@@ -112,6 +101,10 @@ export function createDesktopServices(): DesktopServices {
       forgetVault: async () => {
         unwrap(await Platform.forgetVault());
       },
+      agentIdentityConfig: async () =>
+        unwrap(await Platform.agentIdentityConfig()),
+      saveAgentIdentityConfig: async (userPoolId) =>
+        unwrap(await Platform.saveAgentIdentityConfig({ userPoolId })),
       userTokenVaultStatus: async (runtimeId) =>
         unwrap(await Platform.userTokenVaultStatus({ runtimeId })),
       saveUserTokenVault: async (input) =>

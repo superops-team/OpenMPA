@@ -349,12 +349,18 @@ it('unlocks saved Agent Identity for the current Runtime connection', async () =
   const userTokenVaultStatus = vi.fn(async () => ({
     exists: true,
     runtimeId: 'runtime-1',
+    userPoolId: '3ea6c536-152c-435d-8040-9fcb3597476a',
     subject: 'user-1',
     expiresAt: '2026-10-29T12:00:00Z',
+  }));
+  const saveAgentIdentityConfig = vi.fn(async (userPoolId: string) => ({
+    userPoolId,
+    suggestedUserPoolId: '3ea6c536-152c-435d-8040-9fcb3597476a',
   }));
   const unlockUserTokenVault = vi.fn(async () => ({
     exists: true,
     runtimeId: 'runtime-1',
+    userPoolId: '3ea6c536-152c-435d-8040-9fcb3597476a',
     subject: 'user-1',
   }));
   const status = vi.fn(async () => ({
@@ -371,6 +377,11 @@ it('unlocks saved Agent Identity for the current Runtime connection', async () =
         accountId: '1234567890',
         region: 'cn-beijing',
       }),
+      agentIdentityConfig: async () => ({
+        userPoolId: '',
+        suggestedUserPoolId: '3ea6c536-152c-435d-8040-9fcb3597476a',
+      }),
+      saveAgentIdentityConfig,
       userTokenVaultStatus,
       unlockUserTokenVault,
       forgetUserTokenVault: vi.fn(async () => {}),
@@ -401,11 +412,33 @@ it('unlocks saved Agent Identity for the current Runtime connection', async () =
   await act(async () => {});
   expect(userTokenVaultStatus).toHaveBeenCalledWith('runtime-1');
   expect(JSON.stringify(renderer.toJSON())).toContain(
+    '3ea6c536-152c-435d-8040-9fcb3597476a',
+  );
+  expect(JSON.stringify(renderer.toJSON())).toContain(
     m.settingsConnectionSummary(
-      'user-1',
+      'user-1 · 3ea6c536-152c-435d-8040-9fcb3597476a',
       m.settingsLegacyJwtAuthenticated(),
       '2026-10-29T12:00:00Z',
     ),
+  );
+  const userPoolInput = renderer.root
+    .findAllByType('input')
+    .find(
+      (input) => input.props.value === '3ea6c536-152c-435d-8040-9fcb3597476a',
+    )!;
+  await act(async () =>
+    userPoolInput.props.onChange({
+      target: { value: '3ea6c536-152c-435d-8040-9fcb3597476a' },
+    }),
+  );
+  await act(async () =>
+    renderer.root
+      .findAllByType('button')
+      .find((button) => button.children.includes(m.saveBusinessIdentity()))!
+      .props.onClick(),
+  );
+  expect(saveAgentIdentityConfig).toHaveBeenCalledWith(
+    '3ea6c536-152c-435d-8040-9fcb3597476a',
   );
   const input = renderer.root.findByProps({
     'aria-label': m.vaultUnlockHint(),

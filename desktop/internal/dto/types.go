@@ -89,6 +89,10 @@ func SafeMessage(code string) string {
 		return "Sign in before saving credentials."
 	case "vaultAccountMismatch":
 		return "The saved credentials belong to a different account."
+	case "agentIdentityUserPoolRequired":
+		return "Configure the Agent Identity user pool."
+	case "agentIdentityUserPoolMismatch":
+		return "Saved Runtime identity uses a different Agent Identity user pool."
 	default:
 		return "The requested operation could not be completed."
 	}

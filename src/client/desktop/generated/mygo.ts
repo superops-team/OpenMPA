@@ -70,6 +70,21 @@ export interface ActiveRun {
   recoveryDisposition: string;
 }
 
+export interface AgentIdentityConfig {
+  userPoolId?: string;
+  suggestedUserPoolId?: string;
+}
+
+export interface AgentIdentityConfigRequest {
+  userPoolId: string;
+}
+
+export interface AgentIdentityConfigResult {
+  ok: boolean;
+  value?: AgentIdentityConfig;
+  error?: SafeError;
+}
+
 export interface AgentListRequest {
   connectionEpoch: number;
   agentId: string;
@@ -2578,6 +2593,7 @@ export interface UserTokenVaultRequest {
 export interface UserTokenVaultSaveRequest {
   passphrase: string;
   runtimeId: string;
+  userPoolId?: string;
   issuer: string;
   clientId: string;
   subject: string;
@@ -2591,6 +2607,7 @@ export interface UserTokenVaultSaveRequest {
 export interface UserTokenVaultStatus {
   exists: boolean;
   runtimeId?: string;
+  userPoolId?: string;
   issuer?: string;
   clientId?: string;
   subject?: string;
@@ -2665,6 +2682,9 @@ export interface WorkspaceMutationResult {
 // ---- Services ----
 
 export const Platform = {
+  agentIdentityConfig(): Promise<AgentIdentityConfigResult> {
+    return call("Platform.AgentIdentityConfig");
+  },
   bindRuntime(r: RuntimeRequest): Promise<ConnectionStateResult> {
     return call("Platform.BindRuntime", r);
   },
@@ -2690,6 +2710,9 @@ export const Platform = {
   },
   runtime(r: RuntimeRequest): Promise<RuntimeSummaryResult> {
     return call("Platform.Runtime", r);
+  },
+  saveAgentIdentityConfig(r: AgentIdentityConfigRequest): Promise<AgentIdentityConfigResult> {
+    return call("Platform.SaveAgentIdentityConfig", r);
   },
   /**
    * SaveUserTokenVault stores Runtime user identity tokens without exposing them
