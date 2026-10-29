@@ -2571,6 +2571,46 @@ export interface UpgradeResult {
   error?: SafeError;
 }
 
+export interface UserTokenVaultRequest {
+  runtimeId: string;
+}
+
+export interface UserTokenVaultSaveRequest {
+  passphrase: string;
+  runtimeId: string;
+  issuer: string;
+  clientId: string;
+  subject: string;
+  mpaId: string;
+  spaceId: string;
+  idToken: string;
+  refreshToken: string;
+  expiresAt: string;
+}
+
+export interface UserTokenVaultStatus {
+  exists: boolean;
+  runtimeId?: string;
+  issuer?: string;
+  clientId?: string;
+  subject?: string;
+  mpaId?: string;
+  spaceId?: string;
+  expiresAt?: string;
+  updatedAt?: string;
+}
+
+export interface UserTokenVaultStatusResult {
+  ok: boolean;
+  value?: UserTokenVaultStatus;
+  error?: SafeError;
+}
+
+export interface UserTokenVaultUnlockRequest {
+  runtimeId: string;
+  passphrase: string;
+}
+
 export interface Values {
   description: string;
   cpuMilli: number;
@@ -2627,6 +2667,9 @@ export const Platform = {
   bindRuntime(r: RuntimeRequest): Promise<ConnectionStateResult> {
     return call("Platform.BindRuntime", r);
   },
+  forgetUserTokenVault(r: UserTokenVaultRequest): Promise<EmptyResult> {
+    return call("Platform.ForgetUserTokenVault", r);
+  },
   forgetVault(): Promise<EmptyResult> {
     return call("Platform.ForgetVault");
   },
@@ -2648,6 +2691,13 @@ export const Platform = {
     return call("Platform.Runtime", r);
   },
   /**
+   * SaveUserTokenVault stores Runtime user identity tokens without exposing them
+   * through later status or unlock responses.
+   */
+  saveUserTokenVault(r: UserTokenVaultSaveRequest): Promise<UserTokenVaultStatusResult> {
+    return call("Platform.SaveUserTokenVault", r);
+  },
+  /**
    * SaveVault encrypts the current in-memory credential. It requires a signed-in
    * session because only the cloud client can prove the account and Region.
    */
@@ -2663,12 +2713,20 @@ export const Platform = {
   status(): Promise<PlatformStateResult> {
     return call("Platform.Status");
   },
+  /** UnlockUserTokenVault validates the passphrase and returns only safe metadata. */
+  unlockUserTokenVault(r: UserTokenVaultUnlockRequest): Promise<UserTokenVaultStatusResult> {
+    return call("Platform.UnlockUserTokenVault", r);
+  },
   /**
    * UnlockVault decrypts the saved credential and signs in. A wrong passphrase
    * and a damaged record deliberately share one safe error.
    */
   unlockVault(r: VaultPassphraseRequest): Promise<PlatformStateResult> {
     return call("Platform.UnlockVault", r);
+  },
+  /** UserTokenVaultStatus is a local read; it never returns idToken or refreshToken. */
+  userTokenVaultStatus(r: UserTokenVaultRequest): Promise<UserTokenVaultStatusResult> {
+    return call("Platform.UserTokenVaultStatus", r);
   },
   /** VaultStatus is a local read; it never returns the passphrase or any secret. */
   vaultStatus(): Promise<VaultStatusResult> {

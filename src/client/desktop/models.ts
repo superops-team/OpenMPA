@@ -118,6 +118,29 @@ export interface VaultStatusVM {
   region?: string;
   updatedAt?: string;
 }
+export interface UserTokenVaultStatusVM {
+  exists: boolean;
+  runtimeId?: string;
+  issuer?: string;
+  clientId?: string;
+  subject?: string;
+  mpaId?: string;
+  spaceId?: string;
+  expiresAt?: string;
+  updatedAt?: string;
+}
+export interface UserTokenVaultSaveInput {
+  passphrase: string;
+  runtimeId: string;
+  issuer: string;
+  clientId: string;
+  subject: string;
+  mpaId: string;
+  spaceId: string;
+  idToken: string;
+  refreshToken: string;
+  expiresAt: string;
+}
 export interface RegionVM {
   id: string;
   name: string;
@@ -248,6 +271,17 @@ export interface DesktopServices {
     saveVault?(passphrase: string): Promise<VaultStatusVM>;
     unlockVault?(passphrase: string): Promise<PlatformVM>;
     forgetVault?(): Promise<void>;
+    userTokenVaultStatus?(
+      runtimeId: string,
+    ): Promise<UserTokenVaultStatusVM>;
+    saveUserTokenVault?(
+      input: UserTokenVaultSaveInput,
+    ): Promise<UserTokenVaultStatusVM>;
+    unlockUserTokenVault?(
+      runtimeId: string,
+      passphrase: string,
+    ): Promise<UserTokenVaultStatusVM>;
+    forgetUserTokenVault?(runtimeId: string): Promise<void>;
     signIn(input: {
       accessKey: string;
       secretKey: string;

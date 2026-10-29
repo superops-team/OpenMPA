@@ -15,6 +15,11 @@ type VaultStatusResult struct {
 	Value *VaultStatus `json:"value,omitempty"`
 	Error *SafeError   `json:"error,omitempty"`
 }
+type UserTokenVaultStatusResult struct {
+	OK    bool                  `json:"ok"`
+	Value *UserTokenVaultStatus `json:"value,omitempty"`
+	Error *SafeError            `json:"error,omitempty"`
+}
 type RuntimeSummaryResult struct {
 	OK    bool            `json:"ok"`
 	Value *RuntimeSummary `json:"value,omitempty"`
