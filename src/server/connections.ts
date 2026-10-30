@@ -158,7 +158,7 @@ export class ConnectionService {
       AbortSignal.timeout(this.timeoutMs),
       ...(signal ? [signal] : []),
     ]);
-    const client = new Client({ name: 'opendots', version: '0.1.0' });
+    const client = new Client({ name: 'openmpa', version: '0.1.3' });
     try {
       await client.connect(this.transport({ ...target, signal: bounded }), {
         signal: bounded,

@@ -113,7 +113,7 @@ export function sourcesFromResult(
 }
 // src/server (tsx and tests) and dist/server/server (the production build) both
 // sit below the repository package.json. Walk up so either layout resolves it.
-function opendotsPackageVersion(): string {
+function openmpaPackageVersion(): string {
   let directory = dirname(fileURLToPath(import.meta.url));
   for (let depth = 0; depth < 8; depth += 1) {
     try {
@@ -124,7 +124,7 @@ function opendotsPackageVersion(): string {
         parsed &&
         typeof parsed === 'object' &&
         'name' in parsed &&
-        parsed.name === 'opendots' &&
+        parsed.name === 'openmpa' &&
         'version' in parsed &&
         typeof parsed.version === 'string' &&
         parsed.version.length > 0
@@ -139,7 +139,7 @@ function opendotsPackageVersion(): string {
     if (parent === directory) break;
     directory = parent;
   }
-  throw new Error('Could not read the OpenDots version from package.json.');
+  throw new Error('Could not read the OpenMPA version from package.json.');
 }
 export async function parallelSources(
   request: {
@@ -155,12 +155,12 @@ export async function parallelSources(
   signal.throwIfAborted();
   if ((config.webSearchProvider ?? 'parallel') !== 'parallel')
     throw new Error('Parallel web research is disabled.');
-  const version = opendotsPackageVersion();
-  const client = new Client({ name: 'opendots', version });
+  const version = openmpaPackageVersion();
+  const client = new Client({ name: 'openmpa', version });
   const boundedSignal = AbortSignal.any([signal, AbortSignal.timeout(60_000)]);
   // Identify aggregate project usage, without user or installation identifiers.
   const headers: Record<string, string> = {
-    'User-Agent': `opendots/${version}`,
+    'User-Agent': `openmpa/${version}`,
   };
   if (config.parallelApiKey)
     headers.Authorization = `Bearer ${config.parallelApiKey}`;

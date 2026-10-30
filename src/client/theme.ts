@@ -1,5 +1,5 @@
 export type ThemePreference = 'system' | 'light' | 'dark';
-const key = 'opendots-theme';
+const key = 'openmpa-theme';
 // The choice for this page, even if storage refuses to keep it.
 let chosen: ThemePreference | undefined;
 const query = () => window.matchMedia('(prefers-color-scheme: dark)');
@@ -19,11 +19,30 @@ export function resolveTheme(preference: ThemePreference, systemDark: boolean) {
   return preference === 'system' ? (systemDark ? 'dark' : 'light') : preference;
 }
 function apply() {
+  if (typeof document === 'undefined') return;
   const theme = resolveTheme(themePreference(), query().matches);
-  document.documentElement.dataset.theme = theme;
-  document
-    .querySelector('meta[name="theme-color"]')
-    ?.setAttribute('content', theme === 'dark' ? '#1b1b1b' : '#f8f7f4');
+  const root = document.documentElement;
+  root.dataset.themeChanging = '';
+  root.dataset.theme = theme;
+  const background =
+    typeof getComputedStyle === 'function'
+      ? getComputedStyle(root).getPropertyValue('--color-background').trim()
+      : '';
+  if (background)
+    document
+      .querySelector('meta[name="theme-color"]')
+      ?.setAttribute('content', background);
+  root.getBoundingClientRect?.();
+  const nextFrame =
+    typeof requestAnimationFrame === 'function'
+      ? requestAnimationFrame
+      : (callback: FrameRequestCallback) => {
+          callback(0);
+          return 0;
+        };
+  nextFrame(() => {
+    delete root.dataset.themeChanging;
+  });
 }
 export function setThemePreference(preference: ThemePreference) {
   chosen = preference;

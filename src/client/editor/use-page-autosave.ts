@@ -1,16 +1,14 @@
 import { useEffect, useState, useSyncExternalStore } from 'react';
-import type { Page } from '../../server/pages';
-import { api } from '../api';
-import { PageAutosave } from './autosave';
-export function usePageAutosave(page: Page, onSaved: (page: Page) => void) {
+import type { Page } from '../../shared/page-types';
+import { PageAutosave, type SavePage } from './autosave';
+export function usePageAutosave(
+  page: Page,
+  onSaved: (page: Page) => void,
+  savePage: SavePage,
+) {
   const [controller] = useState(() => {
     const instance = new PageAutosave(async (id, patch, signal) => {
-      const result = await api<Page>(
-        `/spaces/${page.spaceId}/pages/${id}`,
-        'PATCH',
-        patch,
-        signal,
-      );
+      const result = await savePage(id, patch, signal);
       onSaved(result);
       return result;
     });

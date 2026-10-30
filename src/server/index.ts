@@ -25,11 +25,11 @@ if (
   throw new Error(
     'External binding requires an OWNER_TOKEN of at least 24 characters.',
   );
-const database = process.env.DATABASE_PATH ?? 'data/opendots.sqlite';
+const database = process.env.DATABASE_PATH ?? 'data/openmpa.sqlite';
 const store = new Store(database);
 const workspace = new WorkspaceStore(
   database,
-  process.env.OWNER_ID ?? 'opendots-owner',
+  process.env.OWNER_ID ?? 'openmpa-owner',
 );
 const config: PlatformConfig = {
   intelligenceKey: intelligenceApiKeyFromEnv(process.env),
@@ -83,7 +83,7 @@ const runner = new Runner(
       );
     progress('Running this task in its Intelligence conversation.');
     const text = await platform.turn(threadId, claim.prompt, signal, {
-      opendotsSource: 'scheduled_task',
+      openmpaSource: 'scheduled_task',
     });
     return { text, sources: [], sample: false };
   },
@@ -113,7 +113,7 @@ app.get('/api/*', (c) => c.json({ error: 'Not found.' }, 404));
 app.use('/*', serveStatic({ root: './dist/client' }));
 app.get('*', serveStatic({ path: './dist/client/index.html' }));
 const server = serve({ fetch: app.fetch, hostname: host, port }, (info) => {
-  console.log(`OpenDots template listening on http://${host}:${info.port}`);
+  console.log(`OpenMPA template listening on http://${host}:${info.port}`);
   runner.start();
   void platform
     .start()

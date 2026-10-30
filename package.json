@@ -1,7 +1,7 @@
 {
-  "name": "opendots",
-  "version": "0.1.0",
-  "description": "A self-hosted personal-agent template with CopilotKit Intelligence, Threads, and Channels.",
+  "name": "openmpa",
+  "version": "0.1.5",
+  "description": "OpenMPA desktop client for AgentKit MPA Runtime, built with MyGo.",
   "directories": {
     "doc": "docs",
     "test": "tests"
@@ -18,7 +18,17 @@
     "knip:production": "knip --production",
     "lint": "eslint src tests vite.config.ts",
     "format": "prettier --write src tests *.json *.ts *.js index.html public .github Dockerfile \"compose*.yml\" deployment README.md docs .env.example --ignore-unknown",
-    "check-format": "prettier --check src tests *.json *.ts *.js index.html public .github Dockerfile \"compose*.yml\" deployment README.md docs .env.example --ignore-unknown"
+    "check-format": "prettier --check src tests *.json *.ts *.js index.html public .github Dockerfile \"compose*.yml\" deployment README.md docs .env.example --ignore-unknown",
+    "design:generate": "node scripts/generate-design-tokens.mjs",
+    "design:check": "node scripts/generate-design-tokens.mjs --check && node scripts/check-design-usage.mjs",
+    "design:verify": "node scripts/verify-desktop-design.mjs",
+    "dev:desktop:frontend": "vite --config vite.desktop.config.ts",
+    "build:desktop:frontend": "vite build --config vite.desktop.config.ts",
+    "desktop:generate": "cd desktop && GOTOOLCHAIN=go1.27.3 CGO_ENABLED=0 go run github.com/egoist/mygo/cmd/mygo generate .",
+    "desktop:engine": "python3 scripts/prepare-mpa-engine.py",
+    "desktop:dev": "npm run desktop:engine && cd desktop && GOTOOLCHAIN=go1.27.3 CGO_ENABLED=0 go run github.com/egoist/mygo/cmd/mygo dev .",
+    "desktop:build": "npm run desktop:engine && cd desktop && GOTOOLCHAIN=go1.27.3 CGO_ENABLED=0 go run github.com/egoist/mygo/cmd/mygo build -platform darwin/arm64 .",
+    "desktop:test": "cd desktop && GOTOOLCHAIN=go1.27.3 go test ./..."
   },
   "keywords": [],
   "author": "Atai Barkai",
@@ -46,6 +56,7 @@
     "@tiptap/react": "3.31.3",
     "@tiptap/starter-kit": "3.31.3",
     "@tiptap/suggestion": "3.31.3",
+    "@wecom/wecom-aibot-sdk": "0.1.0",
     "hono": "^4.13.11",
     "lucide-react": "^1.48.0",
     "playwright": "^1.63.0",
@@ -54,7 +65,8 @@
     "react-markdown": "^10.1.0",
     "remark-gfm": "^4.0.1",
     "rxjs": "^7.8.1",
-    "zod": "^4.6.5"
+    "zod": "^4.6.5",
+    "mygo-runtime": "0.6.4"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
@@ -83,7 +95,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/CopilotKit/OpenDots.git"
+    "url": "git+https://github.com/superops-team/OpenMPA.git"
   },
   "overrides": {
     "undici": "^6.29.0"

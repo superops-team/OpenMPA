@@ -1,6 +1,6 @@
 # Recorded walkthroughs
 
-Recorded from the local OpenDots app on September 29, 2026. The recordings use a dedicated `opendots` Intelligence project, a live `gpt-5.4-mini` model, and example content in a separate Launch studio Space. No customer data or credentials are shown.
+Recorded from the local OpenMPA app on September 29, 2026. The recordings use a dedicated `openmpa` Intelligence project, a live `gpt-5.4-mini` model, and example content in a separate Launch studio Space. No customer data or credentials are shown.
 
 | Recording                                    | Flow                                                                                | Duration   | Framing |
 | -------------------------------------------- | ----------------------------------------------------------------------------------- | ---------- | ------- |

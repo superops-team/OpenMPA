@@ -8,7 +8,7 @@ import { pageAccess } from '../src/server/page-tools.js';
 
 const resources: { store: Store; dir: string }[] = [];
 function fixture() {
-  const dir = mkdtempSync(join(tmpdir(), 'opendots-'));
+  const dir = mkdtempSync(join(tmpdir(), 'openmpa-'));
   const path = join(dir, 'test.sqlite');
   const store = new Store(path);
   resources.push({ store, dir });

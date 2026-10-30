@@ -18,3 +18,48 @@ data/
 
 # Local hosted-project selection
 .copilotkit/
+
+# Desktop private state and build evidence
+.openmpa/
+desktop/build/
+desktop/.mygo/
+desktop/mpa-engine/.venv/
+desktop/mpa-engine/.pytest_cache/
+desktop/verify-live
+desktop/go.work
+desktop/go.work.sum
+desktop/verify-gui
+desktop/openmpa
+
+# Local agent tooling and account-bound live acceptance
+.trae/
+.trae-html-share-packages/
+skills-lock.json
+desktop/cmd/verify-*/
+
+# Credentials and local environment exports
+*.pem
+*.key
+*.p12
+*.pfx
+.envrc
+.envrc.*
+.zshrc
+
+# Superseded research and environment-specific evidence
+prd-spec/features/agentkit-desktop/2026-10-25-evidence-and-api.md
+prd-spec/features/agentkit-desktop/2026-10-25-volcengine-platform-evidence.md
+prd-spec/features/agentkit-desktop/2026-10-25-bot-channel-evidence.md
+prd-spec/features/agentkit-desktop/2026-10-25-voice-evidence.md
+prd-spec/features/agentkit-desktop/modules/2026-10-25-m11-computer-completion.md
+prd-spec/features/agentkit-desktop/modules/2026-10-25-m11-human-operations.md
+
+# Python verification bytecode
+__pycache__/
+*.pyc
+
+# Local brainstorming mockups (visual companion)
+.superpowers/
+
+# Private requirements and design documents stay local.
+/prd-spec/

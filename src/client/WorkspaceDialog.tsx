@@ -133,7 +133,7 @@ export function WorkspaceDialog({
         >
           <X size={18} />
         </button>
-        <span className="eyebrow">OPENDOTS TEMPLATE</span>
+        <span className="eyebrow">OPENMPA TEMPLATE</span>
         <h2 id="dialog-title">{title}</h2>
         <form
           onSubmit={async (e) => {
@@ -480,7 +480,7 @@ export function WorkspaceDialog({
               <p>
                 Setup and usage metadata is collected by default.{' '}
                 <a
-                  href="https://github.com/CopilotKit/OpenDots/blob/main/docs/SETUP-TELEMETRY.md"
+                  href="https://github.com/superops-team/OpenMPA/blob/main/docs/SETUP-TELEMETRY.md"
                   target="_blank"
                   rel="noreferrer"
                 >
@@ -488,7 +488,7 @@ export function WorkspaceDialog({
                 </a>
               </p>
               <a
-                href="https://github.com/CopilotKit/OpenDots/blob/main/docs/SETUP.md"
+                href="https://github.com/superops-team/OpenMPA/blob/main/docs/SETUP.md"
                 target="_blank"
                 rel="noreferrer"
               >

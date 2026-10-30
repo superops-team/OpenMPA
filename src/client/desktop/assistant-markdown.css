@@ -1,0 +1,76 @@
+.assistant-markdown {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  color: var(--color-foreground);
+  font: 400 var(--text-ui-base) / var(--line-body) var(--font-ui);
+}
+
+.assistant-markdown :where(h1, h2, h3, h4, h5, h6) {
+  margin-block: var(--space-5) var(--space-2);
+  color: var(--color-foreground);
+  line-height: var(--line-heading);
+  text-wrap: balance;
+}
+
+.assistant-markdown h1 {
+  font-size: var(--text-ui-xl);
+  font-weight: 600;
+}
+.assistant-markdown h2 {
+  font-size: var(--text-ui-lg);
+  font-weight: 600;
+}
+.assistant-markdown :where(h3, h4) {
+  font-size: var(--text-ui-base);
+  font-weight: 600;
+}
+.assistant-markdown h5 {
+  font-size: var(--text-ui-base);
+  font-weight: 500;
+}
+.assistant-markdown h6 {
+  font-size: var(--text-ui-base);
+  font-weight: 400;
+}
+.assistant-markdown :where(p, ul, ol, blockquote) {
+  text-wrap: pretty;
+}
+
+.assistant-markdown :where(ul, ol) {
+  margin-block: var(--space-2);
+  padding-inline-start: var(--space-5);
+}
+
+.assistant-markdown li + li {
+  margin-block-start: var(--space-1);
+}
+
+.assistant-markdown blockquote {
+  margin-block: var(--space-3);
+  padding-inline-start: var(--space-3);
+  border-inline-start: 2px solid var(--color-border-hover);
+  color: var(--color-foreground-subtle);
+}
+
+.assistant-markdown :not(pre) > code {
+  padding-inline: var(--space-1);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-code);
+  font: 400 var(--text-ui-sm) / var(--line-compact) var(--font-mono);
+}
+
+.assistant-markdown a {
+  color: var(--color-link);
+  font-weight: 500;
+  text-decoration: underline;
+  text-underline-position: from-font;
+  text-decoration-thickness: from-font;
+  text-underline-offset: 3px;
+}
+
+.assistant-markdown a:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}

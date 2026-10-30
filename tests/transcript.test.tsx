@@ -79,15 +79,15 @@ it('visually labels scheduled prompts while keeping ordinary user messages uncha
       messages={[
         { id: 'manual', role: 'user', content: 'Manual request' },
         {
-          id: 'opendots:scheduled_task:run-1',
+          id: 'openmpa:scheduled_task:run-1',
           role: 'user',
           content: 'Scheduled request body',
         },
         {
-          id: 'opendots:scheduled_task:assistant',
+          id: 'openmpa:scheduled_task:assistant',
           role: 'assistant',
           content: 'Scheduled request body',
-          metadata: { opendotsSource: 'scheduled_task' },
+          metadata: { openmpaSource: 'scheduled_task' },
         },
       ]}
       calls={[]}
@@ -114,7 +114,7 @@ it('labels a scheduled prompt from metadata without requiring a prefixed ID', ()
           id: 'scheduled',
           role: 'user',
           content: 'Metadata-marked scheduled prompt',
-          metadata: { opendotsSource: 'scheduled_task' },
+          metadata: { openmpaSource: 'scheduled_task' },
         },
       ]}
       calls={[]}
@@ -129,7 +129,7 @@ it('retains the scheduled label when history replay provides only the durable me
     <ChatTranscript
       messages={[
         {
-          id: 'opendots:scheduled_task:replayed',
+          id: 'openmpa:scheduled_task:replayed',
           role: 'user',
           content: 'Replayed scheduled prompt',
         },
@@ -150,10 +150,10 @@ it('hides only marked receipt prompts while retaining summaries and prior unmark
       id: 'internal',
       role: 'user',
       content: 'Internal sync instructions',
-      metadata: { opendotsSource: 'voice_receipt' },
+      metadata: { openmpaSource: 'voice_receipt' },
     },
     {
-      id: 'opendots:voice_receipt:durable',
+      id: 'openmpa:voice_receipt:durable',
       role: 'user',
       content: 'Persisted internal instructions without metadata',
     },
@@ -161,13 +161,13 @@ it('hides only marked receipt prompts while retaining summaries and prior unmark
       id: 'summary',
       role: 'assistant',
       content: 'Confirmed call summary',
-      metadata: { opendotsSource: 'voice_receipt' },
+      metadata: { openmpaSource: 'voice_receipt' },
     },
     {
       id: 'user',
       role: 'user',
       content: 'My next question',
-      metadata: { opendotsSource: 'voice_compute' },
+      metadata: { openmpaSource: 'voice_compute' },
     },
   ];
   const html = renderToStaticMarkup(

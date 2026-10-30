@@ -16,7 +16,7 @@ export async function readResource(
         method: 'GET',
         signal,
         headers: {
-          'User-Agent': 'OpenDots/0.1 (read-only research)',
+          'User-Agent': 'OpenMPA/0.1 (read-only research)',
           Accept: 'text/html,image/*,text/css,*/*;q=0.5',
           'Accept-Encoding': 'identity',
         },

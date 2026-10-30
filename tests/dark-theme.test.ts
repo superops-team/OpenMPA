@@ -37,6 +37,9 @@ it('scopes selectors to the dark theme attribute', () => {
   );
   expect(darkSelector(':root')).toBe(":root[data-theme='dark']");
   expect(darkSelector('html body')).toBe("html[data-theme='dark'] body");
+  expect(darkSelector('.a:is(.primary, .secondary), .b:not(.x, .y)')).toBe(
+    ":root[data-theme='dark'] .a:is(.primary, .secondary), :root[data-theme='dark'] .b:not(.x, .y)",
+  );
 });
 it('twins only color declarations, inside the same media query', () => {
   const css = run(`
@@ -47,6 +50,25 @@ it('twins only color declarations, inside the same media query', () => {
   expect(css).not.toMatch(/data-theme='dark'\] \.card \{[^}]*padding/);
   expect(css).toMatch(
     /@media \(max-width: 700px\) \{[^@]*:root\[data-theme='dark'\] \.card \{ background: #1b1b1b; \}/,
+  );
+});
+it('keeps explicit light and dark token sources authoritative', () => {
+  const css = run(`
+    :root,
+    :root[data-theme='light'] { --surface: #ffffff; }
+    :root[data-theme='dark'] { --surface: #161616; }
+  `);
+  expect(css).not.toContain(":root[data-theme='dark'][data-theme='light']");
+  expect(css.match(/:root\[data-theme='dark'\]/g)).toHaveLength(1);
+  expect(css).toContain(":root[data-theme='dark'] { --surface: #161616; }");
+
+  const alternateQuotes = run(`
+    :root[data-theme="light"] { --surface: #ffffff; }
+    :root[data-theme=dark] { --surface: #161616; }
+  `);
+  expect(alternateQuotes.match(/--surface:/g)).toHaveLength(2);
+  expect(alternateQuotes).toContain(
+    ':root[data-theme=dark] { --surface: #161616; }',
   );
 });
 it('keeps the light cascade order when later rules have no literal color', () => {
@@ -82,19 +104,19 @@ it('keeps fixed surfaces in their light colors, untouched by global rules', () =
   // ...and generated global rules skip it, so a keyboard focus ring inside
   // keeps its light color (the reviewer's #373e64 regression).
   expect(css).toContain(
-    ":root[data-theme='dark'] button:focus-visible:not(.call-view, .call-view *) { outline: 3px solid #",
+    ":root[data-theme='dark'] button:focus-visible:where(:not(.call-view, .call-view *)) { outline: 3px solid #",
   );
   expect(css).toContain(
-    ":root[data-theme='dark'] input:not(.call-view, .call-view *)::placeholder",
+    ":root[data-theme='dark'] input:where(:not(.call-view, .call-view *))::placeholder",
   );
   expect(css).toContain(
-    ":root[data-theme='dark'] .after:not(.call-view, .call-view *) { color: #eeeeee; }",
+    ":root[data-theme='dark'] .after:where(:not(.call-view, .call-view *)) { color: #eeeeee; }",
   );
   expect(css).toContain(
-    ":root[data-theme='dark'] .row:not(:last-child):not(.call-view, .call-view *):before",
+    ":root[data-theme='dark'] .row:not(:last-child):where(:not(.call-view, .call-view *)):before",
   );
   expect(css).toContain(
-    ":root[data-theme='dark'] :not(.call-view, .call-view *)::-webkit-scrollbar-thumb:hover",
+    ":root[data-theme='dark'] :where(:not(.call-view, .call-view *))::-webkit-scrollbar-thumb:hover",
   );
   // A pseudo-element cannot be followed by :not() (the minifier rejects it).
   expect(css).not.toMatch(

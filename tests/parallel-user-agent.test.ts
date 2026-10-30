@@ -11,7 +11,7 @@ const version = (
     version: string;
   }
 ).version;
-const userAgent = `opendots/${version}`;
+const userAgent = `openmpa/${version}`;
 const page = {
   title: 'Evidence',
   url: 'https://example.com',
@@ -82,7 +82,7 @@ afterEach(() => {
 });
 
 describe('Parallel User-Agent', () => {
-  it('sends opendots/<package version> on MCP requests without a key', async () => {
+  it('sends openmpa/<package version> on MCP requests without a key', async () => {
     const captured = await captureParallelRequests();
     try {
       const sources = await parallelSources(
@@ -119,7 +119,7 @@ describe('Parallel User-Agent', () => {
       expect(
         calls.find((call) => call.message.method === 'initialize')?.message
           .params?.clientInfo,
-      ).toEqual({ name: 'opendots', version });
+      ).toEqual({ name: 'openmpa', version });
       expect(calls.some((call) => call.message.method === 'tools/call')).toBe(
         true,
       );

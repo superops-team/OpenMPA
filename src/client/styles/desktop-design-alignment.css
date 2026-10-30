@@ -1,0 +1,803 @@
+/* Desktop pages load legacy layout CSS after the shared stylesheet. Keep the
+   final application cascade semantic by matching its page-level selectors. */
+.desktop-app .main-content {
+  width: min(100%, var(--layout-fixture-column));
+  max-width: var(--layout-fixture-column);
+  padding: var(--space-6) var(--space-5);
+  color: var(--color-foreground);
+  background: var(--color-background);
+}
+
+.desktop-app .desktop-settings {
+  width: min(100%, var(--layout-settings-column));
+  max-width: var(--layout-settings-column);
+}
+
+.desktop-app .page-heading {
+  gap: var(--space-4);
+  margin-block-end: var(--space-5);
+}
+
+.desktop-app .page-heading h1 {
+  margin: var(--space-2) 0 var(--space-1);
+  color: var(--color-foreground);
+  font-size: var(--text-ui-xl);
+  line-height: var(--line-heading);
+  letter-spacing: normal;
+}
+
+.desktop-app .page-heading p {
+  margin: 0;
+  color: var(--color-foreground-subtle);
+  font-size: var(--text-ui-sm);
+  line-height: var(--line-body);
+}
+
+.desktop-app .task-detail-card,
+.desktop-app .memory-card {
+  margin-block-start: var(--space-4);
+  padding: var(--space-4);
+  border: 1px solid var(--color-card-border);
+  border-radius: var(--radius-xl);
+  background: var(--color-card);
+  color: var(--color-foreground);
+  box-shadow: none;
+}
+
+.desktop-app .task-detail-card h2,
+.desktop-app .memory-card h2 {
+  margin: 0;
+  color: var(--color-foreground);
+  font-size: var(--text-ui-lg);
+  line-height: var(--line-heading);
+}
+
+.desktop-app .task-detail-card p,
+.desktop-app .memory-card p {
+  color: var(--color-foreground-subtle);
+  font-size: var(--text-ui-sm);
+  line-height: var(--line-body);
+}
+
+.desktop-app .desktop-form {
+  gap: var(--space-3);
+}
+.desktop-app .desktop-form label,
+.desktop-app .desktop-field {
+  gap: var(--space-1);
+  color: var(--color-foreground-subtle);
+  font-size: var(--text-ui-sm);
+  line-height: var(--line-compact);
+}
+
+.desktop-app .desktop-form input,
+.desktop-app .desktop-form select,
+.desktop-app .desktop-form textarea,
+.desktop-app .desktop-field input,
+.desktop-app .desktop-field select {
+  min-height: var(--control-input);
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--color-input-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-input);
+  color: var(--color-foreground);
+  font-size: var(--text-ui-base);
+  line-height: var(--line-compact);
+}
+.desktop-app .desktop-form input:not([type='checkbox']):not([type='radio']),
+.desktop-app .desktop-form select,
+.desktop-app .desktop-field input:not([type='checkbox']):not([type='radio']),
+.desktop-app .desktop-field select {
+  height: var(--control-input);
+}
+
+.template-app.desktop-app
+  :is(button, a, input, textarea, select):not(.call-view *):focus-visible {
+  outline: var(--border-focus) solid var(--color-focus);
+  outline-offset: 2px;
+  box-shadow: none;
+}
+.template-app.desktop-app .desktop-form :is(input, select, textarea):focus,
+.template-app.desktop-app
+  .desktop-form
+  :is(input, select, textarea):focus-visible,
+.template-app.desktop-app .desktop-field :is(input, select):focus,
+.template-app.desktop-app .desktop-field :is(input, select):focus-visible {
+  border-color: var(--color-input-border-focused);
+  outline: none;
+  outline-offset: 0;
+  box-shadow: none;
+}
+
+.desktop-app input[type='checkbox'],
+.desktop-app input[type='radio'] {
+  accent-color: var(--color-primary);
+}
+
+.desktop-app .desktop-check {
+  gap: var(--space-2);
+  color: var(--color-foreground-subtle);
+  font-size: var(--text-ui-sm);
+}
+
+.desktop-app .desktop-inline {
+  gap: var(--space-3);
+  align-items: end;
+}
+
+.desktop-app .desktop-section-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.desktop-app .desktop-section-head > div {
+  min-width: 0;
+}
+.desktop-app .desktop-section-head p {
+  margin: var(--space-1) 0 0;
+}
+
+.desktop-app .desktop-segmented {
+  gap: var(--space-1);
+  padding: var(--space-1);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+}
+
+.desktop-app .desktop-segmented span {
+  min-height: var(--control-md);
+  padding-inline: var(--space-3);
+  border-radius: var(--radius-md);
+  color: var(--color-foreground-subtle);
+  font-size: var(--text-ui-sm);
+}
+
+.desktop-app .desktop-segmented input:checked + span {
+  background: var(--color-card-selected);
+  color: var(--color-foreground);
+  box-shadow: none;
+}
+
+.desktop-app .desktop-segmented input:focus-visible + span {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 1px;
+}
+
+.desktop-app .desktop-segmented input {
+  width: 1px;
+  height: 1px;
+  min-height: 0;
+  margin: -1px;
+  overflow: hidden;
+  padding: 0;
+  border: 0;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+.desktop-app .desktop-runtime {
+  gap: var(--space-3);
+  padding: var(--space-3);
+  border-bottom: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+}
+.desktop-app .desktop-runtime > div {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.desktop-app .desktop-runtime-action {
+  display: inline-grid;
+  flex: none;
+}
+.desktop-app .desktop-runtime-action > span {
+  grid-area: 1 / 1;
+}
+.desktop-app .desktop-runtime-action > span[data-visible='false'] {
+  visibility: hidden;
+}
+.desktop-app .desktop-runtime-feedback {
+  block-size: 2lh;
+  overflow-y: auto;
+  overflow-wrap: anywhere;
+  color: var(--color-foreground-subtle);
+  font-size: var(--text-ui-sm);
+  line-height: var(--line-body);
+}
+.desktop-app .desktop-runtime-error {
+  color: var(--color-destructive);
+}
+.desktop-app .desktop-runtime[data-selected='true'] {
+  background: var(--color-card-selected);
+}
+.desktop-app .desktop-runtime[data-selecting='true'] {
+  background: var(--color-surface-hover);
+}
+
+.desktop-app .desktop-runtime:last-child {
+  border-bottom: 0;
+}
+.desktop-app .desktop-runtime p {
+  color: var(--color-foreground-subtle);
+  font-size: var(--text-ui-sm);
+}
+
+.desktop-app .task-list {
+  gap: var(--space-2);
+}
+
+.desktop-app .task-row {
+  min-height: var(--control-input);
+  padding: var(--space-3);
+  gap: var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-card);
+  color: var(--color-foreground);
+  box-shadow: none;
+}
+
+.desktop-app .task-row[data-selected='true'] {
+  border-color: var(--color-focus);
+  background: var(--color-card-selected);
+}
+
+.desktop-app .task-row strong {
+  color: var(--color-foreground);
+  font-size: var(--text-ui-base);
+}
+
+.desktop-app .task-row > div > span {
+  margin-block-start: var(--space-1);
+  color: var(--color-foreground-subtle);
+  font-size: var(--text-ui-sm);
+  line-height: var(--line-compact);
+}
+
+.desktop-app .task-row > svg {
+  color: var(--color-brand);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .desktop-app .task-row:hover:not(:disabled) {
+    border-color: var(--color-border-hover);
+    background: var(--color-surface-hover);
+  }
+}
+
+.desktop-app .status {
+  gap: var(--space-1);
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  color: var(--color-foreground-subtle);
+  font-size: var(--text-ui-xs);
+}
+
+.desktop-app .status.completed {
+  background: var(--color-success-surface);
+  color: var(--color-success-surface-foreground);
+}
+.desktop-app .status.running {
+  background: var(--color-progress-surface);
+  color: var(--color-progress-surface-foreground);
+}
+.desktop-app .status.failed,
+.desktop-app .status.interrupted {
+  background: var(--color-destructive-surface);
+  color: var(--color-destructive-surface-foreground);
+}
+.desktop-app .status.paused {
+  background: var(--color-warning-surface);
+  color: var(--color-warning-surface-foreground);
+}
+
+.desktop-app .search-box {
+  min-height: var(--control-input);
+  margin: 0;
+  padding-inline: var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-input);
+  color: var(--color-foreground-subtle);
+}
+
+.desktop-app .search-box input {
+  min-height: var(--control-lg);
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--color-foreground);
+  font-size: var(--text-ui-sm);
+}
+
+.desktop-app .memory-grid {
+  gap: var(--space-4);
+}
+
+.desktop-app .memory-card > svg {
+  color: var(--color-brand);
+}
+.desktop-app .memory-card small {
+  color: var(--color-foreground-subtle);
+  font-size: var(--text-ui-sm);
+}
+
+.desktop-app .large-empty {
+  margin: var(--space-6) auto;
+}
+.desktop-app .large-empty h2 {
+  color: var(--color-foreground);
+  font-size: var(--text-ui-lg);
+}
+.desktop-app .large-empty p {
+  color: var(--color-foreground-subtle);
+  font-size: var(--text-ui-sm);
+  line-height: var(--line-body);
+}
+
+.desktop-app .notice,
+.desktop-app .setup-card,
+.desktop-app .document-save-notice {
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+  color: var(--color-foreground-subtle);
+  font-size: var(--text-ui-sm);
+  line-height: var(--line-body);
+}
+
+.desktop-app .error-banner {
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--color-destructive);
+  border-radius: var(--radius-lg);
+  background: var(--color-destructive-surface);
+  color: var(--color-destructive-surface-foreground);
+  font-size: var(--text-ui-sm);
+}
+
+.desktop-app .assistant-settings-grid {
+  gap: var(--space-4);
+}
+.desktop-app .ui-modal-body .assistant-settings {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+.desktop-app .assistant-settings > form {
+  gap: var(--space-4);
+}
+.assistant-dialog.ui-modal-dialog[data-size='wide'] {
+  width: min(100%, var(--layout-assistant-dialog-width));
+}
+.assistant-dialog .ui-modal-card {
+  height: min(
+    var(--layout-assistant-dialog-height),
+    calc(100dvh - var(--space-4) * 2)
+  );
+}
+.assistant-dialog .ui-modal-body {
+  flex: 1;
+  scrollbar-gutter: stable;
+}
+.assistant-dialog .assistant-settings-fields {
+  display: grid;
+  min-width: 0;
+  gap: var(--space-4);
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+.desktop-app .assistant-settings-error {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-lg);
+  color: var(--color-destructive-surface-foreground);
+  background: var(--color-destructive-surface);
+  font-size: var(--text-ui-sm);
+}
+.desktop-app .assistant-model-picker .composer-model-trigger {
+  display: flex;
+  width: 100%;
+  max-width: none;
+  height: var(--control-input);
+  padding-inline: var(--space-3);
+  border: var(--border-default) solid var(--color-input-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-input);
+  color: var(--color-foreground);
+  font-size: var(--text-ui-base);
+}
+.desktop-app .assistant-model-picker .composer-model-trigger span {
+  flex: 1;
+  text-align: start;
+}
+.desktop-app .composer-model[data-placement='below'] .composer-model-menu {
+  top: calc(100% + var(--space-1));
+  bottom: auto;
+  width: 100%;
+}
+.desktop-app .composer-model-option strong {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.desktop-app .assistant-settings .ui-tabs {
+  justify-self: start;
+}
+.desktop-app .assistant-instructions-panel {
+  display: grid;
+  gap: var(--space-3);
+}
+.desktop-app .assistant-instructions-panel p {
+  max-width: 70ch;
+  margin: 0;
+  color: var(--color-foreground-subtle);
+  font-size: var(--text-ui-sm);
+  line-height: var(--line-body);
+}
+.desktop-app .assistant-instructions-panel .assistant-agents-editor {
+  min-height: 180px;
+}
+.desktop-app .assistant-settings-grid > section {
+  display: grid;
+  min-width: 0;
+  align-content: start;
+  gap: var(--space-3);
+}
+.desktop-app .assistant-settings-grid h3,
+.desktop-app .assistant-settings-grid label,
+.desktop-app .assistant-settings-grid p {
+  margin: 0;
+}
+.desktop-app .assistant-settings-grid h3 {
+  font-size: var(--text-ui-base);
+  line-height: var(--line-heading);
+}
+.desktop-app .assistant-agents-editor {
+  min-height: 144px;
+  max-height: 240px;
+}
+.ui-modal-dialog.desktop-app
+  .assistant-skill-option.ui-button[data-size='content'] {
+  width: 100%;
+  align-items: start;
+  justify-content: start;
+}
+.desktop-app .assistant-skill-option > span {
+  display: grid;
+  min-width: 0;
+  gap: var(--space-1);
+}
+.desktop-app .assistant-skill-option strong {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.desktop-app .assistant-skill-option small {
+  display: -webkit-box;
+  overflow: hidden;
+  white-space: normal;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+.template-app.desktop-app .composer-model-search input:not(.call-view *),
+.desktop-app .trace-search input {
+  appearance: none;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+.template-app.desktop-app .composer-model-search input:not(.call-view *) {
+  width: 0;
+  min-height: 0;
+  height: 100%;
+  padding: 0;
+}
+.desktop-app .desktop-form .composer-model-search {
+  display: flex;
+}
+.desktop-app .composer-model-search input:focus,
+.desktop-app .composer-model-search input:focus-visible,
+.template-app.desktop-app
+  .composer-model-search
+  input:not(.call-view *):focus-visible,
+.desktop-app .trace-search input:focus,
+.desktop-app .trace-search input:focus-visible,
+.template-app.desktop-app .trace-search input:not(.call-view *):focus-visible {
+  outline: none;
+  outline-offset: 0;
+  box-shadow: none;
+}
+.desktop-app .assistant-skill-list {
+  max-height: min(var(--layout-assistant-skill-list-height), 38dvh);
+  grid-auto-rows: max-content;
+  align-content: start;
+  padding-inline-end: var(--space-1);
+  scrollbar-gutter: stable;
+}
+.assistant-settings-launcher .ui-button {
+  justify-self: start;
+}
+.desktop-app .assistant-skill-list {
+  gap: var(--space-2);
+}
+.desktop-app .assistant-skill-row,
+.desktop-app .assistant-skill-option {
+  gap: var(--space-2);
+  padding: var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+  color: var(--color-foreground);
+}
+.desktop-app .assistant-skill-row p,
+.desktop-app .assistant-skill-option small {
+  color: var(--color-foreground-subtle);
+  font-size: var(--text-ui-sm);
+  line-height: var(--line-compact);
+}
+
+.desktop-app .composer-context {
+  gap: var(--space-3);
+}
+.app.template-app.desktop-app .chat-composer {
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+.desktop-app .composer-context-identity {
+  gap: var(--space-2);
+}
+.desktop-app .composer-context-identity strong {
+  color: var(--color-foreground);
+  font-size: var(--text-ui-sm);
+}
+.desktop-app .composer-architecture {
+  height: var(--control-xs);
+  padding-inline: var(--space-2);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-full);
+  background: var(--color-surface);
+  color: var(--color-foreground-subtle);
+  font-size: var(--text-ui-xs);
+}
+.desktop-app .composer-architecture.mpa {
+  border-color: var(--color-brand);
+  background: var(--color-accent);
+  color: var(--color-link);
+}
+.desktop-app .composer-architecture.codex-worker {
+  border-color: var(--color-border);
+  background: var(--color-surface);
+  color: var(--color-foreground-subtle);
+}
+.desktop-app .composer-field {
+  padding: var(--space-3) var(--space-3) var(--space-2);
+  border-color: var(--color-border);
+  border-radius: var(--radius-2xl);
+  background: var(--color-input);
+  box-shadow: none;
+  transition: border-color var(--motion-state-duration) var(--motion-ease-out);
+}
+.desktop-app .composer-action:is(.is-submitting, .is-running)::after {
+  content: none;
+  animation: none;
+}
+.desktop-app .composer-action.is-running svg {
+  animation: none;
+}
+.desktop-app .composer-action.send:hover:not(:disabled) {
+  transform: none;
+}
+.desktop-app .composer-field:focus-within {
+  border-color: var(--color-focus);
+  box-shadow: none;
+}
+.desktop-app .composer-field textarea {
+  caret-color: var(--color-primary);
+}
+.template-app.desktop-app .composer-field textarea::placeholder,
+.template-app.desktop-app .desktop-form :is(input, textarea)::placeholder,
+.template-app.desktop-app .composer-model-search input::placeholder {
+  color: var(--color-foreground-subtlest);
+  opacity: 1;
+}
+.desktop-app .ui-composer-shell.composer-field textarea:focus,
+.desktop-app .ui-composer-shell.composer-field textarea:focus-visible {
+  border-color: transparent;
+  outline: none;
+  outline-offset: 0;
+  box-shadow: none;
+}
+.desktop-app .composer-model-trigger {
+  height: var(--control-sm);
+  padding-inline: var(--space-2);
+  border-radius: var(--radius-full);
+  color: var(--color-foreground-subtle);
+  font-size: var(--text-ui-sm);
+}
+.desktop-app .composer-model-trigger:hover:not(:disabled) {
+  background: var(--color-surface-hover);
+  color: var(--color-foreground);
+}
+.desktop-app .composer-model-trigger:focus-visible {
+  outline-color: var(--color-focus);
+}
+.desktop-app .composer-model-menu {
+  padding: var(--space-3);
+  border-color: var(--color-popover-border);
+  border-radius: var(--radius-xl);
+  background: var(--color-popover);
+  color: var(--color-foreground);
+  box-shadow: var(--shadow-overlay);
+}
+.desktop-app .composer-model-option {
+  border-radius: var(--radius-lg);
+  color: var(--color-foreground);
+}
+.desktop-app .composer-model-option:hover:not(:disabled) {
+  background: var(--color-menu-hover);
+}
+.desktop-app .composer-model-option small,
+.desktop-app .composer-model-meta,
+.desktop-app .composer-model-help,
+.desktop-app .composer-model-notice {
+  color: var(--color-foreground-subtle);
+}
+
+.desktop-app .desktop-vault-unlock p,
+.desktop-app .desktop-vault-unlock .desktop-check,
+.desktop-app .desktop-secondary-auth summary {
+  color: var(--color-foreground-subtle);
+  font-size: var(--text-ui-sm);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  button {
+    transition: none;
+  }
+  button:active:not(:disabled) {
+    transform: none;
+  }
+}
+
+@media (forced-colors: active) {
+  button:focus-visible,
+  a:focus-visible,
+  input:focus-visible,
+  textarea:focus-visible,
+  select:focus-visible {
+    outline: var(--border-focus) solid CanvasText;
+    outline-offset: 2px;
+  }
+  .template-app.desktop-app
+    .desktop-form
+    :is(input, select, textarea):focus-visible,
+  .template-app.desktop-app .desktop-field :is(input, select):focus-visible {
+    border-color: CanvasText;
+    outline: var(--border-focus) solid CanvasText;
+    outline-offset: 2px;
+  }
+}
+
+@media (max-width: 760px) {
+  .desktop-app .main-content {
+    padding: var(--space-5) var(--space-4);
+  }
+  .desktop-app .page-heading,
+  .desktop-app .desktop-section-head {
+    display: grid;
+    align-items: stretch;
+  }
+  .desktop-app .page-heading {
+    display: grid;
+  }
+  .desktop-app .desktop-section-head .search-box {
+    width: 100%;
+    max-width: none;
+  }
+  .desktop-app .desktop-section-head .search-box input {
+    width: 100%;
+    min-width: 0;
+  }
+  .ui-modal-dialog.desktop-app.template-app .assistant-settings-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .desktop-app .desktop-segmented {
+    display: grid;
+    width: 100%;
+    min-width: 0;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+  .desktop-app .desktop-segmented label,
+  .desktop-app .desktop-segmented span {
+    width: 100%;
+    min-width: 0;
+  }
+  .desktop-app .desktop-segmented span {
+    padding-inline: var(--space-1);
+  }
+}
+
+/* The search wrapper owns the only focus ring; the inner input stays borderless. */
+.template-app.desktop-app .composer-model-menu {
+  width: min(360px, calc(100vw - 48px));
+  max-width: calc(100vw - 48px);
+  max-height: min(520px, 75dvh);
+  display: flex;
+  flex-direction: column;
+}
+.template-app.desktop-app .composer-model-search {
+  flex: none;
+  min-width: 0;
+  height: var(--control-input);
+  box-sizing: border-box;
+}
+.template-app.desktop-app .composer-model-search input,
+.template-app.desktop-app .composer-model-search input:focus,
+.template-app.desktop-app .composer-model-search input:focus-visible {
+  flex: 1 1 0%;
+  width: 0;
+  min-width: 0;
+  min-height: 0;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  outline: none;
+  outline-offset: 0;
+  box-shadow: none;
+  background: transparent;
+  box-sizing: border-box;
+}
+.template-app.desktop-app .composer-model-list {
+  min-height: 0;
+  max-height: min(280px, 38dvh);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.desktop-app .studio-actions,
+.desktop-app .studio-channel-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  align-items: center;
+}
+.desktop-app .studio-channel-tabs [aria-selected='true'] {
+  color: var(--color-foreground);
+  background: var(--color-surface-hover);
+  box-shadow: inset 0 -2px var(--color-focus);
+}
+.desktop-app .studio-resource-address,
+.desktop-app .studio-member-detail {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.desktop-app .studio-checkbox {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: var(--space-2);
+}
+.template-app.desktop-app .studio-checkbox input[type='checkbox'] {
+  width: auto;
+  min-height: 0;
+}
+.desktop-app .studio-channel-recovery summary {
+  cursor: pointer;
+  padding-block: var(--space-2);
+}

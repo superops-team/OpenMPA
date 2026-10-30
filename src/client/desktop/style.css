@@ -1,0 +1,721 @@
+/* The native controls overlay this first row; the page reserves their inset. */
+.desktop-app.app {
+  height: 100dvh;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  overscroll-behavior: none;
+}
+.desktop-app.app .workspace {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  width: 100%;
+  margin-left: 0;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+}
+.desktop-app .chat-workspace {
+  height: auto;
+  flex: 1;
+  min-height: 0;
+}
+.desktop-app .workspace > .main-content {
+  flex: 1;
+  min-height: 0;
+}
+.desktop-app .workspace {
+  min-width: 0;
+}
+.desktop-app .main-content {
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+.desktop-app .desktop-settings {
+  width: min(100%, var(--layout-settings-column));
+  margin-inline: auto;
+}
+.desktop-form {
+  display: grid;
+  gap: 14px;
+}
+.desktop-app .desktop-form[hidden] {
+  display: none;
+}
+.desktop-app .desktop-studio-page {
+  align-content: start;
+}
+.desktop-form label {
+  display: grid;
+  gap: 6px;
+  font-size: var(--text-ui-caption);
+}
+.desktop-form input,
+.desktop-form select,
+.desktop-form textarea,
+.desktop-app .document-chat-dock select {
+  font: inherit;
+  color: inherit;
+  padding: 10px 12px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-input);
+  min-width: 0;
+}
+.desktop-form input:focus-visible,
+.desktop-form select:focus-visible,
+.desktop-form textarea:focus-visible,
+.desktop-app .desktop-vault-unlock input:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 2px;
+  border-color: var(--color-focus);
+}
+.desktop-form input[type='checkbox'],
+.desktop-app .desktop-vault-unlock input[type='checkbox'] {
+  width: 16px;
+  height: 16px;
+  flex: none;
+}
+.desktop-form textarea {
+  min-height: 110px;
+  resize: vertical;
+}
+.desktop-form .desktop-check {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.desktop-segmented {
+  display: inline-flex;
+  width: fit-content;
+  max-width: 100%;
+  gap: 2px;
+  padding: 3px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+}
+.desktop-segmented legend {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+}
+.desktop-segmented label {
+  display: inline-flex;
+}
+.desktop-segmented input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+.desktop-segmented span {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 84px;
+  min-height: 30px;
+  padding: 0 10px;
+  border-radius: var(--radius-md);
+  color: var(--color-foreground-subtle);
+  font-size: var(--text-ui-sm);
+  white-space: nowrap;
+  cursor: pointer;
+}
+.desktop-segmented input:checked + span {
+  background: var(--color-input);
+  color: var(--color-foreground);
+  box-shadow: none;
+}
+.desktop-segmented input:focus-visible + span {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 1px;
+}
+.desktop-segmented input:disabled + span {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+.desktop-inline {
+  display: flex;
+  gap: 12px;
+  align-items: end;
+  flex-wrap: wrap;
+}
+.desktop-runtime {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  justify-content: space-between;
+  padding: 12px 0;
+}
+.desktop-runtime p {
+  font-size: var(--text-ui-sm);
+  word-break: break-all;
+}
+.desktop-chat-actions {
+  display: flex;
+  justify-content: end;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 18px;
+}
+.desktop-chat-actions .text-button[aria-pressed='true'] {
+  background: var(--color-surface);
+  color: var(--color-foreground);
+}
+.desktop-chat-actions .text-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.42;
+}
+.desktop-app .persistent-chat {
+  min-height: 0;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+.desktop-app .persistent-chat.live-chat {
+  width: 100%;
+  max-width: none;
+  padding: 0 0 20px;
+}
+.desktop-app .chat-persona,
+.desktop-app .chat-composer,
+.desktop-app .chat-status {
+  width: calc(100% - 48px);
+  max-width: var(--layout-reading-column);
+  margin-inline: auto;
+  box-sizing: border-box;
+}
+.desktop-app .chat-transcript-wrap {
+  width: 100%;
+}
+.desktop-app .chat-transcript {
+  scrollbar-gutter: stable;
+  padding-inline: max(24px, calc((100% - var(--layout-reading-column)) / 2));
+  overscroll-behavior: contain;
+}
+.desktop-app .chat-jump {
+  right: max(24px, calc((100% - var(--layout-reading-column)) / 2));
+}
+.desktop-app .chat-bubble table {
+  display: block;
+  max-width: 100%;
+  overflow-x: auto;
+  border-collapse: collapse;
+  border-spacing: 0;
+  font-size: var(--text-ui-sm);
+}
+.desktop-app .chat-bubble th,
+.desktop-app .chat-bubble td {
+  padding: 7px 9px;
+  border: 1px solid var(--color-border);
+  text-align: left;
+  vertical-align: top;
+}
+.desktop-app .chat-bubble th {
+  background: var(--color-surface);
+  color: var(--color-foreground);
+  font-weight: 600;
+}
+.desktop-app .chat-bubble td {
+  background: var(--color-input);
+}
+.desktop-app .chat-bubble a,
+.desktop-app .chat-bubble.user a,
+.desktop-app .chat-bubble.assistant a {
+  color: var(--color-link);
+  font-weight: 500;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.desktop-app .chat-column {
+  display: flex;
+  flex-direction: column;
+}
+.desktop-app .document-chat-panel {
+  min-height: 0;
+}
+.desktop-app .document-chat-panel .persistent-chat {
+  height: calc(100% - 44px);
+}
+.desktop-app .chat-transcript {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+.desktop-app .composer-field textarea {
+  resize: none;
+  min-height: 44px;
+  caret-color: var(--color-primary);
+}
+/* The product-wide ink focus ring reads as a heavy black frame around a
+   multi-line composer. The container's teal focus ring is the indicator. */
+.desktop-app .composer-field textarea:focus,
+.desktop-app .composer-field textarea:focus-visible {
+  outline: none;
+  outline-offset: 0;
+}
+.desktop-app .document-chat-dock {
+  padding: 16px;
+}
+.desktop-app .document-chat-dock label {
+  display: grid;
+  gap: 8px;
+}
+.desktop-app .result-pane {
+  padding: 18px;
+  overflow-y: auto;
+}
+.desktop-app .task-detail-card {
+  margin-top: 20px;
+}
+.desktop-app .task-row {
+  text-align: left;
+  color: inherit;
+  background: transparent;
+  width: 100%;
+  cursor: pointer;
+}
+.desktop-app .task-row > div {
+  flex: 1;
+}
+.desktop-app .document-save-notice {
+  overflow-wrap: anywhere;
+}
+.desktop-binding-qr {
+  max-width: 280px;
+  width: 100%;
+  height: auto;
+  background: var(--color-media-canvas);
+}
+.desktop-content {
+  max-height: 480px;
+  overflow: auto;
+  overscroll-behavior: contain;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+/* Composer follows the Codex surface: one soft rounded field with the assistant and
+   remote architecture above it, and the model control in the bottom bar. */
+.desktop-app .chat-composer {
+  margin-top: 12px;
+}
+.desktop-app .composer-context {
+  position: relative;
+  z-index: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  width: calc(100% - var(--space-4) * 2);
+  min-width: 0;
+  min-height: calc(var(--control-input) + var(--space-2));
+  margin: 0 auto calc(-1 * var(--space-2));
+  padding: var(--space-2) var(--space-4) var(--space-4);
+  border: 1px solid var(--color-border);
+  border-bottom: 0;
+  border-radius: var(--radius-2xl) var(--radius-2xl) 0 0;
+  background: var(--color-surface-hover);
+}
+.desktop-app .composer-context-identity {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+.desktop-app .composer-context-identity .mascot {
+  width: 18px;
+  height: 18px;
+  flex: none;
+}
+.desktop-app .composer-context-identity strong {
+  min-width: 0;
+  max-width: 42ch;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: var(--text-ui-sm);
+  font-weight: 600;
+  color: var(--color-foreground);
+}
+.desktop-app .composer-architecture {
+  display: inline-flex;
+  align-items: center;
+  height: 19px;
+  padding: 0 7px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-full);
+  background: var(--color-surface);
+  color: var(--color-foreground-subtle);
+  font-size: var(--text-ui-xs);
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+.desktop-app .composer-architecture.mpa {
+  border-color: var(--color-border-hover);
+  background: var(--color-accent);
+  color: var(--color-link);
+}
+.desktop-app .composer-architecture.codex-worker {
+  border-color: var(--color-border);
+  background: var(--color-surface-hover);
+  color: var(--color-foreground);
+}
+.desktop-app .composer-field {
+  position: relative;
+  z-index: 1;
+  border-radius: var(--radius-2xl);
+  padding: 13px 14px 9px;
+  box-shadow: none;
+}
+.desktop-app .composer-field:focus-within {
+  border-color: var(--color-focus);
+  box-shadow: none;
+}
+.desktop-app .composer-bar {
+  gap: 8px;
+}
+.desktop-app .composer-bar .composer-hint {
+  margin-left: auto;
+}
+.desktop-app .composer-model {
+  position: relative;
+  flex: none;
+  min-width: 0;
+}
+.desktop-app .composer-model-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  height: 26px;
+  max-width: 220px;
+  padding: 0 8px;
+  border: 1px solid transparent;
+  border-radius: var(--radius-full);
+  background: transparent;
+  color: var(--color-foreground-subtle);
+  font-size: var(--text-ui-sm);
+  line-height: var(--line-compact);
+  cursor: pointer;
+}
+.desktop-app .composer-model-trigger span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.desktop-app .composer-model-trigger:hover:not(:disabled) {
+  background: var(--color-surface-hover);
+  color: var(--color-foreground);
+}
+.desktop-app .composer-model-trigger:disabled {
+  cursor: default;
+  opacity: 0.72;
+}
+.desktop-app .composer-model-trigger:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 1px;
+}
+.desktop-app .composer-model-menu {
+  position: absolute;
+  left: 0;
+  bottom: calc(100% + 8px);
+  z-index: var(--layer-popover);
+  width: min(var(--layout-model-menu-width), calc(100vw - var(--space-6) * 2));
+  padding: 12px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  background: var(--color-input);
+  box-shadow: var(--shadow-overlay);
+}
+.desktop-app .composer-model-option {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) var(--icon-sm);
+  align-items: center;
+  gap: 9px;
+  width: 100%;
+  padding: 8px;
+  border: 0;
+  border-radius: var(--radius-lg);
+  background: transparent;
+  color: var(--color-foreground);
+  text-align: left;
+  cursor: pointer;
+}
+.desktop-app .composer-model-option:disabled {
+  cursor: default;
+  opacity: 0.55;
+}
+.desktop-app .composer-model-option:hover:not(:disabled) {
+  background: var(--color-surface-hover);
+}
+.desktop-app .composer-model-option > span {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+.desktop-app .model-check-hidden {
+  visibility: hidden;
+}
+.desktop-app .composer-model-option strong {
+  font-size: var(--text-ui-sm);
+  font-weight: 500;
+}
+.desktop-app .composer-model-option small {
+  overflow: hidden;
+  font-size: var(--text-ui-xs);
+  color: var(--color-foreground-subtlest);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.desktop-app .composer-model-search {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 30px;
+  margin: 0 8px 6px;
+  padding: 0 8px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-input);
+  color: var(--color-foreground-subtlest);
+}
+.desktop-app .composer-model-search:has(input:disabled) {
+  background: var(--color-surface);
+  color: var(--color-disabled-foreground);
+}
+.desktop-app .composer-model-search:focus-within {
+  border-color: var(--color-focus);
+  outline: none;
+  box-shadow: none;
+}
+.desktop-app .composer-model-search input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  background: transparent;
+  color: var(--color-foreground);
+  font: inherit;
+  font-size: var(--text-ui-sm);
+  outline: none;
+}
+.desktop-app .composer-model-search input:focus,
+.desktop-app .composer-model-search input:focus-visible,
+.desktop-app.app .composer-model-search input:focus-visible,
+.template-app.desktop-app .composer-model-search input:focus-visible {
+  outline: none;
+  outline-offset: 0;
+  box-shadow: none;
+}
+.desktop-app .composer-model-search input:disabled {
+  color: var(--color-disabled-foreground);
+  cursor: not-allowed;
+}
+.desktop-app .composer-model-list {
+  display: grid;
+  gap: 2px;
+  max-height: min(var(--layout-model-menu-height), 35dvh);
+  overflow-y: auto;
+  padding: 0 2px;
+}
+.desktop-app .composer-model-list.is-disabled {
+  pointer-events: none;
+}
+.desktop-app .composer-model-warning {
+  display: grid;
+  gap: 6px;
+  margin: 0 2px 10px;
+  padding: 9px 10px;
+  border: 1px solid var(--color-warning);
+  border-radius: var(--radius-lg);
+  background: var(--color-warning-surface);
+  color: var(--color-warning-surface-foreground);
+  font-size: var(--text-ui-sm);
+  line-height: var(--line-compact);
+}
+.desktop-app .composer-model-warning-action {
+  justify-self: start;
+  min-height: 28px;
+  padding: 0 10px;
+  border: 1px solid var(--color-warning);
+  border-radius: var(--radius-md);
+  background: var(--color-input);
+  color: var(--color-warning-surface-foreground);
+  font-size: var(--text-ui-sm);
+}
+.desktop-app .composer-model-warning-action:hover {
+  background: var(--color-warning-surface);
+}
+.desktop-app .composer-model-empty {
+  margin: 8px;
+  color: var(--color-foreground-subtlest);
+  font-size: var(--text-ui-xs);
+  text-align: center;
+}
+.desktop-app .composer-model-note {
+  margin: 3px 0 0;
+  font-size: var(--text-ui-sm);
+  line-height: var(--line-compact);
+  color: var(--color-foreground-subtlest);
+}
+.desktop-app .composer-model-footnote {
+  margin: 8px 2px 0;
+  font-size: var(--text-ui-xs);
+  line-height: var(--line-compact);
+  color: var(--color-foreground-subtlest);
+}
+.desktop-app .composer-model-error,
+.desktop-app .composer-model-notice {
+  margin: 6px 6px 0;
+  font-size: var(--text-ui-xs);
+  line-height: var(--line-compact);
+}
+.desktop-app .composer-model-error {
+  color: var(--color-destructive);
+}
+.desktop-app .composer-model-notice {
+  color: var(--color-foreground-subtle);
+}
+.desktop-app .desktop-section-head {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 16px;
+}
+.desktop-app .assistant-agents-editor {
+  min-height: 180px;
+  font-family: var(--font-mono);
+  line-height: var(--line-body);
+}
+.desktop-app .assistant-settings-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 18px;
+  align-items: start;
+}
+.desktop-app .assistant-settings-grid h3 {
+  margin: 0 0 8px;
+  font-size: var(--text-ui-caption);
+}
+.desktop-app .assistant-basics {
+  display: grid;
+  gap: 12px;
+}
+.desktop-app .assistant-model-picker {
+  display: grid;
+  gap: 8px;
+}
+.desktop-app .assistant-model-picker > span {
+  color: var(--color-foreground-subtle);
+  font-size: var(--text-ui-caption);
+  font-weight: 500;
+}
+.desktop-app .assistant-skill-list {
+  display: grid;
+  gap: 8px;
+  max-height: 280px;
+  overflow: auto;
+  overscroll-behavior: contain;
+}
+.desktop-app .assistant-skill-row,
+.desktop-app .assistant-skill-option {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 10px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-input);
+  text-align: left;
+}
+.desktop-app .assistant-skill-option {
+  grid-template-columns: auto minmax(0, 1fr);
+  cursor: pointer;
+}
+.desktop-app .assistant-skill-option:hover:not(:disabled) {
+  background: var(--color-surface-hover);
+  border-color: var(--color-border-hover);
+}
+.desktop-app .assistant-skill-option:disabled {
+  cursor: default;
+  opacity: 0.58;
+}
+.desktop-app .assistant-skill-row p,
+.desktop-app .assistant-skill-option small {
+  margin: 2px 0 0;
+  color: var(--color-foreground-subtle);
+  font-size: var(--text-ui-sm);
+  line-height: var(--line-compact);
+}
+.desktop-app .desktop-vault-unlock {
+  display: grid;
+  gap: 12px;
+  max-width: 440px;
+  margin-top: 4px;
+}
+.desktop-app .desktop-vault-unlock p {
+  margin: 0;
+  color: var(--color-foreground-subtle);
+  font-size: var(--text-ui-caption);
+}
+.desktop-app .desktop-vault-unlock .desktop-field {
+  display: grid;
+  gap: 7px;
+  font-size: var(--text-ui-caption);
+  font-weight: 500;
+}
+.desktop-app .desktop-vault-unlock input[type='password'],
+.desktop-app .desktop-vault-unlock input[type='text'] {
+  width: 100%;
+  box-sizing: border-box;
+}
+.desktop-app .desktop-vault-unlock .primary {
+  width: 100%;
+  min-height: 38px;
+}
+.desktop-app .desktop-vault-unlock .desktop-check {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: -2px;
+  color: var(--color-foreground);
+  font-size: var(--text-ui-sm);
+}
+.desktop-app .desktop-secondary-auth {
+  margin-top: 12px;
+}
+.desktop-app .desktop-secondary-auth summary {
+  cursor: pointer;
+  color: var(--color-foreground-subtle);
+  font-size: var(--text-ui-sm);
+}
+@media (max-width: 760px) {
+  .desktop-inline {
+    display: grid;
+  }
+  .desktop-runtime {
+    align-items: start;
+  }
+  .desktop-app .chat-persona,
+  .desktop-app .chat-composer,
+  .desktop-app .chat-status {
+    width: calc(100% - 32px);
+  }
+  .desktop-app .chat-transcript {
+    padding-inline: 16px;
+  }
+  .desktop-app .chat-jump {
+    right: 16px;
+  }
+  .desktop-app .desktop-section-head,
+  .desktop-app .assistant-settings-grid {
+    display: grid;
+  }
+}

@@ -1,0 +1,511 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "$schema": { "type": "string", "const": "./tokens.schema.json" },
+    "name": { "type": "string", "minLength": 1 },
+    "version": { "type": "string", "pattern": "^\\d+\\.\\d+\\.\\d+$" },
+    "source": {
+      "type": "object",
+      "properties": {
+        "design": { "type": "string" },
+        "reference": { "type": "string", "format": "uri" },
+        "license": { "type": "string" }
+      },
+      "required": ["design", "reference", "license"],
+      "additionalProperties": false
+    },
+    "theme": {
+      "type": "object",
+      "properties": {
+        "light": {
+          "type": "object",
+          "propertyNames": {
+            "type": "string",
+            "enum": [
+              "background",
+              "background-alt",
+              "header",
+              "panel",
+              "sidebar",
+              "surface",
+              "surface-hover",
+              "surface-pressed",
+              "card",
+              "card-selected",
+              "card-border",
+              "popover",
+              "popover-border",
+              "menu",
+              "menu-hover",
+              "input",
+              "input-focused",
+              "input-border",
+              "input-border-hover",
+              "input-border-focused",
+              "foreground",
+              "foreground-subtle",
+              "foreground-subtlest",
+              "foreground-inverse",
+              "border",
+              "border-hover",
+              "brand",
+              "primary",
+              "primary-hover",
+              "primary-pressed",
+              "primary-foreground",
+              "accent",
+              "hover",
+              "selected",
+              "link",
+              "focus",
+              "success",
+              "success-foreground",
+              "success-surface",
+              "success-surface-foreground",
+              "warning",
+              "warning-foreground",
+              "warning-surface",
+              "warning-surface-foreground",
+              "destructive",
+              "destructive-foreground",
+              "destructive-surface",
+              "destructive-surface-foreground",
+              "progress",
+              "progress-foreground",
+              "progress-surface",
+              "progress-surface-foreground",
+              "code",
+              "selection",
+              "disabled",
+              "disabled-foreground",
+              "tooltip",
+              "tooltip-foreground",
+              "scrollbar",
+              "scrim",
+              "media-canvas"
+            ]
+          },
+          "additionalProperties": {
+            "type": "string",
+            "pattern": "^#[0-9a-fA-F]{6}$"
+          },
+          "required": [
+            "background",
+            "background-alt",
+            "header",
+            "panel",
+            "sidebar",
+            "surface",
+            "surface-hover",
+            "surface-pressed",
+            "card",
+            "card-selected",
+            "card-border",
+            "popover",
+            "popover-border",
+            "menu",
+            "menu-hover",
+            "input",
+            "input-focused",
+            "input-border",
+            "input-border-hover",
+            "input-border-focused",
+            "foreground",
+            "foreground-subtle",
+            "foreground-subtlest",
+            "foreground-inverse",
+            "border",
+            "border-hover",
+            "brand",
+            "primary",
+            "primary-hover",
+            "primary-pressed",
+            "primary-foreground",
+            "accent",
+            "hover",
+            "selected",
+            "link",
+            "focus",
+            "success",
+            "success-foreground",
+            "success-surface",
+            "success-surface-foreground",
+            "warning",
+            "warning-foreground",
+            "warning-surface",
+            "warning-surface-foreground",
+            "destructive",
+            "destructive-foreground",
+            "destructive-surface",
+            "destructive-surface-foreground",
+            "progress",
+            "progress-foreground",
+            "progress-surface",
+            "progress-surface-foreground",
+            "code",
+            "selection",
+            "disabled",
+            "disabled-foreground",
+            "tooltip",
+            "tooltip-foreground",
+            "scrollbar",
+            "scrim",
+            "media-canvas"
+          ]
+        },
+        "dark": {
+          "type": "object",
+          "propertyNames": {
+            "type": "string",
+            "enum": [
+              "background",
+              "background-alt",
+              "header",
+              "panel",
+              "sidebar",
+              "surface",
+              "surface-hover",
+              "surface-pressed",
+              "card",
+              "card-selected",
+              "card-border",
+              "popover",
+              "popover-border",
+              "menu",
+              "menu-hover",
+              "input",
+              "input-focused",
+              "input-border",
+              "input-border-hover",
+              "input-border-focused",
+              "foreground",
+              "foreground-subtle",
+              "foreground-subtlest",
+              "foreground-inverse",
+              "border",
+              "border-hover",
+              "brand",
+              "primary",
+              "primary-hover",
+              "primary-pressed",
+              "primary-foreground",
+              "accent",
+              "hover",
+              "selected",
+              "link",
+              "focus",
+              "success",
+              "success-foreground",
+              "success-surface",
+              "success-surface-foreground",
+              "warning",
+              "warning-foreground",
+              "warning-surface",
+              "warning-surface-foreground",
+              "destructive",
+              "destructive-foreground",
+              "destructive-surface",
+              "destructive-surface-foreground",
+              "progress",
+              "progress-foreground",
+              "progress-surface",
+              "progress-surface-foreground",
+              "code",
+              "selection",
+              "disabled",
+              "disabled-foreground",
+              "tooltip",
+              "tooltip-foreground",
+              "scrollbar",
+              "scrim",
+              "media-canvas"
+            ]
+          },
+          "additionalProperties": {
+            "type": "string",
+            "pattern": "^#[0-9a-fA-F]{6}$"
+          },
+          "required": [
+            "background",
+            "background-alt",
+            "header",
+            "panel",
+            "sidebar",
+            "surface",
+            "surface-hover",
+            "surface-pressed",
+            "card",
+            "card-selected",
+            "card-border",
+            "popover",
+            "popover-border",
+            "menu",
+            "menu-hover",
+            "input",
+            "input-focused",
+            "input-border",
+            "input-border-hover",
+            "input-border-focused",
+            "foreground",
+            "foreground-subtle",
+            "foreground-subtlest",
+            "foreground-inverse",
+            "border",
+            "border-hover",
+            "brand",
+            "primary",
+            "primary-hover",
+            "primary-pressed",
+            "primary-foreground",
+            "accent",
+            "hover",
+            "selected",
+            "link",
+            "focus",
+            "success",
+            "success-foreground",
+            "success-surface",
+            "success-surface-foreground",
+            "warning",
+            "warning-foreground",
+            "warning-surface",
+            "warning-surface-foreground",
+            "destructive",
+            "destructive-foreground",
+            "destructive-surface",
+            "destructive-surface-foreground",
+            "progress",
+            "progress-foreground",
+            "progress-surface",
+            "progress-surface-foreground",
+            "code",
+            "selection",
+            "disabled",
+            "disabled-foreground",
+            "tooltip",
+            "tooltip-foreground",
+            "scrollbar",
+            "scrim",
+            "media-canvas"
+          ]
+        }
+      },
+      "required": ["light", "dark"],
+      "additionalProperties": false
+    },
+    "typography": {
+      "type": "object",
+      "properties": {
+        "ui-font-size": { "type": "string", "pattern": "^\\d+(?:\\.\\d+)?px$" },
+        "ui-xl": { "type": "string", "pattern": "^\\d+(?:\\.\\d+)?px$" },
+        "ui-lg": { "type": "string", "pattern": "^\\d+(?:\\.\\d+)?px$" },
+        "ui-base": { "type": "string", "pattern": "^\\d+(?:\\.\\d+)?px$" },
+        "ui-caption": { "type": "string", "pattern": "^\\d+(?:\\.\\d+)?px$" },
+        "ui-sm": { "type": "string", "pattern": "^\\d+(?:\\.\\d+)?px$" },
+        "ui-xs": { "type": "string", "pattern": "^\\d+(?:\\.\\d+)?px$" },
+        "mobile-input-safe": {
+          "type": "string",
+          "pattern": "^\\d+(?:\\.\\d+)?px$"
+        },
+        "line-heading": { "type": "string" },
+        "line-body": { "type": "string" },
+        "line-compact": { "type": "string" }
+      },
+      "required": [
+        "ui-font-size",
+        "ui-xl",
+        "ui-lg",
+        "ui-base",
+        "ui-caption",
+        "ui-sm",
+        "ui-xs",
+        "mobile-input-safe",
+        "line-heading",
+        "line-body",
+        "line-compact"
+      ],
+      "additionalProperties": false
+    },
+    "font": {
+      "type": "object",
+      "properties": {
+        "ui": { "type": "string", "minLength": 1 },
+        "mono": { "type": "string", "minLength": 1 }
+      },
+      "required": ["ui", "mono"],
+      "additionalProperties": false
+    },
+    "space": {
+      "type": "object",
+      "propertyNames": {
+        "type": "string",
+        "enum": ["1", "2", "3", "4", "5", "6"]
+      },
+      "additionalProperties": {
+        "type": "string",
+        "pattern": "^\\d+(?:\\.\\d+)?px$"
+      },
+      "required": ["1", "2", "3", "4", "5", "6"]
+    },
+    "radius": {
+      "type": "object",
+      "propertyNames": {
+        "type": "string",
+        "enum": ["none", "sm", "md", "lg", "xl", "2xl", "full"]
+      },
+      "additionalProperties": {
+        "type": "string",
+        "pattern": "^\\d+(?:\\.\\d+)?px$"
+      },
+      "required": ["none", "sm", "md", "lg", "xl", "2xl", "full"]
+    },
+    "control": {
+      "type": "object",
+      "propertyNames": {
+        "type": "string",
+        "enum": ["xs", "sm", "md", "lg", "input"]
+      },
+      "additionalProperties": {
+        "type": "string",
+        "pattern": "^\\d+(?:\\.\\d+)?px$"
+      },
+      "required": ["xs", "sm", "md", "lg", "input"]
+    },
+    "icon": {
+      "type": "object",
+      "propertyNames": {
+        "type": "string",
+        "enum": ["sm", "md", "lg", "brand"]
+      },
+      "additionalProperties": {
+        "type": "string",
+        "pattern": "^\\d+(?:\\.\\d+)?px$"
+      },
+      "required": ["sm", "md", "lg", "brand"]
+    },
+    "border": {
+      "type": "object",
+      "propertyNames": { "type": "string", "enum": ["default", "focus"] },
+      "additionalProperties": {
+        "type": "string",
+        "pattern": "^\\d+(?:\\.\\d+)?px$"
+      },
+      "required": ["default", "focus"]
+    },
+    "layer": {
+      "type": "object",
+      "propertyNames": {
+        "type": "string",
+        "enum": ["base", "sticky", "popover", "overlay", "toast"]
+      },
+      "additionalProperties": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 9007199254740991
+      },
+      "required": ["base", "sticky", "popover", "overlay", "toast"]
+    },
+    "weight": {
+      "type": "object",
+      "propertyNames": {
+        "type": "string",
+        "enum": ["regular", "medium", "semibold", "bold"]
+      },
+      "additionalProperties": {
+        "type": "integer",
+        "minimum": 100,
+        "maximum": 900
+      },
+      "required": ["regular", "medium", "semibold", "bold"]
+    },
+    "motion": {
+      "type": "object",
+      "properties": {
+        "press-duration": { "type": "string", "pattern": "^\\d+ms$" },
+        "state-duration": { "type": "string", "pattern": "^\\d+ms$" },
+        "overlay-duration": { "type": "string", "pattern": "^\\d+ms$" },
+        "sidebar-duration": { "type": "string", "pattern": "^\\d+ms$" },
+        "spinner-duration": { "type": "string", "pattern": "^\\d+ms$" },
+        "ease-out": {
+          "type": "string",
+          "pattern": "^cubic-bezier\\([\\d., ]+\\)$"
+        }
+      },
+      "required": [
+        "press-duration",
+        "state-duration",
+        "overlay-duration",
+        "sidebar-duration",
+        "spinner-duration",
+        "ease-out"
+      ],
+      "additionalProperties": false
+    },
+    "elevation": {
+      "type": "object",
+      "properties": {
+        "overlay": { "type": "string" },
+        "attention": { "type": "string" }
+      },
+      "required": ["overlay", "attention"],
+      "additionalProperties": false
+    },
+    "layout": {
+      "type": "object",
+      "propertyNames": {
+        "type": "string",
+        "enum": [
+          "rail-width",
+          "sidebar-width",
+          "titlebar-height",
+          "reading-column",
+          "fixture-column",
+          "settings-column",
+          "assistant-skill-list-height",
+          "assistant-dialog-width",
+          "assistant-dialog-height",
+          "model-menu-width",
+          "model-menu-height"
+        ]
+      },
+      "additionalProperties": {
+        "type": "string",
+        "pattern": "^\\d+(?:\\.\\d+)?px$"
+      },
+      "required": [
+        "rail-width",
+        "sidebar-width",
+        "titlebar-height",
+        "reading-column",
+        "fixture-column",
+        "settings-column",
+        "assistant-skill-list-height",
+        "assistant-dialog-width",
+        "assistant-dialog-height",
+        "model-menu-width",
+        "model-menu-height"
+      ]
+    }
+  },
+  "required": [
+    "$schema",
+    "name",
+    "version",
+    "source",
+    "theme",
+    "typography",
+    "font",
+    "space",
+    "radius",
+    "control",
+    "icon",
+    "border",
+    "layer",
+    "weight",
+    "motion",
+    "elevation",
+    "layout"
+  ],
+  "additionalProperties": false
+}

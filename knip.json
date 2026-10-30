@@ -2,7 +2,8 @@
   "$schema": "https://unpkg.com/knip@6/schema.json",
   "entry": [
     "src/{server,browser}/index.ts!",
-    "deployment/computers/harden-supervisor.mjs!"
+    "deployment/computers/harden-supervisor.mjs!",
+    "src/client/desktop/main.tsx!"
   ],
   "project": [
     "src/{client,server,browser,shared}/**/*.{ts,tsx}!",

@@ -14,7 +14,7 @@ it('gives each child its own credential without forwarding the master', async ()
   const first = module.environmentFor('dot-a', { COMPUTER_TOKEN: master });
   const second = module.environmentFor('dot-b', { COMPUTER_TOKEN: master });
   expect(first[1]).toBe(
-    `COMPUTER_TOKEN=${createHmac('sha256', master).update('opendots-computer:dot-a').digest('hex')}`,
+    `COMPUTER_TOKEN=${createHmac('sha256', master).update('openmpa-computer:dot-a').digest('hex')}`,
   );
   expect(first[1]).not.toBe(second[1]);
   expect(first.join()).not.toContain(master);

@@ -1,4 +1,4 @@
-import type { Page } from '../../server/pages';
+import type { Page } from '../../shared/page-types';
 export type PageDraft = Pick<Page, 'title' | 'content' | 'parentId'>;
 export type SaveState = {
   page?: Page;
@@ -98,6 +98,20 @@ export class PageAutosave {
       error: undefined,
     });
     this.schedule();
+  }
+  restoreDraft(draft: PageDraft, baseRevision: number) {
+    if (!this.state.page) return;
+    if (baseRevision === this.state.page.revision) {
+      this.edit(draft);
+      return;
+    }
+    clearTimeout(this.timer);
+    this.publish({
+      draft: { ...draft },
+      status: 'conflict',
+      error:
+        'This recovered draft is based on an older revision. Review or export it before choosing the latest saved page.',
+    });
   }
   private schedule() {
     clearTimeout(this.timer);

@@ -1,0 +1,15 @@
+{
+  "ModelMetaDatas": [
+    {
+      "FoundationModelName": "kimi-k3-1-pro",
+      "FoundationModelVersion": "261024",
+      "Key": "api.responses.support",
+      "Data": [
+        "true"
+      ]
+    }
+  ],
+  "PageNum": 1,
+  "PageSize": 1000,
+  "Total": 1
+}

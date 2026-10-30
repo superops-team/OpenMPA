@@ -1,11 +1,15 @@
 import type { AtRule, Declaration, Plugin, Rule } from 'postcss';
-// Build-time dark theme. Every rule with colors gets a sibling rule under
-// :root[data-theme='dark'] with only its color declarations, mapped by
-// flipping perceptual (OKLab) lightness and keeping hue. New styles get a
-// dark variant automatically, and cascade order is preserved because every
-// dark rule gains the same specificity and sits right after its original.
+import { list } from 'postcss';
+// Build-time dark theme. Rules with colors get a sibling rule under
+// :root[data-theme='dark'] with only their color declarations, mapped by
+// flipping perceptual (OKLab) lightness and keeping hue. Rules that explicitly
+// target the light theme are left to their matching explicit dark rules.
 // Wrap intentionally dark surfaces in /* theme: fixed */ ... /* theme: end */.
 export const DARK = ":root[data-theme='dark']";
+const explicitThemeSelector = {
+  light: /\[data-theme\s*=\s*(?:['"]light['"]|light)\s*\]/,
+  dark: /\[data-theme\s*=\s*(?:['"]dark['"]|dark)\s*\]/,
+} as const;
 const toLinear = (c: number) =>
   c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
 const toSrgb = (c: number) =>
@@ -117,8 +121,8 @@ const themed = (decl: Declaration) =>
   (new RegExp(colorToken.source).test(decl.value) ||
     (colorProp.test(decl.prop) && !decl.prop.startsWith('--')));
 export function darkSelector(selector: string) {
-  return selector
-    .split(',')
+  return list
+    .comma(selector)
     .map((part) => {
       const item = part.trim();
       if (item.startsWith(':root')) return DARK + item.slice(5);
@@ -172,9 +176,9 @@ function darkDeclarations(colors: Declaration[], variables: Variables) {
 // rules (like a focus ring) keep their light values there.
 export function excludeFixed(selector: string, containers: string[]) {
   if (!containers.length) return selector;
-  const not = `:not(${containers.flatMap((item) => [item, `${item} *`]).join(', ')})`;
-  return selector
-    .split(',')
+  const not = `:where(:not(${containers.flatMap((item) => [item, `${item} *`]).join(', ')}))`;
+  return list
+    .comma(selector)
     .map((part) => {
       const item = part.trim();
       // :not() must come before any pseudo-element, including the legacy
@@ -190,12 +194,16 @@ export function excludeFixed(selector: string, containers: string[]) {
 }
 export function darkTheme(): Plugin {
   return {
-    postcssPlugin: 'opendots-dark-theme',
+    postcssPlugin: 'openmpa-dark-theme',
     Once(root) {
       let fixed = false;
       const containers: string[] = [];
       const variables: Variables = new Map();
-      const rules: { rule: Rule; fixed: boolean }[] = [];
+      const rules: {
+        rule: Rule;
+        fixed: boolean;
+        explicitLightTheme: boolean;
+      }[] = [];
       root.each(function visit(node): void {
         if (node.type === 'comment') {
           // `/* theme: fixed .call-view */` names the surface it keeps.
@@ -213,8 +221,14 @@ export function darkTheme(): Plugin {
             (node as AtRule).each(visit);
           return;
         }
-        if (node.type === 'rule' && !node.selector.startsWith(DARK)) {
-          rules.push({ rule: node, fixed });
+        if (
+          node.type === 'rule' &&
+          !explicitThemeSelector.dark.test(node.selector)
+        ) {
+          const explicitLightTheme = explicitThemeSelector.light.test(
+            node.selector,
+          );
+          rules.push({ rule: node, fixed, explicitLightTheme });
           if (!fixed)
             node.each((decl) => {
               if (decl.type === 'decl' && decl.prop.startsWith('--')) {
@@ -224,9 +238,9 @@ export function darkTheme(): Plugin {
             });
         }
       });
-      for (const { rule, fixed } of rules) {
+      for (const { rule, fixed, explicitLightTheme } of rules) {
         // Fixed surfaces keep their light colors and get no dark rules.
-        if (fixed) continue;
+        if (fixed || explicitLightTheme) continue;
         const colors = rule.nodes.filter(
           (node): node is Declaration => node.type === 'decl' && themed(node),
         );

@@ -66,7 +66,7 @@ it('executes server turns without browser-only Core discovery and tears down the
       'thread',
       'Record my call',
       new AbortController().signal,
-      { opendotsSource: 'voice_receipt' },
+      { openmpaSource: 'voice_receipt' },
     ),
   ).toBe('Confirmed receipt');
   expect(fetcher).toHaveBeenCalledWith(
@@ -82,10 +82,10 @@ it('executes server turns without browser-only Core discovery and tears down the
   );
   expect(sdk.message).toHaveBeenCalledWith(
     expect.objectContaining({
-      id: expect.stringMatching(/^opendots:voice_receipt:/),
+      id: expect.stringMatching(/^openmpa:voice_receipt:/),
       role: 'user',
       content: 'Record my call',
-      metadata: { opendotsSource: 'voice_receipt' },
+      metadata: { openmpaSource: 'voice_receipt' },
     }),
   );
   expect(sdk.thread).toHaveBeenCalledWith('thread');
@@ -116,15 +116,15 @@ it('marks scheduled user prompts while preserving their text and user role', asy
     'thread',
     'Check the nightly report',
     new AbortController().signal,
-    { opendotsSource: 'scheduled_task' },
+    { openmpaSource: 'scheduled_task' },
   );
 
   expect(sdk.message).toHaveBeenCalledWith(
     expect.objectContaining({
-      id: expect.stringMatching(/^opendots:scheduled_task:/),
+      id: expect.stringMatching(/^openmpa:scheduled_task:/),
       role: 'user',
       content: 'Check the nightly report',
-      metadata: { opendotsSource: 'scheduled_task' },
+      metadata: { openmpaSource: 'scheduled_task' },
     }),
   );
 });
